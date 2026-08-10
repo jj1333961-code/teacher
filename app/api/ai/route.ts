@@ -69,8 +69,58 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
+// ===== أدوات معالجة المهلة (timeout) وإعادة المحاولة =====
+// fetch مع مهلة زمنية عبر AbortController — يمنع تعليق الطلب حتى تقتله المنصّة (504).
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...init, signal: controller.signal })
+  } catch (e: any) {
+    if (e?.name === "AbortError") {
+      throw new Error(`TIMEOUT: انتهت المهلة الزمنية (${Math.round(timeoutMs / 1000)}ث) قبل رد الخادم الخارجي`)
+    }
+    throw e
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// هل الخطأ عابر (يستحق إعادة المحاولة)؟ الشبكة، المهلة، أو 429/5xx.
+function isTransientError(msg: string): boolean {
+  return /TIMEOUT|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|getaddrinfo|\b(429|500|502|503|504)\b/i.test(
+    msg,
+  )
+}
+
+// إعادة محاولة تلقائية مع تراجع أُسّي بسيط للأخطاء العابرة فقط.
+async function withRetry<T>(fn: () => Promise<T>, retries = 1, baseDelayMs = 600): Promise<T> {
+  let lastErr: any
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn()
+    } catch (e: any) {
+      lastErr = e
+      const msg = String(e?.message || "")
+      if (attempt < retries && isTransientError(msg)) {
+        await new Promise((r) => setTimeout(r, baseDelayMs * (attempt + 1)))
+        continue
+      }
+      throw e
+    }
+  }
+  throw lastErr
+}
+
 // نداء موحّد إلى OpenRouter (chat/completions). يُرجع نص الرد.
-async function openRouter(messages: any[], temperature: number, maxTokens: number): Promise<string> {
+// timeoutMs: مهلة لكل محاولة. retries: عدد إعادات المحاولة للأخطاء العابرة.
+async function openRouter(
+  messages: any[],
+  temperature: number,
+  maxTokens: number,
+  timeoutMs = 45000,
+  retries = 1,
+): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) {
     throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
@@ -79,32 +129,38 @@ async function openRouter(messages: any[], temperature: number, maxTokens: numbe
   const hasAudio = messages.some(
     (m) => Array.isArray(m?.content) && m.content.some((c: any) => c?.type === "input_audio"),
   )
-  const res = await fetch(OPENROUTER_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      // ترويسات اختيارية يوصي بها OpenRouter لتصنيف الاستخدام
-      "HTTP-Referer": "https://quran-testing-platform.vercel.app",
-      "X-Title": "Quranic Testing Platform",
-    },
-    body: JSON.stringify({
-      model: hasAudio ? AUDIO_MODEL : TEXT_MODEL,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-    }),
-  })
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "")
-    throw new Error(`OpenRouter ${res.status}: ${errText.slice(0, 300)}`)
-  }
-  const data = await res.json().catch(() => null)
-  const text = data?.choices?.[0]?.message?.content
-  if (typeof text !== "string") {
-    throw new Error("رد غير متوقع من OpenRouter")
-  }
-  return text
+  return withRetry(async () => {
+    const res = await fetchWithTimeout(
+      OPENROUTER_URL,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          // ترويسات اختيارية يوصي بها OpenRouter لتصنيف الاستخدام
+          "HTTP-Referer": "https://quran-testing-platform.vercel.app",
+          "X-Title": "Quranic Testing Platform",
+        },
+        body: JSON.stringify({
+          model: hasAudio ? AUDIO_MODEL : TEXT_MODEL,
+          messages,
+          temperature,
+          max_tokens: maxTokens,
+        }),
+      },
+      timeoutMs,
+    )
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "")
+      throw new Error(`OpenRouter ${res.status}: ${errText.slice(0, 300)}`)
+    }
+    const data = await res.json().catch(() => null)
+    const text = data?.choices?.[0]?.message?.content
+    if (typeof text !== "string") {
+      throw new Error("رد غير متوقع من OpenRouter")
+    }
+    return text
+  }, retries)
 }
 
 function json(data: unknown, status = 200) {
@@ -155,14 +211,23 @@ function extractJson(text: string): any {
   return null
 }
 
-async function runText(prompt: string, system: string, temperature: number) {
+async function runText(
+  prompt: string,
+  system: string,
+  temperature: number,
+  maxTokens = 4000,
+  timeoutMs = 45000,
+  retries = 1,
+) {
   return openRouter(
     [
       { role: "system", content: system },
       { role: "user", content: prompt },
     ],
     temperature,
-    4000,
+    maxTokens,
+    timeoutMs,
+    retries,
   )
 }
 
@@ -264,7 +329,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 {"transcript":"النص المفرغ","accepted":true/false,"score":number,"matchedPercent":number,"isRecitation":true/false,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
 // ===== مساعد تطوير الموقع (للمسؤول فقط) =====
-// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج كسياق للتحليل.
+// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج ��سياق للتحليل.
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
 الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
@@ -274,7 +339,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولين، إعدادات المسؤول (adminSettings).
   • تخزين البيانات محلياً عبر getData(key)/setData(key,value) على localStorage (مفاتيح مثل students, admins, messages, files).
   • حالة الجلسة: currentUser, currentType ('admin'|'student'|'parent'), currentAdminId.
-  • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي ينادي /api/ai.
+  • الذكاء الاصطناعي ��بر callStudentAI(mode,payload,temperature) الذي ينادي /api/ai.
   • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
 - "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم OpenRouter (OPENROUTER_API_KEY) وتدعم الأوضاع: generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant, بالإضافة إلى وضع النص الحر (prompt).
@@ -540,7 +605,9 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 أعد JSON فقط بالشكل التالي (بدون أي نص خارجه):
 {"summary":"وصف عربي واضح لما تم تعديله فعلياً وكيف","patches":[{"path":"...","content":"المحتوى الكامل الجديد للملف","reason":"سبب التعديل وما تغيّر في هذا الملف بالتحديد"}],"tests":["ملاحظة تحقق أو خطوة اختبار يدوي مقترحة"]}`
   const prompt = `طلب المسؤول:\n${request}\n\nخطة التحليل السابقة:\n${JSON.stringify(plan)}\n\nمحتويات الملفات التي يمكن تعديلها:\n${source}`
-  const text = await runText(prompt, system, 0.1)
+  // توليد الرقعات يجب أن يعيد المحتوى الكامل للملفات، لذا نمنحه ميزانية توكنات كبيرة
+  // ومهلة أطول (لكن ضمن حد الدالة maxDuration) دون إعادة محاولة لتفادي مضاعفة الزمن.
+  const text = await runText(prompt, system, 0.1, 16000, 55000, 0)
   return extractJson(text) || {}
 }
 
@@ -550,8 +617,25 @@ async function autoApplyDevRequest(request: string, plan: any) {
   if (!pf.ok) throw new Error(pf.reason || "فشل الفحص المسبق لإعدادات التطبيق التلقائي")
   const tree = await githubListTree()
   const repoFiles = new Set(tree.files)
-  const selected = Array.isArray(plan?.files) ? plan.files.map((f:any) => String(f?.path || "")).filter((p:string) => safeProjectPath(p)) : []
-  if (!selected.length) throw new Error("لم يحدد الذكاء الاصطناعي ملفات صالحة للتعديل")
+  let selected = Array.isArray(plan?.files) ? plan.files.map((f:any) => String(f?.path || "")).filter((p:string) => safeProjectPath(p)) : []
+  // احتياطي: إن لم يحدد النموذج ملفاً، لا نرفض فوراً — بل نبحث في شجرة المشروع عن الملفات ذات
+  // الصلة بالطلب (بحسب الكلمات المفتاحية) لأن معظم واجهة التطبيق في public/index.html والخلفية في route.ts.
+  if (!selected.length) {
+    const req = request.toLowerCase()
+    const backendHints = ["api", "route", "server", "خادم", "backend", "endpoint", "openrouter", "توليد", "تصحيح", "github", "deploy", "نشر"]
+    const uiHints = ["صفحة", "واجهة", "زر", "سؤال", "أسئلة", "اختبار", "طالب", "مؤقت", "وقت", "تصميم", "لون", "ui", "page", "button", "timer", "exam", "student", "قائمة", "رسائل"]
+    const candidates: string[] = []
+    if (backendHints.some((k) => req.includes(k)) && repoFiles.has("app/api/ai/route.ts")) candidates.push("app/api/ai/route.ts")
+    if (uiHints.some((k) => req.includes(k)) && repoFiles.has("public/index.html")) candidates.push("public/index.html")
+    // إن لم تُطابق أي كلمة مفتاحية، نختار ملف الواجهة الرئيسي كافتراض آمن (لأنه يحوي معظم المنطق).
+    if (!candidates.length && repoFiles.has("public/index.html")) candidates.push("public/index.html")
+    selected = candidates
+    if (selected.length) {
+      // نحقن الملفات المختارة في الخطة كي تصل لمرحلة توليد الرقعات.
+      plan.files = selected.map((p: string) => ({ path: p, action: "modify", reason: "تم اختياره تلقائياً لصلته بالطلب", changes: [] }))
+    }
+  }
+  if (!selected.length) throw new Error("لم يُعثر على ملفات مرتبطة بالطلب في المستودع. وضّح الطلب أكثر أو حدّد الصفحة/الوظيفة المقصودة.")
   if (selected.length > 12) throw new Error("الطلب يحتاج تعديل عدد كبير من الملفات؛ الحد التلقائي 12 ملفاً")
   for (const path of selected) {
     const action = plan.files.find((f:any) => String(f?.path || "") === path)?.action
@@ -848,12 +932,16 @@ export async function POST(req: Request) {
     let friendly = "تعذر تنفيذ طلب الذكاء الاصطناعي على الخادم"
     if (raw.includes("OPENROUTER_API_KEY")) {
       friendly = "مفتاح OpenRouter غير مُهيّأ على الخادم"
+    } else if (raw.startsWith("TIMEOUT") || raw.includes("504")) {
+      friendly = "انتهت المهلة الزمنية قبل رد خدمة الذكاء الاصطناعي. جرّب تقليل عدد الأسئلة أو أعد المحاولة."
     } else if (raw.includes("402") || raw.toLowerCase().includes("balance") || raw.toLowerCase().includes("credit")) {
-      friendly = "رصيد حساب OpenRouter غير كافٍ لتحليل الصوت — يرجى إضافة رصيد إلى الحساب"
+      friendly = "رصيد حساب OpenRouter غير كافٍ — يرجى إضافة رصيد إلى الحساب"
     } else if (raw.includes("401")) {
       friendly = "مفتاح OpenRouter غير صالح"
     } else if (raw.includes("429")) {
       friendly = "تم تجاوز حد الطلبات على OpenRouter، حاول لاحقاً"
+    } else if (isTransientError(raw)) {
+      friendly = "تعذر الاتصال بخدمة الذكاء الاصطناعي مؤقتاً (مشكلة شبكة). أعد المحاولة بعد لحظات."
     }
     return json(
       {
