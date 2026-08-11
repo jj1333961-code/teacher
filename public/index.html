@@ -498,9 +498,9 @@ tr:hover { background: var(--table-hover); }
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
 <div id="devAssistantPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>OpenRouter</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على المشروع عبر الخادم وGitHub عند تفعيل التطبيق التلقائي. لا توجد خطوة موافقة ثانية.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>Groq</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على المشروع عبر الخادم وGitHub عند تفعيل التطبيق التلقائي. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفاتيح OpenRouter وGitHub تبقى على الخادم فقط.
+    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفاتيح Groq وGitHub تبقى على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div class="form-group">
@@ -4151,7 +4151,7 @@ function startArabicASR() {
 // يعمل في جميع المتصفحات ولا يعتمد على التعرف على الكلام في المتصفح.
 async function serverRecitationAnalysis(blob, task) {
   try {
-    // OpenRouter لا يقبل webm — نحوّل التسجيل إلى WAV أولاً، ونرجع إلى الأصل عند فشل التحويل.
+      // Groq لا يقبل webm — نحوّل التسجيل إلى WAV أولاً، ونرجع إلى الأصل عند فشل التحويل.
     let sendBlob = blob;
     const wav = await blobToWav(blob);
     if (wav) sendBlob = wav;
@@ -4348,7 +4348,7 @@ function _fft(re, im) {
 
 async function computeVoicePrint(blob) {
   // بصمة محلية متعددة السمات: طيف صوتي + مركز الطيف + عبور الصفر + إحصاءات زمنية.
-  // لا نرفع البصمة الخام إلى OpenRouter؛ تبقى المقارنة على جهاز المستخدم.
+      // لا نرفع البصمة الخام إلى Groq؛ تبقى المقارنة على جهاز المستخدم.
   try{
     const buf=await blob.arrayBuffer(),AC=window.AudioContext||window.webkitAudioContext,ctx=new AC(),audio=await ctx.decodeAudioData(buf.slice(0)),ch=audio.getChannelData(0);
     const N=1024,hop=512,bands=48,bandSum=new Float64Array(bands),bandSq=new Float64Array(bands),cent=[] ,zcr=[],ener=[];let frames=0;
@@ -4394,7 +4394,7 @@ function blobToDataURL(blob) {
   return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(blob); });
 }
 // ====== تحويل الصوت المسجّل (webm/ogg) إلى WAV ======
-// OpenRouter يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصيغة webm.
+  // Groq يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصيغة webm.
 // نفكّ الترميز عبر Web Audio ثم نعيد ترميزه PCM 16-bit أحادي القناة بمعدل 16kHz لتقليل الحجم.
 async function blobToWav(blob) {
   try {
@@ -4440,7 +4440,7 @@ function dataURLToBlob(dataUrl) {
   } catch (e) { return null; }
 }
 
-// ====== QURAN AYAH IMAGES (صور الآيات ��الرسم العثماني المُشكَّل) ======
+// ====== QURAN AYAH IMAGES (صور الآيات ��ا��رسم العثماني المُشكَّل) ======
 function surahNumber(name) {
   const i = ALL_SURAHS_ORDERED.indexOf((name || '').trim());
   return i === -1 ? 0 : i + 1;
@@ -4917,7 +4917,7 @@ function renderFiles() {
   html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px;">';
   files.slice().reverse().forEach(f => {
     const sizeMB = (f.size / (1024*1024)).toFixed(2);
-    const icon = f.type && f.type.startsWith('image/') ? '🖼️' : f.type && f.type.startsWith('audio/') ? '🎵' : f.type && f.type.startsWith('video/') ? '🎬' : f.type && f.type.includes('pdf') ? '📄' : '📎';
+    const icon = f.type && f.type.startsWith('image/') ? '🖼️' : f.type && f.type.startsWith('audio/') ? '🎵' : f.type && f.type.startsWith('video/') ? '🎬' : f.type && f.type.includes('pdf') ? '����' : '📎';
     html += '<div style="background:var(--table-header); border-radius:12px; padding:15px; border:2px solid var(--border); transition:0.2s;" onmouseover="this.style.borderColor=&quot;var(--primary)&quot;" onmouseout="this.style.borderColor=&quot;var(--border)&quot;">';
     html += '<div style="font-size:2.5rem; text-align:center; margin-bottom:10px;">'+icon+'</div>';
     html += '<h5 style="color:var(--primary); margin-bottom:5px; word-break:break-word;">'+f.desc+'</h5>';
@@ -5140,7 +5140,7 @@ function generateAIResponse(text, student) {
   }
   // التقدم عبر الجلسات
   if(has('تقد��','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
-    if(finalizedSessions.length < 2) return '📈 أحتاج تسميعين نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
+    if(finalizedSessions.length < 2) return '��� أحتاج تسميعين نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];

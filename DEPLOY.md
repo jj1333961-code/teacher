@@ -2,10 +2,10 @@
 
 هذه النسخة تعدّل المشروع الحالي نفسه ولا تنشئ مشروعاً جديداً.
 
-## OpenRouter
-- `OPENROUTER_API_KEY` يبقى Server-side فقط.
-- النموذج النصي: `openai/gpt-5-mini`.
-- تفريغ الصوت: `openai/gpt-4o-mini-transcribe` عبر OpenRouter Audio Transcriptions.
+## Groq
+- `GROQ_API_KEY` يبقى Server-side فقط.
+- النموذج النصي: `llama-3.3-70b-versatile`.
+- تفريغ الصوت: `whisper-large-v3` عبر Groq Audio Transcriptions.
 - لا يوجد استخدام لـ Gemini في الكود.
 
 ## ما تم تحسينه
@@ -18,7 +18,7 @@
 
 ## النشر على Vercel
 بعد رفع الملفات إلى المستودع المرتبط بالمشروع، يجب ضبط متغير البيئة:
-`OPENROUTER_API_KEY`
+`GROQ_API_KEY`
 ثم إعادة Deploy.
 
 ## مساعد تطوير الموقع — التطبيق التلقائي

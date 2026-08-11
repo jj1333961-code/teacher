@@ -38,14 +38,14 @@ pnpm lint       # فحص الأخطاء (اختياري)
 
 | المتغير | مطلوب؟ | الوصف |
 |---|---|---|
-| `OPENROUTER_API_KEY` | نعم | مفتاح OpenRouter — محرك الذكاء الاصطناعي (خادمي فقط). |
+| `GROQ_API_KEY` | نعم | مفتاح Groq — محرك الذكاء الاصطناعي (خادمي فقط). |
 | `GITHUB_TOKEN` | للمزامنة | رمز GitHub بصلاحية `Contents: Read and write` (خادمي فقط، لا يُعرض أبداً). |
 | `GITHUB_OWNER` | للمزامنة | اسم المالك فقط، مثال: `jj1333961-code`. |
 | `GITHUB_REPO` | للمزامنة | **اسم المستودع فقط** بدون `https://github.com/` وبدون `.git`، مثال: `student-system-ai`. |
 | `GITHUB_BRANCH` | اختياري | الفرع، مثال `main`. إن تُرك فارغاً يُستخدم الفرع الافتراضي للمستودع. |
 | `DEV_ASSISTANT_AUTO_APPLY` | اختياري | `true` لتفعيل التطبيق والدفع التلقائي بعد كل تعديل من مساعد التطوير. |
 | `VERCEL_DEPLOY_HOOK_URL` | اختياري | Deploy Hook لتشغيل النشر على Vercel بعد التعديل الناجح. |
-| `SPEECH_TO_TEXT_API_KEY` | اختياري | مزوّد تفريغ صوت متوافق مع OpenAI (Whisper). عند ضبطه يُستخدم بدل OpenRouter. |
+| `SPEECH_TO_TEXT_API_KEY` | اختياري | مزوّد تفريغ صوت متوافق مع OpenAI (Whisper). عند ضبطه يُستخدم بدل Groq. |
 | `SPEECH_TO_TEXT_URL` | اختياري | نقطة نهاية التفريغ (الافتراضي `https://api.openai.com/v1/audio/transcriptions`). |
 | `SPEECH_TO_TEXT_MODEL` | اختياري | نموذج التفريغ (الافتراضي `whisper-1`). |
 | `SPEAKER_VERIFICATION_API_KEY` | اختياري | نقطة توسعة للتحقق من هوية المتحدث (SpeechBrain / ECAPA-TDNN). |
@@ -70,12 +70,12 @@ pnpm lint       # فحص الأخطاء (اختياري)
 
 ---
 
-## 4) طريقة إعداد OpenRouter
+## 4) طريقة إعداد Groq
 
-1. أنشئ مفتاحاً من https://openrouter.ai وأضِف رصيداً كافياً.
-2. اضبط `OPENROUTER_API_KEY` على الخادم فقط.
+1. أنشئ مفتاحاً من https://console.groq.com/keys.
+2. اضبط `GROQ_API_KEY` على الخادم فقط.
 3. النماذج مُعرّفة في مكان واحد قابل للتغيير داخل `app/api/ai/route.ts`
-   (`TEXT_MODEL`, `AUDIO_MODEL`, `TRANSCRIBE_MODEL`) — يمكن تبديل النموذج لاحقاً دون إعادة بناء النظام.
+   (`TEXT_MODEL`, `TRANSCRIBE_MODEL`) — يمكن تبديل النموذج لاحقاً دون إعادة بناء النظام.
 4. عند غياب المفتاح أو بطلانه تظهر رسالة عربية واضحة للمسؤول **دون كشف المفتاح**.
 
 ---
@@ -108,7 +108,7 @@ pnpm lint       # فحص الأخطاء (اختياري)
 
 1. ارفع المشروع إلى مستودع GitHub الخاص بك.
 2. اربط المستودع بمشروع على Vercel.
-3. أضِف متغيرات البيئة في إعدادات مشروع Vercel (على الأقل `OPENROUTER_API_KEY`، ثم متغيرات GitHub للمزامنة).
+3. أضِف متغيرات البيئة في إعدادات مشروع Vercel (على الأقل `GROQ_API_KEY`، ثم متغيرات GitHub للمزامنة).
 4. نفّذ Deploy. بعد ذلك كل Commit من مساعد التطوير سيؤدي إلى إعادة نشر تلقائية
    (أو استخدم `VERCEL_DEPLOY_HOOK_URL`).
 
