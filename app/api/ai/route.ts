@@ -1,16 +1,17 @@
 export const maxDuration = 60
 
-// ===== مزوّد الذكاء الاصطناعي: OpenRouter =====
+// ===== مزوّد الذكاء الاصطناعي: Groq =====
 // المفتاح يُقرأ من متغيّر البيئة على الخادم فقط ولا يُرسل أبداً إلى المتصفح.
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-// نموذج نصي احترافي + نموذج متعدد الوسائط لتحليل الصوت (كلاهما عبر OpenRouter)
-const TEXT_MODEL = "openai/gpt-5-mini"
-const AUDIO_MODEL = "openai/gpt-audio-mini"
-const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe"
-const OPENROUTER_AUDIO_TRANSCRIPTIONS_URL = "https://openrouter.ai/api/v1/audio/transcriptions"
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+// نموذج نصي احترافي (production) + نموذج تفريغ صوتي، كلاهما عبر Groq.
+// النماذج قابلة للضبط عبر متغيرات البيئة لتفادي أي إيقاف مستقبلي دون تعديل الكود.
+// الافتراضي gpt-oss-120b لأنه نموذج production مستقر وهو البديل الرسمي لـ llama-3.3-70b-versatile الموقوف.
+const TEXT_MODEL = (process.env.GROQ_TEXT_MODEL || "openai/gpt-oss-120b").trim()
+const TRANSCRIBE_MODEL = (process.env.GROQ_TRANSCRIBE_MODEL || "whisper-large-v3").trim()
+const GROQ_AUDIO_TRANSCRIPTIONS_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
 
 // ===== مزوّد تحويل الصوت إلى نص (Speech-to-Text) قابل للتبديل عبر متغيرات البيئة =====
-// افتراضياً نستخدم OpenRouter. عند ضبط SPEECH_TO_TEXT_API_KEY يُستخدم مزوّد خارجي متوافق مع OpenAI
+// افتراضياً نستخدم Groq (Whisper). عند ضبط SPEECH_TO_TEXT_API_KEY يُستخدم مزوّد خارجي متوافق مع OpenAI
 // (مثل OpenAI Whisper). كل هذه القيم Server-side فقط ولا تصل أبداً إلى المتصفح.
 const STT_API_KEY = (process.env.SPEECH_TO_TEXT_API_KEY || "").trim()
 const STT_URL = (process.env.SPEECH_TO_TEXT_URL || "https://api.openai.com/v1/audio/transcriptions").trim()
@@ -19,7 +20,7 @@ const sttProviderConfigured = !!STT_API_KEY
 // مزوّد التحقق من هوية المتحدث (Speaker Verification) — نقطة توسعة اختيارية عبر البيئة.
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
 
-const keyConfigured = !!process.env.OPENROUTER_API_KEY
+const keyConfigured = !!process.env.GROQ_API_KEY
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -69,27 +70,20 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-// نداء موحّد إلى OpenRouter (chat/completions). يُرجع نص الرد.
-async function openRouter(messages: any[], temperature: number, maxTokens: number): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY
+// نداء موحّد إلى Groq (chat/completions). يُرجع نص الرد.
+async function groqChat(messages: any[], temperature: number, maxTokens: number): Promise<string> {
+  const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
+    throw new Error("GROQ_API_KEY غير مُهيّأ على الخادم")
   }
-  // النموذج نصي فقط ما لم تحتوِ الرسائل على صوت (input_audio)
-  const hasAudio = messages.some(
-    (m) => Array.isArray(m?.content) && m.content.some((c: any) => c?.type === "input_audio"),
-  )
-  const res = await fetch(OPENROUTER_URL, {
+  const res = await fetch(GROQ_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      // ترويسات اختيارية يوصي بها OpenRouter لتصنيف الاستخدام
-      "HTTP-Referer": "https://quran-testing-platform.vercel.app",
-      "X-Title": "Quranic Testing Platform",
     },
     body: JSON.stringify({
-      model: hasAudio ? AUDIO_MODEL : TEXT_MODEL,
+      model: TEXT_MODEL,
       messages,
       temperature,
       max_tokens: maxTokens,
@@ -97,12 +91,12 @@ async function openRouter(messages: any[], temperature: number, maxTokens: numbe
   })
   if (!res.ok) {
     const errText = await res.text().catch(() => "")
-    throw new Error(`OpenRouter ${res.status}: ${errText.slice(0, 300)}`)
+    throw new Error(`Groq ${res.status}: ${errText.slice(0, 300)}`)
   }
   const data = await res.json().catch(() => null)
   const text = data?.choices?.[0]?.message?.content
   if (typeof text !== "string") {
-    throw new Error("رد غير متوقع من OpenRouter")
+    throw new Error("رد غير متوقع من Groq")
   }
   return text
 }
@@ -156,7 +150,7 @@ function extractJson(text: string): any {
 }
 
 async function runText(prompt: string, system: string, temperature: number) {
-  return openRouter(
+  return groqChat(
     [
       { role: "system", content: system },
       { role: "user", content: prompt },
@@ -168,12 +162,13 @@ async function runText(prompt: string, system: string, temperature: number) {
 
 // تحويل الصوت إلى نص مع دعم مزوّد خارجي قابل للتبديل عبر البيئة.
 // إن ضُبط SPEECH_TO_TEXT_API_KEY نستخدم مزوّداً متوافقاً مع OpenAI (multipart)،
-// وإلا نعود تلقائياً إلى OpenRouter. لا يتعطّل النظام إذا لم يُضبط مزوّد خارجي.
+// وإلا نعود تلقائياً إلى Groq (Whisper). لا يتعطّل النظام إذا لم يُضبط مزوّد خارجي.
 async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
+  const bytes = Buffer.from(audioBase64, "base64")
+  const mime = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
+
   // المزوّد الخارجي المخصّص (OpenAI-compatible) عند توفّر مفتاحه.
   if (sttProviderConfigured) {
-    const bytes = Buffer.from(audioBase64, "base64")
-    const mime = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
     const form = new FormData()
     form.append("file", new Blob([bytes], { type: mime }), `recording.${audioFormat}`)
     form.append("model", STT_MODEL)
@@ -190,21 +185,22 @@ async function transcribeAudio(audioBase64: string, audioFormat: string): Promis
     const data = await res.json().catch(() => null)
     return typeof data?.text === "string" ? data.text.trim() : ""
   }
-  // الافتراضي: OpenRouter.
-  const apiKey = process.env.OPENROUTER_API_KEY
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
-  const res = await fetch(OPENROUTER_AUDIO_TRANSCRIPTIONS_URL, {
+  // الافتراضي: Groq (تفريغ صوتي عبر Whisper بصيغة multipart/form-data).
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) throw new Error("GROQ_API_KEY غير مُهيّأ على الخادم")
+  const form = new FormData()
+  form.append("file", new Blob([bytes], { type: mime }), `recording.${audioFormat}`)
+  form.append("model", TRANSCRIBE_MODEL)
+  form.append("language", "ar")
+  form.append("response_format", "json")
+  const res = await fetch(GROQ_AUDIO_TRANSCRIPTIONS_URL, {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: TRANSCRIBE_MODEL,
-      input_audio: { data: audioBase64, format: audioFormat },
-      language: "ar",
-    }),
+    headers: { Authorization: `Bearer ${apiKey}` },
+    body: form,
   })
   if (!res.ok) {
     const errText = await res.text().catch(() => "")
-    throw new Error(`OpenRouter transcription ${res.status}: ${errText.slice(0, 300)}`)
+    throw new Error(`Groq transcription ${res.status}: ${errText.slice(0, 300)}`)
   }
   const data = await res.json().catch(() => null)
   return typeof data?.text === "string" ? data.text.trim() : ""
@@ -264,9 +260,9 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 {"transcript":"النص المفرغ","accepted":true/false,"score":number,"matchedPercent":number,"isRecitation":true/false,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
 // ===== مساعد تطوير الموقع (للمسؤول فقط) =====
-// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج كسياق للتحليل.
+// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج ��سياق للتحليل.
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
-الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
+الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر مو��فقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
 - "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي على:
   • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') والرجوع عبر goBack().
@@ -277,7 +273,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي ينادي /api/ai.
   • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
-- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم OpenRouter (OPENROUTER_API_KEY) وتدعم الأوضاع: generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant, بالإضافة إلى وضع النص الحر (prompt).
+- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم Groq (GROQ_API_KEY) وتدعم الأوضاع: generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant, بالإضافة إلى وضع النص الحر (prompt).
 - "app/layout.tsx": تخطيط الجذر.
 - "app/page.tsx": صفحة Next.js احتياطية؛ الجذر يعاد توجيهه إلى public/index.html عبر next.config.mjs.
 - "app/globals.css": الأنماط العامة لـNext.js.
@@ -371,7 +367,7 @@ async function githubListTree(ref?: string) {
 }
 
 async function githubPutFile(path: string, content: string, sha?: string, message = "chore: apply AI development assistant change") {
-  if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
+  if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات ��ستودع GitHub غير مكتملة")
   const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${path.split("/").map(encodeURIComponent).join("/")}`
   const body: any = { message, content: Buffer.from(content, "utf8").toString("base64"), branch: await resolveBranch() }
   if (sha) body.sha = sha
@@ -467,7 +463,7 @@ async function getGithubSyncStatus() {
 // لا ي��شف أبداً قيمة أي رمز مميز، فقط اسم ��لمتغير الناقص أو نوع المشكلة.
 async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; details?: any }> {
   const missing: string[] = []
-  if (!process.env.OPENROUTER_API_KEY) missing.push("OPENROUTER_API_KEY")
+  if (!process.env.GROQ_API_KEY) missing.push("GROQ_API_KEY")
   if (!GITHUB_TOKEN) missing.push("GITHUB_TOKEN")
   if (!GITHUB_OWNER) missing.push("GITHUB_OWNER")
   if (!GITHUB_REPO) missing.push("GITHUB_REPO")
@@ -481,7 +477,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
   if (!AUTO_DEV_ENABLED) {
     return { ok: false, reason: "التطبيق التلقائي غير مفعّل. اضبط DEV_ASSISTANT_AUTO_APPLY=true على الخادم." }
   }
-  // التحقق من الشبكة + وجود المستودع فعلياً + صلاحية الرمز.
+  // التحقق من ��لشبكة + وجود المستودع فعلياً + صلاحية الرمز.
   let repo: any
   try {
     repo = await githubGetRepo()
@@ -515,6 +511,107 @@ function safeProjectPath(path: string) {
   if (!normalized || normalized.includes("..") || normalized.startsWith(".git/")) return false
   if (normalized === ".env" || normalized.startsWith(".env.") && !normalized.endsWith(".example")) return false
   return true
+}
+
+// ===== طبقة الاختبار والتحقق الذاتي للوكيل =====
+// فحص ثابت (static analysis) لكل ملف مُعدّل للتأكد من سلامته البنيوية قبل الحفظ في المستودع.
+// يكتشف: JSON غير صالح، أقواس/وسوم غير متوازنة، ملف فارغ بالخطأ، وبقايا علامات دمج Git.
+// لا يشغّل الكود، لكنه يمنع تطبيق تعديلات مكسورة بناءً على تحليل النص.
+
+// يوازن الأقواس {} () [] مع تجاهل ما يقع داخل السلاسل النصية والتعليقات في ملفات JS/TS.
+function checkBracketBalance(content: string, isCode: boolean): string[] {
+  const errors: string[] = []
+  const stack: Array<{ ch: string; line: number }> = []
+  const pairs: Record<string, string> = { ")": "(", "]": "[", "}": "{" }
+  const openers = new Set(["(", "[", "{"])
+  const closers = new Set([")", "]", "}"])
+  let line = 1
+  let inStr: string | null = null
+  let inLineComment = false
+  let inBlockComment = false
+  for (let i = 0; i < content.length; i++) {
+    const c = content[i]
+    const next = content[i + 1]
+    if (c === "\n") {
+      line++
+      inLineComment = false
+      continue
+    }
+    if (inLineComment) continue
+    if (inBlockComment) {
+      if (c === "*" && next === "/") { inBlockComment = false; i++ }
+      continue
+    }
+    if (inStr) {
+      if (c === "\\") { i++; continue }
+      if (c === inStr) inStr = null
+      continue
+    }
+    if (isCode) {
+      if (c === "/" && next === "/") { inLineComment = true; i++; continue }
+      if (c === "/" && next === "*") { inBlockComment = true; i++; continue }
+      if (c === '"' || c === "'" || c === "`") { inStr = c; continue }
+    }
+    if (openers.has(c)) stack.push({ ch: c, line })
+    else if (closers.has(c)) {
+      const top = stack.pop()
+      if (!top || top.ch !== pairs[c]) {
+        errors.push(`قوس إغلاق غير متطابق '${c}' عند السطر ${line}`)
+        if (errors.length > 5) break
+      }
+    }
+  }
+  if (stack.length && errors.length <= 5) {
+    const t = stack[stack.length - 1]
+    errors.push(`قوس '${t.ch}' مفتوح ولم يُغلق (بدأ عند السطر ${t.line})`)
+  }
+  return errors
+}
+
+// فحص شامل لملف واحد حسب امتداده. old هو المحتوى السابق (للكشف عن الإفراغ بالخطأ).
+function validatePatchContent(path: string, content: string, old?: string): string[] {
+  const errors: string[] = []
+  const lower = path.toLowerCase()
+  if (typeof content !== "string") return [`محتوى الملف ${path} غير نصّي`]
+  if (old && old.trim() && !content.trim()) errors.push(`الملف ${path} أصبح فارغاً بينما لم يكن فارغاً — يُرجّح أنه حذف بالخطأ`)
+  if (/^(<{7}|={7}|>{7})/m.test(content)) errors.push(`الملف ${path} يحتوي على علامات دمج Git غير محلولة (<<<<<<< أو =======)`)
+  if (lower.endsWith(".json")) {
+    try { JSON.parse(content) } catch (e: any) { errors.push(`JSON غير صالح في ${path}: ${String(e?.message || "").slice(0, 120)}`) }
+    return errors
+  }
+  const isCode = /\.(ts|tsx|js|jsx|mjs|cjs|css)$/.test(lower)
+  const isHtml = lower.endsWith(".html") || lower.endsWith(".htm")
+  if (isCode || isHtml) errors.push(...checkBracketBalance(content, isCode))
+  return errors
+}
+
+// يفحص كل الرقع ويعيد خريطة الأخطاء لكل مسار (المسارات السليمة لا تظهر).
+function validatePatches(patches: any[], currentMap: Map<string, { content: string }>): Record<string, string[]> {
+  const report: Record<string, string[]> = {}
+  for (const patch of patches) {
+    const path = String(patch?.path || "")
+    const content = typeof patch?.content === "string" ? patch.content : ""
+    const old = currentMap.get(path)?.content
+    const errs = validatePatchContent(path, content, old)
+    if (errs.length) report[path] = errs
+  }
+  return report
+}
+
+// جولة إصلاح ذاتي: يعيد إرسال الملفات المكسورة مع أخطائها للنموذج لإصلاحها فقط.
+async function repairDevPatches(request: string, brokenPatches: any[], report: Record<string, string[]>) {
+  const source = brokenPatches
+    .map((p) => {
+      const errs = (report[String(p?.path || "")] || []).join("؛ ")
+      return `\n===== FILE: ${p.path} (أخطاء يجب إصلاحها: ${errs}) =====\n${p.content}\n===== END FILE =====`
+    })
+    .join("\n")
+  const system = `أنت مبرمج ويب محترف. الملفات التالية فشلت في فحص السلامة البنيوية (أقواس/وسوم غير متوازنة أو JSON غير صالح أو بقايا دمج). أصلح كل ملف بحيث يصبح صحيحاً بناء الجملة ومتوازن الأقواس والوسوم، مع الحفاظ التام على المنطق والوظيفة والتصميم المقصود من التعديل الأصلي. لا تغيّر السلوك المطلوب، فقط أصلح الخطأ البنيوي.
+أعد JSON فقط: {"patches":[{"path":"...","content":"المحتوى الكامل الصحيح للملف","reason":"ما تم إصلاحه"}]}`
+  const prompt = `طلب المسؤول الأصلي:\n${request}\n\nالملفات المكسورة مع أخطائها:\n${source}`
+  const text = await runText(prompt, system, 0.05)
+  const parsed = extractJson(text) || {}
+  return Array.isArray(parsed?.patches) ? parsed.patches : []
 }
 
 async function buildDevPatches(request: string, plan: any, files: Array<{path:string,content:string}>) {
@@ -566,10 +663,44 @@ async function autoApplyDevRequest(request: string, plan: any) {
     }
   }
   const patchResult = await buildDevPatches(request, plan, current)
-  const patches = Array.isArray(patchResult?.patches) ? patchResult.patches : []
+  let patches = Array.isArray(patchResult?.patches) ? patchResult.patches : []
   if (!patches.length) throw new Error("لم ينتج الذكاء الاصطناعي ��عديلات قابلة للتطبيق")
   if (patches.length > 12) throw new Error("عدد التعديلات المقترحة يتجاوز ال��د الآمن")
   const currentMap = new Map(current.map(x => [x.path, x]))
+
+  // ===== مرحلة الاختبار والإصلاح الذاتي قبل الحفظ =====
+  // نفحص سلامة كل ملف بنيوياً، وإذا وُجدت أخطاء نطلب من النموذج إصلاح الملفات المكسورة فقط،
+  // ونعيد الفحص حتى نجاحه أو استنفاد المحاولات. لا يُحفظ أي ملف مكسور في المستودع.
+  const patchMap = new Map<string, any>(patches.map((p: any) => [String(p?.path || ""), p]))
+  const repairLog: string[] = []
+  let report = validatePatches(patches, currentMap)
+  for (let attempt = 1; attempt <= 2 && Object.keys(report).length; attempt++) {
+    const brokenPaths = Object.keys(report)
+    repairLog.push(`المحاولة ${attempt}: أخطاء بنيوية في ${brokenPaths.join("، ")} — جارٍ الإصلاح الذاتي.`)
+    const brokenPatches = brokenPaths.map((p) => patchMap.get(p)).filter(Boolean)
+    let fixed: any[] = []
+    try {
+      fixed = await repairDevPatches(request, brokenPatches, report)
+    } catch (e: any) {
+      repairLog.push(`تعذّر الإصلاح الذاتي: ${String(e?.message || "").slice(0, 120)}`)
+      break
+    }
+    for (const f of fixed) {
+      const fp = String(f?.path || "")
+      if (fp && typeof f?.content === "string" && patchMap.has(fp)) {
+        patchMap.set(fp, { ...patchMap.get(fp), content: f.content, reason: f.reason || patchMap.get(fp).reason })
+      }
+    }
+    patches = Array.from(patchMap.values())
+    report = validatePatches(patches, currentMap)
+  }
+  if (Object.keys(report).length) {
+    const summary = Object.entries(report)
+      .map(([p, errs]) => `${p}: ${(errs as string[]).join("؛ ")}`)
+      .join(" | ")
+    throw new Error(`فشل اختبار سلامة الكود بعد محاولات الإصلاح الذاتي، ولم يُحفظ أي ملف حفاظاً على استقرار المشروع. التفاصيل: ${summary.slice(0, 400)}`)
+  }
+
   const applied = []
   for (const patch of patches) {
     const path = String(patch?.path || "")
@@ -607,6 +738,8 @@ async function autoApplyDevRequest(request: string, plan: any) {
     applied,
     summary: patchResult.summary || "تم تطبيق التعديلات المطلوبة",
     tests: Array.isArray(patchResult.tests) ? patchResult.tests : [],
+    // سجل الاختبار الذاتي: يوضّح ما اكتُشف من أخطاء بنيوية وكيف أُصلح قبل الحفظ.
+    selfCheck: repairLog.length ? repairLog : ["اجتاز الكود فحص السلامة البنيوية من المحاولة الأولى دون أخطاء."],
     deployTriggered,
     deployStatus,
     deploymentMode,
@@ -696,19 +829,19 @@ export async function POST(req: Request) {
     // 5) تفريغ صوت حقيقي + تصحيح (تحليل الصوت على الخادم)
     if (mode === "transcribe_and_grade") {
       const { audioBase64, mimeType, surah, from, to, expectedText } = payload
-      const apiKey = process.env.OPENROUTER_API_KEY
-      if (!apiKey) throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
+      const apiKey = process.env.GROQ_API_KEY
+      if (!apiKey) throw new Error("GROQ_API_KEY غير مُهيّأ على الخادم")
       if (!audioBase64) {
         return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
       }
-      // OpenRouter يقبل الصوت بصيغة wav أو mp3 فقط (input_audio).
+      // Groq يقبل الصوت بصيغة wav أو mp3 (تفريغ Whisper).
       // المتصفح يحوّل التسجيل إلى wav قبل الإرسال؛ نستنتج الصيغة من mimeType.
       let audioFormat = "wav"
       const mt = (typeof mimeType === "string" ? mimeType : "").toLowerCase()
       if (mt.includes("mpeg") || mt.includes("mp3")) audioFormat = "mp3"
       else if (mt.includes("wav")) audioFormat = "wav"
 
-      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ضبطه، وإلا OpenRouter).
+      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ضبطه، وإلا Groq).
       const transcript = await transcribeAudio(audioBase64, audioFormat)
 
       // المرحلة الثانية: مقارنة التفريغ بالنص القرآني المطلوب وحساب الدرجة.
@@ -747,7 +880,7 @@ export async function POST(req: Request) {
           ready: pf.ok,
           reason: pf.reason || "",
           checks: {
-            openrouter: !!process.env.OPENROUTER_API_KEY,
+            groq: !!process.env.GROQ_API_KEY,
             githubToken: !!GITHUB_TOKEN,
             githubOwner: !!GITHUB_OWNER,
             githubRepo: !!GITHUB_REPO,
@@ -844,16 +977,16 @@ export async function POST(req: Request) {
     return json({ error: "وضع غير معروف", diagnostics }, 400)
   } catch (err: any) {
     const raw = err?.message ? String(err.message) : "خطأ غير معروف"
-    // رسائل عربية أوضح لحالات OpenRouter الشائعة
+    // رسائل عربية أوضح لحالات Groq الشائعة
     let friendly = "تعذر تنفيذ طلب الذكاء الاصطناعي على الخادم"
-    if (raw.includes("OPENROUTER_API_KEY")) {
-      friendly = "مفتاح OpenRouter غير مُهيّأ على الخادم"
+    if (raw.includes("GROQ_API_KEY")) {
+      friendly = "مفتاح Groq غير مُهيّأ على الخادم"
     } else if (raw.includes("402") || raw.toLowerCase().includes("balance") || raw.toLowerCase().includes("credit")) {
-      friendly = "رصيد حساب OpenRouter غير كافٍ لتحليل الصوت — يرجى إضافة رصيد إلى الحساب"
+      friendly = "رصيد حساب Groq غير كافٍ لتحليل الصوت — يرجى التحقق من الحساب"
     } else if (raw.includes("401")) {
-      friendly = "مفتاح OpenRouter غير صالح"
+      friendly = "مفتاح Groq غير صالح"
     } else if (raw.includes("429")) {
-      friendly = "تم تجاوز حد الطلبات على OpenRouter، حاول لاحقاً"
+      friendly = "تم ��جاوز حد الطلبات على Groq، حاول لاحقاً"
     }
     return json(
       {
