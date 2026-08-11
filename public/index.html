@@ -519,7 +519,7 @@ tr:hover { background: var(--table-hover); }
         <button class="btn" style="background:#dc3545;color:#fff;" onclick="clearDevAudit()">🗑️ مسح السجل</button>
       </div>
     </div>
-    <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:12px;">يُسجَّل هنا كل طلب ينفّذه مساعد التطوير: الوقت، المسؤول، نص الطلب، الحالة (نجاح/فشل/محظور)، الملفات التي تغيّرت وروابط الـcommit. يُحفَظ السجل محلياً في هذا المتصفح.</p>
+    <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:12px;">يُسجَّل هنا كل طلب ينفّذه مساعد التطوير: الوقت، المسؤول، نص الطلب، الحالة (نج��ح/فشل/محظور)، الملفات التي تغيّرت وروابط الـcommit. يُحفَظ السجل محلياً في هذا المتصفح.</p>
     <div id="devAuditLog"></div>
   </div>
 </div>
@@ -927,7 +927,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ملفات المسؤول لولي الأمر -->
 <div id="parentFilesPage" class="page hidden">
-  <div class="page-header"><h2>📁 الملفات المرسلة لي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📁 الملفات المرسلة ��ي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="parentFilesContent"></div>
 </div>
 
@@ -1083,7 +1083,7 @@ const SURAH_AYAH_COUNTS = {
 
 const ALL_SURAHS_ORDERED = [
   "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
-  "الإسراء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
+  "الإس��اء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
   "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الإنفطار",
@@ -1116,7 +1116,42 @@ if(localStorage.getItem('theme') === 'dark') {
 }
 
 function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
-function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+let studentSaveQueue = Promise.resolve();
+let studentServerReady = false;
+function setData(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+  if(key === 'students' && studentServerReady) {
+    const snapshot = JSON.parse(JSON.stringify(val));
+    studentSaveQueue = studentSaveQueue
+      .catch(() => {})
+      .then(() => fetch('/api/students', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({students: snapshot})
+      }))
+      .then(response => { if(!response.ok) throw new Error('Student sync failed'); })
+      .catch(error => console.error('تعذر حفظ بيانات الطلاب على الخادم:', error));
+  }
+}
+async function hydrateStudentsFromServer() {
+  try {
+    const response = await fetch('/api/students', {cache: 'no-store'});
+    if(!response.ok) throw new Error('Student load failed');
+    const payload = await response.json();
+    const serverStudents = Array.isArray(payload.students) ? payload.students : [];
+    const localStudents = getData('students');
+    if(serverStudents.length) {
+      localStorage.setItem('students', JSON.stringify(serverStudents));
+    }
+    studentServerReady = true;
+    if(!serverStudents.length && localStudents.length) {
+      setData('students', localStudents);
+      await studentSaveQueue;
+    }
+  } catch(error) {
+    console.error('تعذر تحميل بيانات الطلاب من الخادم:', error);
+  }
+}
 
 if(!localStorage.getItem('initialized_v7')) {
   setData('subjects', [
@@ -3269,7 +3304,7 @@ async function runDevAssistant(){
   if(dangers.length){
     const confirmed = confirm(
       '⚠️ تحذير: قد يتضمن هذا الطلب عملية حسّاسة:\n\n- '+dangers.join('\n- ')+
-      '\n\nهذه العمليات قد تؤثر على البيانات أو الأمان أو المستخدمين. لن يُنفَّذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتابعة والتنفيذ التلقائي؟'
+      '\n\nهذه العمليات قد تؤثر على البيانات أو الأمان أو المستخدمين. لن يُنفَّذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتا��عة والتنفيذ التلقائي؟'
     );
     if(!confirmed){
       recordDevAudit({ status:'blocked', request, summary:'أُلغي بواسطة المسؤول قبل التنفيذ.', flagged:dangers });
@@ -5213,22 +5248,27 @@ function logout() {
   showPage('lockScreen');
 }
 
-// Restore session on page load
-if(restoreSession()) {
-  if(currentType === 'admin' && currentUser) {
-    showPage('adminDashboard');
-  } else if(currentType === 'student' && currentUser) {
-    renderStudentDashboard();
-    showPage('studentDashboard');
-  } else if(currentType === 'parent' && currentUser) {
-    renderParentDashboard();
-    showPage('parentDashboard');
+// Load persistent student data before restoring the current session.
+(async function initializeSite() {
+  await hydrateStudentsFromServer();
+  if(restoreSession()) {
+    if(currentType === 'admin' && currentUser) {
+      showPage('adminDashboard');
+    } else if(currentType === 'student' && currentUser) {
+      const freshStudent = getData('students').find(student => student.id === currentUser.id);
+      if(freshStudent) currentUser = freshStudent;
+      renderStudentDashboard();
+      showPage('studentDashboard');
+    } else if(currentType === 'parent' && currentUser) {
+      renderParentDashboard();
+      showPage('parentDashboard');
+    } else {
+      showPage('lockScreen');
+    }
   } else {
     showPage('lockScreen');
   }
-} else {
-  showPage('lockScreen');
-}
+})();
 </script>
 
 <!-- File View Modal -->
