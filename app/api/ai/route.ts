@@ -3,9 +3,11 @@ export const maxDuration = 60
 // ===== مزوّد الذكاء الاصطناعي: Groq =====
 // المفتاح يُقرأ من متغيّر البيئة على الخادم فقط ولا يُرسل أبداً إلى المتصفح.
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-// نموذج نصي احترافي + نموذج تفريغ صوتي (كلاهما عبر Groq)
-const TEXT_MODEL = "llama-3.3-70b-versatile"
-const TRANSCRIBE_MODEL = "whisper-large-v3"
+// نموذج نصي احترافي (production) + نموذج تفريغ صوتي، كلاهما عبر Groq.
+// النماذج قابلة للضبط عبر متغيرات البيئة لتفادي أي إيقاف مستقبلي دون تعديل الكود.
+// الافتراضي gpt-oss-120b لأنه نموذج production مستقر وهو البديل الرسمي لـ llama-3.3-70b-versatile الموقوف.
+const TEXT_MODEL = (process.env.GROQ_TEXT_MODEL || "openai/gpt-oss-120b").trim()
+const TRANSCRIBE_MODEL = (process.env.GROQ_TRANSCRIBE_MODEL || "whisper-large-v3").trim()
 const GROQ_AUDIO_TRANSCRIPTIONS_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
 
 // ===== مزوّد تحويل الصوت إلى نص (Speech-to-Text) قابل للتبديل عبر متغيرات البيئة =====
@@ -260,7 +262,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 // ===== مساعد تطوير الموقع (للمسؤول فقط) =====
 // وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج ��سياق للتحليل.
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
-الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
+الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر مو��فقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
 - "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي على:
   • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') والرجوع عبر goBack().
@@ -475,7 +477,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
   if (!AUTO_DEV_ENABLED) {
     return { ok: false, reason: "التطبيق التلقائي غير مفعّل. اضبط DEV_ASSISTANT_AUTO_APPLY=true على الخادم." }
   }
-  // التحقق من الشبكة + وجود المستودع فعلياً + صلاحية الرمز.
+  // التحقق من ��لشبكة + وجود المستودع فعلياً + صلاحية الرمز.
   let repo: any
   try {
     repo = await githubGetRepo()
@@ -509,6 +511,107 @@ function safeProjectPath(path: string) {
   if (!normalized || normalized.includes("..") || normalized.startsWith(".git/")) return false
   if (normalized === ".env" || normalized.startsWith(".env.") && !normalized.endsWith(".example")) return false
   return true
+}
+
+// ===== طبقة الاختبار والتحقق الذاتي للوكيل =====
+// فحص ثابت (static analysis) لكل ملف مُعدّل للتأكد من سلامته البنيوية قبل الحفظ في المستودع.
+// يكتشف: JSON غير صالح، أقواس/وسوم غير متوازنة، ملف فارغ بالخطأ، وبقايا علامات دمج Git.
+// لا يشغّل الكود، لكنه يمنع تطبيق تعديلات مكسورة بناءً على تحليل النص.
+
+// يوازن الأقواس {} () [] مع تجاهل ما يقع داخل السلاسل النصية والتعليقات في ملفات JS/TS.
+function checkBracketBalance(content: string, isCode: boolean): string[] {
+  const errors: string[] = []
+  const stack: Array<{ ch: string; line: number }> = []
+  const pairs: Record<string, string> = { ")": "(", "]": "[", "}": "{" }
+  const openers = new Set(["(", "[", "{"])
+  const closers = new Set([")", "]", "}"])
+  let line = 1
+  let inStr: string | null = null
+  let inLineComment = false
+  let inBlockComment = false
+  for (let i = 0; i < content.length; i++) {
+    const c = content[i]
+    const next = content[i + 1]
+    if (c === "\n") {
+      line++
+      inLineComment = false
+      continue
+    }
+    if (inLineComment) continue
+    if (inBlockComment) {
+      if (c === "*" && next === "/") { inBlockComment = false; i++ }
+      continue
+    }
+    if (inStr) {
+      if (c === "\\") { i++; continue }
+      if (c === inStr) inStr = null
+      continue
+    }
+    if (isCode) {
+      if (c === "/" && next === "/") { inLineComment = true; i++; continue }
+      if (c === "/" && next === "*") { inBlockComment = true; i++; continue }
+      if (c === '"' || c === "'" || c === "`") { inStr = c; continue }
+    }
+    if (openers.has(c)) stack.push({ ch: c, line })
+    else if (closers.has(c)) {
+      const top = stack.pop()
+      if (!top || top.ch !== pairs[c]) {
+        errors.push(`قوس إغلاق غير متطابق '${c}' عند السطر ${line}`)
+        if (errors.length > 5) break
+      }
+    }
+  }
+  if (stack.length && errors.length <= 5) {
+    const t = stack[stack.length - 1]
+    errors.push(`قوس '${t.ch}' مفتوح ولم يُغلق (بدأ عند السطر ${t.line})`)
+  }
+  return errors
+}
+
+// فحص شامل لملف واحد حسب امتداده. old هو المحتوى السابق (للكشف عن الإفراغ بالخطأ).
+function validatePatchContent(path: string, content: string, old?: string): string[] {
+  const errors: string[] = []
+  const lower = path.toLowerCase()
+  if (typeof content !== "string") return [`محتوى الملف ${path} غير نصّي`]
+  if (old && old.trim() && !content.trim()) errors.push(`الملف ${path} أصبح فارغاً بينما لم يكن فارغاً — يُرجّح أنه حذف بالخطأ`)
+  if (/^(<{7}|={7}|>{7})/m.test(content)) errors.push(`الملف ${path} يحتوي على علامات دمج Git غير محلولة (<<<<<<< أو =======)`)
+  if (lower.endsWith(".json")) {
+    try { JSON.parse(content) } catch (e: any) { errors.push(`JSON غير صالح في ${path}: ${String(e?.message || "").slice(0, 120)}`) }
+    return errors
+  }
+  const isCode = /\.(ts|tsx|js|jsx|mjs|cjs|css)$/.test(lower)
+  const isHtml = lower.endsWith(".html") || lower.endsWith(".htm")
+  if (isCode || isHtml) errors.push(...checkBracketBalance(content, isCode))
+  return errors
+}
+
+// يفحص كل الرقع ويعيد خريطة الأخطاء لكل مسار (المسارات السليمة لا تظهر).
+function validatePatches(patches: any[], currentMap: Map<string, { content: string }>): Record<string, string[]> {
+  const report: Record<string, string[]> = {}
+  for (const patch of patches) {
+    const path = String(patch?.path || "")
+    const content = typeof patch?.content === "string" ? patch.content : ""
+    const old = currentMap.get(path)?.content
+    const errs = validatePatchContent(path, content, old)
+    if (errs.length) report[path] = errs
+  }
+  return report
+}
+
+// جولة إصلاح ذاتي: يعيد إرسال الملفات المكسورة مع أخطائها للنموذج لإصلاحها فقط.
+async function repairDevPatches(request: string, brokenPatches: any[], report: Record<string, string[]>) {
+  const source = brokenPatches
+    .map((p) => {
+      const errs = (report[String(p?.path || "")] || []).join("؛ ")
+      return `\n===== FILE: ${p.path} (أخطاء يجب إصلاحها: ${errs}) =====\n${p.content}\n===== END FILE =====`
+    })
+    .join("\n")
+  const system = `أنت مبرمج ويب محترف. الملفات التالية فشلت في فحص السلامة البنيوية (أقواس/وسوم غير متوازنة أو JSON غير صالح أو بقايا دمج). أصلح كل ملف بحيث يصبح صحيحاً بناء الجملة ومتوازن الأقواس والوسوم، مع الحفاظ التام على المنطق والوظيفة والتصميم المقصود من التعديل الأصلي. لا تغيّر السلوك المطلوب، فقط أصلح الخطأ البنيوي.
+أعد JSON فقط: {"patches":[{"path":"...","content":"المحتوى الكامل الصحيح للملف","reason":"ما تم إصلاحه"}]}`
+  const prompt = `طلب المسؤول الأصلي:\n${request}\n\nالملفات المكسورة مع أخطائها:\n${source}`
+  const text = await runText(prompt, system, 0.05)
+  const parsed = extractJson(text) || {}
+  return Array.isArray(parsed?.patches) ? parsed.patches : []
 }
 
 async function buildDevPatches(request: string, plan: any, files: Array<{path:string,content:string}>) {
@@ -560,10 +663,44 @@ async function autoApplyDevRequest(request: string, plan: any) {
     }
   }
   const patchResult = await buildDevPatches(request, plan, current)
-  const patches = Array.isArray(patchResult?.patches) ? patchResult.patches : []
+  let patches = Array.isArray(patchResult?.patches) ? patchResult.patches : []
   if (!patches.length) throw new Error("لم ينتج الذكاء الاصطناعي ��عديلات قابلة للتطبيق")
   if (patches.length > 12) throw new Error("عدد التعديلات المقترحة يتجاوز ال��د الآمن")
   const currentMap = new Map(current.map(x => [x.path, x]))
+
+  // ===== مرحلة الاختبار والإصلاح الذاتي قبل الحفظ =====
+  // نفحص سلامة كل ملف بنيوياً، وإذا وُجدت أخطاء نطلب من النموذج إصلاح الملفات المكسورة فقط،
+  // ونعيد الفحص حتى نجاحه أو استنفاد المحاولات. لا يُحفظ أي ملف مكسور في المستودع.
+  const patchMap = new Map<string, any>(patches.map((p: any) => [String(p?.path || ""), p]))
+  const repairLog: string[] = []
+  let report = validatePatches(patches, currentMap)
+  for (let attempt = 1; attempt <= 2 && Object.keys(report).length; attempt++) {
+    const brokenPaths = Object.keys(report)
+    repairLog.push(`المحاولة ${attempt}: أخطاء بنيوية في ${brokenPaths.join("، ")} — جارٍ الإصلاح الذاتي.`)
+    const brokenPatches = brokenPaths.map((p) => patchMap.get(p)).filter(Boolean)
+    let fixed: any[] = []
+    try {
+      fixed = await repairDevPatches(request, brokenPatches, report)
+    } catch (e: any) {
+      repairLog.push(`تعذّر الإصلاح الذاتي: ${String(e?.message || "").slice(0, 120)}`)
+      break
+    }
+    for (const f of fixed) {
+      const fp = String(f?.path || "")
+      if (fp && typeof f?.content === "string" && patchMap.has(fp)) {
+        patchMap.set(fp, { ...patchMap.get(fp), content: f.content, reason: f.reason || patchMap.get(fp).reason })
+      }
+    }
+    patches = Array.from(patchMap.values())
+    report = validatePatches(patches, currentMap)
+  }
+  if (Object.keys(report).length) {
+    const summary = Object.entries(report)
+      .map(([p, errs]) => `${p}: ${(errs as string[]).join("؛ ")}`)
+      .join(" | ")
+    throw new Error(`فشل اختبار سلامة الكود بعد محاولات الإصلاح الذاتي، ولم يُحفظ أي ملف حفاظاً على استقرار المشروع. التفاصيل: ${summary.slice(0, 400)}`)
+  }
+
   const applied = []
   for (const patch of patches) {
     const path = String(patch?.path || "")
@@ -601,6 +738,8 @@ async function autoApplyDevRequest(request: string, plan: any) {
     applied,
     summary: patchResult.summary || "تم تطبيق التعديلات المطلوبة",
     tests: Array.isArray(patchResult.tests) ? patchResult.tests : [],
+    // سجل الاختبار الذاتي: يوضّح ما اكتُشف من أخطاء بنيوية وكيف أُصلح قبل الحفظ.
+    selfCheck: repairLog.length ? repairLog : ["اجتاز الكود فحص السلامة البنيوية من المحاولة الأولى دون أخطاء."],
     deployTriggered,
     deployStatus,
     deploymentMode,
@@ -847,7 +986,7 @@ export async function POST(req: Request) {
     } else if (raw.includes("401")) {
       friendly = "مفتاح Groq غير صالح"
     } else if (raw.includes("429")) {
-      friendly = "تم تجاوز حد الطلبات على Groq، حاول لاحقاً"
+      friendly = "تم ��جاوز حد الطلبات على Groq، حاول لاحقاً"
     }
     return json(
       {
