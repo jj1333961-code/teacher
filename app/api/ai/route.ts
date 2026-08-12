@@ -1,26 +1,15 @@
-import { generateText } from "ai"
+import { Pool } from "pg"
 
 export const maxDuration = 60
 
-// ===== مزوّد الذكاء الاصطناعي: Vercel AI Gateway =====
-const TEXT_MODEL = "google/gemini-3.6-flash"
-
-// OpenRouter متروك فقط كمسار احتياطي اختياري لتحويل التسجيلات الصوتية القديمة.
-// لا يحتاج النص إلى مفتاح مزود داخل المتصفح؛ المصادقة تتم على الخادم عبر Vercel AI Gateway.
-const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe"
-const OPENROUTER_AUDIO_TRANSCRIPTIONS_URL = "https://openrouter.ai/api/v1/audio/transcriptions"
-
-// ===== مزوّد تحويل الصوت إلى نص (Speech-to-Text) قابل للتبديل عبر متغيرات البيئة =====
-// افتراضياً نستخدم OpenRouter. عند ضبط SPEECH_TO_TEXT_API_KEY يُستخدم مزوّد خارجي متوافق مع OpenAI
-// (مثل OpenAI Whisper). كل هذه القيم Server-side فقط ولا تصل أبداً إلى المتصفح.
-const STT_API_KEY = (process.env.SPEECH_TO_TEXT_API_KEY || "").trim()
-const STT_URL = (process.env.SPEECH_TO_TEXT_URL || "https://api.openai.com/v1/audio/transcriptions").trim()
-const STT_MODEL = (process.env.SPEECH_TO_TEXT_MODEL || "whisper-1").trim()
-const sttProviderConfigured = !!STT_API_KEY
-// مزوّد التحقق من هوية المتحدث (Speaker Verification) — نقطة توسعة اختيارية عبر البيئة.
+// جميع طلبات النص والصوت تتصل بـ Groq مباشرة من الخادم.
+const GROQ_API_URL = "https://api.groq.com/openai/v1"
+const TEXT_MODEL = "llama-3.3-70b-versatile"
+const TRANSCRIBE_MODEL = "whisper-large-v3-turbo"
+const GROQ_API_KEY = (process.env.GROQ_API_KEY || "").trim()
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
-
-const keyConfigured = true
+const keyConfigured = !!GROQ_API_KEY
+const auditPool = new Pool({ connectionString: process.env.DATABASE_URL })
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -70,15 +59,26 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-async function gatewayText(prompt: string, system: string, temperature: number): Promise<string> {
-  const { text } = await generateText({
-    model: TEXT_MODEL,
-    system,
-    prompt,
-    temperature,
+async function groqText(prompt: string, system: string, temperature: number): Promise<string> {
+  if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY غير مُهيّأ على الخادم")
+  const res = await fetch(`${GROQ_API_URL}/chat/completions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: TEXT_MODEL,
+      messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
+      temperature,
+    }),
+    cache: "no-store",
   })
-  if (!text.trim()) throw new Error("رد فارغ من Vercel AI Gateway")
-  return text
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "")
+    throw new Error(`Groq ${res.status}: ${detail.slice(0, 300)}`)
+  }
+  const data = await res.json()
+  const text = data?.choices?.[0]?.message?.content
+  if (typeof text !== "string" || !text.trim()) throw new Error("رد فارغ من Groq")
+  return text.trim()
 }
 
 function json(data: unknown, status = 200) {
@@ -130,51 +130,32 @@ function extractJson(text: string): any {
 }
 
 async function runText(prompt: string, system: string, temperature: number) {
-  return gatewayText(prompt, system, temperature)
+  return groqText(prompt, system, temperature)
 }
 
-// تحويل الصوت إلى نص مع دعم مزوّد خارجي قابل للتبديل عبر البيئة.
-// إن ضُبط SPEECH_TO_TEXT_API_KEY نستخدم مزوّداً متوافقاً مع OpenAI (multipart)،
-// وإلا نعود تلقائياً إلى OpenRouter. لا يتعطّل النظام إذا لم يُضبط مزوّد خارجي.
 async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
-  // المزوّد الخارجي المخصّص (OpenAI-compatible) عند توفّر مفتاحه.
-  if (sttProviderConfigured) {
-    const bytes = Buffer.from(audioBase64, "base64")
-    const mime = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
-    const form = new FormData()
-    form.append("file", new Blob([bytes], { type: mime }), `recording.${audioFormat}`)
-    form.append("model", STT_MODEL)
-    form.append("language", "ar")
-    const res = await fetch(STT_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${STT_API_KEY}` },
-      body: form,
-    })
-    if (!res.ok) {
-      const errText = await res.text().catch(() => "")
-      throw new Error(`STT provider ${res.status}: ${errText.slice(0, 300)}`)
-    }
-    const data = await res.json().catch(() => null)
-    return typeof data?.text === "string" ? data.text.trim() : ""
-  }
-  // الافتراضي: OpenRouter.
-  const apiKey = process.env.OPENROUTER_API_KEY
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
-  const res = await fetch(OPENROUTER_AUDIO_TRANSCRIPTIONS_URL, {
+  if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY غير مُهيّأ على الخادم")
+  const bytes = Buffer.from(audioBase64, "base64")
+  const mime = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
+  const form = new FormData()
+  form.append("file", new Blob([bytes], { type: mime }), `recording.${audioFormat}`)
+  form.append("model", TRANSCRIBE_MODEL)
+  form.append("language", "ar")
+  form.append("response_format", "json")
+  const res = await fetch(`${GROQ_API_URL}/audio/transcriptions`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: TRANSCRIBE_MODEL,
-      input_audio: { data: audioBase64, format: audioFormat },
-      language: "ar",
-    }),
+    headers: { Authorization: `Bearer ${GROQ_API_KEY}` },
+    body: form,
+    cache: "no-store",
   })
   if (!res.ok) {
-    const errText = await res.text().catch(() => "")
-    throw new Error(`OpenRouter transcription ${res.status}: ${errText.slice(0, 300)}`)
+    const detail = await res.text().catch(() => "")
+    throw new Error(`Groq transcription ${res.status}: ${detail.slice(0, 300)}`)
   }
   const data = await res.json().catch(() => null)
-  return typeof data?.text === "string" ? data.text.trim() : ""
+  const text = data?.text
+  if (typeof text !== "string" || !text.trim()) throw new Error("تعذر استخراج نص من التسجيل")
+  return text.trim()
 }
 
 // ===== أنظمة التعليمات لكل وضع =====
@@ -241,10 +222,10 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولين، إعدادات المسؤول (adminSettings).
   • تخزين البيانات محلياً عبر getData(key)/setData(key,value) على localStorage (مفاتيح مثل students, admins, messages, files).
   • حالة الجلسة: currentUser, currentType ('admin'|'student'|'parent'), currentAdminId.
-  • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي ينادي /api/ai.
+  • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد�� /api/ai.
   • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
-- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم OpenRouter (OPENROUTER_API_KEY) وتدعم الأوضاع: generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant, بالإضافة إلى وضع النص الحر (prompt).
+- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم Groq مباشرة عبر GROQ_API_KEY وتدعم الأوضاع: generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant, بالإضافة إلى وضع النص الحر (prompt).
 - "app/layout.tsx": تخطيط الجذر.
 - "app/page.tsx": صفحة Next.js احتياطية؛ الجذر يعاد توجيهه إلى public/index.html عبر next.config.mjs.
 - "app/globals.css": الأنماط العامة لـNext.js.
@@ -337,17 +318,40 @@ async function githubListTree(ref?: string) {
   return { files, commitSha }
 }
 
-async function githubPutFile(path: string, content: string, sha?: string, message = "chore: apply AI development assistant change") {
-  if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
-  const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${path.split("/").map(encodeURIComponent).join("/")}`
-  const body: any = { message, content: Buffer.from(content, "utf8").toString("base64"), branch: await resolveBranch() }
-  if (sha) body.sha = sha
-  const res = await fetch(url, { method: "PUT", headers: githubHeaders(), body: JSON.stringify(body), cache: "no-store" })
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "")
-    throw new Error(`GitHub ${res.status}: تعذر حفظ ${path} ${detail.slice(0, 200)}`)
+async function githubCommitFiles(files: Array<{ path: string; content: string }>, message: string) {
+  const branch = await resolveBranch()
+  const current = await githubListTree(branch)
+  const commitRes = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/commits/${current.commitSha}`, { headers: githubHeaders(), cache: "no-store" })
+  if (!commitRes.ok) throw new Error(`GitHub ${commitRes.status}: تعذر قراءة أساس commit`)
+  const parent = await commitRes.json()
+  const treeEntries = []
+  for (const file of files) {
+    const blobRes = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/blobs`, {
+      method: "POST", headers: githubHeaders(),
+      body: JSON.stringify({ content: file.content, encoding: "utf-8" }), cache: "no-store",
+    })
+    if (!blobRes.ok) throw new Error(`GitHub ${blobRes.status}: تعذر إنشاء blob للملف ${file.path}`)
+    const blob = await blobRes.json()
+    treeEntries.push({ path: file.path, mode: "100644", type: "blob", sha: blob.sha })
   }
-  return await res.json()
+  const treeRes = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/trees`, {
+    method: "POST", headers: githubHeaders(),
+    body: JSON.stringify({ base_tree: parent.tree.sha, tree: treeEntries }), cache: "no-store",
+  })
+  if (!treeRes.ok) throw new Error(`GitHub ${treeRes.status}: تعذر إنشاء شجرة التعديلات`)
+  const tree = await treeRes.json()
+  const newCommitRes = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/commits`, {
+    method: "POST", headers: githubHeaders(),
+    body: JSON.stringify({ message, tree: tree.sha, parents: [current.commitSha] }), cache: "no-store",
+  })
+  if (!newCommitRes.ok) throw new Error(`GitHub ${newCommitRes.status}: تعذر إنشاء commit`)
+  const commit = await newCommitRes.json()
+  const refRes = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/refs/heads/${encodeURIComponent(branch)}`, {
+    method: "PATCH", headers: githubHeaders(),
+    body: JSON.stringify({ sha: commit.sha, force: false }), cache: "no-store",
+  })
+  if (!refRes.ok) throw new Error(`GitHub ${refRes.status}: تعذر تحديث الفرع ${branch}`)
+  return { sha: commit.sha, url: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/commit/${commit.sha}` }
 }
 
 // ملفات حسّاسة يُمنع حذفها تلقائياً لحماية المشروع من الأعطال (يتطلب تعديلها لا حذفها).
@@ -466,7 +470,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
       reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
-  // التحقق من أن الفرع المُحدد/الافتراضي قابل للحل.
+  // التحقق من أن الفرع المُحدد/الافتراضي قابل ��لحل.
   let branch = ""
   try {
     branch = await resolveBranch()
@@ -536,18 +540,23 @@ async function autoApplyDevRequest(request: string, plan: any) {
   if (!patches.length) throw new Error("لم ينتج الذكاء الاصطناعي ��عديلات قابلة للتطبيق")
   if (patches.length > 12) throw new Error("عدد التعديلات المقترحة يتجاوز ال��د الآمن")
   const currentMap = new Map(current.map(x => [x.path, x]))
-  const applied = []
+  const validPatches: Array<{ path: string; content: string; reason: string }> = []
   for (const patch of patches) {
     const path = String(patch?.path || "")
     const content = typeof patch?.content === "string" ? patch.content : null
     if (!safeProjectPath(path) || content === null || content.length > 500_000) continue
     const old = currentMap.get(path)
-    // منع الحذف المقنّع: الملف الجديد لا يمكن أن يكون فارغاً إذا كان الملف القديم غير فارغاً.
     if (old && old.content && !content.trim()) continue
-    const result = await githubPutFile(path, content, old?.sha, `chore: AI assistant - ${request.slice(0, 70)}`)
-    applied.push({ path, reason: patch.reason || "", commitUrl: result?.commit?.html_url || null })
+    validPatches.push({ path, content, reason: patch.reason || "" })
   }
-  if (!applied.length) throw new Error("لم يتم تطبيق أي ملف بعد التحقق من التعديلات")
+  if (!validPatches.length) throw new Error("لم يتم تطبيق أي ملف بعد التحقق من التعديلات")
+  const commit = await githubCommitFiles(validPatches, `chore: AI assistant - ${request.slice(0, 70)}`)
+  const applied = validPatches.map(patch => ({ path: patch.path, reason: patch.reason, commitUrl: commit.url }))
+  await auditPool.query(
+    `INSERT INTO change_log (id, source, prompt, branch, commit_sha, files, status)
+     VALUES ($1, 'dev-assistant', $2, $3, $4, $5::jsonb, 'committed')`,
+    [crypto.randomUUID(), request, await resolveBranch(), commit.sha, JSON.stringify(applied.map(item => item.path))],
+  )
   let deployTriggered = false
   let deployError = ""
   if (VERCEL_DEPLOY_HOOK_URL) {
@@ -662,19 +671,18 @@ export async function POST(req: Request) {
     // 5) تفريغ صوت حقيقي + تصحيح (تحليل الصوت على الخادم)
     if (mode === "transcribe_and_grade") {
       const { audioBase64, mimeType, surah, from, to, expectedText } = payload
-      const apiKey = process.env.OPENROUTER_API_KEY
-      if (!apiKey) throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
+      if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY غير مُهيّأ على الخادم")
       if (!audioBase64) {
         return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
       }
-      // OpenRouter يقبل الصوت بصيغة wav أو mp3 فقط (input_audio).
+      // Groq يستقبل الصوت بصيغة wav أو mp3 عبر multipart.
       // المتصفح يحوّل التسجيل إلى wav قبل الإرسال؛ نستنتج الصيغة من mimeType.
       let audioFormat = "wav"
       const mt = (typeof mimeType === "string" ? mimeType : "").toLowerCase()
       if (mt.includes("mpeg") || mt.includes("mp3")) audioFormat = "mp3"
       else if (mt.includes("wav")) audioFormat = "wav"
 
-      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ضبطه، وإلا OpenRouter).
+      // المرحلة الأولى: تفريغ صوتي مباشر عبر نموذج Whisper على Groq.
       const transcript = await transcribeAudio(audioBase64, audioFormat)
 
       // المرحلة الثانية: مقارنة التفريغ بالنص القرآني المطلوب وحساب الدرجة.
@@ -713,7 +721,7 @@ export async function POST(req: Request) {
           ready: pf.ok,
           reason: pf.reason || "",
           checks: {
-            aiGateway: true,
+            groq: keyConfigured,
             githubToken: !!GITHUB_TOKEN,
             githubOwner: !!GITHUB_OWNER,
             githubRepo: !!GITHUB_REPO,
@@ -731,7 +739,7 @@ export async function POST(req: Request) {
       })
     }
 
-    // 6) مساعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
+    // 6) م��اعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
     if (mode === "dev_assistant") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const request = typeof payload.request === "string" ? payload.request.trim() : ""
@@ -810,16 +818,13 @@ export async function POST(req: Request) {
     return json({ error: "وضع غير معروف", diagnostics }, 400)
   } catch (err: any) {
     const raw = err?.message ? String(err.message) : "خطأ غير معروف"
-    // رسائل عربية أوضح لحالات OpenRouter الشائعة
     let friendly = "تعذر تنفيذ طلب الذكاء الاصطناعي على الخادم"
-    if (raw.includes("OPENROUTER_API_KEY")) {
-      friendly = "تحويل الصوت غير مهيأ على الخادم"
-    } else if (raw.includes("402") || raw.toLowerCase().includes("balance") || raw.toLowerCase().includes("credit card") || raw.toLowerCase().includes("credit")) {
-      friendly = "يتطلب Vercel AI Gateway إضافة وسيلة دفع لتفعيل الرصيد المجاني"
+    if (raw.includes("GROQ_API_KEY")) {
+      friendly = "مفتاح Groq غير مهيأ على الخادم"
     } else if (raw.includes("401")) {
-      friendly = "تعذر توثيق Vercel AI Gateway"
+      friendly = "تعذر توثيق Groq"
     } else if (raw.includes("429")) {
-      friendly = "تم تجاوز حد طلبات Vercel AI Gateway، حاول لاحقاً"
+      friendly = "تم تجاوز حد طلبات Groq، حاول لاحقاً"
     }
     return json(
       {
