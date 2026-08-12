@@ -212,7 +212,7 @@ async function transcribeAudio(audioBase64: string, audioFormat: string): Promis
 
 // ===== أنظمة التعليمات لكل وضع =====
 
-const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم واختبارات الحفظ لطلاب التحفيظ.
+const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم واختبارات الحفظ لطلا�� التحفيظ.
 مهمتك توليد أسئلة اختبار قرآنية فقط، دقيقة ومبنية حصراً على نصوص الآيات المرسلة في sourceVerses.
 
 قواعد صارمة:
@@ -227,10 +227,15 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - level=easy: سؤال مباشر من النص.
 - level=medium: تمييز وربط أدق بين الآية والسورة أو موضعها.
 - level=hard: مواضع متشابهة وتمييز دقيق دون غموض أو معلومات من خارج النص.
-- لا تكرر السؤال نفسه.
+- اكتب السؤال بالعربية الفصحى الواضحة، دون أخطاء لغوية أو تعليمات مبهمة.
+- نوّع مواضع الآيات وصياغات الأسئلة، ولا تكرر السؤال أو stem أو الخيارات بين سؤالين.
+- اجعل المشتتات في الاختيار المتعدد معقولة وغير متطابقة، مع إجابة واحدة قطعية فقط.
+- رتّب النتائج بنفس ترتيب عناصر plans؛ أخرج جميع أسئلة الخطة الأولى ثم الثانية وهكذا.
+- prompt وstem وcorrect حقول نصية غير فارغة، ما عدا correct في التسجيل الصوتي فيجوز أن يكون نص المقطع المرجعي.
 - points=1 دائماً.
-- timeLimit لا يخرج عن الوقت الذي حدده المسؤول في plan؛ إذا كان موجوداً فاستخدمه كما هو.
+- timeLimit يساوي تماماً الوقت الذي حدده المسؤول في plan.
 - لا تضع إجابة صحيحة خارج الخيارات.
+- راجع الناتج داخلياً مرتين للتأكد من العدد والنوع والمستوى والنطاق وعدم التكرار قبل الإخراج.
 - أعد مصفوفة JSON فقط، دون Markdown أو شرح.
 
 شكل كل عنصر:
@@ -658,7 +663,52 @@ export async function POST(req: Request) {
       if (!Array.isArray(questions)) {
         return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
       }
-      return json({ result: questions, diagnostics })
+      const plans = Array.isArray(payload?.plans) ? payload.plans : []
+      const sources = Array.isArray(payload?.sourceVerses) ? payload.sourceVerses : []
+      const expectedCount = plans.reduce((sum: number, plan: any) => sum + Math.max(0, Number.parseInt(plan?.count) || 0), 0)
+      if (!expectedCount || questions.length !== expectedCount) {
+        return json({ error: `لم يلتزم مولد الأسئلة بالعدد المطلوب (${questions.length} من ${expectedCount})`, diagnostics }, 502)
+      }
+      const sourceBySurah = new Map(sources.map((source: any) => [String(source?.surah || "").trim(), source]))
+      const seen = new Set<string>()
+      let cursor = 0
+      const validated: any[] = []
+      for (const plan of plans) {
+        const count = Math.max(0, Number.parseInt(plan?.count) || 0)
+        const type = String(plan?.type || "")
+        const level = String(plan?.level || "")
+        const timeLimit = Math.max(5, Math.min(86399, Number.parseInt(plan?.timeLimit) || 60))
+        const optionsCount = Math.max(2, Math.min(6, Number.parseInt(plan?.optionsCount) || 4))
+        for (let index = 0; index < count; index += 1) {
+          const question = questions[cursor++] || {}
+          const prompt = typeof question.prompt === "string" ? question.prompt.trim() : ""
+          const stem = typeof question.stem === "string" ? question.stem.trim() : ""
+          const correct = typeof question.correct === "string" ? question.correct.trim() : ""
+          const surah = typeof question.surah === "string" ? question.surah.trim() : ""
+          const from = Math.max(1, Number.parseInt(question.from) || 1)
+          const to = Math.max(from, Number.parseInt(question.to) || from)
+          const source: any = sourceBySurah.get(surah)
+          const fingerprint = `${prompt}|${stem}`.replace(/\s+/g, " ").toLowerCase()
+          if (!prompt || !stem || !source || from < Number(source.from || 1) || to > Number(source.to || 0) || seen.has(fingerprint)) {
+            return json({ error: `السؤال ${cursor} غير موثوق أو مكرر أو خارج نصوص الآيات المتاحة`, diagnostics }, 502)
+          }
+          if (question.type !== type || question.level !== level) {
+            return json({ error: `السؤال ${cursor} لا يطابق النوع أو المستوى المطلوب`, diagnostics }, 502)
+          }
+          let options = Array.isArray(question.options) ? question.options.map((option: any) => String(option).trim()).filter(Boolean) : []
+          if (type === "truefalse") options = ["صح", "خطأ"]
+          if (type === "mcq" && (options.length !== optionsCount || new Set(options).size !== options.length || !options.includes(correct))) {
+            return json({ error: `خيارات السؤال ${cursor} غير صالحة أو لا تحتوي إجابة صحيحة واحدة واضحة`, diagnostics }, 502)
+          }
+          if (type === "truefalse" && !["صح", "خطأ"].includes(correct)) {
+            return json({ error: `إجابة سؤال الصح والخطأ رقم ${cursor} غير صالحة`, diagnostics }, 502)
+          }
+          if (type !== "audio" && !correct) return json({ error: `السؤال ${cursor} بلا إجابة مرجعية`, diagnostics }, 502)
+          seen.add(fingerprint)
+          validated.push({ ...question, type, level, surah, prompt, stem, correct, options, from, to, timeLimit, points: 1 })
+        }
+      }
+      return json({ result: validated, diagnostics })
     }
 
     // 3) تصحيح نص (أكمل)
