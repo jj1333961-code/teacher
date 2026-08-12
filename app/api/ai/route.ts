@@ -264,7 +264,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 {"transcript":"النص المفرغ","accepted":true/false,"score":number,"matchedPercent":number,"isRecitation":true/false,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
 // ===== مساعد تطوير الموقع (للمسؤول فقط) =====
-// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج ��سياق للتحليل.
+// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج ����سياق للتحليل.
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
 الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
@@ -803,7 +803,7 @@ export async function POST(req: Request) {
       if (payload.autoApply === true && plan.feasible !== false) {
         try {
           const applied = await autoApplyDevRequest(request, plan)
-          return json({ result: { ...plan, ...applied, applied: true, autoApplied: true, note: "تم تطبيق التعديلات تلقائياً على المشروع من الخادم. إذا كان Vercel مربوطاً بالمستودع فسيبدأ النشر تلقائياً، أو يمكن استخدام VERCEL_DEPLOY_HOOK_URL." }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
+          return json({ result: { ...plan, ...applied, applied: true, autoApplied: true, executionStages: ["فحص الجاهزية", "تحليل المشروع", "توليد التعديلات", "الحفظ في GitHub", applied.deployTriggered ? "بدء النشر" : "انتظار نشر Vercel"], estimatedSeconds: 120, note: "تم تطبيق التعديلات تلقائياً على المشروع من الخادم وحفظها في GitHub، ثم تشغيل النشر عند توفر Deploy Hook." }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
         } catch (e:any) {
           return json({ error: e?.message || "تعذر التطبيق التلقائي", result: { ...plan, applied: false, autoApplied: false }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } }, 500)
         }
