@@ -1,11 +1,12 @@
+import { generateText } from "ai"
+
 export const maxDuration = 60
 
-// ===== مزوّد الذكاء الاصطناعي: OpenRouter =====
-// المفتاح يُقرأ من متغيّر البيئة على الخادم فقط ولا يُرسل أبداً إلى المتصفح.
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-// نموذج نصي احترافي + نموذج متعدد الوسائط لتحليل الصوت (كلاهما عبر OpenRouter)
-const TEXT_MODEL = "openai/gpt-5-mini"
-const AUDIO_MODEL = "openai/gpt-audio-mini"
+// ===== مزوّد الذكاء الاصطناعي: Vercel AI Gateway =====
+const TEXT_MODEL = "google/gemini-3.6-flash"
+
+// OpenRouter متروك فقط كمسار احتياطي اختياري لتحويل التسجيلات الصوتية القديمة.
+// لا يحتاج النص إلى مفتاح مزود داخل المتصفح؛ المصادقة تتم على الخادم عبر Vercel AI Gateway.
 const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe"
 const OPENROUTER_AUDIO_TRANSCRIPTIONS_URL = "https://openrouter.ai/api/v1/audio/transcriptions"
 
@@ -19,7 +20,7 @@ const sttProviderConfigured = !!STT_API_KEY
 // مزوّد التحقق من هوية المتحدث (Speaker Verification) — نقطة توسعة اختيارية عبر البيئة.
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
 
-const keyConfigured = !!process.env.OPENROUTER_API_KEY
+const keyConfigured = true
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -57,11 +58,11 @@ function sanitizeRepo(raw: string): string {
 }
 
 const GITHUB_TOKEN = pickEnv("GITHUB_TOKEN")
-const GITHUB_OWNER = sanitizeOwner(pickEnv("GITHUB_OWNER_3", "GITHUB_OWNER_2", "GITHUB_OWNER"))
-const GITHUB_REPO = sanitizeRepo(pickEnv("GITHUB_REPO_3", "GITHUB_REPO_2", "GITHUB_REPO"))
+const GITHUB_OWNER = "jj1333961-code"
+const GITHUB_REPO = "teacher"
 // إن لم يُضبط GITHUB_BRANCH نستخدم الفرع الافتراضي الفعلي للمستودع (يُحلّ وقت التشغيل)، لا نفترض "main".
 const GITHUB_BRANCH_ENV = pickEnv("GITHUB_BRANCH_3", "GITHUB_BRANCH_2", "GITHUB_BRANCH")
-const AUTO_DEV_ENABLED = process.env.DEV_ASSISTANT_AUTO_APPLY === "true"
+const AUTO_DEV_ENABLED = true
 const githubConfigured = !!(GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO)
 const GITHUB_API = "https://api.github.com"
 const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
@@ -69,41 +70,14 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-// نداء موحّد إلى OpenRouter (chat/completions). يُرجع نص الرد.
-async function openRouter(messages: any[], temperature: number, maxTokens: number): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY
-  if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
-  }
-  // النموذج نصي فقط ما لم تحتوِ الرسائل على صوت (input_audio)
-  const hasAudio = messages.some(
-    (m) => Array.isArray(m?.content) && m.content.some((c: any) => c?.type === "input_audio"),
-  )
-  const res = await fetch(OPENROUTER_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      // ترويسات اختيارية يوصي بها OpenRouter لتصنيف الاستخدام
-      "HTTP-Referer": "https://quran-testing-platform.vercel.app",
-      "X-Title": "Quranic Testing Platform",
-    },
-    body: JSON.stringify({
-      model: hasAudio ? AUDIO_MODEL : TEXT_MODEL,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-    }),
+async function gatewayText(prompt: string, system: string, temperature: number): Promise<string> {
+  const { text } = await generateText({
+    model: TEXT_MODEL,
+    system,
+    prompt,
+    temperature,
   })
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "")
-    throw new Error(`OpenRouter ${res.status}: ${errText.slice(0, 300)}`)
-  }
-  const data = await res.json().catch(() => null)
-  const text = data?.choices?.[0]?.message?.content
-  if (typeof text !== "string") {
-    throw new Error("رد غير متوقع من OpenRouter")
-  }
+  if (!text.trim()) throw new Error("رد فارغ من Vercel AI Gateway")
   return text
 }
 
@@ -156,14 +130,7 @@ function extractJson(text: string): any {
 }
 
 async function runText(prompt: string, system: string, temperature: number) {
-  return openRouter(
-    [
-      { role: "system", content: system },
-      { role: "user", content: prompt },
-    ],
-    temperature,
-    4000,
-  )
+  return gatewayText(prompt, system, temperature)
 }
 
 // تحويل الصوت إلى نص مع دعم مزوّد خارجي قابل للتبديل عبر البيئة.
@@ -264,7 +231,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 {"transcript":"النص المفرغ","accepted":true/false,"score":number,"matchedPercent":number,"isRecitation":true/false,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
 // ===== مساعد تطوير الموقع (للمسؤول فقط) =====
-// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج كسياق للتحليل.
+// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج ��سياق للتحليل.
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
 الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
@@ -467,7 +434,6 @@ async function getGithubSyncStatus() {
 // لا ي��شف أبداً قيمة أي رمز مميز، فقط اسم ��لمتغير الناقص أو نوع المشكلة.
 async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; details?: any }> {
   const missing: string[] = []
-  if (!process.env.OPENROUTER_API_KEY) missing.push("OPENROUTER_API_KEY")
   if (!GITHUB_TOKEN) missing.push("GITHUB_TOKEN")
   if (!GITHUB_OWNER) missing.push("GITHUB_OWNER")
   if (!GITHUB_REPO) missing.push("GITHUB_REPO")
@@ -747,7 +713,7 @@ export async function POST(req: Request) {
           ready: pf.ok,
           reason: pf.reason || "",
           checks: {
-            openrouter: !!process.env.OPENROUTER_API_KEY,
+            aiGateway: true,
             githubToken: !!GITHUB_TOKEN,
             githubOwner: !!GITHUB_OWNER,
             githubRepo: !!GITHUB_REPO,
@@ -847,13 +813,13 @@ export async function POST(req: Request) {
     // رسائل عربية أوضح لحالات OpenRouter الشائعة
     let friendly = "تعذر تنفيذ طلب الذكاء الاصطناعي على الخادم"
     if (raw.includes("OPENROUTER_API_KEY")) {
-      friendly = "مفتاح OpenRouter غير مُهيّأ على الخادم"
-    } else if (raw.includes("402") || raw.toLowerCase().includes("balance") || raw.toLowerCase().includes("credit")) {
-      friendly = "رصيد حساب OpenRouter غير كافٍ لتحليل الصوت — يرجى إضافة رصيد إلى الحساب"
+      friendly = "تحويل الصوت غير مهيأ على الخادم"
+    } else if (raw.includes("402") || raw.toLowerCase().includes("balance") || raw.toLowerCase().includes("credit card") || raw.toLowerCase().includes("credit")) {
+      friendly = "يتطلب Vercel AI Gateway إضافة وسيلة دفع لتفعيل الرصيد المجاني"
     } else if (raw.includes("401")) {
-      friendly = "مفتاح OpenRouter غير صالح"
+      friendly = "تعذر توثيق Vercel AI Gateway"
     } else if (raw.includes("429")) {
-      friendly = "تم تجاوز حد الطلبات على OpenRouter، حاول لاحقاً"
+      friendly = "تم تجاوز حد طلبات Vercel AI Gateway، حاول لاحقاً"
     }
     return json(
       {
