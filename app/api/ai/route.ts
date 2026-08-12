@@ -1,12 +1,13 @@
-import { generateText } from "ai"
-
 export const maxDuration = 60
 
-// ===== مزوّد الذكاء الاصطناعي: Vercel AI Gateway =====
-const TEXT_MODEL = "google/gemini-3.6-flash"
-
-// OpenRouter متروك فقط كمسار احتياطي اختياري لتحويل التسجيلات الصوتية القديمة.
-// لا يحتاج النص إلى مفتاح مزود داخل المتصفح؛ المصادقة تتم على الخادم عبر Vercel AI Gateway.
+// ===== مزودا النص المباشران: OpenRouter أولاً ثم Groq =====
+// المفاتيح خادمية فقط، ولا تُرسل إلى المتصفح أو تُضمّن في diagnostics.
+const OPENROUTER_API_KEY = (process.env.OPENROUTER_API_KEY || "").trim()
+const GROQ_API_KEY = (process.env.GROQ_API_KEY || "").trim()
+const OPENROUTER_TEXT_URL = "https://openrouter.ai/api/v1/chat/completions"
+const GROQ_TEXT_URL = "https://api.groq.com/openai/v1/chat/completions"
+const OPENROUTER_TEXT_MODEL = (process.env.OPENROUTER_TEXT_MODEL || "google/gemini-2.5-flash").trim()
+const GROQ_TEXT_MODEL = (process.env.GROQ_TEXT_MODEL || "llama-3.3-70b-versatile").trim()
 const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe"
 const OPENROUTER_AUDIO_TRANSCRIPTIONS_URL = "https://openrouter.ai/api/v1/audio/transcriptions"
 
@@ -20,7 +21,8 @@ const sttProviderConfigured = !!STT_API_KEY
 // مزوّد التحقق من هوية المتحدث (Speaker Verification) — نقطة توسعة اختيارية عبر البيئة.
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
 
-const keyConfigured = true
+const keyConfigured = !!(OPENROUTER_API_KEY || GROQ_API_KEY)
+let lastTextProvider: "openrouter" | "groq" | null = null
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -70,15 +72,57 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-async function gatewayText(prompt: string, system: string, temperature: number): Promise<string> {
-  const { text } = await generateText({
-    model: TEXT_MODEL,
-    system,
-    prompt,
-    temperature,
-  })
-  if (!text.trim()) throw new Error("رد فارغ من Vercel AI Gateway")
-  return text
+type TextProvider = {
+  name: "openrouter" | "groq"
+  url: string
+  apiKey: string
+  model: string
+}
+
+async function directText(provider: TextProvider, prompt: string, system: string, temperature: number): Promise<string> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 50_000)
+  try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${provider.apiKey}`,
+      "Content-Type": "application/json",
+    }
+    if (provider.name === "openrouter") {
+      headers["HTTP-Referer"] = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://v0.dev"
+      headers["X-Title"] = "Teacher Quran Exam System"
+    }
+    const response = await fetch(provider.url, {
+      method: "POST",
+      headers,
+      signal: controller.signal,
+      cache: "no-store",
+      body: JSON.stringify({
+        model: provider.model,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: prompt },
+        ],
+        temperature: Math.max(0, Math.min(1, temperature)),
+        max_tokens: 3000,
+      }),
+    })
+    const data = await response.json().catch(() => null)
+    if (!response.ok) {
+      const detail = typeof data?.error?.message === "string" ? data.error.message : `HTTP ${response.status}`
+      throw new Error(`${provider.name}:${response.status}:${detail.slice(0, 180)}`)
+    }
+    const content = data?.choices?.[0]?.message?.content
+    const text = typeof content === "string"
+      ? content.trim()
+      : Array.isArray(content)
+        ? content.map((part: any) => typeof part?.text === "string" ? part.text : "").join("").trim()
+        : ""
+    if (!text) throw new Error(`${provider.name}:empty-response`)
+    lastTextProvider = provider.name
+    return text
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 function json(data: unknown, status = 200) {
@@ -130,7 +174,21 @@ function extractJson(text: string): any {
 }
 
 async function runText(prompt: string, system: string, temperature: number) {
-  return gatewayText(prompt, system, temperature)
+  const providers: TextProvider[] = [
+    { name: "openrouter", url: OPENROUTER_TEXT_URL, apiKey: OPENROUTER_API_KEY, model: OPENROUTER_TEXT_MODEL },
+    { name: "groq", url: GROQ_TEXT_URL, apiKey: GROQ_API_KEY, model: GROQ_TEXT_MODEL },
+  ].filter((provider) => !!provider.apiKey) as TextProvider[]
+  if (!providers.length) throw new Error("لم يتم ضبط OPENROUTER_API_KEY أو GROQ_API_KEY على الخادم")
+
+  const errors: string[] = []
+  for (const provider of providers) {
+    try {
+      return await directText(provider, prompt, system, temperature)
+    } catch (error: any) {
+      errors.push(String(error?.message || `${provider.name}:unknown`).slice(0, 220))
+    }
+  }
+  throw new Error(`فشل مزودا الذكاء المباشران: ${errors.join(" | ")}`)
 }
 
 // تحويل الصوت إلى نص مع دعم مزوّد خارجي قابل للتبديل عبر البيئة.
@@ -179,31 +237,26 @@ async function transcribeAudio(audioBase64: string, audioFormat: string): Promis
 
 // ===== أنظمة التعليمات لكل وضع =====
 
-const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم واختبارات الحفظ لطلاب التحفيظ.
-مهمتك توليد أسئلة اختبار قرآنية فقط، دقيقة ومبنية حصراً على نصوص الآيات المرسلة في sourceVerses.
+const SYS_EXAM = `أنت خبير قياس وتقويم متخصص في اختبارات حفظ القرآن الكريم لطلاب حلقات التحفيظ.
+أنشئ اختباراً احترافياً واضحاً وعادلاً، واعتمد حصراً على المقاطع الواردة في sourceVerses دون أي نص أو معلومة من خارجها.
 
-قواعد صارمة:
-- ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceVerses.
-- كل سؤال يجب أن يكون متعلقاً مباشرة بحفظ القرآن أو نص الآية أو السورة.
-- لا تنشئ أسئلة ثقافة عامة أو دين عام أو معلومات خارج نصوص القرآن.
-- التزم تماماً بعدد الأسئلة count المطلوب لكل plan، وبالنوع والمستوى المحددين في كل plan.
-- إذا كان type=mcq فعدد الخيارات يجب أن يساوي optionsCount لذلك plan، مع إجابة صحيحة واحدة فقط.
-- إذا كان type=truefalse فاجعل options=["صح","خطأ"] فقط، وبدّل بين العبارات الصحيحة والخاطئة بذكاء. مثال: "الآية ... من سورة الناس، صح أم خطأ؟"
-- إذا كان type=complete فاختر بداية آية حقيقية، ثم اجعل الطالب يكمل عدداً يساوي completeAyahs بالضبط. يجب أن يكون from/to صحيحين وفي السورة نفسها.
-- إذا كان type=audio فحدد مقطعاً حقيقياً من السورة، ويجب أن يساوي عدد الآيات من from إلى to قيمة reciteAyahs بالضبط.
-- level=easy: سؤال مباشر من النص.
-- level=medium: تمييز وربط أدق بين الآية والسورة أو موضعها.
-- level=hard: مواضع متشابهة وتمييز دقيق دون غموض أو معلومات من خارج النص.
-- لا تكرر السؤال نفسه.
-- points=1 دائماً.
-- timeLimit لا يخرج عن الوقت الذي حدده المسؤول في plan؛ إذا كان موجوداً فاستخدمه كما هو.
-- لا تضع إجابة صحيحة خارج الخيارات.
-- أعد مصفوفة JSON فقط، دون Markdown أو شرح.
+معايير الجودة الإلزامية:
+- نفّذ plans بالترتيب نفسه، وأخرج count سؤالاً لكل خطة بالنوع والمستوى والوقت المحدد فيها تماماً.
+- نوّع مهارات القياس: معرفة السورة، تمييز مطلع الآية، ترتيب المقطع، إكماله، أو تلاوته. لا تكرر الصياغة أو الإجابة أو المقطع بلا ضرورة.
+- اكتب prompt عربية فصيحة ومباشرة ومناسبة للطالب، بلا تلميح يكشف الجواب وبلا غموض.
+- stem يجب أن يكون مقتبساً حرفياً من text داخل sourceVerses المقابل. ممنوع اختراع أو تصحيح أو دمج نصوص قرآنية.
+- mcq: أنشئ optionsCount خيارات قصيرة ومتجانسة، إجابة واحدة صحيحة فقط، ومشتتات معقولة من أسماء السور أو المقاطع المتاحة وليست هزلية. correct يطابق أحد الخيارات حرفياً.
+- truefalse: options=["صح","خطأ"] فقط، correct أحدهما حرفياً، ووازن بين الإجابات الصحيحة والخاطئة عبر المجموعة.
+- complete: اجعل prompt يطلب الإكمال بوضوح، وحدد مقطعاً متصلاً في سورة واحدة؛ from/to ضمن المصدر، وعدد الآيات المطلوبة يساوي completeAyahs. ضع النص المرجعي المطلوب في correct.
+- audio: اجعل prompt يحدد السورة والمقطع المطلوب تلاوته، وحقق to-from+1=reciteAyahs ضمن مقطع المصدر.
+- easy مباشر، medium يحتاج تمييزاً دقيقاً، hard يستخدم تشابهاً حقيقياً موجوداً في المصادر دون تعجيز أو معرفة خارجية.
+- points=1 دائماً، وtimeLimit يساوي قيمة الخطة دون تغيير.
+- أعد مصفوفة JSON فقط، بلا Markdown أو مقدمة أو تعليق.
 
 شكل كل عنصر:
-{"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"نص السؤال","stem":"الآية أو النص القرآني المرجعي عند الحاجة","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
+{"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"تعليمة السؤال","stem":"النص المرجعي الحرفي","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
 
-تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن الآيات المستخدمة موجودة فعلاً في sourceVerses.`
+راجع قبل الإخراج: العدد، ترتيب الخطط، عدم التكرار، وجود السورة والأرقام في sourceVerses، عدد الخيارات، ووجود correct داخل options عند الحاجة.`
 
 const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
 كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
@@ -466,7 +519,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
       reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
-  // التحقق من أن الفرع المُحدد/الافتراضي قابل للحل.
+  // التحقق من أن الفرع المُحدد/الافتراضي قابل ��لحل.
   let branch = ""
   try {
     branch = await resolveBranch()
@@ -579,6 +632,89 @@ async function autoApplyDevRequest(request: string, plan: any) {
   }
 }
 
+function normalizeGeneratedExam(rawQuestions: any[], payload: any) {
+  const plans = Array.isArray(payload?.plans) ? payload.plans : []
+  const sources = Array.isArray(payload?.sourceVerses) ? payload.sourceVerses : []
+  const expected = plans.flatMap((plan: any) => Array.from({ length: Math.max(0, Number(plan?.count) || 0) }, () => plan))
+  if (!expected.length || rawQuestions.length !== expected.length) {
+    throw new Error(`عدد الأسئلة غير صحيح: المطلوب ${expected.length} والمستلم ${rawQuestions.length}`)
+  }
+
+  const seen = new Set<string>()
+  return rawQuestions.map((raw: any, index: number) => {
+    const plan = expected[index]
+    const source = sources.find((item: any) => String(item?.surah || "").trim() === String(raw?.surah || "").trim())
+    if (!source) throw new Error(`السؤال ${index + 1}: السورة غير موجودة في المصادر`)
+    const sourceFrom = Math.max(1, Number(source.from) || 1)
+    const sourceTo = Math.max(sourceFrom, Number(source.to) || sourceFrom)
+    const from = Math.max(sourceFrom, Math.min(sourceTo, Number(raw?.from) || sourceFrom))
+    let to = Math.max(from, Math.min(sourceTo, Number(raw?.to) || from))
+    const type = String(plan.type || "mcq")
+    const span = type === "audio" ? Math.max(1, Number(plan.reciteAyahs) || 1) : type === "complete" ? Math.max(1, Number(plan.completeAyahs) || 1) : 1
+    if (type === "audio" || type === "complete") {
+      to = from + span - 1
+      if (to > sourceTo) throw new Error(`السؤال ${index + 1}: المقطع المطلوب يتجاوز المصدر`)
+    }
+    const prompt = String(raw?.prompt || "").trim()
+    const stem = String(raw?.stem || "").trim()
+    if (!prompt || !stem) throw new Error(`السؤال ${index + 1}: صياغة أو نص مرجعي فارغ`)
+    const signature = `${type}|${String(raw.surah).trim()}|${prompt.replace(/\s+/g, " ")}`
+    if (seen.has(signature)) throw new Error(`السؤال ${index + 1}: سؤال مكرر`)
+    seen.add(signature)
+
+    let options = Array.isArray(raw?.options) ? raw.options.map((item: any) => String(item).trim()).filter(Boolean) : []
+    let correct = String(raw?.correct || "").trim()
+    if (type === "truefalse") {
+      options = ["صح", "خطأ"]
+      if (!options.includes(correct)) throw new Error(`السؤال ${index + 1}: إجابة صح/خطأ غير صالحة`)
+    } else if (type === "mcq") {
+      const optionsCount = Math.max(2, Math.min(6, Number(plan.optionsCount) || 4))
+      if (options.length !== optionsCount || new Set(options).size !== options.length || !options.includes(correct)) {
+        throw new Error(`السؤال ${index + 1}: خيارات الاختيار المتعدد غير صالحة`)
+      }
+    } else {
+      options = []
+      if (type === "complete" && !correct) throw new Error(`السؤال ${index + 1}: الإجابة المرجعية فارغة`)
+    }
+
+    return {
+      type,
+      level: String(plan.level || "medium"),
+      surah: String(source.surah).trim(),
+      prompt,
+      stem,
+      options,
+      correct,
+      from,
+      to,
+      timeLimit: Math.max(5, Math.min(3600, Number(plan.timeLimit) || 60)),
+      completeAyahs: Math.max(1, Number(plan.completeAyahs) || 1),
+      reciteAyahs: Math.max(1, Number(plan.reciteAyahs) || 1),
+      points: 1,
+    }
+  })
+}
+
+async function generateValidatedExam(payload: any, temperature: number) {
+  let feedback = ""
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const prompt = `${JSON.stringify(payload)}${feedback ? `\n\nفشل التحقق السابق: ${feedback}. أعد إنشاء المصفوفة كاملة بعد إصلاح الخطأ.` : ""}`
+    const text = await runText(prompt, SYS_EXAM, attempt === 1 ? temperature : 0.05)
+    const parsed = extractJson(text)
+    const questions = Array.isArray(parsed) ? parsed : parsed?.questions
+    if (!Array.isArray(questions)) {
+      feedback = "الرد ليس مصفوفة JSON"
+      continue
+    }
+    try {
+      return normalizeGeneratedExam(questions, payload)
+    } catch (error: any) {
+      feedback = String(error?.message || "نتيجة غير صالحة").slice(0, 240)
+    }
+  }
+  throw new Error(`تعذر إنشاء اختبار مستوفٍ للمعايير: ${feedback}`)
+}
+
 export async function POST(req: Request) {
   let body: any = {}
   try {
@@ -587,7 +723,13 @@ export async function POST(req: Request) {
     return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured } }, 400)
   }
 
-  const diagnostics = { executedOn: "server", keyConfigured, providerStatus: 200 }
+  lastTextProvider = null
+  const diagnostics = {
+    executedOn: "server",
+    keyConfigured,
+    providers: { openrouter: !!OPENROUTER_API_KEY, groq: !!GROQ_API_KEY },
+    providerPriority: ["openrouter", "groq"],
+  }
 
   try {
     // 1) وضع النص الحر (صندوق اختبار الذكاء الاصطناعي)
@@ -618,13 +760,8 @@ export async function POST(req: Request) {
 
     // 2) توليد أسئلة الاختبار
     if (mode === "generate_exam") {
-      const text = await runText(JSON.stringify(payload), SYS_EXAM, temperature)
-      const parsed = extractJson(text)
-      const questions = Array.isArray(parsed) ? parsed : parsed?.questions
-      if (!Array.isArray(questions)) {
-        return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
-      }
-      return json({ result: questions, diagnostics })
+      const questions = await generateValidatedExam(payload, temperature)
+      return json({ result: questions, diagnostics: { ...diagnostics, provider: lastTextProvider, validated: true } })
     }
 
     // 3) تصحيح نص (أكمل)
@@ -662,8 +799,6 @@ export async function POST(req: Request) {
     // 5) تفريغ صوت حقيقي + تصحيح (تحليل الصوت على الخادم)
     if (mode === "transcribe_and_grade") {
       const { audioBase64, mimeType, surah, from, to, expectedText } = payload
-      const apiKey = process.env.OPENROUTER_API_KEY
-      if (!apiKey) throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
       if (!audioBase64) {
         return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
       }
@@ -713,7 +848,9 @@ export async function POST(req: Request) {
           ready: pf.ok,
           reason: pf.reason || "",
           checks: {
-            aiGateway: true,
+            openrouter: !!OPENROUTER_API_KEY,
+            groqFallback: !!GROQ_API_KEY,
+            textProviderReady: keyConfigured,
             githubToken: !!GITHUB_TOKEN,
             githubOwner: !!GITHUB_OWNER,
             githubRepo: !!GITHUB_REPO,
@@ -731,7 +868,7 @@ export async function POST(req: Request) {
       })
     }
 
-    // 6) مساعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
+    // 6) م��اعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
     if (mode === "dev_assistant") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const request = typeof payload.request === "string" ? payload.request.trim() : ""
@@ -810,16 +947,19 @@ export async function POST(req: Request) {
     return json({ error: "وضع غير معروف", diagnostics }, 400)
   } catch (err: any) {
     const raw = err?.message ? String(err.message) : "خطأ غير معروف"
-    // رسائل عربية أوضح لحالات OpenRouter الشائعة
-    let friendly = "تعذر تنفيذ طلب الذكاء الاصطناعي على الخادم"
-    if (raw.includes("OPENROUTER_API_KEY")) {
-      friendly = "تحويل الصوت غير مهيأ على الخادم"
-    } else if (raw.includes("402") || raw.toLowerCase().includes("balance") || raw.toLowerCase().includes("credit card") || raw.toLowerCase().includes("credit")) {
-      friendly = "يتطلب Vercel AI Gateway إضافة وسيلة دفع لتفعيل الرصيد المجاني"
+    let friendly = "تعذر تنفيذ طلب الذكاء الاصطناعي عبر OpenRouter وGroq"
+    if (raw.includes("لم يتم ضبط OPENROUTER_API_KEY")) {
+      friendly = "لم يتم إعداد مفتاح OpenRouter أو Groq على الخادم"
+    } else if (raw.includes("OPENROUTER_API_KEY غير مُهيّأ")) {
+      friendly = "تحويل الصوت عبر OpenRouter غير مهيأ على الخادم"
+    } else if (raw.includes("402") || raw.toLowerCase().includes("balance") || raw.toLowerCase().includes("credit")) {
+      friendly = "رصيد OpenRouter غير كافٍ، وتعذر إكمال الطلب عبر Groq الاحتياطي"
     } else if (raw.includes("401")) {
-      friendly = "تعذر توثيق Vercel AI Gateway"
+      friendly = "تعذر توثيق مفاتيح OpenRouter وGroq"
     } else if (raw.includes("429")) {
-      friendly = "تم تجاوز حد طلبات Vercel AI Gateway، حاول لاحقاً"
+      friendly = "تم تجاوز حدود طلبات مزودي الذكاء، حاول لاحقاً"
+    } else if (raw.includes("اختبار مستوفٍ")) {
+      friendly = raw
     }
     return json(
       {
@@ -827,6 +967,8 @@ export async function POST(req: Request) {
         diagnostics: {
           executedOn: "server",
           keyConfigured,
+          providers: { openrouter: !!OPENROUTER_API_KEY, groq: !!GROQ_API_KEY },
+          lastProvider: lastTextProvider,
           reason: raw.slice(0, 300),
         },
       },

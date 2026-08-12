@@ -498,7 +498,7 @@ tr:hover { background: var(--table-hover); }
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
 <div id="devAssistantPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>Vercel AI Gateway</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيستخدم النظام OpenRouter مباشرة، مع Groq مزوداً احتياطياً، لتحليل المشروع وقراءة الملفات البرمجية اللازمة وتوليد الكود ثم تطبيق التعديل تلقائياً على GitHub. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
     ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفاتيح OpenRouter وGitHub تبقى على الخادم فقط.
   </div>
@@ -692,7 +692,7 @@ tr:hover { background: var(--table-hover); }
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
   <div class="form-group"><label>ملاحظات</label><textarea id="editNotes" rows="2"></textarea></div>
-  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التع��يلات</button>
+  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التع����يلات</button>
 </div>
 
 <!-- تسجيل تسميع جديد -->
@@ -2523,7 +2523,7 @@ async function generateExamQuestions(){
   const plans=examPlanRows.filter(r=>(parseInt(r.count)||0)>0);
   if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على الأقل.','danger');return}
   const btns=document.querySelectorAll('#examBuilderSection button'); btns.forEach(b=>b.disabled=true);
-  showExamAlert('🤖 الذكاء الاصطناعي يجهز أسئلة دقيقة من نصوص القرآن الفعلية...','info');
+  showExamAlert('يجري الآن بناء الاختبار والتحقق من جودة الصياغة والخيارات والمقاطع القرآنية...','info');
   try{
     const candidates=await buildExamSourceCandidates(base);
     if(!candidates.length) throw new Error('تعذر جلب نصوص الآيات لتوليد الاختبار.');
@@ -2532,7 +2532,7 @@ async function generateExamQuestions(){
       plans:plans.map(r=>({count:parseInt(r.count)||1,level:r.level,type:r.type,timeLimit:Math.max(5,Math.min(3600,parseInt(r.timeLimit)||60)),completeAyahs:parseInt(r.completeAyahs)||1,reciteAyahs:parseInt(r.reciteAyahs)||1,audioShareWithParent:r.audioShareWithParent!==false,optionsCount:Math.max(2,Math.min(6,parseInt(r.optionsCount)||4))})),
       optionsCount:4,
       sourceVerses:candidates,
-      rules:'صح/خطأ: ضع آية حقيقية واذكر سورة ثم اجعل الطالب يحدد صح/خطأ. أكمل: اجعل البداية والنهاية في نفس السورة وعدد آيات الإكمال يساوي completeAyahs. التسجيل: حدد السورة ورقم الآيات بدقة. لا تخترع آية.'
+      rules:'أنشئ اختباراً احترافياً متنوع الصياغة ومن دون أسئلة مكررة. اجعل المشتتات في الاختيار المتعدد معقولة ومتجانسة والإجابة الصحيحة واحدة. وازن إجابات صح وخطأ. في أكمل والتسجيل استخدم مقطعاً متصلاً من سورة واحدة والتزم بعدد الآيات المطلوب. استخدم النصوص المرسلة حرفياً بوصفها المصدر الوحيد.'
     };
     const ai=await callStudentAI('generate_exam',payload,0.1);
     let list=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[]);
@@ -2557,8 +2557,8 @@ async function generateExamQuestions(){
       }
     });
     examQuestions=normalized;
-    renderExamQuestions(); showExamAlert('✅ تم توليد '+examQuestions.length+' سؤالاً بالذكاء الاصطناعي. راجعها قبل الإرسال.','success');
-  }catch(e){showExamAlert('❌ '+(e.message||'تعذر توليد الأسئلة بالذكاء الاصطناعي'),'danger')}
+    renderExamQuestions(); showExamAlert('تم توليد '+examQuestions.length+' سؤالاً والتحقق آلياً من بنيتها. راجع الصياغة النهائية قبل إرسال الاختبار للطالب.','success');
+  }catch(e){showExamAlert((e.message||'تعذر توليد اختبار مستوفٍ لمعايير الجودة. حاول مرة أخرى.'),'danger')}
   finally{btns.forEach(b=>b.disabled=false)}
 }
 function addManualExamQuestion(){examQuestions.push({id:'manual_'+Date.now(),type:'mcq',level:'medium',surah:currentRecordMainSurah||'',prompt:'سؤال يدوي',stem:'',options:['','','',''],correct:'',from:1,to:1,timeLimit:60,completeAyahs:1,reciteAyahs:1,audioShareWithParent:true,points:1,rejected:false,weakened:false,source:'manual'});renderExamQuestions()}
@@ -3143,7 +3143,7 @@ async function refreshGithubSync(){
   const link = document.getElementById('githubHistoryLink');
   const del = document.getElementById('githubDeleteBox');
   if(btn){ btn.disabled = true; btn.textContent = '⏳ جارٍ التحقق...'; }
-  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الات��ال بمستودعك...</p>';
+  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الات���ال بمستودعك...</p>';
   try {
     const st = await callStudentAI('github_status', { role:'admin', adminId: currentAdminId || null }, 0.1);
     if(!st || st.connected !== true){
