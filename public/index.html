@@ -498,9 +498,9 @@ tr:hover { background: var(--table-hover); }
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
 <div id="devAssistantPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>OpenRouter</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على المشروع عبر الخادم وGitHub عند تفعيل التطبيق التلقائي. لا توجد خطوة موافقة ثانية.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>Gemini</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على المشروع عبر الخادم وGitHub عند تفعيل التطبيق التلقائي. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفاتيح OpenRouter وGitHub تبقى على الخادم فقط.
+    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفاتيح Gemini وGitHub تبقى على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div class="form-group">
@@ -519,7 +519,7 @@ tr:hover { background: var(--table-hover); }
         <button class="btn" style="background:#dc3545;color:#fff;" onclick="clearDevAudit()">🗑️ مسح السجل</button>
       </div>
     </div>
-    <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:12px;">يُسجَّل هنا كل طلب ينفّذه مساعد التطوير: الوقت، المسؤول، نص الطلب، الحالة (نج��ح/فشل/محظور)، الملفات التي تغيّرت وروابط الـcommit. يُحفَظ السجل محلياً في هذا المتصفح.</p>
+    <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:12px;">يُسجَّل هنا كل طلب ينفّذه مساعد التطوير: الوقت، المسؤول، نص الطلب، الحالة (نج����ح/فشل/محظور)، الملفات التي تغيّرت وروابط الـcommit. يُحفَظ السجل محلياً في هذا المتصفح.</p>
     <div id="devAuditLog"></div>
   </div>
 </div>
@@ -3245,7 +3245,7 @@ function openDevAssistant(){
 // عبارات تدل على عمليات خطيرة تتطلب تأكيداً صريحاً قبل التنفيذ التلقائي.
 const DEV_DANGER_PATTERNS = [
   {re:/حذف\s*(قاعدة|القاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
-  {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*الملفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
+  {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*ال��لفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
   {re:/حذف\s*(المستخدمين|كل\s*المستخدمين|جميع\s*المستخدمين)|delete\s+users/i, label:'حذف المستخدمين'},
   {re:/حذف\s*(الطلاب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},
   {re:/(المصادقة|تسجيل\s*الدخول|نظام\s*الدخول|كلمة\s*المرور\s*الرئيسية|authentication|login\s*system)/i, label:'تغيير نظام المصادقة'},
@@ -4197,7 +4197,7 @@ function startArabicASR() {
 // يعمل في جميع المتصفحات ولا يعتمد على التعرف على الكلام في المتصفح.
 async function serverRecitationAnalysis(blob, task) {
   try {
-    // OpenRouter لا يقبل webm — نحوّل التسجيل إلى WAV أولاً، ونرجع إلى الأصل عند فشل التحويل.
+    // Gemini لا يقبل webm — نحوّل التسجيل إلى WAV أولاً، ونرجع إلى الأصل عند فشل التحويل.
     let sendBlob = blob;
     const wav = await blobToWav(blob);
     if (wav) sendBlob = wav;
@@ -4394,7 +4394,7 @@ function _fft(re, im) {
 
 async function computeVoicePrint(blob) {
   // بصمة محلية متعددة السمات: طيف صوتي + مركز الطيف + عبور الصفر + إحصاءات زمنية.
-  // لا نرفع البصمة الخام إلى OpenRouter؛ تبقى المقارنة على جهاز المستخدم.
+  // لا نرفع البصمة الخام إلى Gemini؛ تبقى المقارنة على جهاز المستخدم.
   try{
     const buf=await blob.arrayBuffer(),AC=window.AudioContext||window.webkitAudioContext,ctx=new AC(),audio=await ctx.decodeAudioData(buf.slice(0)),ch=audio.getChannelData(0);
     const N=1024,hop=512,bands=48,bandSum=new Float64Array(bands),bandSq=new Float64Array(bands),cent=[] ,zcr=[],ener=[];let frames=0;
@@ -4440,7 +4440,7 @@ function blobToDataURL(blob) {
   return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(blob); });
 }
 // ====== تحويل الصوت المسجّل (webm/ogg) إلى WAV ======
-// OpenRouter يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصيغة webm.
+// Gemini يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصيغة webm.
 // نفكّ الترميز عبر Web Audio ثم نعيد ترميزه PCM 16-bit أحادي القناة بمعدل 16kHz لتقليل الحجم.
 async function blobToWav(blob) {
   try {
@@ -5121,7 +5121,7 @@ function generateWelcomeMessages(student) {
     {title: '��هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من يش��ء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر أن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
     {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية، وسترى الفرق في حياتك.'},
-    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متيناً.'},
+    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متين��ً.'},
     {title: 'يوم مبارك يا '+student.name+'! ✨', body: 'حافظ على الاستمرارية في الحفظ، فالقرآن يُحفظ بالتكرار والمراجعة. ثق بالله، فهو معك في كل خطوة.'}
   ];
   const base = templates[dayOfWeek % templates.length];
@@ -5206,7 +5206,7 @@ function generateAIResponse(text, student) {
     r += '<br>💡 المهام التي عليها علامة 👁️ يمكنك عرض آياتها كصورة واضحة مع إمكانية التكبير.';
     return r;
   }
-  // الآيات والصور
+  // الآي��ت والصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
     return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم أزرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>الآيات تُعرض بالرسم العثماني المُشكَّل كصورة مطابقة تماماً للمصحف.';
   }
