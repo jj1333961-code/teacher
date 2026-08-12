@@ -519,7 +519,7 @@ tr:hover { background: var(--table-hover); }
         <button class="btn" style="background:#dc3545;color:#fff;" onclick="clearDevAudit()">🗑️ مسح السجل</button>
       </div>
     </div>
-    <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:12px;">يُسجَّل هنا كل طلب ينفّذه مساعد التطوير: الوقت، المسؤول، نص الطلب، الحالة (نجاح/فشل/محظور)، الملفات التي تغيّرت وروابط الـcommit. يُحفَظ السجل محلياً في هذا المتصفح.</p>
+    <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:12px;">يُسجَّل هنا كل طلب ينفّذه مساعد التطوير: الوقت، المسؤول، نص الطلب، الحالة (نج��ح/فشل/محظور)، الملفات التي تغيّرت وروابط الـcommit. يُحفَظ السجل محلياً في هذا المتصفح.</p>
     <div id="devAuditLog"></div>
   </div>
 </div>
@@ -927,7 +927,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ملفات المسؤول لولي الأمر -->
 <div id="parentFilesPage" class="page hidden">
-  <div class="page-header"><h2>📁 الملفات المرسلة لي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📁 الملفات المرسلة ��ي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="parentFilesContent"></div>
 </div>
 
@@ -1083,7 +1083,7 @@ const SURAH_AYAH_COUNTS = {
 
 const ALL_SURAHS_ORDERED = [
   "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
-  "الإسراء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
+  "الإس��اء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
   "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الإنفطار",
@@ -1115,8 +1115,102 @@ if(localStorage.getItem('theme') === 'dark') {
   document.querySelector('.theme-toggle').textContent = '☀️';
 }
 
-function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
-function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+const CLOUD_DATA_KEYS = ['subjects', 'students', 'messages', 'devices', 'admins', 'uploadedFiles', 'devAuditLog', 'initialized_v7'];
+let cloudStateVersion = 0;
+let cloudSyncTimer = null;
+let cloudSyncInFlight = false;
+let cloudSyncQueued = false;
+
+function getData(key, def) {
+  const d = localStorage.getItem(key);
+  if(!d) return def || [];
+  try { return JSON.parse(d); } catch(e) { return def || []; }
+}
+
+function setCloudStatus(text, state) {
+  let el = document.getElementById('cloudSyncStatus');
+  if(!el) {
+    el = document.createElement('div');
+    el.id = 'cloudSyncStatus';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    el.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:10000;padding:8px 12px;border-radius:999px;font:600 13px Arial,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2);direction:rtl';
+    document.body.appendChild(el);
+  }
+  const colors = state === 'error' ? ['#fee2e2','#991b1b'] : state === 'saving' ? ['#fef3c7','#92400e'] : ['#dcfce7','#166534'];
+  el.style.background = colors[0]; el.style.color = colors[1]; el.textContent = text;
+}
+
+function collectCloudData() {
+  const data = {};
+  CLOUD_DATA_KEYS.forEach(key => {
+    const raw = localStorage.getItem(key);
+    if(raw !== null) { try { data[key] = JSON.parse(raw); } catch(e) {} }
+  });
+  return data;
+}
+
+function applyCloudData(data) {
+  if(!data || typeof data !== 'object') return;
+  CLOUD_DATA_KEYS.forEach(key => {
+    if(Object.prototype.hasOwnProperty.call(data, key)) localStorage.setItem(key, JSON.stringify(data[key]));
+  });
+}
+
+async function flushCloudData() {
+  if(cloudSyncInFlight) { cloudSyncQueued = true; return; }
+  cloudSyncInFlight = true; cloudSyncQueued = false;
+  setCloudStatus('جارٍ الحفظ في قاعدة البيانات...', 'saving');
+  try {
+    const res = await fetch('/api/state', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({data:collectCloudData(), version:cloudStateVersion})});
+    const result = await res.json();
+    if(res.status === 409 && result.data) {
+      applyCloudData(result.data); cloudStateVersion = Number(result.version || 0);
+      setCloudStatus('تم جلب أحدث نسخة من قاعدة البيانات', 'error');
+      return;
+    }
+    if(!res.ok) throw new Error(result.error || 'تعذر الحفظ');
+    cloudStateVersion = Number(result.version || cloudStateVersion + 1);
+    setCloudStatus('تم الحفظ تلقائياً', 'saved');
+  } catch(e) {
+    setCloudStatus('تعذر الحفظ — ستتم إعادة المحاولة', 'error');
+    clearTimeout(cloudSyncTimer); cloudSyncTimer = setTimeout(flushCloudData, 5000);
+  } finally {
+    cloudSyncInFlight = false;
+    if(cloudSyncQueued) { cloudSyncQueued = false; setTimeout(flushCloudData, 50); }
+  }
+}
+
+function setData(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+  if(!CLOUD_DATA_KEYS.includes(key)) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(flushCloudData, 700);
+}
+
+async function initializeCloudData() {
+  setCloudStatus('جارٍ الاتصال بقاعدة البيانات...', 'saving');
+  try {
+    const res = await fetch('/api/state', {cache:'no-store'});
+    if(!res.ok) throw new Error('تعذر تحميل البيانات');
+    const remote = await res.json();
+    cloudStateVersion = Number(remote.version || 0);
+    if(remote.data && Object.keys(remote.data).length > 0) {
+      applyCloudData(remote.data);
+      setCloudStatus('متصل بقاعدة البيانات', 'saved');
+    } else {
+      const migrated = await fetch('/api/state', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({data:collectCloudData(), version:cloudStateVersion, migrate:true})});
+      const result = await migrated.json();
+      if(!migrated.ok) throw new Error(result.error || 'تعذر نقل البيانات');
+      if(result.data) applyCloudData(result.data);
+      cloudStateVersion = Number(result.version || cloudStateVersion + 1);
+      localStorage.setItem('neon_migration_complete', 'true');
+      setCloudStatus('تم نقل البيانات إلى Neon وحفظها', 'saved');
+    }
+  } catch(e) {
+    setCloudStatus('وضع دون اتصال — البيانات محفوظة مؤقتاً', 'error');
+  }
+}
 
 if(!localStorage.getItem('initialized_v7')) {
   setData('subjects', [
@@ -4440,7 +4534,7 @@ function dataURLToBlob(dataUrl) {
   } catch (e) { return null; }
 }
 
-// ====== QURAN AYAH IMAGES (صور الآيات ��الرسم العثماني المُشكَّل) ======
+// ====== QURAN AYAH IMAGES (صور الآيات ��ا��رسم العثماني المُشكَّل) ======
 function surahNumber(name) {
   const i = ALL_SURAHS_ORDERED.indexOf((name || '').trim());
   return i === -1 ? 0 : i + 1;
@@ -4917,7 +5011,7 @@ function renderFiles() {
   html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px;">';
   files.slice().reverse().forEach(f => {
     const sizeMB = (f.size / (1024*1024)).toFixed(2);
-    const icon = f.type && f.type.startsWith('image/') ? '🖼️' : f.type && f.type.startsWith('audio/') ? '🎵' : f.type && f.type.startsWith('video/') ? '🎬' : f.type && f.type.includes('pdf') ? '📄' : '📎';
+    const icon = f.type && f.type.startsWith('image/') ? '🖼️' : f.type && f.type.startsWith('audio/') ? '🎵' : f.type && f.type.startsWith('video/') ? '🎬' : f.type && f.type.includes('pdf') ? '����' : '📎';
     html += '<div style="background:var(--table-header); border-radius:12px; padding:15px; border:2px solid var(--border); transition:0.2s;" onmouseover="this.style.borderColor=&quot;var(--primary)&quot;" onmouseout="this.style.borderColor=&quot;var(--border)&quot;">';
     html += '<div style="font-size:2.5rem; text-align:center; margin-bottom:10px;">'+icon+'</div>';
     html += '<h5 style="color:var(--primary); margin-bottom:5px; word-break:break-word;">'+f.desc+'</h5>';
@@ -5140,7 +5234,7 @@ function generateAIResponse(text, student) {
   }
   // التقدم عبر الجلسات
   if(has('تقد��','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
-    if(finalizedSessions.length < 2) return '📈 أحتاج تسميعين نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
+    if(finalizedSessions.length < 2) return '��� أحتاج تسميعين نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
@@ -5213,22 +5307,31 @@ function logout() {
   showPage('lockScreen');
 }
 
-// Restore session on page load
-if(restoreSession()) {
-  if(currentType === 'admin' && currentUser) {
-    showPage('adminDashboard');
-  } else if(currentType === 'student' && currentUser) {
-    renderStudentDashboard();
-    showPage('studentDashboard');
-  } else if(currentType === 'parent' && currentUser) {
-    renderParentDashboard();
-    showPage('parentDashboard');
+// Load Neon first, then restore the existing session against the latest data.
+(async function startApplication() {
+  await initializeCloudData();
+  if(restoreSession()) {
+    if(currentType === 'admin' && currentUser) {
+      const latest = getData('admins').find(a => String(a.id) === String(currentUser.id));
+      if(latest) currentUser = latest;
+      showPage('adminDashboard');
+    } else if(currentType === 'student' && currentUser) {
+      const latest = getData('students').find(s => String(s.id) === String(currentUser.id));
+      if(latest) currentUser = latest;
+      renderStudentDashboard();
+      showPage('studentDashboard');
+    } else if(currentType === 'parent' && currentUser) {
+      const ids = currentUser.map(s => String(s.id));
+      currentUser = getData('students').filter(s => ids.includes(String(s.id)));
+      renderParentDashboard();
+      showPage('parentDashboard');
+    } else {
+      showPage('lockScreen');
+    }
   } else {
     showPage('lockScreen');
   }
-} else {
-  showPage('lockScreen');
-}
+})();
 </script>
 
 <!-- File View Modal -->

@@ -264,7 +264,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 {"transcript":"النص المفرغ","accepted":true/false,"score":number,"matchedPercent":number,"isRecitation":true/false,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
 // ===== مساعد تطوير الموقع (للمسؤول فقط) =====
-// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج كسياق للتحليل.
+// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج ��سياق للتحليل.
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
 الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
@@ -371,7 +371,7 @@ async function githubListTree(ref?: string) {
 }
 
 async function githubPutFile(path: string, content: string, sha?: string, message = "chore: apply AI development assistant change") {
-  if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
+  if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات ��ستودع GitHub غير مكتملة")
   const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${path.split("/").map(encodeURIComponent).join("/")}`
   const body: any = { message, content: Buffer.from(content, "utf8").toString("base64"), branch: await resolveBranch() }
   if (sha) body.sha = sha
@@ -512,8 +512,12 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
 
 function safeProjectPath(path: string) {
   const normalized = String(path || "").replace(/\\/g, "/").replace(/^\/+/, "")
+  const lower = normalized.toLowerCase()
   if (!normalized || normalized.includes("..") || normalized.startsWith(".git/")) return false
   if (normalized === ".env" || normalized.startsWith(".env.") && !normalized.endsWith(".example")) return false
+  // بيانات التشغيل والنسخ الاحتياطية تبقى في Neon ولا تدخل سجل GitHub مطلقاً.
+  if (lower.startsWith("data/") || lower.startsWith("backups/") || lower.includes("student-data") || lower.includes("app-state")) return false
+  if (lower.endsWith(".sqlite") || lower.endsWith(".sqlite3") || lower.endsWith(".db") || lower.endsWith(".sql")) return false
   return true
 }
 
