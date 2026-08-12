@@ -18,7 +18,7 @@ function response(data: unknown, status = 200) {
 export async function GET() {
   try {
     const result = await pool.query(
-      'SELECT data, updated_at FROM app_snapshots WHERE id = $1',
+      'SELECT data, updated_at FROM app_state WHERE scope = $1',
       [SNAPSHOT_ID],
     )
     return response({ data: result.rows[0]?.data ?? null, updatedAt: result.rows[0]?.updated_at ?? null })
@@ -38,9 +38,9 @@ export async function PUT(request: Request) {
       return response({ error: 'حجم البيانات أكبر من الحد المسموح' }, 413)
     }
     const result = await pool.query(
-      `INSERT INTO app_snapshots (id, data, updated_at)
-       VALUES ($1, $2::jsonb, now())
-       ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = now()
+      `INSERT INTO app_state (scope, data, version, updated_at)
+       VALUES ($1, $2::jsonb, 1, now())
+       ON CONFLICT (scope) DO UPDATE SET data = EXCLUDED.data, version = app_state.version + 1, updated_at = now()
        RETURNING updated_at`,
       [SNAPSHOT_ID, serialized],
     )

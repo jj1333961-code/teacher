@@ -498,9 +498,9 @@ tr:hover { background: var(--table-hover); }
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
 <div id="devAssistantPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>Vercel AI Gateway</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>Groq</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفاتيح OpenRouter وGitHub تبقى على الخادم فقط.
+    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفتاحا Groq وGitHub يبقيان على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
@@ -692,7 +692,7 @@ tr:hover { background: var(--table-hover); }
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
   <div class="form-group"><label>ملاحظات</label><textarea id="editNotes" rows="2"></textarea></div>
-  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التعديلات</button>
+  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التع��يلات</button>
 </div>
 
 <!-- تسجيل تسميع جديد -->
@@ -1121,7 +1121,7 @@ if(localStorage.getItem('theme') === 'dark') {
 }
 
 let neonSaveTimer = null;
-const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','recordElements','extraElements'];
+const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','uploadedFiles','devAuditLog','recordElements','extraElements','initialized_v7'];
 function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
@@ -3144,7 +3144,7 @@ async function refreshGithubSync(){
   const link = document.getElementById('githubHistoryLink');
   const del = document.getElementById('githubDeleteBox');
   if(btn){ btn.disabled = true; btn.textContent = '⏳ جارٍ التحقق...'; }
-  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الاتصال بمستودعك...</p>';
+  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الات��ال بمستودعك...</p>';
   try {
     const st = await callStudentAI('github_status', { role:'admin', adminId: currentAdminId || null }, 0.1);
     if(!st || st.connected !== true){
@@ -4188,7 +4188,7 @@ function startArabicASR() {
 // يعمل في جميع المتصفحات ولا يعتمد على التعرف على الكلام في المتصفح.
 async function serverRecitationAnalysis(blob, task) {
   try {
-    // OpenRouter لا يقبل webm — نحوّل التسجيل إلى WAV أولاً، ونرجع إلى الأصل عند فشل التحويل.
+    // مسار Groq يستقبل WAV/MP3 — نحوّل تسجيل المتصفح إلى WAV أولاً، ونرجع إلى الأصل عند فشل التحويل.
     let sendBlob = blob;
     const wav = await blobToWav(blob);
     if (wav) sendBlob = wav;
@@ -4385,7 +4385,7 @@ function _fft(re, im) {
 
 async function computeVoicePrint(blob) {
   // بصمة محلية متعددة السمات: طيف صوتي + مركز الطيف + عبور الصفر + إحصاءات زمنية.
-  // لا نرفع البصمة الخام إلى OpenRouter؛ تبقى المقارنة على جهاز المستخدم.
+  // لا نرفع البصمة الخام إلى مزود الذكاء؛ تبقى المقارنة على جهاز المستخدم.
   try{
     const buf=await blob.arrayBuffer(),AC=window.AudioContext||window.webkitAudioContext,ctx=new AC(),audio=await ctx.decodeAudioData(buf.slice(0)),ch=audio.getChannelData(0);
     const N=1024,hop=512,bands=48,bandSum=new Float64Array(bands),bandSq=new Float64Array(bands),cent=[] ,zcr=[],ener=[];let frames=0;
@@ -4431,7 +4431,7 @@ function blobToDataURL(blob) {
   return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(blob); });
 }
 // ====== تحويل الصوت المسجّل (webm/ogg) إلى WAV ======
-// OpenRouter يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصيغة webm.
+// Groq يقبل صوت الإدخال بصيغة wav أو mp3، بينما المتصفح يسجّل غالباً بصيغة webm.
 // نفكّ الترميز عبر Web Audio ثم نعيد ترميزه PCM 16-bit أحادي القناة بمعدل 16kHz لتقليل الحجم.
 async function blobToWav(blob) {
   try {
@@ -4895,7 +4895,7 @@ function renderParentFullChart() {
   setTimeout(() => drawTotalOnlyChart(canvasId, finalizedSessions), 100);
 }
 
-function uploadFile(input) {
+async function uploadFile(input) {
   const file = input.files[0];
   if(!file) return;
   const desc = document.getElementById('fileDesc').value.trim() || file.name;
@@ -4903,42 +4903,38 @@ function uploadFile(input) {
   const targetSel = document.getElementById('fileTarget');
   const targetId = targetSel ? targetSel.value : 'all';
   const progressDiv = document.getElementById('fileUploadProgress');
-  progressDiv.innerHTML = '<div class="alert alert-info">⏳ جاري رفع الملف...</div>';
-
-  const reader = new FileReader();
-  reader.onprogress = function(e) {
-    if(e.lengthComputable) {
-      const pct = Math.round((e.loaded / e.total) * 100);
-      progressDiv.innerHTML = '<div class="alert alert-info">⏳ جاري الرفع... '+pct+'%</div>';
-    }
-  };
-  reader.onload = function(e) {
+  progressDiv.innerHTML = '<div class="alert alert-info">جاري رفع الملف إلى التخزين الآمن...</div>';
+  try {
+    const form = new FormData();
+    form.append('file', file);
+    const response = await fetch('/api/files', { method: 'POST', body: form });
+    const uploaded = await response.json();
+    if(!response.ok) throw new Error(uploaded.error || 'فشل رفع الملف');
     let files = getData('uploadedFiles', []);
-    const fileData = {
-      id: Date.now(),
-      name: file.name,
+    files.push({
+      id: uploaded.id,
+      name: uploaded.name,
       desc: desc,
       category: category,
       audience: category,
       targetId: targetId,
-      size: file.size,
-      type: file.type,
-      data: e.target.result,
-      uploadedAt: new Date().toLocaleString('ar-EG'),
+      size: uploaded.size,
+      type: uploaded.type,
+      data: uploaded.data,
+      pathname: uploaded.pathname,
+      uploadedAt: new Date(uploaded.uploadedAt).toLocaleString('ar-EG'),
+      expiresAt: uploaded.expiresAt,
       uploadedBy: currentUser ? (currentUser.mobile || currentUser.name || 'مسؤول') : 'مسؤول'
-    };
-    files.push(fileData);
+    });
     setData('uploadedFiles', files);
-    progressDiv.innerHTML = '<div class="alert alert-success">✅ تم رفع الملف بنجاح!</div>';
+    progressDiv.innerHTML = '<div class="alert alert-success">تم رفع الملف بنجاح، وسيُحذف تلقائياً بعد 7 أيام.</div>';
     document.getElementById('fileDesc').value = '';
     document.getElementById('fileInput').value = '';
     renderFiles();
     setTimeout(() => { progressDiv.innerHTML = ''; }, 5000);
-  };
-  reader.onerror = function() {
-    progressDiv.innerHTML = '<div class="alert alert-danger">❌ فشل رفع الملف</div>';
-  };
-  reader.readAsDataURL(file);
+  } catch(error) {
+    progressDiv.innerHTML = '<div class="alert alert-danger">'+(error.message || 'فشل رفع الملف')+'</div>';
+  }
 }
 
 function renderFiles() {
@@ -4967,8 +4963,8 @@ function renderFiles() {
     html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">🕐 '+f.uploadedAt+'</p>';
     html += '<div style="display:flex; gap:8px;">';
     html += '<a href="'+f.data+'" download="'+f.name+'" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تحميل</a>';
-    html += '<button class="btn btn-sm btn-primary" onclick="viewFile('+f.id+')">👁️ عرض</button>';
-    html += '<button class="btn btn-sm btn-danger" onclick="deleteFile('+f.id+')">🗑️ حذف</button>';
+    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(&quot;'+f.id+'&quot;)">👁️ عرض</button>';
+    html += '<button class="btn btn-sm btn-danger" onclick="deleteFile(&quot;'+f.id+'&quot;)">🗑️ حذف</button>';
     html += '</div>';
     html += '</div>';
   });
@@ -5028,7 +5024,7 @@ function renderUserFiles(role) {
     html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">🕐 ' + f.uploadedAt + '</p>';
     html += '<div style="display:flex; gap:8px;">';
     html += '<a href="' + f.data + '" download="' + f.name + '" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تحميل</a>';
-    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁️ عرض</button>';
+    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(&quot;' + f.id + '&quot;)">👁️ عرض</button>';
     html += '</div></div>';
   });
   html += '</div>';
@@ -5080,12 +5076,19 @@ function closeFileModal() {
   if(content) content.innerHTML = '';
 }
 
-function deleteFile(id) {
+async function deleteFile(id) {
   if(!confirm('هل أنت متأكد من حذف هذا الملف؟')) return;
-  let files = getData('uploadedFiles', []);
-  files = files.filter(f => f.id !== id);
-  setData('uploadedFiles', files);
-  renderFiles();
+  try {
+    const response = await fetch('/api/files?id='+encodeURIComponent(id), { method: 'DELETE' });
+    const result = await response.json();
+    if(!response.ok) throw new Error(result.error || 'تعذر حذف الملف');
+    let files = getData('uploadedFiles', []);
+    files = files.filter(f => String(f.id) !== String(id));
+    setData('uploadedFiles', files);
+    renderFiles();
+  } catch(error) {
+    alert(error.message || 'تعذر حذف الملف');
+  }
 }
 
 function generateAIReport(student) {
