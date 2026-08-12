@@ -498,7 +498,7 @@ tr:hover { background: var(--table-hover); }
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
 <div id="devAssistantPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>Vercel AI Gateway</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>Groq</code> المشروع الحالي مع <code>OpenRouter</code> كمسار احتياطي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
     ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفاتيح OpenRouter وGitHub تبقى على الخادم فقط.
   </div>
@@ -692,7 +692,7 @@ tr:hover { background: var(--table-hover); }
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
   <div class="form-group"><label>ملاحظات</label><textarea id="editNotes" rows="2"></textarea></div>
-  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التعديلات</button>
+  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التع��يلات</button>
 </div>
 
 <!-- تسجيل تسميع جديد -->
@@ -1121,7 +1121,7 @@ if(localStorage.getItem('theme') === 'dark') {
 }
 
 let neonSaveTimer = null;
-const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','recordElements','extraElements'];
+const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','uploadedFiles','devAuditLog','recordElements','extraElements','initialized_v7'];
 function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
@@ -2499,7 +2499,7 @@ function renderExamPlanRows(){
   c.innerHTML=h;
 }
 function examLevelLabel(l){return l==='easy'?'سهل':l==='hard'?'صعب':'متوسط'}
-function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').trim()}
+function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(/��/g,'ه').replace(/ى/g,'ي').trim()}
 
 async function buildExamSourceCandidates(base){
   const baseIdx=ALL_SURAHS_ORDERED.indexOf(base);
@@ -3144,7 +3144,7 @@ async function refreshGithubSync(){
   const link = document.getElementById('githubHistoryLink');
   const del = document.getElementById('githubDeleteBox');
   if(btn){ btn.disabled = true; btn.textContent = '⏳ جارٍ التحقق...'; }
-  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الاتصال بمستودعك...</p>';
+  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الات��ال بمستودعك...</p>';
   try {
     const st = await callStudentAI('github_status', { role:'admin', adminId: currentAdminId || null }, 0.1);
     if(!st || st.connected !== true){
@@ -4225,7 +4225,7 @@ async function analyzeRecitationContent(blob, task, transcript) {
     try{aiResult=await callStudentAI('grade_recitation',{surah:task.surah,from:task.from,to:task.to,expectedText,studentTranscript:transcript},0.05)}catch(e){}
   }
   if(!aiResult && expectedText && !transcript){
-    return {pct:0,dur:Math.round(dur),txtPct:null,expectedSec:expectedSecondsFromText(expectedText)||expectedAyahSeconds(task),reason:'تعذّر تحليل الصوت على الخادم ولم يتوفر تفريغ في المتصفح. أعد المحاولة والتأكد من الاتصال بالإنترنت.'};
+    return {pct:0,dur:Math.round(dur),txtPct:null,expectedSec:expectedSecondsFromText(expectedText)||expectedAyahSeconds(task),reason:'تعذّر تحليل الصوت على الخادم ولم يتوفر تفريغ في المتصفح. أعد المحاو��ة والتأكد من الاتصال بالإنترنت.'};
   }
   const usedTranscript=(aiResult&&aiResult.transcript)?aiResult.transcript:transcript;
   const txtPct=aiResult&&typeof aiResult.matchedPercent==='number'?aiResult.matchedPercent:(usedTranscript&&expectedText?transcriptMatchPercent(usedTranscript,expectedText):null);
@@ -4895,7 +4895,7 @@ function renderParentFullChart() {
   setTimeout(() => drawTotalOnlyChart(canvasId, finalizedSessions), 100);
 }
 
-function uploadFile(input) {
+async function uploadFile(input) {
   const file = input.files[0];
   if(!file) return;
   const desc = document.getElementById('fileDesc').value.trim() || file.name;
@@ -4903,42 +4903,37 @@ function uploadFile(input) {
   const targetSel = document.getElementById('fileTarget');
   const targetId = targetSel ? targetSel.value : 'all';
   const progressDiv = document.getElementById('fileUploadProgress');
-  progressDiv.innerHTML = '<div class="alert alert-info">⏳ جاري رفع الملف...</div>';
-
-  const reader = new FileReader();
-  reader.onprogress = function(e) {
-    if(e.lengthComputable) {
-      const pct = Math.round((e.loaded / e.total) * 100);
-      progressDiv.innerHTML = '<div class="alert alert-info">⏳ جاري الرفع... '+pct+'%</div>';
-    }
-  };
-  reader.onload = function(e) {
+  progressDiv.innerHTML = '<div class="alert alert-info">جاري رفع الملف إلى التخزين الآمن...</div>';
+  try {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch('/api/attachments', { method:'POST', body:form });
+    const body = await res.json();
+    if(!res.ok || !body.file) throw new Error(body.error || 'فشل رفع الملف');
     let files = getData('uploadedFiles', []);
-    const fileData = {
-      id: Date.now(),
-      name: file.name,
+    files.push({
+      id: body.file.id,
+      name: body.file.filename,
       desc: desc,
       category: category,
       audience: category,
       targetId: targetId,
-      size: file.size,
-      type: file.type,
-      data: e.target.result,
-      uploadedAt: new Date().toLocaleString('ar-EG'),
+      size: body.file.size,
+      type: body.file.contentType,
+      data: '/api/attachments/file?id='+encodeURIComponent(body.file.id),
+      uploadedAt: new Date(body.file.uploadedAt).toLocaleString('ar-EG'),
+      expiresAt: body.file.expiresAt,
       uploadedBy: currentUser ? (currentUser.mobile || currentUser.name || 'مسؤول') : 'مسؤول'
-    };
-    files.push(fileData);
+    });
     setData('uploadedFiles', files);
-    progressDiv.innerHTML = '<div class="alert alert-success">✅ تم رفع الملف بنجاح!</div>';
+    progressDiv.innerHTML = '<div class="alert alert-success">تم رفع الملف بنجاح. سيُحذف تلقائياً بعد 7 أيام.</div>';
     document.getElementById('fileDesc').value = '';
-    document.getElementById('fileInput').value = '';
+    input.value = '';
     renderFiles();
-    setTimeout(() => { progressDiv.innerHTML = ''; }, 5000);
-  };
-  reader.onerror = function() {
-    progressDiv.innerHTML = '<div class="alert alert-danger">❌ فشل رفع الملف</div>';
-  };
-  reader.readAsDataURL(file);
+  } catch(error) {
+    progressDiv.innerHTML = '<div class="alert alert-danger">'+(error.message || 'فشل رفع الملف')+'</div>';
+  }
+  setTimeout(() => { progressDiv.innerHTML = ''; }, 5000);
 }
 
 function renderFiles() {
@@ -4964,7 +4959,7 @@ function renderFiles() {
     html += '<span class="badge badge-info">'+fileTargetLabel(f)+'</span>';
     html += '<span class="badge badge-secondary">'+sizeMB+' MB</span>';
     html += '</div>';
-    html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">🕐 '+f.uploadedAt+'</p>';
+    html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">تاريخ الرفع: '+f.uploadedAt+(f.expiresAt ? '<br>متاح حتى: '+new Date(f.expiresAt).toLocaleString('ar-EG') : '')+'</p>';
     html += '<div style="display:flex; gap:8px;">';
     html += '<a href="'+f.data+'" download="'+f.name+'" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تحميل</a>';
     html += '<button class="btn btn-sm btn-primary" onclick="viewFile('+f.id+')">👁️ عرض</button>';
@@ -5080,12 +5075,17 @@ function closeFileModal() {
   if(content) content.innerHTML = '';
 }
 
-function deleteFile(id) {
+async function deleteFile(id) {
   if(!confirm('هل أنت متأكد من حذف هذا الملف؟')) return;
-  let files = getData('uploadedFiles', []);
-  files = files.filter(f => f.id !== id);
-  setData('uploadedFiles', files);
-  renderFiles();
+  try {
+    const res = await fetch('/api/attachments?id='+encodeURIComponent(id), { method:'DELETE' });
+    const body = await res.json();
+    if(!res.ok) throw new Error(body.error || 'تعذر حذف الملف');
+    let files = getData('uploadedFiles', []);
+    files = files.filter(f => String(f.id) !== String(id));
+    setData('uploadedFiles', files);
+    renderFiles();
+  } catch(error) { alert(error.message || 'تعذر حذف الملف'); }
 }
 
 function generateAIReport(student) {
