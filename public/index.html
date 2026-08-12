@@ -498,16 +498,21 @@ tr:hover { background: var(--table-hover); }
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
 <div id="devAssistantPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>OpenRouter</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على المشروع عبر الخادم وGitHub عند تفعيل التطبيق التلقائي. لا توجد خطوة موافقة ثانية.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>Vercel AI Gateway</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
     ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفاتيح OpenRouter وGitHub تبقى على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
+  <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
   <div class="form-group">
     <label>طلب التطوير</label>
     <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تريد إضافته أو تعديله ف�� الموقع..."></textarea>
   </div>
-  <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">⚡ تحليل الطلب وتطبيقه تلقائياً</button>
+  <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
+  <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
+    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;"><strong id="devProgressLabel">تحليل الطلب</strong><span id="devEta">الوقت المتبقي: 02:00</span></div>
+    <div style="height:9px;background:var(--border);border-radius:999px;overflow:hidden;"><div id="devProgressBar" style="height:100%;width:8%;background:var(--primary);transition:width .5s;"></div></div>
+  </div>
   <div id="devAssistantResult" style="margin-top:20px;"></div>
 
   <!-- سجل تدقيق عمليات مساعد التطوير (Audit Log) -->
@@ -519,7 +524,7 @@ tr:hover { background: var(--table-hover); }
         <button class="btn" style="background:#dc3545;color:#fff;" onclick="clearDevAudit()">🗑️ مسح السجل</button>
       </div>
     </div>
-    <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:12px;">يُسجَّل هنا كل طلب ينفّذه مساعد التطوير: الوقت، المسؤول، نص الطلب، الحالة (نجاح/فشل/محظور)، الملفات التي تغيّرت وروابط الـcommit. يُحفَظ السجل محلياً في هذا المتصفح.</p>
+    <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:12px;">يُسجَّل هنا كل طلب ينفّذه مساعد التطوير: الوقت، المسؤول، نص الطلب، الحالة (نج��ح/فشل/محظور)، الملفات التي تغيّرت وروابط الـcommit. يُحفَظ السجل محلياً في هذا المتصفح.</p>
     <div id="devAuditLog"></div>
   </div>
 </div>
@@ -927,7 +932,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ملفات المسؤول لولي الأمر -->
 <div id="parentFilesPage" class="page hidden">
-  <div class="page-header"><h2>📁 الملفات المرسلة لي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📁 الملفات المرسلة ��ي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="parentFilesContent"></div>
 </div>
 
@@ -1083,7 +1088,7 @@ const SURAH_AYAH_COUNTS = {
 
 const ALL_SURAHS_ORDERED = [
   "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
-  "الإسراء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
+  "الإس��اء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
   "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الإنفطار",
@@ -1115,8 +1120,22 @@ if(localStorage.getItem('theme') === 'dark') {
   document.querySelector('.theme-toggle').textContent = '☀️';
 }
 
+let neonSaveTimer = null;
+const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','recordElements','extraElements'];
 function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
-function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
+async function saveAllDataToNeon(){
+  const status=document.getElementById('cloudSaveStatus');
+  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})}); if(!res.ok)throw new Error(); if(status)status.textContent='محفوظ في Neon'; }
+  catch(e){ if(status)status.textContent='تعذر الحفظ في Neon'; }
+}
+function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
+async function hydrateDataFromNeon(){
+  if(sessionStorage.getItem('neon_hydrated_v1'))return;
+  try{ const res=await fetch('/api/data',{cache:'no-store'}); const body=await res.json(); if(res.ok&&body.data){ Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); }); sessionStorage.setItem('neon_hydrated_v1','1'); location.reload(); } else { sessionStorage.setItem('neon_hydrated_v1','1'); await saveAllDataToNeon(); } }
+  catch(e){ sessionStorage.setItem('neon_hydrated_v1','1'); }
+}
+hydrateDataFromNeon();
 
 if(!localStorage.getItem('initialized_v7')) {
   setData('subjects', [
@@ -1129,6 +1148,7 @@ if(!localStorage.getItem('initialized_v7')) {
 } else {
   let admins = getData('admins');
   let changed = false;
+  if(!Array.isArray(admins) || !admins.length){ admins=[{id:1,mobile:'00000000000',password:'1234',isMain:true}]; changed=true; }
   admins.forEach(a => { if(a.mobile === '0000000000') { a.mobile = '00000000000'; changed = true; } });
   if(changed) setData('admins', admins);
 }
@@ -2443,10 +2463,18 @@ function addExamPlanRow(){
   examPlanRows.push({count:1,level:'easy',type:'mcq',timeLimit:60,completeAyahs:1,reciteAyahs:1,audioShareWithParent:true,optionsCount:4});
   renderExamPlanRows();
 }
-function toggleExamPlanWeak(i){
-  if(!examPlanRows[i])return;
-  examPlanRows[i].weakened=!examPlanRows[i].weakened;
-  renderExamPlanRows();
+function setExamPlanTime(i,part,value){
+  const row=examPlanRows[i]; if(!row)return;
+  let total=Math.max(0,parseInt(row.timeLimit)||0),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;
+  const v=Math.max(0,parseInt(value)||0); if(part==='hours')h=Math.min(23,v); if(part==='minutes')m=Math.min(59,v); if(part==='seconds')s=Math.min(59,v);
+  row.timeLimit=Math.max(5,h*3600+m*60+s);
+}
+function deleteEntireExam(){
+  if(!confirm('هل تريد حذف الاختبار بالكامل؟ لا يمكن التراجع عن هذا الإجراء.'))return;
+  examQuestions=[]; examPlanRows=[]; renderExamPlanRows(); renderExamQuestions();
+  const id=parseInt(document.getElementById('recordStudentId')?.value||'0'); const students=getData('students'); const index=students.findIndex(function(student){return student.id===id});
+  if(index>=0){students[index].activeExam=null;setData('students',students)}
+  showExamAlert('تم حذف الاختبار بالكامل.','info');
 }
 function renderExamPlanRows(){
   const c=document.getElementById('examPlanRows'); if(!c)return;
@@ -2460,12 +2488,12 @@ function renderExamPlanRows(){
       '<option value="easy" '+(r.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(r.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(r.level==='hard'?'selected':'')+'>صعب</option></select></div>'+
       '<div class="form-group"><label>نوع السؤال</label><select onchange="examPlanRows['+i+'].type=this.value;renderExamPlanRows()">'+
       '<option value="mcq" '+(r.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(r.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(r.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(r.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+
-      '<div class="form-group"><label>وقت كل سؤال (ثانية)</label><input type="number" min="5" max="3600" value="'+(r.timeLimit||60)+'" onchange="examPlanRows['+i+'].timeLimit=Math.max(5,Math.min(3600,parseInt(this.value)||60))"></div>'+
+      '<div class="form-group"><label>وقت السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" title="الساعات" type="number" min="0" max="23" value="'+Math.floor((r.timeLimit||60)/3600)+'" onchange="setExamPlanTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" title="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((r.timeLimit||60)%3600)/60)+'" onchange="setExamPlanTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" title="الثواني" type="number" min="0" max="59" value="'+((r.timeLimit||60)%60)+'" onchange="setExamPlanTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+
       (r.type==='mcq'?'<div class="form-group"><label>عدد الاختيارات</label><input type="number" min="2" max="6" value="'+(r.optionsCount||4)+'" onchange="examPlanRows['+i+'].optionsCount=Math.max(2,Math.min(6,parseInt(this.value)||4))"></div>':'')+
       (r.type==='complete'?'<div class="form-group"><label>عدد الآيات المراد إكمالها</label><input type="number" min="1" max="20" value="'+(r.completeAyahs||1)+'" onchange="examPlanRows['+i+'].completeAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">يحدد عدد الآيات التي سيكملها الطالب بعد بداية السؤال</small></div>':'')+
       (r.type==='audio'?'<div class="form-group"><label>عدد الآيات المطلوب تسجيلها</label><input type="number" min="1" max="20" value="'+(r.reciteAyahs||1)+'" onchange="examPlanRows['+i+'].reciteAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">عدد الآيات التي سيقرأها الطالب</small></div>':'')+
       (r.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="examPlanRows['+i+'].audioShareWithParent=this.value===\'true\'"><option value="true" '+(r.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(r.audioShareWithParent===false?'selected':'')+'>إخفاء عن ولي الأمر</option></select></div>':'')+
-      '<div class="form-group" style="display:flex;align-items:flex-end"><button class="btn btn-xs '+(weak?'btn-warning':'btn-secondary')+'" onclick="toggleExamPlanWeak('+i+')">'+(weak?'↩️ إلغاء التضعيف':'⚠️ تضعيف')+'</button></div>'+
+      '<div class="form-group" style="display:flex;align-items:flex-end"><button class="btn btn-xs btn-danger" onclick="deleteEntireExam()">حذف الاختبار بالكامل</button></div>'+
       '</div></div>';
   });
   c.innerHTML=h;
@@ -2536,6 +2564,8 @@ async function generateExamQuestions(){
 function addManualExamQuestion(){examQuestions.push({id:'manual_'+Date.now(),type:'mcq',level:'medium',surah:currentRecordMainSurah||'',prompt:'سؤال يدوي',stem:'',options:['','','',''],correct:'',from:1,to:1,timeLimit:60,completeAyahs:1,reciteAyahs:1,audioShareWithParent:true,points:1,rejected:false,weakened:false,source:'manual'});renderExamQuestions()}
 function clearExamQuestions(){examQuestions=[];renderExamQuestions()}
 function updateExamQuestion(i,k,v){if(examQuestions[i])examQuestions[i][k]=v}
+function setQuestionTime(i,part,value){const q=examQuestions[i];if(!q)return;let total=Math.max(0,parseInt(q.timeLimit)||0),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;const v=Math.max(0,parseInt(value)||0);if(part==='hours')h=Math.min(23,v);if(part==='minutes')m=Math.min(59,v);if(part==='seconds')s=Math.min(59,v);q.timeLimit=Math.max(5,h*3600+m*60+s)}
+function formatExamTime(total){total=Math.max(0,parseInt(total)||0);return [Math.floor(total/3600),Math.floor((total%3600)/60),total%60].map(function(v){return String(v).padStart(2,'0')}).join(':')}
 function rejectExamQuestion(i){if(examQuestions[i]){examQuestions[i].rejected=true;examQuestions[i].weakened=false;}renderExamQuestions()}
 function restoreExamQuestion(i){if(examQuestions[i])examQuestions[i].rejected=false;renderExamQuestions()}
 function weakenExamQuestion(i){if(examQuestions[i])examQuestions[i].weakened=!examQuestions[i].weakened;renderExamQuestions()}
@@ -2547,7 +2577,7 @@ function renderExamQuestions(){
       '<div class="exam-question-header"><strong>السؤال '+(i+1)+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">↩️ استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">🚫 رفض</button>')+'</div>'+
       '<div class="form-row"><div class="form-group"><label>النوع</label><select onchange="updateExamQuestion('+i+',\'type\',this.value);renderExamQuestions()"><option value="mcq" '+(q.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(q.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(q.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(q.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+ 
       '<div class="form-group"><label>المستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+ 
-      '<div class="form-group"><label>زمن السؤال (ثانية)</label><input type="number" min="5" max="600" value="'+(q.timeLimit||30)+'" onchange="updateExamQuestion('+i+',\'timeLimit\',parseInt(this.value)||30)"></div>'+ 
+      '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
       (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
       (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
       '</div>'+
@@ -2616,10 +2646,10 @@ function renderStudentExam(){
   if(studentExamCurrentIndex>=ex.questions.length){submitStudentExam(true);return}
   const i=studentExamCurrentIndex,q=ex.questions[i];
   const remaining=Math.max(0,studentExamQuestionRemaining[i]||parseInt(q.timeLimit)||60);
-  let h='<div class="exam-sticky"><strong>🧪 اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال '+(i+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+remaining+'ث</span></div><div>⏱️ لكل سؤال وقت مستقل، ولا ينتقل الوقت إلى السؤال التالي.</div></div>';
+  let h='<div class="exam-sticky"><strong>🧪 اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال '+(i+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)</span></div><div>⏱️ لكل سؤال وقت مستقل، ولا ينتقل الوقت إلى السؤال التالي.</div></div>';
   h+='<div id="studentExamQuestions">';
   h+='<div class="exam-question" id="examQuestionBox_'+i+'"><h4>س'+(i+1)+'. '+escapeHtml(q.prompt||'')+'</h4>'+
-    '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><p style="margin:10px 0;line-height:1.8">'+escapeHtml(q.stem||'')+'</p><span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+remaining+'ث</span></div>';
+    '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><p style="margin:10px 0;line-height:1.8">'+escapeHtml(q.stem||'')+'</p><span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)</span></div>';
   if(q.type==='mcq'||q.type==='truefalse'){
     (q.options||[]).forEach((o,oi)=>{h+='<label class="exam-option"><input type="radio" name="examq_current" value="'+escapeHtml(o)+'" '+(studentExamAnswers[i]===o?'checked':'')+' onchange="markExamAnswer('+i+',this.value)"> '+escapeHtml(o)+'</label>';});
   }else if(q.type==='complete'){
@@ -2644,8 +2674,8 @@ function startStudentExamTimer(ex){
   studentExamQuestionTimer=setInterval(()=>{
     if(studentExamLockedIndices[i]){clearInterval(studentExamQuestionTimer);return;}
     studentExamQuestionRemaining[i]=Math.max(0,studentExamQuestionRemaining[i]-1);
-    const el=document.getElementById('examQTimer_'+i);if(el)el.textContent='الوقت: '+studentExamQuestionRemaining[i]+'ث';
-    const top=document.getElementById('studentExamTimer');if(top)top.textContent='الوقت: '+studentExamQuestionRemaining[i]+'ث';
+const el=document.getElementById('examQTimer_'+i);if(el)el.textContent='الوقت: '+formatExamTime(studentExamQuestionRemaining[i]);
+const top=document.getElementById('studentExamTimer');if(top)top.textContent='الوقت: '+formatExamTime(studentExamQuestionRemaining[i]);
     if(studentExamQuestionRemaining[i]===0){clearInterval(studentExamQuestionTimer);expireExamQuestion(i);}
   },1000);
 }
@@ -3281,8 +3311,11 @@ async function runDevAssistant(){
 
   btn.disabled = true;
   const originalLabel = btn.textContent;
-  btn.textContent = '⚙️ جارٍ التعديل المباشر...';
+  btn.textContent = 'جارٍ التعديل المباشر...';
   resultBox.innerHTML = '<p style="color:var(--text-light)">جارٍ تحليل المشروع وقراءة الملفات البرمجية اللازمة ثم تطبيق التعديل...</p>';
+  const progressPanel=document.getElementById('devProgressPanel'),progressBar=document.getElementById('devProgressBar'),progressLabel=document.getElementById('devProgressLabel'),etaBox=document.getElementById('devEta');
+  if(progressPanel)progressPanel.style.display='block'; let elapsed=0,estimate=120;
+  const progressTimer=setInterval(function(){elapsed++;const left=Math.max(0,estimate-elapsed),progress=Math.min(94,8+Math.round(elapsed/estimate*86));if(progressBar)progressBar.style.width=progress+'%';if(etaBox)etaBox.textContent='الوقت المتبقي التقريبي: '+formatExamTime(left);if(progressLabel)progressLabel.textContent=elapsed<25?'تحليل الطلب':elapsed<70?'تعديل ملفات المشروع':elapsed<105?'إرسال التعديل إلى GitHub':'بدء تحديث الموقع';},1000);
 
   try {
     const plan = await callStudentAI('dev_assistant', { request, role:'admin', adminId: currentAdminId || null, autoApply:true }, 0.2);
@@ -3309,6 +3342,10 @@ async function runDevAssistant(){
     renderDevAudit();
     showToast('❌ تعذر تنفيذ التعديل', 'error');
   } finally {
+    clearInterval(progressTimer);
+    if(progressBar)progressBar.style.width='100%';
+    if(progressLabel)progressLabel.textContent='اكتمل التنفيذ';
+    if(etaBox)etaBox.textContent='الوقت المتبقي: 00:00:00';
     btn.disabled = false;
     btn.textContent = originalLabel;
   }
@@ -4440,7 +4477,7 @@ function dataURLToBlob(dataUrl) {
   } catch (e) { return null; }
 }
 
-// ====== QURAN AYAH IMAGES (صور الآيات ��الرسم العثماني المُشكَّل) ======
+// ====== QURAN AYAH IMAGES (صور الآيات ��ا��رسم العثماني المُشكَّل) ======
 function surahNumber(name) {
   const i = ALL_SURAHS_ORDERED.indexOf((name || '').trim());
   return i === -1 ? 0 : i + 1;
@@ -4917,7 +4954,7 @@ function renderFiles() {
   html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px;">';
   files.slice().reverse().forEach(f => {
     const sizeMB = (f.size / (1024*1024)).toFixed(2);
-    const icon = f.type && f.type.startsWith('image/') ? '🖼️' : f.type && f.type.startsWith('audio/') ? '🎵' : f.type && f.type.startsWith('video/') ? '🎬' : f.type && f.type.includes('pdf') ? '📄' : '📎';
+    const icon = f.type && f.type.startsWith('image/') ? '🖼️' : f.type && f.type.startsWith('audio/') ? '🎵' : f.type && f.type.startsWith('video/') ? '🎬' : f.type && f.type.includes('pdf') ? '����' : '📎';
     html += '<div style="background:var(--table-header); border-radius:12px; padding:15px; border:2px solid var(--border); transition:0.2s;" onmouseover="this.style.borderColor=&quot;var(--primary)&quot;" onmouseout="this.style.borderColor=&quot;var(--border)&quot;">';
     html += '<div style="font-size:2.5rem; text-align:center; margin-bottom:10px;">'+icon+'</div>';
     html += '<h5 style="color:var(--primary); margin-bottom:5px; word-break:break-word;">'+f.desc+'</h5>';
@@ -5140,7 +5177,7 @@ function generateAIResponse(text, student) {
   }
   // التقدم عبر الجلسات
   if(has('تقد��','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
-    if(finalizedSessions.length < 2) return '📈 أحتاج تسميعين نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
+    if(finalizedSessions.length < 2) return '��� أحتاج تسميعين نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
