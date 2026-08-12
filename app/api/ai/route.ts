@@ -1,12 +1,10 @@
-import { generateText } from "ai"
-
 export const maxDuration = 60
 
-// ===== مزوّد الذكاء الاصطناعي: Vercel AI Gateway =====
-const TEXT_MODEL = "google/gemini-3.6-flash"
-
-// OpenRouter متروك فقط كمسار احتياطي اختياري لتحويل التسجيلات الصوتية القديمة.
-// لا يحتاج النص إلى مفتاح مزود داخل المتصفح؛ المصادقة تتم على الخادم عبر Vercel AI Gateway.
+// مزود النص الأساسي Groq، مع OpenRouter كبديل تلقائي. جميع المفاتيح تبقى على الخادم.
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+const GROQ_TEXT_MODEL = (process.env.GROQ_TEXT_MODEL || "llama-3.3-70b-versatile").trim()
+const OPENROUTER_TEXT_MODEL = (process.env.OPENROUTER_TEXT_MODEL || "google/gemini-2.5-flash").trim()
 const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe"
 const OPENROUTER_AUDIO_TRANSCRIPTIONS_URL = "https://openrouter.ai/api/v1/audio/transcriptions"
 
@@ -20,7 +18,7 @@ const sttProviderConfigured = !!STT_API_KEY
 // مزوّد التحقق من هوية المتحدث (Speaker Verification) — نقطة توسعة اختيارية عبر البيئة.
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
 
-const keyConfigured = true
+const keyConfigured = !!(process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY)
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -58,11 +56,11 @@ function sanitizeRepo(raw: string): string {
 }
 
 const GITHUB_TOKEN = pickEnv("GITHUB_TOKEN")
-const GITHUB_OWNER = "jj1333961-code"
-const GITHUB_REPO = "teacher"
+const GITHUB_OWNER = sanitizeOwner(pickEnv("GITHUB_OWNER"))
+const GITHUB_REPO = sanitizeRepo(pickEnv("GITHUB_REPO"))
 // إن لم يُضبط GITHUB_BRANCH نستخدم الفرع الافتراضي الفعلي للمستودع (يُحلّ وقت التشغيل)، لا نفترض "main".
-const GITHUB_BRANCH_ENV = pickEnv("GITHUB_BRANCH_3", "GITHUB_BRANCH_2", "GITHUB_BRANCH")
-const AUTO_DEV_ENABLED = true
+const GITHUB_BRANCH_ENV = pickEnv("GITHUB_BRANCH")
+const AUTO_DEV_ENABLED = pickEnv("DEV_ASSISTANT_AUTO_APPLY").toLowerCase() === "true"
 const githubConfigured = !!(GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO)
 const GITHUB_API = "https://api.github.com"
 const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
@@ -70,15 +68,49 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-async function gatewayText(prompt: string, system: string, temperature: number): Promise<string> {
-  const { text } = await generateText({
-    model: TEXT_MODEL,
-    system,
-    prompt,
-    temperature,
-  })
-  if (!text.trim()) throw new Error("رد فارغ من Vercel AI Gateway")
-  return text
+type TextProvider = { name: string; url: string; key?: string; model: string }
+
+async function requestProvider(provider: TextProvider, prompt: string, system: string, temperature: number): Promise<string> {
+  if (!provider.key) throw new Error(`${provider.name} غير مهيأ`)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 45_000)
+  try {
+    const res = await fetch(provider.url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${provider.key}`,
+        "Content-Type": "application/json",
+        ...(provider.name === "OpenRouter" ? { "HTTP-Referer": process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://v0.dev", "X-Title": "Teacher Platform" } : {}),
+      },
+      body: JSON.stringify({
+        model: provider.model,
+        messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
+        temperature: Math.max(0, Math.min(1, temperature)),
+      }),
+      signal: controller.signal,
+    })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) throw new Error(`${provider.name} ${res.status}: ${String(data?.error?.message || "فشل الطلب").slice(0, 180)}`)
+    const text = data?.choices?.[0]?.message?.content
+    if (typeof text !== "string" || !text.trim()) throw new Error(`رد فارغ من ${provider.name}`)
+    return text.trim()
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+async function directText(prompt: string, system: string, temperature: number): Promise<string> {
+  const providers: TextProvider[] = [
+    { name: "Groq", url: GROQ_API_URL, key: process.env.GROQ_API_KEY, model: GROQ_TEXT_MODEL },
+    { name: "OpenRouter", url: OPENROUTER_API_URL, key: process.env.OPENROUTER_API_KEY, model: OPENROUTER_TEXT_MODEL },
+  ]
+  const errors: string[] = []
+  for (const provider of providers) {
+    if (!provider.key) continue
+    try { return await requestProvider(provider, prompt, system, temperature) }
+    catch (error) { errors.push(error instanceof Error ? error.message : `${provider.name} failed`) }
+  }
+  throw new Error(errors.length ? errors.join(" | ") : "لم يتم إعداد GROQ_API_KEY أو OPENROUTER_API_KEY")
 }
 
 function json(data: unknown, status = 200) {
@@ -130,7 +162,7 @@ function extractJson(text: string): any {
 }
 
 async function runText(prompt: string, system: string, temperature: number) {
-  return gatewayText(prompt, system, temperature)
+  return directText(prompt, system, temperature)
 }
 
 // تحويل الصوت إلى نص مع دعم مزوّد خارجي قابل للتبديل عبر البيئة.
@@ -188,7 +220,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - لا تنشئ أسئلة ثقافة عامة أو دين عام أو معلومات خارج نصوص القرآن.
 - التزم تماماً بعدد الأسئلة count المطلوب لكل plan، وبالنوع والمستوى المحددين في كل plan.
 - إذا كان type=mcq فعدد الخيارات يجب أن يساوي optionsCount لذلك plan، مع إجابة صحيحة واحدة فقط.
-- إذا كان type=truefalse فاجعل options=["صح","خطأ"] فقط، وبدّل بين العبارات الصحيحة والخاطئة بذكاء. مثال: "الآية ... من سورة الناس، صح أم خطأ؟"
+- إذا كان type=truefalse فاجعل options=["صح","خطأ"] فقط، وبدّل بين العبار��ت الصحيحة والخاطئة بذكاء. مثال: "الآية ... من سورة الناس، صح أم خطأ؟"
 - إذا كان type=complete فاختر بداية آية حقيقية، ثم اجعل الطالب يكمل عدداً يساوي completeAyahs بالضبط. يجب أن يكون from/to صحيحين وفي السورة نفسها.
 - إذا كان type=audio فحدد مقطعاً حقيقياً من السورة، ويجب أن يساوي عدد الآيات من from إلى to قيمة reciteAyahs بالضبط.
 - level=easy: سؤال مباشر من النص.
@@ -466,7 +498,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
       reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
-  // التحقق من أن الفرع المُحدد/الافتراضي قابل للحل.
+  // التحقق من أن الفرع المُحدد/الافتراضي قابل ��لحل.
   let branch = ""
   try {
     branch = await resolveBranch()
@@ -731,7 +763,7 @@ export async function POST(req: Request) {
       })
     }
 
-    // 6) مساعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
+    // 6) م��اعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
     if (mode === "dev_assistant") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const request = typeof payload.request === "string" ? payload.request.trim() : ""
