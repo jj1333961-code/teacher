@@ -692,7 +692,7 @@ tr:hover { background: var(--table-hover); }
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
   <div class="form-group"><label>ملاحظات</label><textarea id="editNotes" rows="2"></textarea></div>
-  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التعديلات</button>
+  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التع����يلات</button>
 </div>
 
 <!-- تسجيل تسميع جديد -->
@@ -1121,20 +1121,34 @@ if(localStorage.getItem('theme') === 'dark') {
 }
 
 let neonSaveTimer = null;
-const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','recordElements','extraElements'];
-function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
+let neonUpdatedAt = localStorage.getItem('neon_updated_at') || '';
+let neonSaveQueue = Promise.resolve();
+const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','uploadedFiles','devAuditLog','recordElements','extraElements'];
+function getData(key, def) { const d = localStorage.getItem(key); try{return d ? JSON.parse(d) : (def || []);}catch(e){return def || [];} }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
-async function saveAllDataToNeon(){
-  const status=document.getElementById('cloudSaveStatus');
-  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})}); if(!res.ok)throw new Error(); if(status)status.textContent='محفوظ في Neon'; }
-  catch(e){ if(status)status.textContent='تعذر الحفظ في Neon'; }
+function saveAllDataToNeon(){
+  neonSaveQueue=neonSaveQueue.then(async function(){
+    const status=document.getElementById('cloudSaveStatus');
+    try{
+      const headers={'Content-Type':'application/json'};
+      if(neonUpdatedAt)headers['If-Unmodified-Since']=neonUpdatedAt;
+      const res=await fetch('/api/data',{method:'PUT',headers:headers,body:JSON.stringify({data:collectCloudData()})});
+      const body=await res.json();
+      if(res.status===409&&body.data){Object.keys(body.data).forEach(function(key){localStorage.setItem(key,JSON.stringify(body.data[key]));});neonUpdatedAt=body.updatedAt||'';throw new Error('conflict');}
+      if(!res.ok)throw new Error(body.error||'save failed');
+      neonUpdatedAt=body.updatedAt||neonUpdatedAt; if(neonUpdatedAt)localStorage.setItem('neon_updated_at',neonUpdatedAt);
+      if(status)status.textContent='محفوظ في Neon';
+    }catch(e){if(status)status.textContent=navigator.onLine?'تعذر الحفظ في Neon':'بانتظار عودة الاتصال';}
+  });
+  return neonSaveQueue;
 }
 function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
 async function hydrateDataFromNeon(){
-  if(sessionStorage.getItem('neon_hydrated_v1'))return;
-  try{ const res=await fetch('/api/data',{cache:'no-store'}); const body=await res.json(); if(res.ok&&body.data){ Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); }); sessionStorage.setItem('neon_hydrated_v1','1'); location.reload(); } else { sessionStorage.setItem('neon_hydrated_v1','1'); await saveAllDataToNeon(); } }
-  catch(e){ sessionStorage.setItem('neon_hydrated_v1','1'); }
+  if(sessionStorage.getItem('neon_hydrated_v2'))return;
+  try{const res=await fetch('/api/data',{cache:'no-store'});const body=await res.json();if(res.ok&&body.data){Object.keys(body.data).forEach(function(key){localStorage.setItem(key,JSON.stringify(body.data[key]));});neonUpdatedAt=body.updatedAt||'';if(neonUpdatedAt)localStorage.setItem('neon_updated_at',neonUpdatedAt);sessionStorage.setItem('neon_hydrated_v2','1');location.reload();}else{sessionStorage.setItem('neon_hydrated_v2','1');await saveAllDataToNeon();}}
+  catch(e){sessionStorage.setItem('neon_hydrated_v2','1');}
 }
+window.addEventListener('online',saveAllDataToNeon);
 hydrateDataFromNeon();
 
 if(!localStorage.getItem('initialized_v7')) {
@@ -2499,7 +2513,7 @@ function renderExamPlanRows(){
   c.innerHTML=h;
 }
 function examLevelLabel(l){return l==='easy'?'سهل':l==='hard'?'صعب':'متوسط'}
-function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').trim()}
+function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(/���/g,'ه').replace(/ى/g,'ي').trim()}
 
 async function buildExamSourceCandidates(base){
   const baseIdx=ALL_SURAHS_ORDERED.indexOf(base);
@@ -2598,7 +2612,7 @@ function renderExamQuestions(){
 function showExamAlert(t,type){const e=document.getElementById('examBuilderAlert');if(e)e.innerHTML='<div class="alert alert-'+(type||'info')+'">'+t+'</div>'}
 function saveExamDraft(){
   const id=parseInt(document.getElementById('recordStudentId').value);let students=getData('students');const i=students.findIndex(s=>s.id===id);const qs=examQuestions.filter(q=>!q.rejected);
-  if(i<0||!qs.length){showExamAlert('أضف سؤالاً واحداً على الأقل قبل الحفظ.','danger');return}
+  if(i<0||!qs.length){showExamAlert('أضف سؤالاً واحداً ع��ى الأقل قبل الحفظ.','danger');return}
   const totalSeconds=qs.reduce((n,q)=>n+Math.max(5,parseInt(q.timeLimit)||60),0);
   students[i].activeExam={id:'exam_'+Date.now(),date:document.getElementById('recordDate').value||new Date().toISOString().split('T')[0],questions:JSON.parse(JSON.stringify(qs)),totalSeconds,status:'pending',createdAt:Date.now(),baseSurah:currentRecordMainSurah};
   setData('students',students);
@@ -2646,10 +2660,10 @@ function renderStudentExam(){
   if(studentExamCurrentIndex>=ex.questions.length){submitStudentExam(true);return}
   const i=studentExamCurrentIndex,q=ex.questions[i];
   const remaining=Math.max(0,studentExamQuestionRemaining[i]||parseInt(q.timeLimit)||60);
-  let h='<div class="exam-sticky"><strong>🧪 اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال '+(i+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)</span></div><div>⏱️ لكل سؤال وقت مستقل، ولا ينتقل الوقت إلى السؤال التالي.</div></div>';
+  let h='<div class="exam-sticky"><strong>🧪 اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال '+(i+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)+'</span></div><div>⏱️ لكل سؤال وقت مستقل، ولا ينتقل الوقت إلى السؤال التالي.</div></div>';
   h+='<div id="studentExamQuestions">';
   h+='<div class="exam-question" id="examQuestionBox_'+i+'"><h4>س'+(i+1)+'. '+escapeHtml(q.prompt||'')+'</h4>'+
-    '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><p style="margin:10px 0;line-height:1.8">'+escapeHtml(q.stem||'')+'</p><span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)</span></div>';
+    '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><p style="margin:10px 0;line-height:1.8">'+escapeHtml(q.stem||'')+'</p><span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)+'</span></div>';
   if(q.type==='mcq'||q.type==='truefalse'){
     (q.options||[]).forEach((o,oi)=>{h+='<label class="exam-option"><input type="radio" name="examq_current" value="'+escapeHtml(o)+'" '+(studentExamAnswers[i]===o?'checked':'')+' onchange="markExamAnswer('+i+',this.value)"> '+escapeHtml(o)+'</label>';});
   }else if(q.type==='complete'){
@@ -3144,7 +3158,7 @@ async function refreshGithubSync(){
   const link = document.getElementById('githubHistoryLink');
   const del = document.getElementById('githubDeleteBox');
   if(btn){ btn.disabled = true; btn.textContent = '⏳ جارٍ التحقق...'; }
-  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الاتصال بمستودعك...</p>';
+  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الات��ال بمستودعك...</p>';
   try {
     const st = await callStudentAI('github_status', { role:'admin', adminId: currentAdminId || null }, 0.1);
     if(!st || st.connected !== true){
@@ -3234,7 +3248,7 @@ const DEV_DANGER_PATTERNS = [
   {re:/حذف\s*(الطلاب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},
   {re:/(المصادقة|تسجيل\s*الدخول|نظام\s*الدخول|كلمة\s*المرور\s*الرئيسية|authentication|login\s*system)/i, label:'تغيير نظام المصادقة'},
   {re:/(تغيير|تعديل|حذف)\s*(الصلاحيات|الأذونات|permissions)/i, label:'تغيير الصلاحيات'},
-  {re:/(تغيير|تعديل|حذف)\s*(مفاتيح|متغيرات)\s*البيئة|env(ironment)?\s*var|\.env/i, label:'تغيير مفاتيح البيئة'},
+  {re:/(تغيير|تعديل|حذف)\s*(مفاتيح|متغيرات)\s*الب��ئة|env(ironment)?\s*var|\.env/i, label:'تغيير مفاتيح البيئة'},
   {re:/(تغيير|تعطيل|إزالة)\s*(إعدادات\s*)?الأمان|security/i, label:'تغيير إعدادات الأمان'},
 ];
 function detectDevDanger(request){
@@ -4895,7 +4909,7 @@ function renderParentFullChart() {
   setTimeout(() => drawTotalOnlyChart(canvasId, finalizedSessions), 100);
 }
 
-function uploadFile(input) {
+async function uploadFile(input) {
   const file = input.files[0];
   if(!file) return;
   const desc = document.getElementById('fileDesc').value.trim() || file.name;
@@ -4903,46 +4917,34 @@ function uploadFile(input) {
   const targetSel = document.getElementById('fileTarget');
   const targetId = targetSel ? targetSel.value : 'all';
   const progressDiv = document.getElementById('fileUploadProgress');
-  progressDiv.innerHTML = '<div class="alert alert-info">⏳ جاري رفع الملف...</div>';
-
-  const reader = new FileReader();
-  reader.onprogress = function(e) {
-    if(e.lengthComputable) {
-      const pct = Math.round((e.loaded / e.total) * 100);
-      progressDiv.innerHTML = '<div class="alert alert-info">⏳ جاري الرفع... '+pct+'%</div>';
-    }
-  };
-  reader.onload = function(e) {
+  progressDiv.innerHTML = '<div class="alert alert-info">⏳ جاري رفع الملف إلى التخزين الآمن...</div>';
+  try {
+    const form = new FormData(); form.append('file', file);
+    const res = await fetch('/api/files/upload', {method:'POST', body:form});
+    const uploaded = await res.json();
+    if(!res.ok) throw new Error(uploaded.error || 'فشل رفع الملف');
     let files = getData('uploadedFiles', []);
-    const fileData = {
-      id: Date.now(),
-      name: file.name,
-      desc: desc,
-      category: category,
-      audience: category,
-      targetId: targetId,
-      size: file.size,
-      type: file.type,
-      data: e.target.result,
-      uploadedAt: new Date().toLocaleString('ar-EG'),
+    files.push({
+      id: uploaded.id, name: uploaded.name, desc: desc, category: category, audience: category,
+      targetId: targetId, size: uploaded.size, type: uploaded.type, pathname: uploaded.pathname,
+      uploadedAt: new Date(uploaded.uploadedAt).toLocaleString('ar-EG'), expiresAt: uploaded.expiresAt,
       uploadedBy: currentUser ? (currentUser.mobile || currentUser.name || 'مسؤول') : 'مسؤول'
-    };
-    files.push(fileData);
+    });
     setData('uploadedFiles', files);
-    progressDiv.innerHTML = '<div class="alert alert-success">✅ تم رفع الملف بنجاح!</div>';
+    progressDiv.innerHTML = '<div class="alert alert-success">✅ تم رفع الملف وسيُحذف تلقائياً بعد 7 أيام.</div>';
     document.getElementById('fileDesc').value = '';
-    document.getElementById('fileInput').value = '';
+    input.value = '';
     renderFiles();
-    setTimeout(() => { progressDiv.innerHTML = ''; }, 5000);
-  };
-  reader.onerror = function() {
-    progressDiv.innerHTML = '<div class="alert alert-danger">❌ فشل رفع الملف</div>';
-  };
-  reader.readAsDataURL(file);
+    setTimeout(function(){ progressDiv.innerHTML = ''; }, 5000);
+  } catch(error) {
+    progressDiv.innerHTML = '<div class="alert alert-danger">❌ '+(error.message || 'فشل رفع الملف')+'</div>';
+  }
 }
 
+function fileContentUrl(f){return f.pathname ? '/api/files/content?id='+encodeURIComponent(f.id) : (f.data || '');}
+
 function renderFiles() {
-  let files = getData('uploadedFiles', []);
+  let files = getData('uploadedFiles', []).filter(function(f){return !f.expiresAt || new Date(f.expiresAt).getTime() > Date.now();});
   const categoryLabels = {student:'👨‍🎓 الطالب', parent:'👨‍👩‍👧 ولي الأمر', general:'عام', quran:'قرآن', lessons:'دروس', exams:'اختبارات', reports:'تقارير'};
 
   if(files.length === 0) {
@@ -4966,9 +4968,9 @@ function renderFiles() {
     html += '</div>';
     html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">🕐 '+f.uploadedAt+'</p>';
     html += '<div style="display:flex; gap:8px;">';
-    html += '<a href="'+f.data+'" download="'+f.name+'" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تحميل</a>';
-    html += '<button class="btn btn-sm btn-primary" onclick="viewFile('+f.id+')">👁️ عرض</button>';
-    html += '<button class="btn btn-sm btn-danger" onclick="deleteFile('+f.id+')">🗑️ حذف</button>';
+    html += '<a href="'+fileContentUrl(f)+'" download="'+f.name+'" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تحميل</a>';
+    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(\''+f.id+'\')">👁️ عرض</button>';
+    html += '<button class="btn btn-sm btn-danger" onclick="deleteFile(\''+f.id+'\')">🗑️ حذف</button>';
     html += '</div>';
     html += '</div>';
   });
@@ -5027,7 +5029,7 @@ function renderUserFiles(role) {
     html += '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;"><span class="badge badge-secondary">' + sizeMB + ' MB</span><span class="badge badge-primary">من المسؤول</span></div>';
     html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">🕐 ' + f.uploadedAt + '</p>';
     html += '<div style="display:flex; gap:8px;">';
-    html += '<a href="' + f.data + '" download="' + f.name + '" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تحميل</a>';
+    html += '<a href="' + fileContentUrl(f) + '" download="' + f.name + '" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تحميل</a>';
     html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁️ عرض</button>';
     html += '</div></div>';
   });
@@ -5039,7 +5041,7 @@ function viewFile(id) {
   let files = getData('uploadedFiles', []);
   const f = files.find(x => x.id === id);
   if(!f) return;
-  openFileModal(f.data, f.name, f.desc, f.type);
+  openFileModal(fileContentUrl(f), f.name, f.desc, f.type);
 }
 
 function openFileModal(fileData, fileName, desc, fileType, readonly) {
@@ -5111,7 +5113,7 @@ function generateWelcomeMessages(student) {
   const templates = [
     {title: '��هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من يش��ء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر أن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
-    {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية، وسترى الفرق في حياتك.'},
+    {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به ��آية، وسترى الفرق في حياتك.'},
     {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متيناً.'},
     {title: 'يوم مبارك يا '+student.name+'! ✨', body: 'حافظ على الاستمرارية في الحفظ، فالقرآن يُحفظ بالتكرار والمراجعة. ثق بالله، فهو معك في كل خطوة.'}
   ];
@@ -5199,7 +5201,7 @@ function generateAIResponse(text, student) {
   }
   // الآيات والصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم أزرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>الآيات تُعرض بالرسم العثماني المُشكَّل كصورة مطابقة تماماً للمصحف.';
+    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>��� عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم أزرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>الآيات تُعرض بالرسم العثماني المُشكَّل كصورة مطابقة تماماً للمصحف.';
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صوت','ميكروفون','تحقق')) {
