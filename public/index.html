@@ -77,7 +77,8 @@
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,sans-serif; }
 body { background: var(--bg); min-height:100vh; color: var(--text); transition:0.3s; }
 .container { max-width:1400px; margin:0 auto; padding:20px; padding-bottom:100px; }
-.hidden { display:none !important; }
+  .hidden { display:none !important; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .theme-toggle {
   position:fixed; top:20px; left:20px; z-index:1000;
   background: var(--card-bg); border:2px solid var(--primary); color: var(--primary);
@@ -378,8 +379,9 @@ tr:hover { background: var(--table-hover); }
 /* AI Chat Styles */
 .ai-chat { display: flex; flex-direction: column; height: 500px; border: 2px solid var(--border); border-radius: 15px; overflow: hidden; background: var(--card-bg); }
 .ai-chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-.ai-input { display: flex; gap: 10px; padding: 15px; border-top: 2px solid var(--border); background: var(--input-bg); }
-.ai-input input { flex: 1; padding: 12px 15px; border: 2px solid var(--border); border-radius: 10px; font-size: 1rem; background: var(--card-bg); color: var(--text); }
+ .ai-input { display: flex; gap: 10px; padding: 15px; border-top: 2px solid var(--border); background: var(--input-bg); flex-wrap: wrap; }
+ .ai-input input { flex: 1; min-width: 180px; padding: 12px 15px; border: 2px solid var(--border); border-radius: 10px; font-size: 1rem; background: var(--card-bg); color: var(--text); }
+ .ai-model-picker { min-width: 150px; padding: 10px 12px; border: 2px solid var(--border); border-radius: 10px; background: var(--card-bg); color: var(--text); font-size: 0.95rem; }
 .ai-msg { padding: 12px 16px; border-radius: 15px; max-width: 80%; word-wrap: break-word; line-height: 1.5; }
 .ai-msg.user { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
 .ai-msg.bot { align-self: flex-start; background: var(--table-header); color: var(--text); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
@@ -498,7 +500,7 @@ tr:hover { background: var(--table-hover); }
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
 <div id="devAssistantPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل <code>Vercel AI Gateway</code> المشروع الحالي، يقرأ الملفات البرمجية اللازمة، يولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
     ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفاتيح OpenRouter وGitHub تبقى على الخادم فقط.
   </div>
@@ -724,6 +726,7 @@ tr:hover { background: var(--table-hover); }
     <p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. تحدد لكل نوع عدد الأسئلة والمستوى والوقت، وللاختياري عدد الاختيارات، ولأكمل/التسجيل عدد الآيات. الوقت مستقل لكل سؤال.</p>
     <div class="form-row">
       <div class="form-group"><label>السورة الأساسية</label><input id="examBaseSurah" readonly style="background:var(--table-header)"></div>
+      <div class="form-group"><label for="examAIModel">نموذج إنشاء الاختبار</label><select id="examAIModel" class="ai-model-picker" onchange="saveAIModel(this.value)"><option value="openai">OpenAI (GPT)</option><option value="grok">Grok</option><option value="gemini">Gemini</option></select></div>
     </div>
     <div id="examPlanRows"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
@@ -886,7 +889,11 @@ tr:hover { background: var(--table-hover); }
   <div class="ai-chat">
     <div id="studentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
-      <input type="text" id="studentChatInput" placeholder="اسألني عن مستواك�� أو عن القرآن..." onkeypress="if(event.key==='Enter')sendStudentChat()">
+      <label class="sr-only" for="studentAIModel">نموذج الذكاء الاصطناعي</label>
+      <select id="studentAIModel" class="ai-model-picker" onchange="saveAIModel(this.value)">
+        <option value="openai">OpenAI (GPT)</option><option value="grok">Grok</option><option value="gemini">Gemini</option>
+      </select>
+      <input type="text" id="studentChatInput" placeholder="اسألني عن مستواك أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendStudentChat()">
       <button class="btn btn-primary" onclick="sendStudentChat()">إرسال</button>
     </div>
   </div>
@@ -954,7 +961,11 @@ tr:hover { background: var(--table-hover); }
   <div class="ai-chat">
     <div id="parentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
-      <input type="text" id="parentChatInput" placeholder="اسألني عن مستوى ابنك، أو عن القرآن..." onkeypress="if(event.key==='Enter')sendParentChat()">
+      <label class="sr-only" for="parentAIModel">نموذج الذكاء الاصطناعي</label>
+      <select id="parentAIModel" class="ai-model-picker" onchange="saveAIModel(this.value)">
+        <option value="openai">OpenAI (GPT)</option><option value="grok">Grok</option><option value="gemini">Gemini</option>
+      </select>
+      <input type="text" id="parentChatInput" placeholder="اسألني عن مستوى ابنك، أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendParentChat()">
       <button class="btn btn-primary" onclick="sendParentChat()">إرسال</button>
     </div>
   </div>
@@ -1019,6 +1030,22 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <script>
+const AI_MODEL_STORAGE_KEY = 'preferred_ai_model';
+function getSelectedAIModel(){
+  const saved=localStorage.getItem(AI_MODEL_STORAGE_KEY);
+  return ['openai','grok','gemini'].includes(saved)?saved:'gemini';
+}
+function syncAIModelSelectors(){
+  const selected=getSelectedAIModel();
+  ['studentAIModel','parentAIModel','examAIModel'].forEach(function(id){const el=document.getElementById(id);if(el)el.value=selected;});
+}
+function saveAIModel(value){
+  if(!['openai','grok','gemini'].includes(value))return;
+  localStorage.setItem(AI_MODEL_STORAGE_KEY,value); syncAIModelSelectors();
+}
+function getAIModelLabel(value){return value==='openai'?'OpenAI (GPT)':value==='grok'?'Grok':'Gemini';}
+document.addEventListener('DOMContentLoaded',syncAIModelSelectors);
+
 function showToast(msg, type){
   if(!type){
     var t = String(msg);
@@ -2445,7 +2472,7 @@ let studentExamQuestionRemaining=[]; let studentExamQuestionStartedAt=[]; let st
 async function callStudentAI(mode, payload, temperature){
   const res = await fetch('/api/ai', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({mode, payload, temperature: typeof temperature==='number' ? temperature : 0.15})
+    body:JSON.stringify({mode, payload, model:getSelectedAIModel(), temperature: typeof temperature==='number' ? temperature : 0.15})
   });
   let data={}; try{ data=await res.json(); }catch(e){}
   if(!res.ok) throw new Error(data.error || ('فشل الذكاء الاصطناعي ('+res.status+')'));
@@ -2499,7 +2526,7 @@ function renderExamPlanRows(){
   c.innerHTML=h;
 }
 function examLevelLabel(l){return l==='easy'?'سهل':l==='hard'?'صعب':'متوسط'}
-function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').trim()}
+function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(/��/g,'ه').replace(/ى/g,'ي').trim()}
 
 async function buildExamSourceCandidates(base){
   const baseIdx=ALL_SURAHS_ORDERED.indexOf(base);
@@ -2646,10 +2673,10 @@ function renderStudentExam(){
   if(studentExamCurrentIndex>=ex.questions.length){submitStudentExam(true);return}
   const i=studentExamCurrentIndex,q=ex.questions[i];
   const remaining=Math.max(0,studentExamQuestionRemaining[i]||parseInt(q.timeLimit)||60);
-  let h='<div class="exam-sticky"><strong>🧪 اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال '+(i+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)</span></div><div>⏱️ لكل سؤال وقت مستقل، ولا ينتقل الوقت إلى السؤال التالي.</div></div>';
+  let h='<div class="exam-sticky"><strong>🧪 اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال '+(i+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)+'</span></div><div>⏱️ لكل سؤال وقت مستقل، ولا ينتقل الوقت إلى السؤال التالي.</div></div>';
   h+='<div id="studentExamQuestions">';
   h+='<div class="exam-question" id="examQuestionBox_'+i+'"><h4>س'+(i+1)+'. '+escapeHtml(q.prompt||'')+'</h4>'+
-    '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><p style="margin:10px 0;line-height:1.8">'+escapeHtml(q.stem||'')+'</p><span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)</span></div>';
+    '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><p style="margin:10px 0;line-height:1.8">'+escapeHtml(q.stem||'')+'</p><span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)+'</span></div>';
   if(q.type==='mcq'||q.type==='truefalse'){
     (q.options||[]).forEach((o,oi)=>{h+='<label class="exam-option"><input type="radio" name="examq_current" value="'+escapeHtml(o)+'" '+(studentExamAnswers[i]===o?'checked':'')+' onchange="markExamAnswer('+i+',this.value)"> '+escapeHtml(o)+'</label>';});
   }else if(q.type==='complete'){
@@ -3144,7 +3171,7 @@ async function refreshGithubSync(){
   const link = document.getElementById('githubHistoryLink');
   const del = document.getElementById('githubDeleteBox');
   if(btn){ btn.disabled = true; btn.textContent = '⏳ جارٍ التحقق...'; }
-  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الاتصال بمستودعك...</p>';
+  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من ال��ت��ال بمستودعك...</p>';
   try {
     const st = await callStudentAI('github_status', { role:'admin', adminId: currentAdminId || null }, 0.1);
     if(!st || st.connected !== true){
@@ -3234,7 +3261,7 @@ const DEV_DANGER_PATTERNS = [
   {re:/حذف\s*(الطلاب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},
   {re:/(المصادقة|تسجيل\s*الدخول|نظام\s*الدخول|كلمة\s*المرور\s*الرئيسية|authentication|login\s*system)/i, label:'تغيير نظام المصادقة'},
   {re:/(تغيير|تعديل|حذف)\s*(الصلاحيات|الأذونات|permissions)/i, label:'تغيير الصلاحيات'},
-  {re:/(تغيير|تعديل|حذف)\s*(مفاتيح|متغيرات)\s*البيئة|env(ironment)?\s*var|\.env/i, label:'تغيير مفاتيح البيئة'},
+  {re:/(تغيير|تعديل|حذف)\s*(مفاتيح|متغيرات)\s*الب��ئة|env(ironment)?\s*var|\.env/i, label:'تغيير مفاتيح البيئة'},
   {re:/(تغيير|تعطيل|إزالة)\s*(إعدادات\s*)?الأمان|security/i, label:'تغيير إعدادات الأمان'},
 ];
 function detectDevDanger(request){
@@ -3536,7 +3563,7 @@ function toggleShareWithParent(idx) {
   msgs[idx].shareWithParent = !msgs[idx].shareWithParent;
   setData('messages', msgs);
   renderMessages();
-  alert(msgs[idx].shareWithParent ? '✅ أصبح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعديل).' : '🚫 تم منع ولي الأمر من الاطلاع على هذا الملف.');
+  alert(msgs[idx].shareWithParent ? '✅ أصبح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعديل).' : '🚫 تم منع ولي الأ��ر من الاطلاع على هذا الملف.');
 }
 
 function openMessageFileById(msgId, readonly) {
@@ -4246,7 +4273,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   const refVec = currentUser.voicePrintVec || null;
   let matchPct = (refVec && liveVec) ? voiceMatchPercent(liveVec, refVec) : null;
 
-  // لا يسمح النظام بإرسال تسجيل صوتي لمهمة تتطلب هوية صوتية بدون بصمة مرجعية.
+  // لا يسمح النظام بإرسال تسجيل صوتي لمهمة تتطلب هوية صوتية بدون بصمة ��رجعية.
   if(!refVec || !liveVec || matchPct === null) {
     showToast('❌ لا توجد بصمة صوتية مرجعية صالحة لهذا الطالب — لم يتم حفظ أو إرسال التسجيل', 'error');
     if(statusEl) statusEl.textContent='لا توجد بصمة مرجعية ❌';
@@ -4621,10 +4648,10 @@ async function sendStudentChat() {
   const chatDiv=document.getElementById('studentChatMessages'); chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="studentAiTyping" class="ai-msg bot">⏳ جاري التفكير...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
   const s=currentUser||{}; const last=(s.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
-    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',prompt:'سؤال الطالب: '+text+'\nبيانات الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
+    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانات الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
     const data=await res.json(); if(!res.ok)throw new Error(data.error||'تعذر الرد');
     const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>'); const typing=document.getElementById('studentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
-  }catch(e){const typing=document.getElementById('studentAiTyping');if(typing)typing.innerHTML='❌ تعذر الاتصال بالذكاء الاصطناعي. حاول مرة أخرى.'}
+  }catch(e){const typing=document.getElementById('studentAiTyping');if(typing)typing.textContent='فشل نموذج '+getAIModelLabel(getSelectedAIModel())+': '+(e.message||'تعذر الاتصال. حاول مرة أخرى.')}
   chatDiv.scrollTop=chatDiv.scrollHeight;
 }
 
@@ -4750,12 +4777,12 @@ function updateParentMsgBadge() {
 
 async function sendParentChat() {
   const input=document.getElementById('parentChatInput');const text=input.value.trim();if(!text)return;input.value='';
-  const chatDiv=document.getElementById('parentChatMessages');chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="parentAiTyping" class="ai-msg bot">⏳ جاري تحليل البيانات...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
+  const chatDiv=document.getElementById('parentChatMessages');chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="parentAiTyping" class="ai-msg bot">��� جاري تحليل البيانات...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
   const child=currentUser&&currentUser[0]?currentUser[0]:{}; const last=(child.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
-    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',prompt:'سؤال ولي الأمر: '+text+'\nبيانات الابن/الابنة: '+JSON.stringify({name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)})})});
+    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال ولي الأمر: '+text+'\nبيانات الابن/الابنة: '+JSON.stringify({name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)})})});
     const data=await res.json();if(!res.ok)throw new Error(data.error||'تعذر الرد');const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');const typing=document.getElementById('parentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
-  }catch(e){const typing=document.getElementById('parentAiTyping');if(typing)typing.innerHTML='❌ تعذر الاتصال بالذكاء الاصطناعي. حاول مرة أخرى.'}
+  }catch(e){const typing=document.getElementById('parentAiTyping');if(typing)typing.textContent='فشل نموذج '+getAIModelLabel(getSelectedAIModel())+': '+(e.message||'تعذر الاتصال. حاول مرة أخرى.')}
   chatDiv.scrollTop=chatDiv.scrollHeight;
 }
 
@@ -5111,7 +5138,7 @@ function generateWelcomeMessages(student) {
   const templates = [
     {title: '��هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من يش��ء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر أن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
-    {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية، وسترى الفرق في حياتك.'},
+    {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية�� وسترى الفرق في حياتك.'},
     {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متيناً.'},
     {title: 'يوم مبارك يا '+student.name+'! ✨', body: 'حافظ على الاستمرارية في الحفظ، فالقرآن يُحفظ بالتكرار والمراجعة. ثق بالله، فهو معك في كل خطوة.'}
   ];
