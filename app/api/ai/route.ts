@@ -24,6 +24,12 @@ async function resolveGeminiModel(forceRefresh = false): Promise<string> {
   if (resolvedGeminiModel && !forceRefresh && !unavailableGeminiModels.has(resolvedGeminiModel)) return resolvedGeminiModel
 
   const configured = GEMINI.model.replace(/^models\//, "")
+  // ابدأ بالنموذج المضبوط مباشرة. بعض مفاتيح Gemini تسمح بالتوليد لكنها تمنع models.list،
+  // وكان استدعاء القائمة أولاً يُظهر خطأ توثيق رغم أن المفتاح صالح للتوليد.
+  if (!forceRefresh && !unavailableGeminiModels.has(configured)) {
+    resolvedGeminiModel = configured
+    return configured
+  }
   const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", {
     headers: { "x-goog-api-key": GEMINI.key },
     cache: "no-store",
@@ -260,7 +266,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 // ===== مساعد تطوير الموقع (للمسؤول فقط) =====
 // وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج ��سياق للتحليل.
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
-الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
+الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيق�� تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
 - "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي على:
   • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') وا��رجوع عبر goBack().
@@ -481,7 +487,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
   } catch (e: any) {
     const msg = String(e?.message || "")
     if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|getaddrinfo/i.test(msg)) {
-      return { ok: false, reason: "تعذر الاتصال بخوادم GitHub (مشكلة في الشبكة). يرجى المحاولة مرة أخرى." }
+      return { ok: false, reason: "تعذر الاتصال بخوادم GitHub (مشكلة ف�� الشبكة). يرجى المحاولة مرة أخرى." }
     }
     return { ok: false, reason: msg }
   }
@@ -833,7 +839,7 @@ export async function POST(req: Request) {
       return json({ result: status, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
     }
 
-    // 8) حذف ملف من المستودع — للمسؤول فقط، بتأكيد صريح، مع حماية الملفات الأساسية. ينشئ commit ويحافظ على التاريخ.
+    // 8) حذف ملف من المستودع — للمسؤول فقط، بتأكيد صريح، مع حما��ة الملفات الأساسية. ينشئ commit ويحافظ على التاريخ.
     if (mode === "github_delete") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       if (payload?.confirm !== true) return json({ error: "الحذف يتطلب تأكيداً صريحاً من المسؤول", diagnostics }, 400)
