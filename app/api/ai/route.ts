@@ -3,16 +3,20 @@ export const maxDuration = 60
 // ===== Gemini هو محرك الذكاء الاصطناعي الوحيد (المفتاح يبقى على الخادم) =====
 const GEMINI = {
   label: "Gemini",
-  key: (
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    ""
-  ).trim(),
-  model: (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim(),
+  get key() {
+    return (
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      ""
+    ).trim()
+  },
+  get model() {
+    return (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim()
+  },
 }
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
-const keyConfigured = !!GEMINI.key
+const isGeminiConfigured = () => Boolean(GEMINI.key)
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -66,18 +70,31 @@ async function geminiText(prompt: string, system: string, temperature: number, i
   if (!GEMINI.key) throw new Error("Gemini: مفتاح API غير مهيأ على الخادم")
   const parts: any[] = [{ text: prompt }]
   if (inlineData) parts.unshift({ inlineData })
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI.model)}:generateContent`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": GEMINI.key,
-    },
-    body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } }),
-    cache: "no-store",
-    signal: AbortSignal.timeout(55_000),
-  })
-  const data = await response.json().catch(() => null)
-  if (!response.ok) throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI.model)}:generateContent`
+  const requestBody = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } })
+  let data: any = null
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI.key,
+      },
+      body: requestBody,
+      cache: "no-store",
+      signal: AbortSignal.timeout(50_000),
+    })
+    data = await response.json().catch(() => null)
+    if (response.ok) break
+
+    const retryable = response.status === 429 || response.status >= 500
+    if (!retryable || attempt === 1) {
+      throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+
   const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
   if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
   return text.trim()
@@ -429,7 +446,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
       reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
-  // التحقق من أن الفرع المُحدد/الافتراضي قابل ��لحل.
+  // التحقق من أن الفرع المُحدد/الافتراضي قا��ل ��لحل.
   let branch = ""
   try {
     branch = await resolveBranch()
@@ -453,7 +470,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 منهجية العمل الإلزامية قبل الكتابة:
 1) اقرأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
 2) حدد بدقة أصغر جزء يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
-3) اكتب التعديل بنفس أسلوب وبنية المشروع (نفس التسمية، نفس المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
+3) اكتب التعديل بنفس أسلوب وبنية المشروع (نفس التسمية، ن��س المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
 4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء بناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أ�� معرّف استُخدم معرّف فعلاً.
 
 قواعد صارمة:
@@ -547,10 +564,10 @@ export async function POST(req: Request) {
   try {
     body = await req.json()
   } catch {
-    return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured } }, 400)
+    return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured: isGeminiConfigured() } }, 400)
   }
 
-  const diagnostics = { executedOn: "server", keyConfigured, providerStatus: 200, provider: "gemini", providerLabel: GEMINI.label }
+  const diagnostics = { executedOn: "server", keyConfigured: isGeminiConfigured(), providerStatus: 200, provider: "gemini", providerLabel: GEMINI.label }
 
   try {
     // 1) وضع ��لنص الحر (صندوق اختبار الذكاء الاصطناعي)
@@ -812,7 +829,7 @@ export async function POST(req: Request) {
         error: friendly,
         diagnostics: {
           executedOn: "server",
-          keyConfigured,
+          keyConfigured: isGeminiConfigured(),
           reason: raw.slice(0, 300),
         },
       },
