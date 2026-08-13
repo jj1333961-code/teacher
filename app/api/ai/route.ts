@@ -1,18 +1,57 @@
-export const maxDuration = 60
+export const maxDuration = 300
 
 // ===== Gemini هو محرك الذكاء الاصطناعي الوحيد (المفتاح يبقى على الخادم) =====
 const GEMINI = {
   label: "Gemini",
-  key: (
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    ""
-  ).trim(),
-  model: (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim(),
+  get key() {
+    return (
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      ""
+    ).trim()
+  },
+  get model() {
+    return (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim()
+  },
 }
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
-const keyConfigured = !!GEMINI.key
+const isGeminiConfigured = () => Boolean(GEMINI.key)
+let resolvedGeminiModel: string | null = null
+const unavailableGeminiModels = new Set<string>()
+
+async function resolveGeminiModel(forceRefresh = false): Promise<string> {
+  if (resolvedGeminiModel && !forceRefresh && !unavailableGeminiModels.has(resolvedGeminiModel)) return resolvedGeminiModel
+
+  const configured = GEMINI.model.replace(/^models\//, "")
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", {
+    headers: { "x-goog-api-key": GEMINI.key },
+    cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok) {
+    throw new Error(`Gemini models HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
+  }
+
+  const available = (Array.isArray(data?.models) ? data.models : [])
+    .filter((model: any) => Array.isArray(model?.supportedGenerationMethods) && model.supportedGenerationMethods.includes("generateContent"))
+    .map((model: any) => String(model?.name || "").replace(/^models\//, ""))
+    .filter(Boolean)
+
+  const preferred = [
+    configured,
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    ...available.filter((name: string) => name.includes("flash") && !name.includes("image") && !name.includes("tts")),
+    ...available,
+  ]
+  resolvedGeminiModel = preferred.find(
+    (name, index) => preferred.indexOf(name) === index && available.includes(name) && !unavailableGeminiModels.has(name),
+  ) || null
+  if (!resolvedGeminiModel) throw new Error("Gemini: لا يوجد نموذج يدعم generateContent لهذا المفتاح")
+  return resolvedGeminiModel
+}
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -66,18 +105,43 @@ async function geminiText(prompt: string, system: string, temperature: number, i
   if (!GEMINI.key) throw new Error("Gemini: مفتاح API غير مهيأ على الخادم")
   const parts: any[] = [{ text: prompt }]
   if (inlineData) parts.unshift({ inlineData })
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI.model)}:generateContent`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": GEMINI.key,
-    },
-    body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } }),
-    cache: "no-store",
-    signal: AbortSignal.timeout(55_000),
-  })
-  const data = await response.json().catch(() => null)
-  if (!response.ok) throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
+  const requestBody = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } })
+  let data: any = null
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const model = await resolveGeminiModel(attempt > 0 && resolvedGeminiModel === null)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": GEMINI.key,
+        },
+        body: requestBody,
+        cache: "no-store",
+        signal: AbortSignal.timeout(70_000),
+      })
+      data = await response.json().catch(() => null)
+      if (response.ok) break
+
+      if (response.status === 404 && attempt < 2) {
+        unavailableGeminiModels.add(model)
+        resolvedGeminiModel = null
+        await resolveGeminiModel(true)
+        continue
+      }
+      const retryable = response.status === 429 || response.status >= 500
+      if (!retryable || attempt === 2) {
+        throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
+      }
+    } catch (error: any) {
+      const timedOut = error?.name === "TimeoutError" || error?.name === "AbortError" || String(error?.message || "").toLowerCase().includes("aborted")
+      if (!timedOut || attempt === 2) throw error
+    }
+    await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)))
+  }
+
   const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
   if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
   return text.trim()
@@ -199,9 +263,9 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
 - "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي على:
-  • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') والرجوع عبر goBack().
+  • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') وا��رجوع عبر goBack().
   • لوحة المسؤول (adminDashboard) وبها menu-grid فيها أزرار menu-btn.
-  • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولين، إعدادات المسؤول (adminSettings).
+  • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولي��، إعدادات المسؤول (adminSettings).
   • تخزين البيانات محلياً عبر getData(key)/setData(key,value) على localStorage (مفاتيح مثل students, admins, messages, files).
   • حالة الجلسة: currentUser, currentType ('admin'|'student'|'parent'), currentAdminId.
   • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد�� /api/ai.
@@ -320,7 +384,7 @@ const PROTECTED_PATHS = new Set([
   "pnpm-lock.yaml", "tsconfig.json",
 ])
 
-// حذف ملف واحد من المستودع عبر Contents API (ينشئ commit ويحافظ على كامل تاريخ الإصدارات — لا force push).
+// حذف ملف وا��د من المستودع عبر Contents API (ينشئ commit ويحافظ على كامل تاريخ الإصدارات — لا force push).
 async function githubDeleteFile(path: string, message: string) {
   if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
   if (!safeProjectPath(path)) throw new Error(`المسار ${path} غير مسموح`)
@@ -429,7 +493,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
       reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
-  // التحقق من أن الفرع المُحدد/الافتراضي قابل ��لحل.
+  // التحقق من أن الفرع المُحدد/الافتراضي قا��ل ��لحل.
   let branch = ""
   try {
     branch = await resolveBranch()
@@ -452,8 +516,8 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 
 منهجية العمل الإلزامية قبل الكتابة:
 1) اقرأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
-2) حدد بدقة أصغر جزء يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
-3) اكتب التعديل بنفس أسلوب وبنية المشروع (نفس التسمية، نفس المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
+2) حدد بدقة أصغر جز�� يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
+3) اكتب التعديل بنفس أسلوب وبنية المشروع (نفس التسمية، ن��س المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
 4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء بناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أ�� معرّف استُخدم معرّف فعلاً.
 
 قواعد صارمة:
@@ -547,10 +611,10 @@ export async function POST(req: Request) {
   try {
     body = await req.json()
   } catch {
-    return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured } }, 400)
+    return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured: isGeminiConfigured() } }, 400)
   }
 
-  const diagnostics = { executedOn: "server", keyConfigured, providerStatus: 200, provider: "gemini", providerLabel: GEMINI.label }
+  const diagnostics = { executedOn: "server", keyConfigured: isGeminiConfigured(), providerStatus: 200, provider: "gemini", providerLabel: GEMINI.label }
 
   try {
     // 1) وضع ��لنص الحر (صندوق اختبار الذكاء الاصطناعي)
@@ -567,7 +631,7 @@ export async function POST(req: Request) {
     const payload = body.payload || {}
     const temperature = typeof body.temperature === "number" ? body.temperature : 0.15
 
-    // 1.ب) المساعد الذكي للطالب/ولي الأمر (نص حر مع سياق بيانات الطالب)
+    // 1.ب) المساعد الذكي لل��الب/ولي الأمر (نص حر مع سياق بيانات الطالب)
     if (mode === "assistant") {
       const prompt = typeof body.prompt === "string" ? body.prompt.trim() : ""
       if (!prompt) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)
@@ -593,9 +657,20 @@ export async function POST(req: Request) {
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
       const verseTexts = new Set(sourceVerses.map((verse: any) => verse.text))
-      const valid = questions.every((question: any) => !question?.stem || verseTexts.has(String(question.stem)))
-      if (!valid) return json({ error: "رفضنا الرد لأن نص آية لم يطابق المصدر الموثوق حرفياً", diagnostics }, 502)
-      return json({ result: questions, diagnostics, source: "Al Quran Cloud" })
+      const safeQuestions = questions.map((question: any) => {
+        const from = Math.max(1, Math.min(sourceVerses.length, Number(question?.from) || 1))
+        const requestedTo = Number(question?.to) || from
+        const to = Math.max(from, Math.min(sourceVerses.length, requestedTo))
+        const trustedStem = sourceVerses[from - 1]?.text || ""
+        const suppliedStem = typeof question?.stem === "string" ? question.stem.trim() : ""
+        return {
+          ...question,
+          from,
+          to,
+          stem: suppliedStem && verseTexts.has(suppliedStem) ? suppliedStem : trustedStem,
+        }
+      })
+      return json({ result: safeQuestions, diagnostics, source: "Al Quran Cloud" })
     }
 
     if (mode === "admin_assistant") {
@@ -682,7 +757,7 @@ export async function POST(req: Request) {
       })
     }
 
-    // 6.أ) فحص جاهزية مساعد التطوير (للمسؤول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كشف أي سرّ.
+    // 6.أ) فحص جاهزية مساعد التطوير (للمس��ول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كشف أي سرّ.
     if (mode === "dev_preflight") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const pf = await preflightAutoApply()
@@ -797,12 +872,21 @@ export async function POST(req: Request) {
       friendly = `تم تجاوز حد طلبات نموذج ${GEMINI.label}، حاول لاحقاً`
       status = 429
     } else if (raw.includes("401") || raw.includes("403") || raw.toLowerCase().includes("api key")) {
-      friendly = `تعذر توثيق نموذج ${GEMINI.label}; تحقق من صلاحية المفتاح وواجهة Generative Language API`
+      friendly = `تعذر توثيق نموذج ${GEMINI.label}؛ تحقق من صلاحية المفتاح وواجهة Generative Language API`
       status = 502
+    } else if (raw.includes("لا يوجد نموذج يدعم")) {
+      friendly = "لا يتوفر نموذج Gemini نصي متوافق مع هذا المفتاح"
+      status = 503
     } else if (raw.includes("404")) {
-      friendly = `نموذج ${GEMINI.model} غير متاح لهذا المفتاح`
-    } else if (raw.includes("TimeoutError") || raw.toLowerCase().includes("timed out")) {
-      friendly = `انتهت مهلة الاتصال بنموذج ${GEMINI.label}، حاول مجدداً`
+      friendly = "تعذر الوصول إلى نموذج Gemini المتاح؛ أعد المحاولة"
+    } else if (
+      err?.name === "TimeoutError" ||
+      err?.name === "AbortError" ||
+      raw.includes("TimeoutError") ||
+      raw.toLowerCase().includes("timed out") ||
+      raw.toLowerCase().includes("aborted")
+    ) {
+      friendly = `استغرق نموذج ${GEMINI.label} وقتاً أطول من المتوقع بعد إعادة المحاولة`
       status = 504
     } else if (raw.toLowerCase().includes("empty") || raw.includes("رد فارغ")) {
       friendly = `أعاد نموذج ${GEMINI.label} رداً فارغاً`
@@ -812,7 +896,7 @@ export async function POST(req: Request) {
         error: friendly,
         diagnostics: {
           executedOn: "server",
-          keyConfigured,
+          keyConfigured: isGeminiConfigured(),
           reason: raw.slice(0, 300),
         },
       },
