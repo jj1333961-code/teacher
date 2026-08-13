@@ -18,9 +18,10 @@ const GEMINI = {
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
 const isGeminiConfigured = () => Boolean(GEMINI.key)
 let resolvedGeminiModel: string | null = null
+const unavailableGeminiModels = new Set<string>()
 
 async function resolveGeminiModel(forceRefresh = false): Promise<string> {
-  if (resolvedGeminiModel && !forceRefresh) return resolvedGeminiModel
+  if (resolvedGeminiModel && !forceRefresh && !unavailableGeminiModels.has(resolvedGeminiModel)) return resolvedGeminiModel
 
   const configured = GEMINI.model.replace(/^models\//, "")
   const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", {
@@ -45,7 +46,9 @@ async function resolveGeminiModel(forceRefresh = false): Promise<string> {
     ...available.filter((name: string) => name.includes("flash") && !name.includes("image") && !name.includes("tts")),
     ...available,
   ]
-  resolvedGeminiModel = preferred.find((name, index) => preferred.indexOf(name) === index && available.includes(name)) || null
+  resolvedGeminiModel = preferred.find(
+    (name, index) => preferred.indexOf(name) === index && available.includes(name) && !unavailableGeminiModels.has(name),
+  ) || null
   if (!resolvedGeminiModel) throw new Error("Gemini: لا يوجد نموذج يدعم generateContent لهذا المفتاح")
   return resolvedGeminiModel
 }
@@ -122,6 +125,7 @@ async function geminiText(prompt: string, system: string, temperature: number, i
     if (response.ok) break
 
     if (response.status === 404 && attempt < 2) {
+      unavailableGeminiModels.add(model)
       resolvedGeminiModel = null
       await resolveGeminiModel(true)
       continue
@@ -254,9 +258,9 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
 - "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي على:
-  • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') والرجوع عبر goBack().
+  • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') وا��رجوع عبر goBack().
   • لوحة المسؤول (adminDashboard) وبها menu-grid فيها أزرار menu-btn.
-  • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولين، إعدادات المسؤول (adminSettings).
+  • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولي��، إعدادات المسؤول (adminSettings).
   • تخزين البيانات محلياً عبر getData(key)/setData(key,value) على localStorage (مفاتيح مثل students, admins, messages, files).
   • حالة الجلسة: currentUser, currentType ('admin'|'student'|'parent'), currentAdminId.
   • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد�� /api/ai.
@@ -375,7 +379,7 @@ const PROTECTED_PATHS = new Set([
   "pnpm-lock.yaml", "tsconfig.json",
 ])
 
-// حذف ملف واحد من المستودع عبر Contents API (ينشئ commit ويحافظ على كامل تاريخ الإصدارات — لا force push).
+// حذف ملف وا��د من المستودع عبر Contents API (ينشئ commit ويحافظ على كامل تاريخ الإصدارات — لا force push).
 async function githubDeleteFile(path: string, message: string) {
   if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
   if (!safeProjectPath(path)) throw new Error(`المسار ${path} غير مسموح`)
