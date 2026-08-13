@@ -607,7 +607,7 @@ tr:hover { background: var(--table-hover); }
       <span onclick="togglePassVisibility('newPass', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span>
     </div>
   </div>
-  <button class="btn btn-success" onclick="saveAdminSettings()">💾 حفظ التغييرات</button>
+  <button class="btn btn-success" onclick="saveAdminSettings()">���� حفظ التغييرات</button>
 </div>
 
 <!-- إضافة طالب -->
@@ -726,12 +726,18 @@ tr:hover { background: var(--table-hover); }
     <p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. تحدد لكل نوع عدد الأسئلة والمستوى والوقت، وللاختياري عدد الاختيارات، ولأكمل/التسجيل عدد الآيات. الوقت مستقل لكل سؤال.</p>
     <div class="form-row">
       <div class="form-group"><label>السورة الأساسية</label><input id="examBaseSurah" readonly style="background:var(--table-header)"></div>
-      <div class="form-group"><label for="examAIModel">نموذج إنشاء الاختبار</label><select id="examAIModel" class="ai-model-picker" onchange="saveAIModel(this.value)"><option value="openai">OpenAI (GPT)</option><option value="grok">Grok</option><option value="gemini">Gemini</option></select></div>
+      <div class="form-group" aria-label="حالة محرك توليد الأسئلة">
+        <label>محرك إنشاء الاختبار</label>
+        <div style="display:flex;align-items:center;gap:10px;min-height:46px;padding:10px 12px;border:1px solid var(--success);border-radius:10px;background:rgba(40,167,69,.08)">
+          <span aria-hidden="true" style="font-size:1.35rem">🤖</span>
+          <div><strong style="display:block;color:var(--success)">ذكاء اصطناعي محلي مجاني</strong><small style="color:var(--text-light)">يستخدم نصوص الآيات المحددة ولا يرسل بيانات الطالب للخارج</small></div>
+        </div>
+      </div>
     </div>
     <div id="examPlanRows"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
       <button class="btn btn-info" onclick="addExamPlanRow()">➕ مستوى/نوع جديد</button>
-      <button class="btn btn-primary" onclick="generateExamQuestions()">🤖 توليد الأسئلة تلقائياً</button>
+      <button id="generateExamBtn" class="btn btn-primary" onclick="generateExamQuestions()">🤖 توليد الأسئلة بالذكاء الاصطناعي</button>
       <button class="btn btn-success" onclick="addManualExamQuestion()">✍️ إضافة سؤال يدوي</button>
       <button class="btn btn-secondary" onclick="clearExamQuestions()">🗑️ مسح الاختبار</button>
     </div>
@@ -2469,14 +2475,14 @@ function renderReadingItems() {
 let examQuestions=[]; let examPlanRows=[]; let studentExamTimer=null; let studentExamQuestionTimer=null;
 let studentExamQuestionRemaining=[]; let studentExamQuestionStartedAt=[]; let studentExamQuestionElapsed=[]; let studentExamSessionId=''; let studentExamCurrentIndex=0; let studentExamLockedIndices={};
 
-async function callStudentAI(mode, payload, temperature){
+async function callStudentAI(mode, payload){
   const res = await fetch('/api/ai', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({mode, payload, model:getSelectedAIModel(), temperature: typeof temperature==='number' ? temperature : 0.15})
+    body:JSON.stringify({mode, payload})
   });
   let data={}; try{ data=await res.json(); }catch(e){}
-  if(!res.ok) throw new Error(data.error || ('فشل الذكاء الاصطناعي ('+res.status+')'));
-  if(data.result === undefined || data.result === null) throw new Error('لم يصل رد منظم من الذكاء الاصطناعي');
+  if(!res.ok) throw new Error(data.error || ('فشل محرك التوليد المحلي ('+res.status+')'));
+  if(data.result === undefined || data.result === null) throw new Error('لم يصل رد منظم من محرك التوليد المحلي');
   return data.result;
 }
 
@@ -2550,7 +2556,10 @@ async function generateExamQuestions(){
   const plans=examPlanRows.filter(r=>(parseInt(r.count)||0)>0);
   if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على الأقل.','danger');return}
   const btns=document.querySelectorAll('#examBuilderSection button'); btns.forEach(b=>b.disabled=true);
-  showExamAlert('🤖 الذكاء الاصطناعي يجهز أسئلة دقيقة من نصوص القرآن الفعلية...','info');
+  const generateBtn=document.getElementById('generateExamBtn');
+  const originalGenerateLabel=generateBtn?generateBtn.innerHTML:'';
+  if(generateBtn){generateBtn.innerHTML='⏳ جاري توليد الأسئلة...';generateBtn.setAttribute('aria-busy','true')}
+  showExamAlert('جاري تحليل الخطة وتوليد أسئلة دقيقة من نصوص الآيات المحددة محليًا...','info');
   try{
     const candidates=await buildExamSourceCandidates(base);
     if(!candidates.length) throw new Error('تعذر جلب نصوص الآيات لتوليد الاختبار.');
@@ -2584,9 +2593,9 @@ async function generateExamQuestions(){
       }
     });
     examQuestions=normalized;
-    renderExamQuestions(); showExamAlert('✅ تم توليد '+examQuestions.length+' سؤالاً بالذكاء الاصطناعي. راجعها قبل الإرسال.','success');
-  }catch(e){showExamAlert('❌ '+(e.message||'تعذر توليد الأسئلة بالذكاء الاصطناعي'),'danger')}
-  finally{btns.forEach(b=>b.disabled=false)}
+    renderExamQuestions(); showExamAlert('تم توليد '+examQuestions.length+' سؤالاً بنجاح. راجع الأسئلة وعدّلها أو ارفضها قبل إرسال الاختبار للطالب.','success');
+  }catch(e){showExamAlert((e.message||'تعذر توليد الأسئلة بالذكاء الاصطناعي')+' — راجع الإعدادات ثم حاول مرة أخرى.','danger')}
+  finally{btns.forEach(b=>b.disabled=false);if(generateBtn){generateBtn.innerHTML=originalGenerateLabel;generateBtn.removeAttribute('aria-busy')}}
 }
 function addManualExamQuestion(){examQuestions.push({id:'manual_'+Date.now(),type:'mcq',level:'medium',surah:currentRecordMainSurah||'',prompt:'سؤال يدوي',stem:'',options:['','','',''],correct:'',from:1,to:1,timeLimit:60,completeAyahs:1,reciteAyahs:1,audioShareWithParent:true,points:1,rejected:false,weakened:false,source:'manual'});renderExamQuestions()}
 function clearExamQuestions(){examQuestions=[];renderExamQuestions()}
@@ -4856,7 +4865,7 @@ function renderParentPendingTasks() {
     html += '<div class="page" style="margin-bottom:20px; border-right:5px solid var(--warning);">';
     html += '<h3 style="color:var(--warning); margin-bottom:15px;">👨‍🎓 '+s.name+'</h3>';
     if(pendingTasks.length === 0) {
-      html += '<div class="alert alert-success">✅ لا توجد مهام قيد الانتظار — الطالب على قدر المسؤولية!</div>';
+      html += '<div class="alert alert-success">✅ لا توجد مهام قيد ��لانتظار — الطالب على قدر المسؤولية!</div>';
     } else {
       html += '<div style="background:linear-gradient(135deg, rgba(255,193,7,0.1), rgba(255,152,0,0.1)); border-radius:15px; padding:15px; margin-bottom:15px;">';
       html += '<h4 style="color:var(--warning); margin-bottom:10px;">⏳ عدد المهام المعلقة: '+pendingTasks.length+'</h4>';
@@ -4973,7 +4982,7 @@ function renderFiles() {
   const categoryLabels = {student:'👨‍🎓 الطالب', parent:'👨‍👩‍👧 ولي الأمر', general:'عام', quran:'قرآن', lessons:'دروس', exams:'اختبارات', reports:'تقارير'};
 
   if(files.length === 0) {
-    document.getElementById('filesList').innerHTML = '<div class="alert alert-info">لا توجد ملفات مرفوعة ��عد</div>';
+    document.getElementById('filesList').innerHTML = '<div class="alert alert-info">لا توجد ��لفات مرفوعة ��عد</div>';
     return;
   }
 
