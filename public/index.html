@@ -3144,7 +3144,7 @@ async function refreshGithubSync(){
   const link = document.getElementById('githubHistoryLink');
   const del = document.getElementById('githubDeleteBox');
   if(btn){ btn.disabled = true; btn.textContent = '⏳ جارٍ التحقق...'; }
-  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الاتصال بمستودعك...</p>';
+  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الات��ال بمستودعك...</p>';
   try {
     const st = await callStudentAI('github_status', { role:'admin', adminId: currentAdminId || null }, 0.1);
     if(!st || st.connected !== true){
@@ -4411,7 +4411,7 @@ async function computeVoicePrint(blob) {
     const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
     const std=a=>{const m=avg(a);return Math.sqrt(Math.max(0,avg(a.map(x=>(x-m)*(x-m)))))};
     vec.push(avg(cent),std(cent),avg(zcr),std(zcr),avg(ener),std(ener));
-    // تطبيع المتجه حتى تصبح المقارنة أقل حساسية لمستوى الصوت.
+    // تطبيع المت��ه حتى تصبح المقارنة أقل حساسية لمستوى الصوت.
     const mean=avg(vec);const centered=vec.map(x=>x-mean);const norm=Math.sqrt(centered.reduce((a,b)=>a+b*b,0))||1;
     return centered.map(x=>+(x/norm).toFixed(6));
   }catch(e){return null}
@@ -5286,8 +5286,13 @@ if(restoreSession()) {
 (function(){
   var asked = false;
   function askPerms(){
-    if(asked) return; asked = true;
-    try { if(window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch(e) {}
+  if(asked) return; asked = true;
+  try {
+  if(window.Notification && Notification.permission === 'default') {
+  const permissionRequest = Notification.requestPermission();
+  if(permissionRequest && typeof permissionRequest.catch === 'function') permissionRequest.catch(function(){});
+  }
+  } catch(e) {}
   }
   document.addEventListener('click', askPerms, { once: true });
   window.requestSitePermissions = async function(){
