@@ -1,33 +1,13 @@
 export const maxDuration = 60
 
-// ===== مزودو الذكاء الاصطناعي المباشرون (المفاتيح تبقى على الخادم فقط) =====
-type AIProvider = "openai" | "grok" | "gemini"
-const AI_PROVIDERS: Record<AIProvider, { label: string; key: string; model: string }> = {
-  openai: { label: "OpenAI (GPT)", key: (process.env.OPENAI_API_KEY || "").trim(), model: (process.env.OPENAI_MODEL || "gpt-4.1-mini").trim() },
-  grok: { label: "Grok", key: (process.env.GROK_API_KEY || "").trim(), model: (process.env.GROK_MODEL || "grok-3-mini").trim() },
-  gemini: { label: "Gemini", key: (process.env.GEMINI_API_KEY || "").trim(), model: (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim() },
+// ===== Gemini هو محرك الذكاء الاصطناعي الوحيد (المفتاح يبقى على الخادم) =====
+const GEMINI = {
+  label: "Gemini",
+  key: (process.env.GEMINI_API_KEY || "").trim(),
+  model: (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim(),
 }
-
-function normalizeProvider(value: unknown): AIProvider {
-  return value === "openai" || value === "grok" || value === "gemini" ? value : "gemini"
-}
-
-// OpenRouter متروك فقط كمسار احتياطي اختياري لتحويل التسجيلات الصوتية القديمة.
-// لا يحتاج النص إلى مفتاح مزود داخل المتصفح؛ المصادقة المباشرة مع المزود المختار تتم على الخادم.
-const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe"
-const OPENROUTER_AUDIO_TRANSCRIPTIONS_URL = "https://openrouter.ai/api/v1/audio/transcriptions"
-
-// ===== مزوّد تحويل الصوت إلى نص (Speech-to-Text) قابل للتبديل عبر متغيرات البيئة =====
-// افتراضياً نستخدم OpenRouter. عند ضبط SPEECH_TO_TEXT_API_KEY يُستخدم مزوّد خارجي متوافق مع OpenAI
-// (مثل OpenAI Whisper). كل هذه القيم Server-side فقط ولا تصل أبداً إلى المتصفح.
-const STT_API_KEY = (process.env.SPEECH_TO_TEXT_API_KEY || "").trim()
-const STT_URL = (process.env.SPEECH_TO_TEXT_URL || "https://api.openai.com/v1/audio/transcriptions").trim()
-const STT_MODEL = (process.env.SPEECH_TO_TEXT_MODEL || "whisper-1").trim()
-const sttProviderConfigured = !!STT_API_KEY
-// مزوّد التحقق من هوية المتحدث (Speaker Verification) — نقطة توسعة اختيارية عبر البيئة.
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
-
-const keyConfigured = Object.values(AI_PROVIDERS).some((provider) => !!provider.key)
+const keyConfigured = !!GEMINI.key
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -77,39 +57,19 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-async function providerText(providerName: AIProvider, prompt: string, system: string, temperature: number): Promise<string> {
-  const provider = AI_PROVIDERS[providerName]
-  if (!provider.key) throw new Error(`${provider.label}: مفتاح API غير مهيأ على الخادم`)
-
-  let response: Response
-  if (providerName === "gemini") {
-    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(provider.model)}:generateContent?key=${encodeURIComponent(provider.key)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { temperature },
-      }),
-    })
-  } else {
-    const url = providerName === "openai" ? "https://api.openai.com/v1/chat/completions" : "https://api.x.ai/v1/chat/completions"
-    response = await fetch(url, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${provider.key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: provider.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }], temperature }),
-    })
-  }
-
+async function geminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }): Promise<string> {
+  if (!GEMINI.key) throw new Error("Gemini: مفتاح API غير مهيأ على الخادم")
+  const parts: any[] = [{ text: prompt }]
+  if (inlineData) parts.unshift({ inlineData })
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI.model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } }),
+  })
   const data = await response.json().catch(() => null)
-  if (!response.ok) {
-    const detail = data?.error?.message || data?.message || `HTTP ${response.status}`
-    throw new Error(`${provider.label}: ${String(detail).slice(0, 300)}`)
-  }
-  const text = providerName === "gemini"
-    ? data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
-    : data?.choices?.[0]?.message?.content
-  if (typeof text !== "string" || !text.trim()) throw new Error(`${provider.label}: وصل رد فارغ`)
+  if (!response.ok) throw new Error(`Gemini: ${String(data?.error?.message || data?.message || `HTTP ${response.status}`).slice(0, 300)}`)
+  const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
+  if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
   return text.trim()
 }
 
@@ -161,52 +121,13 @@ function extractJson(text: string): any {
   return null
 }
 
-async function runText(prompt: string, system: string, temperature: number, provider: AIProvider = "gemini") {
-  return providerText(provider, prompt, system, temperature)
+async function runText(prompt: string, system: string, temperature: number) {
+  return geminiText(prompt, system, temperature)
 }
 
-// تحويل الصوت إلى نص مع دعم مزوّد خارجي قابل للتبديل عبر البيئة.
-// إن ضُبط SPEECH_TO_TEXT_API_KEY نستخدم مزوّداً متوافقاً مع OpenAI (multipart)،
-// وإلا نعود تلقائياً إلى OpenRouter. لا يتعطّل النظام إذا لم يُضبط مزوّد خارجي.
 async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
-  // المزوّد الخارجي المخصّص (OpenAI-compatible) عند توفّر مفتاحه.
-  if (sttProviderConfigured) {
-    const bytes = Buffer.from(audioBase64, "base64")
-    const mime = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
-    const form = new FormData()
-    form.append("file", new Blob([bytes], { type: mime }), `recording.${audioFormat}`)
-    form.append("model", STT_MODEL)
-    form.append("language", "ar")
-    const res = await fetch(STT_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${STT_API_KEY}` },
-      body: form,
-    })
-    if (!res.ok) {
-      const errText = await res.text().catch(() => "")
-      throw new Error(`STT provider ${res.status}: ${errText.slice(0, 300)}`)
-    }
-    const data = await res.json().catch(() => null)
-    return typeof data?.text === "string" ? data.text.trim() : ""
-  }
-  // الافتراضي: OpenRouter.
-  const apiKey = process.env.OPENROUTER_API_KEY
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
-  const res = await fetch(OPENROUTER_AUDIO_TRANSCRIPTIONS_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: TRANSCRIBE_MODEL,
-      input_audio: { data: audioBase64, format: audioFormat },
-      language: "ar",
-    }),
-  })
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "")
-    throw new Error(`OpenRouter transcription ${res.status}: ${errText.slice(0, 300)}`)
-  }
-  const data = await res.json().catch(() => null)
-  return typeof data?.text === "string" ? data.text.trim() : ""
+  const mimeType = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
+  return geminiText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType, data: audioBase64 })
 }
 
 // ===== أنظمة التعليمات لكل وضع =====
@@ -282,7 +203,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 - "app/globals.css": الأنماط العامة لـNext.js.
 - "next.config.mjs": rewrite للجذر إلى public/index.html.
 - "package.json": تبعيات وسكربتات المشروع.
-- "components/ui/button.tsx" و"lib/utils.ts": مكونات/أدوات مساعدة موجودة في المشروع.
+- "components/ui/button.tsx" ��"lib/utils.ts": مكونات/أدوات مساعدة موجودة في المشروع.
 
 المسارات الموجودة في النسخة الحالية: public/index.html, app/api/ai/route.ts, app/page.tsx, app/layout.tsx, app/globals.css, next.config.mjs, package.json, components/ui/button.tsx, lib/utils.ts, .env.example, DEPLOY.md.
 قيود مهمة يجب احترامها في أي خطة: لا حذف الملفات، لا إعادة بناء المشروع، لا وضع مفتاح API في المتصفح، الحف��ظ على التصميم العربي RTL الحا��ي، وتعديل الموجود فقط أو إضافة م�� يلزم.`
@@ -456,7 +377,7 @@ async function getGithubSyncStatus() {
     repo: fullName,
     branch,
     lastCommit,
-    // روابط عامة (ليست أسراراً) لعرض سجل التعديلات على GitHub الخاص بالمسؤول.
+    // روابط عامة (ليست أسراراً) لعرض سجل ال��عديلات على GitHub الخاص بالمسؤول.
     historyUrl: `https://github.com/${fullName}/commits/${branch}`,
     repoUrl: `https://github.com/${fullName}`,
   }
@@ -619,18 +540,15 @@ export async function POST(req: Request) {
     return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured } }, 400)
   }
 
-  const selectedProvider = normalizeProvider(body.model || body.provider)
-  const selectedProviderLabel = AI_PROVIDERS[selectedProvider].label
-  const diagnostics = { executedOn: "server", keyConfigured, providerStatus: 200, provider: selectedProvider, providerLabel: selectedProviderLabel }
+  const diagnostics = { executedOn: "server", keyConfigured, providerStatus: 200, provider: "gemini", providerLabel: GEMINI.label }
 
   try {
-    // 1) وضع النص الحر (صندوق اختبار الذكاء الاصطناعي)
+    // 1) وضع ��لنص الحر (صندوق اختبار الذكاء الاصطناعي)
     if (typeof body.prompt === "string" && body.prompt.trim() && !body.mode) {
       const text = await runText(
         body.prompt.trim(),
         "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه. أجب بالعربية الفصحى بدقة وإيجاز.",
         typeof body.temperature === "number" ? body.temperature : 0.4,
-        selectedProvider,
       )
       return json({ result: text, diagnostics })
     }
@@ -647,20 +565,36 @@ export async function POST(req: Request) {
         prompt.slice(0, 6000),
         "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه ومساعد لمتابعة الطالب في التحفيظ. أجب بالعربية الفصحى بدقة وإيجاز وبأسلوب مشجّع. اعتمد على بيانات الطالب المرفقة عند وجودها، ولا تخترع نصوصاً قرآنية.",
         typeof body.temperature === "number" ? body.temperature : 0.4,
-        selectedProvider,
       )
       return json({ result: text, diagnostics })
     }
 
-    // 2) توليد أسئلة الاختبار
+    // 2) جلب السورة من Al Quran Cloud ثم توليد الأسئلة عبر Gemini فقط.
     if (mode === "generate_exam") {
-      const text = await runText(JSON.stringify(payload), SYS_EXAM, temperature, selectedProvider)
+      const surahNumber = Number(payload.surahNumber)
+      if (!Number.isInteger(surahNumber) || surahNumber < 1 || surahNumber > 114) return json({ error: "رقم السورة غير صالح", diagnostics }, 400)
+      const quranResponse = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}`, { cache: "no-store", signal: AbortSignal.timeout(12_000) })
+      const quran = await quranResponse.json().catch(() => null)
+      if (!quranResponse.ok || quran?.code !== 200 || !Array.isArray(quran?.data?.ayahs)) return json({ error: "تعذر جلب السورة من Al Quran Cloud", diagnostics }, 502)
+      const sourceVerses = quran.data.ayahs.map((ayah: any) => ({ number: Number(ayah.numberInSurah), text: String(ayah.text || "") }))
+      const safePayload = { plan: Array.isArray(payload.plan) ? payload.plan : [], surah: String(quran.data.name || ""), surahNumber, sourceVerses }
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nممنوع إعادة كتابة أو تعديل أو تصحيح نص أي آية. استخدم النص المرجعي حرفياً فقط عند الحاجة.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
-      if (!Array.isArray(questions)) {
-        return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
-      }
-      return json({ result: questions, diagnostics })
+      if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
+      const verseTexts = new Set(sourceVerses.map((verse: any) => verse.text))
+      const valid = questions.every((question: any) => !question?.stem || verseTexts.has(String(question.stem)))
+      if (!valid) return json({ error: "رفضنا الرد لأن نص آية لم يطابق المصدر الموثوق حرفياً", diagnostics }, 502)
+      return json({ result: questions, diagnostics, source: "Al Quran Cloud" })
+    }
+
+    if (mode === "admin_assistant") {
+      if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
+      const message = typeof payload.message === "string" ? payload.message.trim().slice(0, 3000) : ""
+      if (!message) return json({ error: "اكتب رسالتك أولاً", diagnostics }, 400)
+      const context = JSON.stringify(payload.context || {}).slice(0, 18_000)
+      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\nسؤال المسؤول:\n${message}`, "أنت مساعد إداري داخل منصة تحفيظ قرآن. أجب فقط عن الطلاب وأولياء الأمور والاختبارات والنتائج والملفات التعليمية الموجودة في سياق الموقع. ارفض بإيجاز أي موضوع خارج هذا النطاق. لا تكشف كلمات مرور أو أسراراً ولا تخترع بيانات.", 0.25)
+      return json({ result, diagnostics })
     }
 
     // 3) تصحيح نص (أكمل)
@@ -698,8 +632,6 @@ export async function POST(req: Request) {
     // 5) تفريغ صوت حقيقي + تصحيح (تحليل الصوت على الخادم)
     if (mode === "transcribe_and_grade") {
       const { audioBase64, mimeType, surah, from, to, expectedText } = payload
-      const apiKey = process.env.OPENROUTER_API_KEY
-      if (!apiKey) throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
       if (!audioBase64) {
         return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
       }
@@ -749,11 +681,7 @@ export async function POST(req: Request) {
           ready: pf.ok,
           reason: pf.reason || "",
           checks: {
-            aiProviders: {
-              openai: !!AI_PROVIDERS.openai.key,
-              grok: !!AI_PROVIDERS.grok.key,
-              gemini: !!AI_PROVIDERS.gemini.key,
-            },
+            aiProviders: { gemini: !!GEMINI.key },
             githubToken: !!GITHUB_TOKEN,
             githubOwner: !!GITHUB_OWNER,
             githubRepo: !!GITHUB_REPO,
@@ -850,15 +778,15 @@ export async function POST(req: Request) {
     return json({ error: "وضع غير معروف", diagnostics }, 400)
   } catch (err: any) {
     const raw = err?.message ? String(err.message) : "خطأ غير معروف"
-    let friendly = `فشل الاتصال بنموذج ${selectedProviderLabel}`
+    let friendly = `فشل الاتصال بنموذج ${GEMINI.label}`
     if (raw.includes("OPENROUTER_API_KEY")) {
       friendly = "تحويل الصوت غير مهيأ على الخادم"
     } else if (raw.includes("429")) {
-      friendly = `تم تجاوز حد طلبات نموذج ${selectedProviderLabel}، حاول لاحقاً`
+      friendly = `تم تجاوز حد طلبات نموذج ${GEMINI.label}، حاول لاحقاً`
     } else if (raw.includes("401") || raw.toLowerCase().includes("api key")) {
-      friendly = `تعذر توثيق نموذج ${selectedProviderLabel}; تحقق من مفتاحه على الخادم`
+      friendly = `تعذر توثيق نموذج ${GEMINI.label}; تحقق من مفتاحه على الخادم`
     }
-    if (raw.toLowerCase().includes("empty") || raw.includes("رد فارغ")) friendly = `أعاد نموذج ${selectedProviderLabel} رداً فارغاً`
+    if (raw.toLowerCase().includes("empty") || raw.includes("رد فارغ")) friendly = `أعاد نموذج ${GEMINI.label} رداً فارغاً`
     return json(
       {
         error: friendly,
