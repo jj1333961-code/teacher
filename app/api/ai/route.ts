@@ -1,12 +1,19 @@
-import { generateText } from "ai"
-
 export const maxDuration = 60
 
-// ===== مزوّد الذكاء الاصطناعي: Vercel AI Gateway =====
-const TEXT_MODEL = "google/gemini-3.6-flash"
+// ===== مزودو الذكاء الاصطناعي المباشرون (المفاتيح تبقى على الخادم فقط) =====
+type AIProvider = "openai" | "grok" | "gemini"
+const AI_PROVIDERS: Record<AIProvider, { label: string; key: string; model: string }> = {
+  openai: { label: "OpenAI (GPT)", key: (process.env.OPENAI_API_KEY || "").trim(), model: (process.env.OPENAI_MODEL || "gpt-4.1-mini").trim() },
+  grok: { label: "Grok", key: (process.env.GROK_API_KEY || "").trim(), model: (process.env.GROK_MODEL || "grok-3-mini").trim() },
+  gemini: { label: "Gemini", key: (process.env.GEMINI_API_KEY || "").trim(), model: (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim() },
+}
+
+function normalizeProvider(value: unknown): AIProvider {
+  return value === "openai" || value === "grok" || value === "gemini" ? value : "gemini"
+}
 
 // OpenRouter متروك فقط كمسار احتياطي اختياري لتحويل التسجيلات الصوتية القديمة.
-// لا يحتاج النص إلى مفتاح مزود داخل المتصفح؛ المصادقة تتم على الخادم عبر Vercel AI Gateway.
+// لا يحتاج النص إلى مفتاح مزود داخل المتصفح؛ المصادقة المباشرة مع المزود المختار تتم على الخادم.
 const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe"
 const OPENROUTER_AUDIO_TRANSCRIPTIONS_URL = "https://openrouter.ai/api/v1/audio/transcriptions"
 
@@ -20,7 +27,7 @@ const sttProviderConfigured = !!STT_API_KEY
 // مزوّد التحقق من هوية المتحدث (Speaker Verification) — نقطة توسعة اختيارية عبر البيئة.
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
 
-const keyConfigured = true
+const keyConfigured = Object.values(AI_PROVIDERS).some((provider) => !!provider.key)
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -70,15 +77,40 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-async function gatewayText(prompt: string, system: string, temperature: number): Promise<string> {
-  const { text } = await generateText({
-    model: TEXT_MODEL,
-    system,
-    prompt,
-    temperature,
-  })
-  if (!text.trim()) throw new Error("رد فارغ من Vercel AI Gateway")
-  return text
+async function providerText(providerName: AIProvider, prompt: string, system: string, temperature: number): Promise<string> {
+  const provider = AI_PROVIDERS[providerName]
+  if (!provider.key) throw new Error(`${provider.label}: مفتاح API غير مهيأ على الخادم`)
+
+  let response: Response
+  if (providerName === "gemini") {
+    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(provider.model)}:generateContent?key=${encodeURIComponent(provider.key)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature },
+      }),
+    })
+  } else {
+    const url = providerName === "openai" ? "https://api.openai.com/v1/chat/completions" : "https://api.x.ai/v1/chat/completions"
+    response = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${provider.key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: provider.model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }], temperature }),
+    })
+  }
+
+  const data = await response.json().catch(() => null)
+  if (!response.ok) {
+    const detail = data?.error?.message || data?.message || `HTTP ${response.status}`
+    throw new Error(`${provider.label}: ${String(detail).slice(0, 300)}`)
+  }
+  const text = providerName === "gemini"
+    ? data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
+    : data?.choices?.[0]?.message?.content
+  if (typeof text !== "string" || !text.trim()) throw new Error(`${provider.label}: وصل رد فارغ`)
+  return text.trim()
 }
 
 function json(data: unknown, status = 200) {
@@ -129,8 +161,8 @@ function extractJson(text: string): any {
   return null
 }
 
-async function runText(prompt: string, system: string, temperature: number) {
-  return gatewayText(prompt, system, temperature)
+async function runText(prompt: string, system: string, temperature: number, provider: AIProvider = "gemini") {
+  return providerText(provider, prompt, system, temperature)
 }
 
 // تحويل الصوت إلى نص مع دعم مزوّد خارجي قابل للتبديل عبر البيئة.
@@ -241,7 +273,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولين، إعدادات المسؤول (adminSettings).
   • تخزين البيانات محلياً عبر getData(key)/setData(key,value) على localStorage (مفاتيح مثل students, admins, messages, files).
   • حالة الجلسة: currentUser, currentType ('admin'|'student'|'parent'), currentAdminId.
-  • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي ينادي /api/ai.
+  • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد�� /api/ai.
   • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
 - "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم OpenRouter (OPENROUTER_API_KEY) وتدعم الأوضاع: generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant, بالإضافة إلى وضع النص الحر (prompt).
@@ -253,7 +285,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 - "components/ui/button.tsx" و"lib/utils.ts": مكونات/أدوات مساعدة موجودة في المشروع.
 
 المسارات الموجودة في النسخة الحالية: public/index.html, app/api/ai/route.ts, app/page.tsx, app/layout.tsx, app/globals.css, next.config.mjs, package.json, components/ui/button.tsx, lib/utils.ts, .env.example, DEPLOY.md.
-قيود مهمة يجب احترامها في أي خطة: لا حذف الملفات، لا إعادة بناء المشروع، لا وضع مفتاح API في المتصفح، الحفاظ على التصميم العربي RTL الحا��ي، وتعديل الموجود فقط أو إضافة م�� يلزم.`
+قيود مهمة يجب احترامها في أي خطة: لا حذف الملفات، لا إعادة بناء المشروع، لا وضع مفتاح API في المتصفح، الحف��ظ على التصميم العربي RTL الحا��ي، وتعديل الموجود فقط أو إضافة م�� يلزم.`
 
 const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم هنا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
 مهمتك: فهم الطلب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعديلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
@@ -466,7 +498,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
       reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
-  // التحقق من أن الفرع المُحدد/الافتراضي قابل للحل.
+  // التحقق من أن الفرع المُحدد/الافتراضي قابل ��لحل.
   let branch = ""
   try {
     branch = await resolveBranch()
@@ -587,7 +619,9 @@ export async function POST(req: Request) {
     return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured } }, 400)
   }
 
-  const diagnostics = { executedOn: "server", keyConfigured, providerStatus: 200 }
+  const selectedProvider = normalizeProvider(body.model || body.provider)
+  const selectedProviderLabel = AI_PROVIDERS[selectedProvider].label
+  const diagnostics = { executedOn: "server", keyConfigured, providerStatus: 200, provider: selectedProvider, providerLabel: selectedProviderLabel }
 
   try {
     // 1) وضع النص الحر (صندوق اختبار الذكاء الاصطناعي)
@@ -596,6 +630,7 @@ export async function POST(req: Request) {
         body.prompt.trim(),
         "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه. أجب بالعربية الفصحى بدقة وإيجاز.",
         typeof body.temperature === "number" ? body.temperature : 0.4,
+        selectedProvider,
       )
       return json({ result: text, diagnostics })
     }
@@ -612,13 +647,14 @@ export async function POST(req: Request) {
         prompt.slice(0, 6000),
         "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه ومساعد لمتابعة الطالب في التحفيظ. أجب بالعربية الفصحى بدقة وإيجاز وبأسلوب مشجّع. اعتمد على بيانات الطالب المرفقة عند وجودها، ولا تخترع نصوصاً قرآنية.",
         typeof body.temperature === "number" ? body.temperature : 0.4,
+        selectedProvider,
       )
       return json({ result: text, diagnostics })
     }
 
     // 2) توليد أسئلة الاختبار
     if (mode === "generate_exam") {
-      const text = await runText(JSON.stringify(payload), SYS_EXAM, temperature)
+      const text = await runText(JSON.stringify(payload), SYS_EXAM, temperature, selectedProvider)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) {
@@ -713,7 +749,11 @@ export async function POST(req: Request) {
           ready: pf.ok,
           reason: pf.reason || "",
           checks: {
-            aiGateway: true,
+            aiProviders: {
+              openai: !!AI_PROVIDERS.openai.key,
+              grok: !!AI_PROVIDERS.grok.key,
+              gemini: !!AI_PROVIDERS.gemini.key,
+            },
             githubToken: !!GITHUB_TOKEN,
             githubOwner: !!GITHUB_OWNER,
             githubRepo: !!GITHUB_REPO,
@@ -731,7 +771,7 @@ export async function POST(req: Request) {
       })
     }
 
-    // 6) مساعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
+    // 6) م��اعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
     if (mode === "dev_assistant") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const request = typeof payload.request === "string" ? payload.request.trim() : ""
@@ -810,17 +850,15 @@ export async function POST(req: Request) {
     return json({ error: "وضع غير معروف", diagnostics }, 400)
   } catch (err: any) {
     const raw = err?.message ? String(err.message) : "خطأ غير معروف"
-    // رسائل عربية أوضح لحالات OpenRouter الشائعة
-    let friendly = "تعذر تنفيذ طلب الذكاء الاصطناعي على الخادم"
+    let friendly = `فشل الاتصال بنموذج ${selectedProviderLabel}`
     if (raw.includes("OPENROUTER_API_KEY")) {
       friendly = "تحويل الصوت غير مهيأ على الخادم"
-    } else if (raw.includes("402") || raw.toLowerCase().includes("balance") || raw.toLowerCase().includes("credit card") || raw.toLowerCase().includes("credit")) {
-      friendly = "يتطلب Vercel AI Gateway إضافة وسيلة دفع لتفعيل الرصيد المجاني"
-    } else if (raw.includes("401")) {
-      friendly = "تعذر توثيق Vercel AI Gateway"
     } else if (raw.includes("429")) {
-      friendly = "تم تجاوز حد طلبات Vercel AI Gateway، حاول لاحقاً"
+      friendly = `تم تجاوز حد طلبات نموذج ${selectedProviderLabel}، حاول لاحقاً`
+    } else if (raw.includes("401") || raw.toLowerCase().includes("api key")) {
+      friendly = `تعذر توثيق نموذج ${selectedProviderLabel}; تحقق من مفتاحه على الخادم`
     }
+    if (raw.toLowerCase().includes("empty") || raw.includes("رد فارغ")) friendly = `أعاد نموذج ${selectedProviderLabel} رداً فارغاً`
     return json(
       {
         error: friendly,
