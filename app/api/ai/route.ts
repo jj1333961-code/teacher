@@ -1,26 +1,17 @@
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { generateText } from "ai"
 
 export const maxDuration = 60
 
-// ===== مزوّد الذكاء الاصطناعي: Vercel AI Gateway =====
-const TEXT_MODEL = "google/gemini-3.6-flash"
+// ===== مزوّد الذكاء الاصطناعي الوحيد: Google Gemini =====
+const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || "").trim()
+const GEMINI_MODEL = "gemini-2.5-flash"
+const google = createGoogleGenerativeAI({ apiKey: GEMINI_API_KEY })
+const geminiModel = google(GEMINI_MODEL)
 
-// OpenRouter متروك فقط كمسار احتياطي اختياري لتحويل التسجيلات الصوتية القديمة.
-// لا يحتاج النص إلى مفتاح مزود داخل المتصفح؛ المصادقة تتم على الخادم عبر Vercel AI Gateway.
-const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe"
-const OPENROUTER_AUDIO_TRANSCRIPTIONS_URL = "https://openrouter.ai/api/v1/audio/transcriptions"
-
-// ===== مزوّد تحويل الصوت إلى نص (Speech-to-Text) قابل للتبديل عبر متغيرات البيئة =====
-// افتراضياً نستخدم OpenRouter. عند ضبط SPEECH_TO_TEXT_API_KEY يُستخدم مزوّد خارجي متوافق مع OpenAI
-// (مثل OpenAI Whisper). كل هذه القيم Server-side فقط ولا تصل أبداً إلى المتصفح.
-const STT_API_KEY = (process.env.SPEECH_TO_TEXT_API_KEY || "").trim()
-const STT_URL = (process.env.SPEECH_TO_TEXT_URL || "https://api.openai.com/v1/audio/transcriptions").trim()
-const STT_MODEL = (process.env.SPEECH_TO_TEXT_MODEL || "whisper-1").trim()
-const sttProviderConfigured = !!STT_API_KEY
 // مزوّد التحقق من هوية المتحدث (Speaker Verification) — نقطة توسعة اختيارية عبر البيئة.
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
-
-const keyConfigured = true
+const keyConfigured = !!GEMINI_API_KEY
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -58,11 +49,11 @@ function sanitizeRepo(raw: string): string {
 }
 
 const GITHUB_TOKEN = pickEnv("GITHUB_TOKEN")
-const GITHUB_OWNER = "jj1333961-code"
-const GITHUB_REPO = "teacher"
+const GITHUB_OWNER = sanitizeOwner(pickEnv("GITHUB_OWNER"))
+const GITHUB_REPO = sanitizeRepo(pickEnv("GITHUB_REPO"))
 // إن لم يُضبط GITHUB_BRANCH نستخدم الفرع الافتراضي الفعلي للمستودع (يُحلّ وقت التشغيل)، لا نفترض "main".
-const GITHUB_BRANCH_ENV = pickEnv("GITHUB_BRANCH_3", "GITHUB_BRANCH_2", "GITHUB_BRANCH")
-const AUTO_DEV_ENABLED = true
+const GITHUB_BRANCH_ENV = pickEnv("GITHUB_BRANCH")
+const AUTO_DEV_ENABLED = pickEnv("DEV_ASSISTANT_AUTO_APPLY").toLowerCase() !== "false"
 const githubConfigured = !!(GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO)
 const GITHUB_API = "https://api.github.com"
 const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
@@ -70,14 +61,15 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-async function gatewayText(prompt: string, system: string, temperature: number): Promise<string> {
+async function geminiText(prompt: string, instructions: string, temperature: number): Promise<string> {
+  if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY غير مُهيّأ على الخادم")
   const { text } = await generateText({
-    model: TEXT_MODEL,
-    system,
+    model: geminiModel,
+    instructions,
     prompt,
     temperature,
   })
-  if (!text.trim()) throw new Error("رد فارغ من Vercel AI Gateway")
+  if (!text.trim()) throw new Error("رد فارغ من Gemini")
   return text
 }
 
@@ -90,6 +82,54 @@ function json(data: unknown, status = 200) {
       "Referrer-Policy": "strict-origin-when-cross-origin",
     },
   })
+}
+
+function describeGeminiError(error: unknown) {
+  const chain: unknown[] = []
+  let current = error
+  for (let depth = 0; current && depth < 5; depth++) {
+    chain.push(current)
+    current = typeof current === "object" && current !== null && "cause" in current
+      ? (current as { cause?: unknown }).cause
+      : undefined
+  }
+
+  const messages = chain
+    .map((item) => item instanceof Error ? item.message : typeof item === "string" ? item : "")
+    .filter(Boolean)
+    .join(" | ")
+  const lower = messages.toLowerCase()
+  const status = chain
+    .map((item) => typeof item === "object" && item !== null && "statusCode" in item
+      ? Number((item as { statusCode?: unknown }).statusCode)
+      : NaN)
+    .find(Number.isFinite)
+
+  if (!GEMINI_API_KEY || lower.includes("gemini_api_key") || lower.includes("api key not found")) {
+    return { message: "مفتاح Gemini غير مهيأ على الخادم", code: "GEMINI_KEY_MISSING", status: 503 }
+  }
+  if (status === 401 || status === 403 || lower.includes("api key not valid") || lower.includes("permission denied")) {
+    return { message: "رفض Gemini المصادقة؛ GEMINI_API_KEY غير صالح أو لا يملك صلاحية Generative Language API", code: "GEMINI_AUTH_FAILED", status: 502 }
+  }
+  if (status === 400 || lower.includes("invalid argument")) {
+    return { message: "رفض Gemini الطلب لأنه غير صالح أو يحتوي بيانات غير مدعومة", code: "GEMINI_INVALID_REQUEST", status: 400 }
+  }
+  if (status === 404 || lower.includes("not found") || lower.includes("model is not found")) {
+    return { message: `نموذج Gemini المحدد (${GEMINI_MODEL}) غير متاح لهذا المفتاح`, code: "GEMINI_MODEL_UNAVAILABLE", status: 502 }
+  }
+  if (status === 429 || lower.includes("quota") || lower.includes("rate limit") || lower.includes("resource exhausted")) {
+    return { message: "تم تجاوز حصة Gemini أو حد الطلبات؛ تحقق من حصة المشروع وحاول لاحقاً", code: "GEMINI_QUOTA_EXCEEDED", status: 429 }
+  }
+  if (status === 503 || lower.includes("overloaded") || lower.includes("unavailable")) {
+    return { message: "خدمة Gemini غير متاحة مؤقتاً أو النموذج مزدحم؛ حاول لاحقاً", code: "GEMINI_UNAVAILABLE", status: 503 }
+  }
+  if (lower.includes("fetch failed") || lower.includes("network") || lower.includes("timeout")) {
+    return { message: "تعذر الوصول إلى خوادم Gemini بسبب مشكلة اتصال أو انتهاء المهلة", code: "GEMINI_NETWORK_ERROR", status: 502 }
+  }
+  if (lower.includes("no content") || lower.includes("empty") || lower.includes("رد فارغ")) {
+    return { message: "أعاد Gemini استجابة فارغة أو محجوبة", code: "GEMINI_EMPTY_RESPONSE", status: 502 }
+  }
+  return { message: "فشل طلب Gemini لسبب غير متوقع", code: "GEMINI_REQUEST_FAILED", status: 500 }
 }
 
 // استخراج JSON بشكل متسامح من رد النموذج (يزيل أسوار الأكواد ويقتطع أول كائن/مصفوفة)
@@ -129,52 +169,38 @@ function extractJson(text: string): any {
   return null
 }
 
-async function runText(prompt: string, system: string, temperature: number) {
-  return gatewayText(prompt, system, temperature)
+async function runText(prompt: string, instructions: string, temperature: number) {
+  return geminiText(prompt, instructions, temperature)
 }
 
-// تحويل الصوت إلى نص مع دعم مزوّد خارجي قابل للتبديل عبر البيئة.
-// إن ضُبط SPEECH_TO_TEXT_API_KEY نستخدم مزوّداً متوافقاً مع OpenAI (multipart)،
-// وإلا نعود تلقائياً إلى OpenRouter. لا يتعطّل النظام إذا لم يُضبط مزوّد خارجي.
-async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
-  // المزوّد الخارجي المخصّص (OpenAI-compatible) عند توفّر مفتاحه.
-  if (sttProviderConfigured) {
-    const bytes = Buffer.from(audioBase64, "base64")
-    const mime = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
-    const form = new FormData()
-    form.append("file", new Blob([bytes], { type: mime }), `recording.${audioFormat}`)
-    form.append("model", STT_MODEL)
-    form.append("language", "ar")
-    const res = await fetch(STT_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${STT_API_KEY}` },
-      body: form,
-    })
-    if (!res.ok) {
-      const errText = await res.text().catch(() => "")
-      throw new Error(`STT provider ${res.status}: ${errText.slice(0, 300)}`)
-    }
-    const data = await res.json().catch(() => null)
-    return typeof data?.text === "string" ? data.text.trim() : ""
-  }
-  // الافتراضي: OpenRouter.
-  const apiKey = process.env.OPENROUTER_API_KEY
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
-  const res = await fetch(OPENROUTER_AUDIO_TRANSCRIPTIONS_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: TRANSCRIBE_MODEL,
-      input_audio: { data: audioBase64, format: audioFormat },
-      language: "ar",
-    }),
+async function analyzeRecitationAudio(
+  audioBase64: string,
+  mimeType: string,
+  context: { surah: string; from: number; to: number; expectedText: string },
+) {
+  if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY غير مُهيّأ على الخادم")
+  const mediaType = mimeType.startsWith("audio/") ? mimeType : "audio/wav"
+  const { text } = await generateText({
+    model: geminiModel,
+    instructions: SYS_TRANSCRIBE,
+    messages: [{
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: `حلّل التسجيل وأعد JSON فقط. السياق: ${JSON.stringify(context)}`,
+        },
+        {
+          type: "file",
+          mediaType,
+          data: Buffer.from(audioBase64, "base64"),
+        },
+      ],
+    }],
+    temperature: 0.05,
   })
-  if (!res.ok) {
-    const errText = await res.text().catch(() => "")
-    throw new Error(`OpenRouter transcription ${res.status}: ${errText.slice(0, 300)}`)
-  }
-  const data = await res.json().catch(() => null)
-  return typeof data?.text === "string" ? data.text.trim() : ""
+  if (!text.trim()) throw new Error("رد صوتي فارغ من Gemini")
+  return extractJson(text) || {}
 }
 
 // ===== أنظمة التعليمات لكل وضع =====
@@ -241,10 +267,10 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولين، إعدادات المسؤول (adminSettings).
   • تخزين البيانات محلياً عبر getData(key)/setData(key,value) على localStorage (مفاتيح مثل students, admins, messages, files).
   • حالة الجلسة: currentUser, currentType ('admin'|'student'|'parent'), currentAdminId.
-  • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي ينادي /api/ai.
+  • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد�� /api/ai.
   • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
-- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم OpenRouter (OPENROUTER_API_KEY) وتدعم الأوضاع: generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant, بالإضافة إلى وضع النص الحر (prompt).
+- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم Google Gemini حصراً عبر GEMINI_API_KEY وتدعم الأوضاع: generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant, بالإضافة إلى وضع النص الحر (prompt).
 - "app/layout.tsx": تخطيط الجذر.
 - "app/page.tsx": صفحة Next.js احتياطية؛ الجذر يعاد توجيهه إلى public/index.html عبر next.config.mjs.
 - "app/globals.css": الأنماط العامة لـNext.js.
@@ -255,7 +281,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 المسارات الموجودة في النسخة الحالية: public/index.html, app/api/ai/route.ts, app/page.tsx, app/layout.tsx, app/globals.css, next.config.mjs, package.json, components/ui/button.tsx, lib/utils.ts, .env.example, DEPLOY.md.
 قيود مهمة يجب احترامها في أي خطة: لا حذف الملفات، لا إعادة بناء المشروع، لا وضع مفتاح API في المتصفح، الحفاظ على التصميم العربي RTL الحا��ي، وتعديل الموجود فقط أو إضافة م�� يلزم.`
 
-const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم هنا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
+const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم هنا هو المسؤول ويعطيك ط��باً بالعربية لتعديل الموقع.
 مهمتك: فهم الطلب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعديلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
 احترم دائماً: عدم حذف الملفات، عدم إعادة بناء المشروع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
 أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (بدون أي نص خارجه):
@@ -434,6 +460,7 @@ async function getGithubSyncStatus() {
 // لا ي��شف أبداً قيمة أي رمز مميز، فقط اسم ��لمتغير الناقص أو نوع المشكلة.
 async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; details?: any }> {
   const missing: string[] = []
+  if (!GEMINI_API_KEY) missing.push("GEMINI_API_KEY")
   if (!GITHUB_TOKEN) missing.push("GITHUB_TOKEN")
   if (!GITHUB_OWNER) missing.push("GITHUB_OWNER")
   if (!GITHUB_REPO) missing.push("GITHUB_REPO")
@@ -466,7 +493,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
       reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
-  // التحقق من أن الفرع المُحدد/الافتراضي قابل للحل.
+  // التحقق من أن الفرع المُحدد/الافتراضي قابل ��لحل.
   let branch = ""
   try {
     branch = await resolveBranch()
@@ -491,7 +518,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 1) اقرأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
 2) حدد بدقة أصغر جزء يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
 3) اكتب التعديل بنفس أسلوب وبنية المشروع (نفس التسمية، نفس المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
-4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء بناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أو معرّف استُخدم معرّف فعلاً.
+4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء بناء الجملة (syntax)، وأ�� الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أو معرّف استُخدم معرّف فعلاً.
 
 قواعد صارمة:
 - لا تحذف ملفات ولا تعيد بناء المشروع من الصفر.
@@ -587,7 +614,7 @@ export async function POST(req: Request) {
     return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured } }, 400)
   }
 
-  const diagnostics = { executedOn: "server", keyConfigured, providerStatus: 200 }
+  const diagnostics = { executedOn: "server", keyConfigured, provider: "google-gemini", model: GEMINI_MODEL, providerStatus: keyConfigured ? 200 : 503 }
 
   try {
     // 1) وضع النص الحر (صندوق اختبار الذكاء الاصطناعي)
@@ -610,7 +637,7 @@ export async function POST(req: Request) {
       if (!prompt) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)
       const text = await runText(
         prompt.slice(0, 6000),
-        "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه ومساعد لمتابعة الطالب في التحفيظ. أجب بالعربية الفصحى بدقة وإيجاز وبأسلوب مشجّع. اعتمد على بيانات الطالب المرفقة عند وجودها، ولا تخترع نصوصاً قرآنية.",
+        "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه ومساعد لمتابعة الطالب في التحفيظ. أجب ��العربية الفصحى بدقة وإيجاز وبأسلوب مشجّع. اعتمد على بيانات الطالب المرفقة عند وجودها، ولا تخترع نصوصاً قرآنية.",
         typeof body.temperature === "number" ? body.temperature : 0.4,
       )
       return json({ result: text, diagnostics })
@@ -662,28 +689,18 @@ export async function POST(req: Request) {
     // 5) تفريغ صوت حقيقي + تصحيح (تحليل الصوت على الخادم)
     if (mode === "transcribe_and_grade") {
       const { audioBase64, mimeType, surah, from, to, expectedText } = payload
-      const apiKey = process.env.OPENROUTER_API_KEY
-      if (!apiKey) throw new Error("OPENROUTER_API_KEY غير مُهيّأ على الخادم")
       if (!audioBase64) {
         return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
       }
-      // OpenRouter يقبل الصوت بصيغة wav أو mp3 فقط (input_audio).
-      // المتصفح يحوّل التسجيل إلى wav قبل الإرسال؛ نستنتج الصيغة من mimeType.
-      let audioFormat = "wav"
-      const mt = (typeof mimeType === "string" ? mimeType : "").toLowerCase()
-      if (mt.includes("mpeg") || mt.includes("mp3")) audioFormat = "mp3"
-      else if (mt.includes("wav")) audioFormat = "wav"
-
-      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ضبطه، وإلا OpenRouter).
-      const transcript = await transcribeAudio(audioBase64, audioFormat)
-
-      // المرحلة الثانية: مقارنة التفريغ بالنص القرآني المطلوب وحساب الدرجة.
-      const gradeText = await runText(
-        JSON.stringify({ surah, from, to, expectedText, studentTranscript: transcript }),
-        SYS_TRANSCRIBE,
-        0.05,
+      if (typeof audioBase64 !== "string" || audioBase64.length > 20_000_000) {
+        return json({ error: "ملف الصوت غير صالح أو يتجاوز الحد المسموح", diagnostics }, 400)
+      }
+      const parsed = await analyzeRecitationAudio(
+        audioBase64,
+        typeof mimeType === "string" ? mimeType.toLowerCase() : "audio/wav",
+        { surah, from, to, expectedText },
       )
-      const parsed = extractJson(gradeText) || {}
+      const transcript = typeof parsed.transcript === "string" ? parsed.transcript.trim() : ""
       const totalAyahs = Math.max(1, Number(to || from || 1) - Number(from || 1) + 1)
       const missingCount = Array.isArray(parsed.missingAyahs) ? Math.min(totalAyahs, parsed.missingAyahs.length) : 0
       const calculatedScore = Math.max(0, Math.min(1, (totalAyahs - missingCount) / totalAyahs))
@@ -713,7 +730,7 @@ export async function POST(req: Request) {
           ready: pf.ok,
           reason: pf.reason || "",
           checks: {
-            aiGateway: true,
+            gemini: keyConfigured,
             githubToken: !!GITHUB_TOKEN,
             githubOwner: !!GITHUB_OWNER,
             githubRepo: !!GITHUB_REPO,
@@ -731,7 +748,7 @@ export async function POST(req: Request) {
       })
     }
 
-    // 6) مساعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
+    // 6) م��اعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
     if (mode === "dev_assistant") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const request = typeof payload.request === "string" ? payload.request.trim() : ""
@@ -808,29 +825,26 @@ export async function POST(req: Request) {
     }
 
     return json({ error: "وضع غير معروف", diagnostics }, 400)
-  } catch (err: any) {
-    const raw = err?.message ? String(err.message) : "خطأ غير معروف"
-    // رسائل عربية أوضح لحالات OpenRouter الشائعة
-    let friendly = "تعذر تنفيذ طلب الذكاء الاصطناعي على الخادم"
-    if (raw.includes("OPENROUTER_API_KEY")) {
-      friendly = "تحويل الصوت غير مهيأ على الخادم"
-    } else if (raw.includes("402") || raw.toLowerCase().includes("balance") || raw.toLowerCase().includes("credit card") || raw.toLowerCase().includes("credit")) {
-      friendly = "يتطلب Vercel AI Gateway إضافة وسيلة دفع لتفعيل الرصيد المجاني"
-    } else if (raw.includes("401")) {
-      friendly = "تعذر توثيق Vercel AI Gateway"
-    } else if (raw.includes("429")) {
-      friendly = "تم تجاوز حد طلبات Vercel AI Gateway، حاول لاحقاً"
-    }
+  } catch (err: unknown) {
+    const failure = describeGeminiError(err)
+    console.error("[Gemini] Request failed", {
+      code: failure.code,
+      status: failure.status,
+      model: GEMINI_MODEL,
+      keyConfigured,
+    })
     return json(
       {
-        error: friendly,
+        error: failure.message,
         diagnostics: {
           executedOn: "server",
+          provider: "google-gemini",
+          model: GEMINI_MODEL,
           keyConfigured,
-          reason: raw.slice(0, 300),
+          code: failure.code,
         },
       },
-      500,
+      failure.status,
     )
   }
 }
