@@ -5,7 +5,7 @@ export const maxDuration = 60
 
 // ===== مزوّد الذكاء الاصطناعي الوحيد: Google Gemini =====
 const GEMINI_API_KEY = (process.env.GEMINI_API_KEY || "").trim()
-const GEMINI_MODEL = "gemini-3.6-flash"
+const GEMINI_MODEL = "gemini-2.5-flash"
 const google = createGoogleGenerativeAI({ apiKey: GEMINI_API_KEY })
 const geminiModel = google(GEMINI_MODEL)
 
@@ -82,6 +82,54 @@ function json(data: unknown, status = 200) {
       "Referrer-Policy": "strict-origin-when-cross-origin",
     },
   })
+}
+
+function describeGeminiError(error: unknown) {
+  const chain: unknown[] = []
+  let current = error
+  for (let depth = 0; current && depth < 5; depth++) {
+    chain.push(current)
+    current = typeof current === "object" && current !== null && "cause" in current
+      ? (current as { cause?: unknown }).cause
+      : undefined
+  }
+
+  const messages = chain
+    .map((item) => item instanceof Error ? item.message : typeof item === "string" ? item : "")
+    .filter(Boolean)
+    .join(" | ")
+  const lower = messages.toLowerCase()
+  const status = chain
+    .map((item) => typeof item === "object" && item !== null && "statusCode" in item
+      ? Number((item as { statusCode?: unknown }).statusCode)
+      : NaN)
+    .find(Number.isFinite)
+
+  if (!GEMINI_API_KEY || lower.includes("gemini_api_key") || lower.includes("api key not found")) {
+    return { message: "مفتاح Gemini غير مهيأ على الخادم", code: "GEMINI_KEY_MISSING", status: 503 }
+  }
+  if (status === 401 || status === 403 || lower.includes("api key not valid") || lower.includes("permission denied")) {
+    return { message: "رفض Gemini المصادقة؛ GEMINI_API_KEY غير صالح أو لا يملك صلاحية Generative Language API", code: "GEMINI_AUTH_FAILED", status: 502 }
+  }
+  if (status === 400 || lower.includes("invalid argument")) {
+    return { message: "رفض Gemini الطلب لأنه غير صالح أو يحتوي بيانات غير مدعومة", code: "GEMINI_INVALID_REQUEST", status: 400 }
+  }
+  if (status === 404 || lower.includes("not found") || lower.includes("model is not found")) {
+    return { message: `نموذج Gemini المحدد (${GEMINI_MODEL}) غير متاح لهذا المفتاح`, code: "GEMINI_MODEL_UNAVAILABLE", status: 502 }
+  }
+  if (status === 429 || lower.includes("quota") || lower.includes("rate limit") || lower.includes("resource exhausted")) {
+    return { message: "تم تجاوز حصة Gemini أو حد الطلبات؛ تحقق من حصة المشروع وحاول لاحقاً", code: "GEMINI_QUOTA_EXCEEDED", status: 429 }
+  }
+  if (status === 503 || lower.includes("overloaded") || lower.includes("unavailable")) {
+    return { message: "خدمة Gemini غير متاحة مؤقتاً أو النموذج مزدحم؛ حاول لاحقاً", code: "GEMINI_UNAVAILABLE", status: 503 }
+  }
+  if (lower.includes("fetch failed") || lower.includes("network") || lower.includes("timeout")) {
+    return { message: "تعذر الوصول إلى خوادم Gemini بسبب مشكلة اتصال أو انتهاء المهلة", code: "GEMINI_NETWORK_ERROR", status: 502 }
+  }
+  if (lower.includes("no content") || lower.includes("empty") || lower.includes("رد فارغ")) {
+    return { message: "أعاد Gemini استجابة فارغة أو محجوبة", code: "GEMINI_EMPTY_RESPONSE", status: 502 }
+  }
+  return { message: "فشل طلب Gemini لسبب غير متوقع", code: "GEMINI_REQUEST_FAILED", status: 500 }
 }
 
 // استخراج JSON بشكل متسامح من رد النموذج (يزيل أسوار الأكواد ويقتطع أول كائن/مصفوفة)
@@ -233,7 +281,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 المسارات الموجودة في النسخة الحالية: public/index.html, app/api/ai/route.ts, app/page.tsx, app/layout.tsx, app/globals.css, next.config.mjs, package.json, components/ui/button.tsx, lib/utils.ts, .env.example, DEPLOY.md.
 قيود مهمة يجب احترامها في أي خطة: لا حذف الملفات، لا إعادة بناء المشروع، لا وضع مفتاح API في المتصفح، الحفاظ على التصميم العربي RTL الحا��ي، وتعديل الموجود فقط أو إضافة م�� يلزم.`
 
-const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم هنا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
+const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم هنا هو المسؤول ويعطيك ط��باً بالعربية لتعديل الموقع.
 مهمتك: فهم الطلب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعديلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
 احترم دائماً: عدم حذف الملفات، عدم إعادة بناء المشروع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
 أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (بدون أي نص خارجه):
@@ -470,7 +518,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 1) اقرأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
 2) حدد بدقة أصغر جزء يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
 3) اكتب التعديل بنفس أسلوب وبنية المشروع (نفس التسمية، نفس المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
-4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء بناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أو معرّف استُخدم معرّف فعلاً.
+4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء بناء الجملة (syntax)، وأ�� الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أو معرّف استُخدم معرّف فعلاً.
 
 قواعد صارمة:
 - لا تحذف ملفات ولا تعيد بناء المشروع من الصفر.
@@ -589,7 +637,7 @@ export async function POST(req: Request) {
       if (!prompt) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)
       const text = await runText(
         prompt.slice(0, 6000),
-        "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه ومساعد لمتابعة الطالب في التحفيظ. أجب بالعربية الفصحى بدقة وإيجاز وبأسلوب مشجّع. اعتمد على بيانات الطالب المرفقة عند وجودها، ولا تخترع نصوصاً قرآنية.",
+        "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه ومساعد لمتابعة الطالب في التحفيظ. أجب ��العربية الفصحى بدقة وإيجاز وبأسلوب مشجّع. اعتمد على بيانات الطالب المرفقة عند وجودها، ولا تخترع نصوصاً قرآنية.",
         typeof body.temperature === "number" ? body.temperature : 0.4,
       )
       return json({ result: text, diagnostics })
@@ -777,27 +825,26 @@ export async function POST(req: Request) {
     }
 
     return json({ error: "وضع غير معروف", diagnostics }, 400)
-  } catch (err: any) {
-    const raw = err?.message ? String(err.message) : "خطأ غير معروف"
-    // رسائل عربية واضحة لحالات Google Gemini الشائعة.
-    let friendly = "تعذر تنفيذ طلب Google Gemini على الخادم"
-    if (raw.includes("GEMINI_API_KEY")) {
-      friendly = "مفتاح Gemini غير مهيأ على الخادم"
-    } else if (raw.includes("401") || raw.includes("403") || raw.toLowerCase().includes("api key")) {
-      friendly = "تعذر توثيق Google Gemini؛ تحقق من GEMINI_API_KEY"
-    } else if (raw.includes("429") || raw.toLowerCase().includes("quota")) {
-      friendly = "تم تجاوز حصة طلبات Google Gemini، حاول لاحقاً"
-    }
+  } catch (err: unknown) {
+    const failure = describeGeminiError(err)
+    console.error("[Gemini] Request failed", {
+      code: failure.code,
+      status: failure.status,
+      model: GEMINI_MODEL,
+      keyConfigured,
+    })
     return json(
       {
-        error: friendly,
+        error: failure.message,
         diagnostics: {
           executedOn: "server",
+          provider: "google-gemini",
+          model: GEMINI_MODEL,
           keyConfigured,
-          reason: raw.slice(0, 300),
+          code: failure.code,
         },
       },
-      500,
+      failure.status,
     )
   }
 }
