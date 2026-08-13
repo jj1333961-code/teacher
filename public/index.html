@@ -972,7 +972,7 @@ tr:hover { background: var(--table-hover); }
 <!-- صفحة المهام قيد الانتظار لولي الأمر -->
 <div id="parentPendingTasksPage" class="page hidden">
   <div class="page-header">
-    <h2>⏳ المهام اليومية</h2>
+    <h2>⏳ المهام اليومي��</h2>
     <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
   </div>
   <div id="parentPendingTasksContent"></div>
@@ -2646,10 +2646,10 @@ function renderStudentExam(){
   if(studentExamCurrentIndex>=ex.questions.length){submitStudentExam(true);return}
   const i=studentExamCurrentIndex,q=ex.questions[i];
   const remaining=Math.max(0,studentExamQuestionRemaining[i]||parseInt(q.timeLimit)||60);
-  let h='<div class="exam-sticky"><strong>🧪 اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال '+(i+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)</span></div><div>⏱️ لكل سؤال وقت مستقل، ولا ينتقل الوقت إلى السؤال التالي.</div></div>';
+  let h='<div class="exam-sticky"><strong>🧪 اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال '+(i+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)+'</span></div><div>⏱️ لكل سؤال وقت مستقل، ولا ينتقل الوقت إلى السؤال التالي.</div></div>';
   h+='<div id="studentExamQuestions">';
   h+='<div class="exam-question" id="examQuestionBox_'+i+'"><h4>س'+(i+1)+'. '+escapeHtml(q.prompt||'')+'</h4>'+
-    '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><p style="margin:10px 0;line-height:1.8">'+escapeHtml(q.stem||'')+'</p><span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)</span></div>';
+    '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><p style="margin:10px 0;line-height:1.8">'+escapeHtml(q.stem||'')+'</p><span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)+'</span></div>';
   if(q.type==='mcq'||q.type==='truefalse'){
     (q.options||[]).forEach((o,oi)=>{h+='<label class="exam-option"><input type="radio" name="examq_current" value="'+escapeHtml(o)+'" '+(studentExamAnswers[i]===o?'checked':'')+' onchange="markExamAnswer('+i+',this.value)"> '+escapeHtml(o)+'</label>';});
   }else if(q.type==='complete'){
@@ -4246,7 +4246,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   const refVec = currentUser.voicePrintVec || null;
   let matchPct = (refVec && liveVec) ? voiceMatchPercent(liveVec, refVec) : null;
 
-  // لا يسمح النظام بإرسال تسجيل صوتي لمهمة تتطلب هوية صوتية بدون بصمة مرجعية.
+  // لا يسمح النظام بإرسال تسجيل صوتي لمهمة تتطلب هوية صوتية بدون ��صمة مرجعية.
   if(!refVec || !liveVec || matchPct === null) {
     showToast('❌ لا توجد بصمة صوتية مرجعية صالحة لهذا الطالب — لم يتم حفظ أو إرسال التسجيل', 'error');
     if(statusEl) statusEl.textContent='لا توجد بصمة مرجعية ❌';
