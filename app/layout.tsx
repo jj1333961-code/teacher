@@ -4,7 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'منصة المعلّم الذكية',
-  description: 'منصة اختبارات قرآنية بمحرك محلي مجاني وتحليل صوت يحافظ على الخصوصية',
+  description: 'منصة تعليمية عربية للاختبارات المؤقتة ومساعد تطوير بالذكاء الاصطناعي',
   generator: 'v0.app',
   icons: {
     icon: [
