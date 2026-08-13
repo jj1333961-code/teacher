@@ -1,4 +1,4 @@
-export const maxDuration = 60
+export const maxDuration = 300
 
 // ===== Gemini هو محرك الذكاء الاصطناعي الوحيد (المفتاح يبقى على الخادم) =====
 const GEMINI = {
@@ -111,30 +111,35 @@ async function geminiText(prompt: string, system: string, temperature: number, i
   for (let attempt = 0; attempt < 3; attempt++) {
     const model = await resolveGeminiModel(attempt > 0 && resolvedGeminiModel === null)
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": GEMINI.key,
-      },
-      body: requestBody,
-      cache: "no-store",
-      signal: AbortSignal.timeout(50_000),
-    })
-    data = await response.json().catch(() => null)
-    if (response.ok) break
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": GEMINI.key,
+        },
+        body: requestBody,
+        cache: "no-store",
+        signal: AbortSignal.timeout(70_000),
+      })
+      data = await response.json().catch(() => null)
+      if (response.ok) break
 
-    if (response.status === 404 && attempt < 2) {
-      unavailableGeminiModels.add(model)
-      resolvedGeminiModel = null
-      await resolveGeminiModel(true)
-      continue
+      if (response.status === 404 && attempt < 2) {
+        unavailableGeminiModels.add(model)
+        resolvedGeminiModel = null
+        await resolveGeminiModel(true)
+        continue
+      }
+      const retryable = response.status === 429 || response.status >= 500
+      if (!retryable || attempt === 2) {
+        throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
+      }
+    } catch (error: any) {
+      const timedOut = error?.name === "TimeoutError" || error?.name === "AbortError" || String(error?.message || "").toLowerCase().includes("aborted")
+      if (!timedOut || attempt === 2) throw error
     }
-    const retryable = response.status === 429 || response.status >= 500
-    if (!retryable || attempt === 2) {
-      throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
-    }
-    await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)))
+    await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)))
   }
 
   const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
@@ -652,9 +657,20 @@ export async function POST(req: Request) {
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
       const verseTexts = new Set(sourceVerses.map((verse: any) => verse.text))
-      const valid = questions.every((question: any) => !question?.stem || verseTexts.has(String(question.stem)))
-      if (!valid) return json({ error: "رفضنا الرد لأن نص آية لم يطابق المصدر الموثوق حرفياً", diagnostics }, 502)
-      return json({ result: questions, diagnostics, source: "Al Quran Cloud" })
+      const safeQuestions = questions.map((question: any) => {
+        const from = Math.max(1, Math.min(sourceVerses.length, Number(question?.from) || 1))
+        const requestedTo = Number(question?.to) || from
+        const to = Math.max(from, Math.min(sourceVerses.length, requestedTo))
+        const trustedStem = sourceVerses[from - 1]?.text || ""
+        const suppliedStem = typeof question?.stem === "string" ? question.stem.trim() : ""
+        return {
+          ...question,
+          from,
+          to,
+          stem: suppliedStem && verseTexts.has(suppliedStem) ? suppliedStem : trustedStem,
+        }
+      })
+      return json({ result: safeQuestions, diagnostics, source: "Al Quran Cloud" })
     }
 
     if (mode === "admin_assistant") {
@@ -863,8 +879,14 @@ export async function POST(req: Request) {
       status = 503
     } else if (raw.includes("404")) {
       friendly = "تعذر الوصول إلى نموذج Gemini المتاح؛ أعد المحاولة"
-    } else if (raw.includes("TimeoutError") || raw.toLowerCase().includes("timed out")) {
-      friendly = `انتهت مهلة الاتصال بنموذج ${GEMINI.label}، حاول مجدداً`
+    } else if (
+      err?.name === "TimeoutError" ||
+      err?.name === "AbortError" ||
+      raw.includes("TimeoutError") ||
+      raw.toLowerCase().includes("timed out") ||
+      raw.toLowerCase().includes("aborted")
+    ) {
+      friendly = `استغرق نموذج ${GEMINI.label} وقتاً أطول من المتوقع بعد إعادة المحاولة`
       status = 504
     } else if (raw.toLowerCase().includes("empty") || raw.includes("رد فارغ")) {
       friendly = `أعاد نموذج ${GEMINI.label} رداً فارغاً`
