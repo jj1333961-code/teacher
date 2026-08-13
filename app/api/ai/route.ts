@@ -17,6 +17,38 @@ const GEMINI = {
 }
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
 const isGeminiConfigured = () => Boolean(GEMINI.key)
+let resolvedGeminiModel: string | null = null
+
+async function resolveGeminiModel(forceRefresh = false): Promise<string> {
+  if (resolvedGeminiModel && !forceRefresh) return resolvedGeminiModel
+
+  const configured = GEMINI.model.replace(/^models\//, "")
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", {
+    headers: { "x-goog-api-key": GEMINI.key },
+    cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok) {
+    throw new Error(`Gemini models HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
+  }
+
+  const available = (Array.isArray(data?.models) ? data.models : [])
+    .filter((model: any) => Array.isArray(model?.supportedGenerationMethods) && model.supportedGenerationMethods.includes("generateContent"))
+    .map((model: any) => String(model?.name || "").replace(/^models\//, ""))
+    .filter(Boolean)
+
+  const preferred = [
+    configured,
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    ...available.filter((name: string) => name.includes("flash") && !name.includes("image") && !name.includes("tts")),
+    ...available,
+  ]
+  resolvedGeminiModel = preferred.find((name, index) => preferred.indexOf(name) === index && available.includes(name)) || null
+  if (!resolvedGeminiModel) throw new Error("Gemini: لا يوجد نموذج يدعم generateContent لهذا المفتاح")
+  return resolvedGeminiModel
+}
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -70,11 +102,12 @@ async function geminiText(prompt: string, system: string, temperature: number, i
   if (!GEMINI.key) throw new Error("Gemini: مفتاح API غير مهيأ على الخادم")
   const parts: any[] = [{ text: prompt }]
   if (inlineData) parts.unshift({ inlineData })
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI.model)}:generateContent`
   const requestBody = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } })
   let data: any = null
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const model = await resolveGeminiModel(attempt > 0 && resolvedGeminiModel === null)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -88,11 +121,16 @@ async function geminiText(prompt: string, system: string, temperature: number, i
     data = await response.json().catch(() => null)
     if (response.ok) break
 
+    if (response.status === 404 && attempt < 2) {
+      resolvedGeminiModel = null
+      await resolveGeminiModel(true)
+      continue
+    }
     const retryable = response.status === 429 || response.status >= 500
-    if (!retryable || attempt === 1) {
+    if (!retryable || attempt === 2) {
       throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
     }
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)))
   }
 
   const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
@@ -469,7 +507,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 
 منهجية العمل الإلزامية قبل الكتابة:
 1) اقرأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
-2) حدد بدقة أصغر جزء يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
+2) حدد بدقة أصغر جز�� يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
 3) اكتب التعديل بنفس أسلوب وبنية المشروع (نفس التسمية، ن��س المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
 4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء بناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أ�� معرّف استُخدم معرّف فعلاً.
 
@@ -584,7 +622,7 @@ export async function POST(req: Request) {
     const payload = body.payload || {}
     const temperature = typeof body.temperature === "number" ? body.temperature : 0.15
 
-    // 1.ب) المساعد الذكي للطالب/ولي الأمر (نص حر مع سياق بيانات الطالب)
+    // 1.ب) المساعد الذكي لل��الب/ولي الأمر (نص حر مع سياق بيانات الطالب)
     if (mode === "assistant") {
       const prompt = typeof body.prompt === "string" ? body.prompt.trim() : ""
       if (!prompt) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)
@@ -699,7 +737,7 @@ export async function POST(req: Request) {
       })
     }
 
-    // 6.أ) فحص جاهزية مساعد التطوير (للمسؤول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كشف أي سرّ.
+    // 6.أ) فحص جاهزية مساعد التطوير (للمس��ول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كشف أي سرّ.
     if (mode === "dev_preflight") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const pf = await preflightAutoApply()
@@ -814,10 +852,13 @@ export async function POST(req: Request) {
       friendly = `تم تجاوز حد طلبات نموذج ${GEMINI.label}، حاول لاحقاً`
       status = 429
     } else if (raw.includes("401") || raw.includes("403") || raw.toLowerCase().includes("api key")) {
-      friendly = `تعذر توثيق نموذج ${GEMINI.label}; تحقق من صلاحية المفتاح وواجهة Generative Language API`
+      friendly = `تعذر توثيق نموذج ${GEMINI.label}؛ تحقق من صلاحية المفتاح وواجهة Generative Language API`
       status = 502
+    } else if (raw.includes("لا يوجد نموذج يدعم")) {
+      friendly = "لا يتوفر نموذج Gemini نصي متوافق مع هذا المفتاح"
+      status = 503
     } else if (raw.includes("404")) {
-      friendly = `نموذج ${GEMINI.model} غير متاح لهذا المفتاح`
+      friendly = "تعذر الوصول إلى نموذج Gemini المتاح؛ أعد المحاولة"
     } else if (raw.includes("TimeoutError") || raw.toLowerCase().includes("timed out")) {
       friendly = `انتهت مهلة الاتصال بنموذج ${GEMINI.label}، حاول مجدداً`
       status = 504
