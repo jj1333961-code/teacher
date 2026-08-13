@@ -493,8 +493,15 @@ tr:hover { background: var(--table-hover); }
     <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات المرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
+<button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
     <button class="menu-btn" style="background:#24292e" onclick="openGithubSync()">🔗 مزامنة GitHub</button>
   </div>
+</div>
+
+<div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
+  <div class="page-header"><h2>مساعد Gemini الإداري</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <p style="color:var(--text-light);margin-bottom:15px;">محادثة مقيدة ببيانات الطلاب وأولياء الأمور والاختبارات داخل الموقع.</p>
+  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو الاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
@@ -502,7 +509,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفاتيح OpenRouter وGitHub تبقى على الخادم فقط.
+    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغيّرت وروابط الـcommit. مفتاحا Gemini وGitHub يبقيان على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
@@ -726,8 +733,10 @@ tr:hover { background: var(--table-hover); }
     <p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. تحدد لكل نوع عدد الأسئلة والمستوى والوقت، وللاختياري عدد الاختيارات، ولأكمل/التسجيل عدد الآيات. الوقت مستقل لكل سؤال.</p>
     <div class="form-row">
       <div class="form-group"><label>السورة الأساسية</label><input id="examBaseSurah" readonly style="background:var(--table-header)"></div>
-      <div class="form-group"><label for="examAIModel">نموذج إنشاء الاختبار</label><select id="examAIModel" class="ai-model-picker" onchange="saveAIModel(this.value)"><option value="openai">OpenAI (GPT)</option><option value="grok">Grok</option><option value="gemini">Gemini</option></select></div>
+      <div class="form-group"><label for="examQuestionSource">مصدر الأسئلة</label><select id="examQuestionSource" onchange="toggleExamSource()"><option value="quran">Gemini من القرآن (Al Quran Cloud)</option><option value="file">توليد محلي من ملف مرفوع</option></select></div>
+      <div class="form-group hidden" id="examFileSourceGroup"><label for="examFileSource">ملف الاختبار</label><select id="examFileSource"><option value="">اختر ملفاً...</option></select></div>
     </div>
+    <div class="alert alert-info">Gemini هو محرك الذكاء الاصطناعي الوحيد. محتوى الملفات لا يُرسل إلى Gemini عند اختيار التوليد المحلي.</div>
     <div id="examPlanRows"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
       <button class="btn btn-info" onclick="addExamPlanRow()">➕ مستوى/نوع جديد</button>
@@ -889,10 +898,7 @@ tr:hover { background: var(--table-hover); }
   <div class="ai-chat">
     <div id="studentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
-      <label class="sr-only" for="studentAIModel">نموذج الذكاء الاصطناعي</label>
-      <select id="studentAIModel" class="ai-model-picker" onchange="saveAIModel(this.value)">
-        <option value="openai">OpenAI (GPT)</option><option value="grok">Grok</option><option value="gemini">Gemini</option>
-      </select>
+<span class="badge badge-primary">Gemini</span>
       <input type="text" id="studentChatInput" placeholder="اسألني عن مستواك أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendStudentChat()">
       <button class="btn btn-primary" onclick="sendStudentChat()">إرسال</button>
     </div>
@@ -961,10 +967,7 @@ tr:hover { background: var(--table-hover); }
   <div class="ai-chat">
     <div id="parentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
-      <label class="sr-only" for="parentAIModel">نموذج الذكاء الاصطناعي</label>
-      <select id="parentAIModel" class="ai-model-picker" onchange="saveAIModel(this.value)">
-        <option value="openai">OpenAI (GPT)</option><option value="grok">Grok</option><option value="gemini">Gemini</option>
-      </select>
+<span class="badge badge-primary">Gemini</span>
       <input type="text" id="parentChatInput" placeholder="اسألني عن مستوى ابنك، أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendParentChat()">
       <button class="btn btn-primary" onclick="sendParentChat()">إرسال</button>
     </div>
@@ -993,6 +996,13 @@ tr:hover { background: var(--table-hover); }
 <div id="filesPage" class="page hidden">
   <div class="page-header"><h2>📁 الملفات المرفوعة</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="filesAlert"></div>
+  <section style="background:var(--table-header);border:2px solid var(--primary);border-radius:15px;padding:20px;margin-bottom:20px;">
+    <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
+    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها محلياً دون إرساله إلى Gemini.</p>
+    <input id="examFileUpload" type="file" accept=".pdf,.docx,.txt" onchange="uploadExamFile(this)">
+    <div id="examFileUploadStatus" style="margin-top:10px;"></div>
+    <div id="examFilesList" style="margin-top:15px;"></div>
+  </section>
   <div style="background:linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); border-radius:15px; padding:20px; margin-bottom:20px; border:2px solid var(--primary);">
     <h4 style="color:var(--primary); margin-bottom:15px;">⬆️ رفع ملف جديد</h4>
     <div class="form-row">
@@ -1030,21 +1040,8 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <script>
-const AI_MODEL_STORAGE_KEY = 'preferred_ai_model';
-function getSelectedAIModel(){
-  const saved=localStorage.getItem(AI_MODEL_STORAGE_KEY);
-  return ['openai','grok','gemini'].includes(saved)?saved:'gemini';
-}
-function syncAIModelSelectors(){
-  const selected=getSelectedAIModel();
-  ['studentAIModel','parentAIModel','examAIModel'].forEach(function(id){const el=document.getElementById(id);if(el)el.value=selected;});
-}
-function saveAIModel(value){
-  if(!['openai','grok','gemini'].includes(value))return;
-  localStorage.setItem(AI_MODEL_STORAGE_KEY,value); syncAIModelSelectors();
-}
-function getAIModelLabel(value){return value==='openai'?'OpenAI (GPT)':value==='grok'?'Grok':'Gemini';}
-document.addEventListener('DOMContentLoaded',syncAIModelSelectors);
+function getSelectedAIModel(){return 'gemini';}
+function getAIModelLabel(){return 'Gemini';}
 
 function showToast(msg, type){
   if(!type){
@@ -1254,7 +1251,7 @@ function showPage(id) {
   if(id === 'studentRecordsPage') renderStudentRecordsBox();
   if(id === 'parentDashboard' && currentType === 'parent') { renderParentDashboard(); updateParentMsgBadge(); }
   if(id === 'parentInbox') { renderParentInbox(); markParentMessagesRead(); }
-  if(id === 'filesPage') { renderFileTargetSelect(); renderFiles(); }
+  if(id === 'filesPage') { renderFileTargetSelect(); renderFiles(); loadExamFiles().catch(function(e){document.getElementById('examFilesList').innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message)+'</div>';}); }
   if(id === 'studentFilesPage') renderUserFiles('student');
   if(id === 'parentFilesPage') renderUserFiles('parent');
   if(id === 'parentRecordsPage') renderParentRecords();
@@ -1307,7 +1304,7 @@ function updateBackButton() {
 }
 
 // ====== DRAFT SYSTEM - Auto finalize after 24 hours ======
-// أرشفة مهام اليوم في السجلات عند انتهاء اليوم (لولي الأمر والطالب والمسؤول)
+// أرشفة مهام اليوم في السجلات عند انتهاء اليوم (��ولي الأمر والطالب والمسؤول)
 function archiveDailyTasks() {
   try {
     let students = getData('students');
@@ -2469,6 +2466,20 @@ function renderReadingItems() {
 let examQuestions=[]; let examPlanRows=[]; let studentExamTimer=null; let studentExamQuestionTimer=null;
 let studentExamQuestionRemaining=[]; let studentExamQuestionStartedAt=[]; let studentExamQuestionElapsed=[]; let studentExamSessionId=''; let studentExamCurrentIndex=0; let studentExamLockedIndices={};
 
+let examFilesCache=[];
+async function loadExamFiles(){
+  const res=await fetch('/api/exam-files',{cache:'no-store'});const data=await res.json();if(!res.ok)throw new Error(data.error||'تعذر تحميل ملفات الاختبارات');examFilesCache=data.files||[];
+  const select=document.getElementById('examFileSource');if(select)select.innerHTML='<option value="">اختر ملفاً...</option>'+examFilesCache.map(f=>'<option value="'+f.id+'">'+escapeHtml(f.name)+'</option>').join('');
+  const box=document.getElementById('examFilesList');if(box)box.innerHTML=examFilesCache.length?examFilesCache.map(f=>'<div class="exam-plan-row"><strong>'+escapeHtml(f.name)+'</strong><div style="color:var(--text-light);font-size:.85rem">'+(f.text||'').length+' حرف — '+new Date(f.uploadedAt).toLocaleString('ar-EG')+'</div><button class="btn btn-sm btn-danger" onclick="deleteExamFile(\''+f.id+'\')">حذف الملف</button></div>').join(''):'<div class="alert alert-info">لا توجد ملفات اختبارات محفوظة.</div>';
+}
+async function uploadExamFile(input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById('examFileUploadStatus');status.innerHTML='<div class="alert alert-info">جاري رفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);const res=await fetch('/api/exam-files',{method:'POST',body:form});const data=await res.json();if(!res.ok)throw new Error(data.error||'تعذر الرفع');status.innerHTML='<div class="alert alert-success">تم حفظ الملف واستخراج النص.</div>';await loadExamFiles()}catch(e){status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message)+'</div>'}finally{input.value=''}}
+async function deleteExamFile(id){const file=examFilesCache.find(f=>f.id===id);if(!file||!confirm('هل تريد حذف هذا الملف نهائياً؟'))return;const res=await fetch('/api/exam-files',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({pathname:file.pathname,metadataPathname:file.metadataPathname})});const data=await res.json();if(!res.ok){alert(data.error||'تعذر الحذف');return}await loadExamFiles()}
+function toggleExamSource(){const local=document.getElementById('examQuestionSource')?.value==='file';document.getElementById('examFileSourceGroup')?.classList.toggle('hidden',!local);if(local)loadExamFiles().catch(e=>showExamAlert(e.message,'danger'))}
+function shuffled(values){return values.slice().sort(()=>Math.random()-.5)}
+function generateLocalFileQuestions(file,plans){const sentences=String(file.text||'').split(/[.!؟\n]+/).map(s=>s.trim()).filter(s=>s.length>=25&&s.length<=260);if(sentences.length<6)throw new Error('لا يحتوي الملف على جمل كافية لإنشاء اختبار متنوع.');const words=shuffled(Array.from(new Set(sentences.join(' ').split(/\s+/).filter(w=>w.length>4))));let cursor=0;const output=[];plans.forEach(plan=>{for(let i=0;i<plan.count;i++){const sentence=sentences[(cursor++)%sentences.length];const type=plan.type==='audio'?'complete':plan.type;let q={id:'file_'+Date.now()+'_'+output.length,type,level:plan.level,surah:'',prompt:'',stem:sentence,options:[],correct:'',from:1,to:1,timeLimit:plan.timeLimit,completeAyahs:1,reciteAyahs:1,audioShareWithParent:false,points:1,rejected:false,weakened:false,source:'file',sourceFileId:file.id,sourceFileName:file.name,optionsCount:plan.optionsCount||4};if(type==='truefalse'){const truthful=Math.random()>.5;q.prompt='هل العبارة التالية وردت في الملف؟';q.stem=truthful?sentence:sentences[(cursor+2)%sentences.length].split(' ').reverse().join(' ');q.options=['صح','خطأ'];q.correct=truthful?'صح':'خطأ'}else if(type==='complete'){const candidates=sentence.split(/\s+/).filter(w=>w.length>4);const answer=candidates[Math.floor(Math.random()*candidates.length)]||words[0];q.prompt='أكمل الكلمة الناقصة من النص المرفوع';q.correct=answer;q.stem=sentence.replace(answer,'_____')}else{const correct=(sentence.split(/\s+/).filter(w=>w.length>4)[0]||words[0]);q.prompt='أي كلمة وردت في النص التالي؟';q.correct=correct;q.options=shuffled([correct].concat(words.filter(w=>w!==correct).slice(0,Math.max(1,(plan.optionsCount||4)-1))))}output.push(q)}});return output}
+
+async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';box.innerHTML+='<div class="ai-msg user">'+escapeHtml(message)+'</div><div id="adminAiTyping" class="ai-msg bot">جاري التحليل...</div>';box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await res.json();if(!res.ok)throw new Error(data.error||'تعذر الرد');document.getElementById('adminAiTyping').outerHTML='<div class="ai-msg bot">'+escapeHtml(data.result).replace(/\n/g,'<br>')+'</div>'}catch(e){document.getElementById('adminAiTyping').textContent=e.message||'تعذر الرد'}box.scrollTop=box.scrollHeight}
+
 async function callStudentAI(mode, payload, temperature){
   const res = await fetch('/api/ai', {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -2552,17 +2563,18 @@ async function generateExamQuestions(){
   const btns=document.querySelectorAll('#examBuilderSection button'); btns.forEach(b=>b.disabled=true);
   showExamAlert('🤖 الذكاء الاصطناعي يجهز أسئلة دقيقة من نصوص القرآن الفعلية...','info');
   try{
-    const candidates=await buildExamSourceCandidates(base);
-    if(!candidates.length) throw new Error('تعذر جلب نصوص الآيات لتوليد الاختبار.');
-    const payload={
-      baseSurah:base,
-      plans:plans.map(r=>({count:parseInt(r.count)||1,level:r.level,type:r.type,timeLimit:Math.max(5,Math.min(3600,parseInt(r.timeLimit)||60)),completeAyahs:parseInt(r.completeAyahs)||1,reciteAyahs:parseInt(r.reciteAyahs)||1,audioShareWithParent:r.audioShareWithParent!==false,optionsCount:Math.max(2,Math.min(6,parseInt(r.optionsCount)||4))})),
-      optionsCount:4,
-      sourceVerses:candidates,
-      rules:'صح/خطأ: ضع آية حقيقية واذكر سورة ثم اجعل الطالب يحدد صح/خطأ. أكمل: اجعل البداية والنهاية في نفس السورة وعدد آيات الإكمال يساوي completeAyahs. التسجيل: حدد السورة ورقم الآيات بدقة. لا تخترع آية.'
-    };
-    const ai=await callStudentAI('generate_exam',payload,0.1);
-    let list=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[]);
+    const normalizedPlans=plans.map(r=>({count:parseInt(r.count)||1,level:r.level,type:r.type,timeLimit:Math.max(5,Math.min(3600,parseInt(r.timeLimit)||60)),completeAyahs:parseInt(r.completeAyahs)||1,reciteAyahs:parseInt(r.reciteAyahs)||1,audioShareWithParent:r.audioShareWithParent!==false,optionsCount:Math.max(2,Math.min(6,parseInt(r.optionsCount)||4))}));
+    const source=document.getElementById('examQuestionSource')?.value||'quran';
+    let list=[];
+    if(source==='file'){
+      if(!examFilesCache.length)await loadExamFiles();
+      const file=examFilesCache.find(f=>f.id===document.getElementById('examFileSource')?.value);if(!file)throw new Error('اختر ملف اختبار مرفوعاً أولاً.');
+      list=generateLocalFileQuestions(file,normalizedPlans);
+    }else{
+      const surahNumber=ALL_SURAHS_ORDERED.indexOf(base)+1;if(surahNumber<1)throw new Error('تعذر تحديد رقم السورة.');
+      const ai=await callStudentAI('generate_exam',{surahNumber:surahNumber,plan:normalizedPlans},0.1);
+      list=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[]);
+    }
     if(!list.length) throw new Error('لم ينشئ الذكاء الاصطناعي أسئلة.');
     const requestedTotal=plans.reduce((n,r)=>n+(parseInt(r.count)||0),0);
     if(list.length<requestedTotal) throw new Error('أعاد الذكاء الاصطناعي عدداً أقل من العدد المطلوب ('+list.length+' من '+requestedTotal+').');
@@ -2579,7 +2591,7 @@ async function generateExamQuestions(){
           timeLimit:Math.max(5,Math.min(3600,parseInt(plan.timeLimit)||60)),
           completeAyahs:parseInt(plan.completeAyahs)||1,reciteAyahs:parseInt(plan.reciteAyahs)||1,
           audioShareWithParent:plan.audioShareWithParent!==false,points:typeof q.points==='number'?q.points:1,
-          rejected:false,weakened:false,source:'ai',optionsCount:plan.optionsCount||4
+          rejected:false,weakened:false,source:q.source||'gemini',sourceFileId:q.sourceFileId||'',sourceFileName:q.sourceFileName||'',optionsCount:plan.optionsCount||4
         });
       }
     });
@@ -4973,7 +4985,7 @@ function renderFiles() {
   const categoryLabels = {student:'👨‍🎓 الطالب', parent:'👨‍👩‍👧 ولي الأمر', general:'عام', quran:'قرآن', lessons:'دروس', exams:'اختبارات', reports:'تقارير'};
 
   if(files.length === 0) {
-    document.getElementById('filesList').innerHTML = '<div class="alert alert-info">لا توجد ملفات مرفوعة ��عد</div>';
+    document.getElementById('filesList').innerHTML = '<div class="alert alert-info">لا توجد ��لفات مرفوعة ��عد</div>';
     return;
   }
 
