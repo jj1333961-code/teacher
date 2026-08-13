@@ -1,17 +1,17 @@
-import type { QuizQuestion } from '@/lib/db/schema'
-
 export const runtime = 'nodejs'
 
-const quran: Record<string, string[]> = {
-  الفاتحة: ['بسم الله الرحمن الرحيم', 'الحمد لله رب العالمين', 'الرحمن الرحيم', 'مالك يوم الدين', 'إياك نعبد وإياك نستعين', 'اهدنا الصراط المستقيم', 'صراط الذين أنعمت عليهم غير المغضوب عليهم ولا الضالين'],
-  الإخلاص: ['قل هو الله أحد', 'الله الصمد', 'لم يلد ولم يولد', 'ولم يكن له كفوا أحد'],
-  الفلق: ['قل أعوذ برب الفلق', 'من شر ما خلق', 'ومن شر غاسق إذا وقب', 'ومن شر النفاثات في العقد', 'ومن شر حاسد إذا حسد'],
-  الناس: ['قل أعوذ برب الناس', 'ملك الناس', 'إله الناس', 'من شر الوسواس الخناس', 'الذي يوسوس في صدور الناس', 'من الجنة والناس'],
-  الكوثر: ['إنا أعطيناك الكوثر', 'فصل لربك وانحر', 'إن شانئك هو الأبتر'],
-  العصر: ['والعصر', 'إن الإنسان لفي خسر', 'إلا الذين آمنوا وعملوا الصالحات وتواصوا بالحق وتواصوا بالصبر'],
-  النصر: ['إذا جاء نصر الله والفتح', 'ورأيت الناس يدخلون في دين الله أفواجا', 'فسبح بحمد ربك واستغفره إنه كان توابا'],
-  المسد: ['تبت يدا أبي لهب وتب', 'ما أغنى عنه ماله وما كسب', 'سيصلى نارا ذات لهب', 'وامرأته حمالة الحطب', 'في جيدها حبل من مسد'],
+type ExamPlan = {
+  count?: number
+  level?: 'easy' | 'medium' | 'hard'
+  type?: 'mcq' | 'truefalse' | 'complete' | 'audio'
+  timeLimit?: number
+  completeAyahs?: number
+  reciteAyahs?: number
+  audioShareWithParent?: boolean
+  optionsCount?: number
 }
+
+type VerseSource = { surah?: string; from?: number; to?: number; text?: string }
 
 function response(data: unknown, status = 200) {
   return Response.json(data, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } })
@@ -29,41 +29,79 @@ function similarity(left: string, right: string) {
   return Math.round((2 * shared * 100) / (a.size + b.size))
 }
 
-function generateExam(body: Record<string, unknown>) {
-  const surah = String(body.surah || 'الفاتحة')
-  const verses = quran[surah]
-  if (!verses) throw new Error('السورة غير متاحة حاليًا في المكتبة المحلية')
-  const from = Math.max(1, Number(body.fromVerse) || 1)
-  const to = Math.min(verses.length, Math.max(from, Number(body.toVerse) || verses.length))
-  const count = Math.min(12, Math.max(1, Number(body.count) || 5))
-  const seconds = Math.min(600, Math.max(15, Number(body.seconds) || 60))
-  const questions: QuizQuestion[] = Array.from({ length: count }, (_, index) => {
-    const verseIndex = (from - 1 + index) % (to - from + 1)
-    const verse = verses[verseIndex]
-    const nextVerse = verses[Math.min(verseIndex + 1, verses.length - 1)]
-    const type = index % 2 === 0 && verseIndex < verses.length - 1 ? 'choice' : 'text'
-    const distractors = verses.filter((item) => item !== nextVerse).slice(0, 2)
-    return { id: crypto.randomUUID(), text: type === 'choice' ? `ما الآية التي تلي: «${verse}»؟` : `اكتب الآية رقم ${verseIndex + 1} من سورة ${surah}`, type, options: type === 'choice' ? [nextVerse, ...distractors].sort(() => 0.5 - Math.random()) : [], answer: type === 'choice' ? nextVerse : verse, points: 10, hours: 0, minutes: Math.floor(seconds / 60), seconds: seconds % 60, surah, verseNumber: verseIndex + 1 }
+function cleanSources(value: unknown): Required<VerseSource>[] {
+  if (!Array.isArray(value)) return []
+  return value.slice(0, 30).map((item) => {
+    const source = (item || {}) as VerseSource
+    return {
+      surah: String(source.surah || '').trim().slice(0, 80),
+      from: Math.max(1, Number(source.from) || 1),
+      to: Math.max(1, Number(source.to) || Number(source.from) || 1),
+      text: String(source.text || '').trim().slice(0, 12000),
+    }
+  }).filter((source) => source.surah && source.text)
+}
+
+function shuffled<T>(items: T[], seed: number) {
+  return [...items].sort((a, b) => {
+    const left = JSON.stringify(a).length * 31 + seed
+    const right = JSON.stringify(b).length * 17 + seed
+    return (left % 97) - (right % 97)
   })
-  return { quiz: { id: crypto.randomUUID(), title: `اختبار سورة ${surah}`, questions }, local: true }
+}
+
+function generateLegacyExam(payload: Record<string, unknown>) {
+  const plans = Array.isArray(payload.plans) ? payload.plans.slice(0, 20) as ExamPlan[] : []
+  const sources = cleanSources(payload.sourceVerses)
+  if (!plans.length) throw new Error('أضف خطة سؤال واحدة على الأقل')
+  if (!sources.length) throw new Error('تعذر العثور على نصوص آيات موثوقة للتوليد')
+
+  const questions: Record<string, unknown>[] = []
+  let cursor = 0
+  plans.forEach((plan) => {
+    const count = Math.min(50, Math.max(1, Number(plan.count) || 1))
+    for (let index = 0; index < count; index += 1) {
+      const source = sources[cursor % sources.length]
+      const type = ['mcq', 'truefalse', 'complete', 'audio'].includes(String(plan.type)) ? String(plan.type) : 'mcq'
+      const points = plan.level === 'hard' ? 3 : plan.level === 'easy' ? 1 : 2
+      const base = { surah: source.surah, from: source.from, to: source.to, points }
+
+      if (type === 'mcq') {
+        const optionCount = Math.min(6, Math.max(2, Number(plan.optionsCount) || 4))
+        const otherSurahs = sources.map((item) => item.surah).filter((name) => name !== source.surah)
+        const fallback = ['الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة'].filter((name) => name !== source.surah)
+        const options = shuffled([source.surah, ...new Set([...otherSurahs, ...fallback])].slice(0, optionCount), cursor)
+        questions.push({ ...base, prompt: 'إلى أي سورة تنتمي الآيات المعروضة؟', stem: source.text, options, correct: source.surah })
+      } else if (type === 'truefalse') {
+        questions.push({ ...base, prompt: `صح أم خطأ: النص المعروض من سورة ${source.surah}.`, stem: source.text, options: ['صح', 'خطأ'], correct: 'صح' })
+      } else if (type === 'complete') {
+        questions.push({ ...base, prompt: `أكمل تلاوة سورة ${source.surah} من الآية ${source.from} إلى الآية ${source.to}.`, stem: source.text, options: [], correct: source.text })
+      } else {
+        questions.push({ ...base, prompt: `سجّل تلاوتك لسورة ${source.surah} من الآية ${source.from} إلى الآية ${source.to}.`, stem: source.text, options: [], correct: source.text })
+      }
+      cursor += 1
+    }
+  })
+  return questions
 }
 
 function developerPlan(prompt: string) {
   const clean = prompt.trim().slice(0, 2000)
-  const keywords = clean.split(/\s+/).filter((word) => word.length > 3).slice(0, 6)
-  return { message: 'تم إعداد اقتراح محلي للمراجعة، ولن يُطبّق أي تغيير تلقائيًا.', proposal: { summary: clean, files: ['components/teacher-dashboard.tsx', 'app/api/ai/route.ts'], steps: ['مراجعة الهدف ونطاق المستخدمين', `البحث عن المواضع المرتبطة: ${keywords.join('، ') || 'واجهة المنصة'}`, 'تنفيذ التعديل في فرع منفصل', 'فحص البناء وتجربة المسار الأساسي', 'عرض الفرق على المسؤول للموافقة'], risks: ['تأثير التعديل على بيانات الاختبارات', 'ضرورة التحقق من الصلاحيات وإتاحة الاستخدام'] } }
+  return { message: 'تم إعداد اقتراح محلي للمراجعة، ولن يُطبّق أي تغيير تلقائيًا.', proposal: { summary: clean, steps: ['مراجعة الهدف', 'تحديد الملفات المتأثرة', 'تنفيذ التعديل في فرع منفصل', 'اختبار المسار', 'عرض الفرق للموافقة'] } }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json() as Record<string, unknown>
-    if (body.mode === 'generate_exam') return response(generateExam(body))
+    const payload = body.payload && typeof body.payload === 'object' ? body.payload as Record<string, unknown> : body
+    if (body.mode === 'generate_exam') return response({ result: generateLegacyExam(payload), local: true })
     if (body.mode === 'grade_answer') {
-      const score = similarity(String(body.answer || ''), String(body.expected || ''))
-      return response({ score, correct: score >= 80, feedback: score >= 80 ? 'إجابة صحيحة' : 'راجع ألفاظ الآية وترتيب الكلمات' })
+      const score = similarity(String(payload.answer || ''), String(payload.expected || ''))
+      return response({ result: { score, correct: score >= 80, feedback: score >= 80 ? 'إجابة صحيحة' : 'راجع ألفاظ الآية وترتيب الكلمات' } })
     }
-    if (body.mode === 'developer') return response(developerPlan(String(body.prompt || '')))
-    if (body.mode === 'status') return response({ ready: true, engine: 'محلي مجاني', externalModels: false })
+    if (body.mode === 'developer') return response({ result: developerPlan(String(body.prompt || payload.prompt || '')) })
+    if (body.mode === 'assistant') return response({ result: 'المساعد المحلي مخصص حاليًا لتوليد الاختبارات القرآنية داخل خانة التسميع.' })
+    if (body.mode === 'status') return response({ result: { ready: true, engine: 'محلي مجاني', externalModels: false } })
     return response({ error: 'وضع التشغيل غير مدعوم' }, 400)
   } catch (error) {
     return response({ error: error instanceof Error ? error.message : 'تعذر تنفيذ الطلب محليًا' }, 400)
