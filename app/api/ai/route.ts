@@ -3,7 +3,12 @@ export const maxDuration = 60
 // ===== Gemini هو محرك الذكاء الاصطناعي الوحيد (المفتاح يبقى على الخادم) =====
 const GEMINI = {
   label: "Gemini",
-  key: (process.env.GEMINI_API_KEY || "").trim(),
+  key: (
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    ""
+  ).trim(),
   model: (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim(),
 }
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
@@ -61,13 +66,18 @@ async function geminiText(prompt: string, system: string, temperature: number, i
   if (!GEMINI.key) throw new Error("Gemini: مفتاح API غير مهيأ على الخادم")
   const parts: any[] = [{ text: prompt }]
   if (inlineData) parts.unshift({ inlineData })
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI.model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI.model)}:generateContent`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": GEMINI.key,
+    },
     body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } }),
+    cache: "no-store",
+    signal: AbortSignal.timeout(55_000),
   })
   const data = await response.json().catch(() => null)
-  if (!response.ok) throw new Error(`Gemini: ${String(data?.error?.message || data?.message || `HTTP ${response.status}`).slice(0, 300)}`)
+  if (!response.ok) throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
   const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
   if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
   return text.trim()
@@ -146,7 +156,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - إذا كان type=audio فحدد مقطعاً حقيقياً من السورة، ويجب أن يساوي عدد الآيات من from إلى to قيمة reciteAyahs بالضبط.
 - level=easy: سؤال مباشر من النص.
 - level=medium: تمييز وربط أدق بين الآية والسورة أو موضعها.
-- level=hard: مواضع متشابهة وتمييز دقيق دون غموض أو معلومات من خارج النص.
+- level=hard: مواضع متشا��هة وتمييز دقيق دون غموض أو معلومات من خارج النص.
 - لا تكرر السؤال نفسه.
 - points=1 دائماً.
 - timeLimit لا يخرج عن الوقت الذي حدده المسؤول في plan؛ إذا كان موجوداً فاستخدمه كما هو.
@@ -209,7 +219,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 قيود مهمة يجب احترامها في أي خطة: لا حذف الملفات، لا إعادة بناء المشروع، لا وضع مفتاح API في المتصفح، الحف��ظ على التصميم العربي RTL الحا��ي، وتعديل الموجود فقط أو إضافة م�� يلزم.`
 
 const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم هنا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
-مهمتك: فهم الطلب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعديلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
+مهمتك: فهم ال��لب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعديلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
 احترم دائماً: عدم حذف الملفات، عدم إعادة بناء المشروع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
 أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (بدون أي نص خارجه):
 {
@@ -444,7 +454,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 1) اقرأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
 2) حدد بدقة أصغر جزء يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
 3) اكتب التعديل بنفس أسلوب وبنية المشروع (نفس التسمية، نفس المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
-4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء بناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أو معرّف استُخدم معرّف فعلاً.
+4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء بناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أ�� معرّف استُخدم معرّف فعلاً.
 
 قواعد صارمة:
 - لا تحذف ملفات ولا تعيد بناء المشروع من الصفر.
@@ -563,7 +573,7 @@ export async function POST(req: Request) {
       if (!prompt) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)
       const text = await runText(
         prompt.slice(0, 6000),
-        "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه ومساعد لمتابعة الطالب في التحفيظ. أجب بالعربية الفصحى بدقة وإيجاز وبأسلوب مشجّع. اعتمد على بيانات الطالب المرفقة عند وجودها، ولا تخترع نصوصاً قرآنية.",
+        "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه ومساعد لمتابعة الطالب في التحفيظ. أجب بالعربية الفصحى بدقة وإيجاز وبأسلوب مشجّع. اعتمد على بيانات الطالب المرفقة عند و��ودها، ولا تخترع نصوصاً قرآنية.",
         typeof body.temperature === "number" ? body.temperature : 0.4,
       )
       return json({ result: text, diagnostics })
@@ -779,14 +789,24 @@ export async function POST(req: Request) {
   } catch (err: any) {
     const raw = err?.message ? String(err.message) : "خطأ غير معروف"
     let friendly = `فشل الاتصال بنموذج ${GEMINI.label}`
-    if (raw.includes("OPENROUTER_API_KEY")) {
-      friendly = "تحويل الصوت غير مهيأ على الخادم"
+    let status = 502
+    if (raw.includes("مفتاح API غير مهيأ")) {
+      friendly = "مفتاح Gemini غير متاح في بيئة الخادم"
+      status = 503
     } else if (raw.includes("429")) {
       friendly = `تم تجاوز حد طلبات نموذج ${GEMINI.label}، حاول لاحقاً`
-    } else if (raw.includes("401") || raw.toLowerCase().includes("api key")) {
-      friendly = `تعذر توثيق نموذج ${GEMINI.label}; تحقق من مفتاحه على الخادم`
+      status = 429
+    } else if (raw.includes("401") || raw.includes("403") || raw.toLowerCase().includes("api key")) {
+      friendly = `تعذر توثيق نموذج ${GEMINI.label}; تحقق من صلاحية المفتاح وواجهة Generative Language API`
+      status = 502
+    } else if (raw.includes("404")) {
+      friendly = `نموذج ${GEMINI.model} غير متاح لهذا المفتاح`
+    } else if (raw.includes("TimeoutError") || raw.toLowerCase().includes("timed out")) {
+      friendly = `انتهت مهلة الاتصال بنموذج ${GEMINI.label}، حاول مجدداً`
+      status = 504
+    } else if (raw.toLowerCase().includes("empty") || raw.includes("رد فارغ")) {
+      friendly = `أعاد نموذج ${GEMINI.label} رداً فارغاً`
     }
-    if (raw.toLowerCase().includes("empty") || raw.includes("رد فارغ")) friendly = `أعاد نموذج ${GEMINI.label} رداً فارغاً`
     return json(
       {
         error: friendly,
@@ -796,7 +816,7 @@ export async function POST(req: Request) {
           reason: raw.slice(0, 300),
         },
       },
-      500,
+      status,
     )
   }
 }
