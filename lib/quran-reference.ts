@@ -5,9 +5,10 @@ import { PDFParse } from "pdf-parse"
 
 const QURAN_PATH = "references/quran.pdf"
 const MUTASHABIHAT_PATH = "references/mutashabihat.pdf"
+const EXAM_GUIDE_PATH = "references/exam-question-guide.pdf"
 const MAX_REFERENCE_CHARS = 240_000
 
-type ReferenceCache = { quran: string; mutashabihat: string; loadedAt: number }
+type ReferenceCache = { quran: string; mutashabihat: string; examGuide: string; loadedAt: number }
 let cache: ReferenceCache | null = null
 let pending: Promise<ReferenceCache> | null = null
 
@@ -50,10 +51,18 @@ async function extractPdf(data: Uint8Array) {
 export async function loadQuranReferences() {
   if (cache && Date.now() - cache.loadedAt < 6 * 60 * 60 * 1000) return cache
   if (!pending) {
-    pending = Promise.all([readReference(QURAN_PATH), readReference(MUTASHABIHAT_PATH)])
-      .then(async ([quranData, mutashabihatData]) => {
-        const [quran, mutashabihat] = await Promise.all([extractPdf(quranData), extractPdf(mutashabihatData)])
-        cache = { quran, mutashabihat, loadedAt: Date.now() }
+    pending = Promise.all([
+      readReference(QURAN_PATH),
+      readReference(MUTASHABIHAT_PATH),
+      readReference(EXAM_GUIDE_PATH),
+    ])
+      .then(async ([quranData, mutashabihatData, examGuideData]) => {
+        const [quran, mutashabihat, examGuide] = await Promise.all([
+          extractPdf(quranData),
+          extractPdf(mutashabihatData),
+          extractPdf(examGuideData),
+        ])
+        cache = { quran, mutashabihat, examGuide, loadedAt: Date.now() }
         return cache
       })
       .finally(() => { pending = null })
@@ -80,10 +89,13 @@ export async function getReferenceContext(query: string, extraTerms: string[] = 
   const terms = [query, ...extraTerms]
   const quranMatches = relevantWindows(references.quran, terms, 1100, 4)
   const mutashabihatMatches = relevantWindows(references.mutashabihat, terms, 1100, 4)
+  const guideMatches = relevantWindows(references.examGuide, terms, 1200, 5)
+  const guideContext = guideMatches.length ? guideMatches : references.examGuide ? [references.examGuide.slice(0, 6_000)] : []
   return [
     quranMatches.length ? `مقتطفات المصحف المرفق:\n${quranMatches.join("\n---\n")}` : "",
     mutashabihatMatches.length ? `مقتطفات ملف المتشابهات المرفق:\n${mutashabihatMatches.join("\n---\n")}` : "",
-  ].filter(Boolean).join("\n\n").slice(0, 14_000)
+    guideContext.length ? `مقتطفات دليل إعداد أسئلة الاختبارات المرفق:\n${guideContext.join("\n---\n")}` : "",
+  ].filter(Boolean).join("\n\n").slice(0, 18_000)
 }
 
 export async function getQuranPdfBytes() {

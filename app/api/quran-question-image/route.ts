@@ -114,7 +114,7 @@ export async function GET(request: Request) {
       const right = Math.max(...rectangles.map((rect) => rect.x + rect.width))
       const bottom = Math.max(...rectangles.map((rect) => rect.y + rect.height))
       const paddingX = 36
-      const paddingY = type === "complete" ? 100 : 48
+      const paddingY = 100
       cropX = Math.max(0, Math.floor(left - paddingX))
       cropY = Math.max(0, Math.floor(top - paddingY))
       cropWidth = Math.min(pageCanvas.width - cropX, Math.ceil(right - left + paddingX * 2))
@@ -131,19 +131,23 @@ export async function GET(request: Request) {
       cropHeight = Math.min(pageCanvas.height - cropY, Math.max(150, Math.round(textHeight * share + 140)))
     }
 
-    if (type === "complete") {
-      context.fillStyle = "#f8f5ec"
-      context.strokeStyle = "#204f45"
-      context.lineWidth = 2
-      if (rectangles.length) {
-        for (const rect of rectangles) {
-          context.fillRect(rect.x - 5, rect.y - 5, rect.width + 10, rect.height + 10)
-          context.strokeRect(rect.x - 5, rect.y - 5, rect.width + 10, rect.height + 10)
-        }
-      } else {
-        context.fillRect(cropX + 12, cropY + 55, cropWidth - 24, Math.max(48, cropHeight - 110))
-        context.strokeRect(cropX + 12, cropY + 55, cropWidth - 24, Math.max(48, cropHeight - 110))
+    // لا تُرسل صورة تحتوي نطاق الإجابة لأي نوع سؤال. عند فشل استخراج
+    // مستطيلات النص نستخدم قناعاً تقديرياً يغطي قلب المقطع بدلاً من كشف الحل.
+    context.fillStyle = "#f8f5ec"
+    context.strokeStyle = "#204f45"
+    context.lineWidth = 2
+    if (rectangles.length) {
+      for (const rect of rectangles) {
+        context.fillRect(rect.x - 7, rect.y - 7, rect.width + 14, rect.height + 14)
+        context.strokeRect(rect.x - 7, rect.y - 7, rect.width + 14, rect.height + 14)
       }
+    } else {
+      const maskX = cropX + 12
+      const maskY = cropY + Math.max(24, Math.round(cropHeight * 0.2))
+      const maskWidth = Math.max(1, cropWidth - 24)
+      const maskHeight = Math.max(56, Math.round(cropHeight * 0.6))
+      context.fillRect(maskX, maskY, maskWidth, Math.min(maskHeight, pageCanvas.height - maskY))
+      context.strokeRect(maskX, maskY, maskWidth, Math.min(maskHeight, pageCanvas.height - maskY))
     }
 
     cropWidth = Math.max(1, Math.min(cropWidth, pageCanvas.width - cropX))
