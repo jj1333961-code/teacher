@@ -514,7 +514,7 @@ tr:hover { background: var(--table-hover); }
     </button>
     <button class="menu-btn" style="background:#6c757d" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button>
     <button class="menu-btn" style="background:#fd7e14" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button>
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ��لمرفوعة</button>
+    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ����لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
@@ -1126,8 +1126,8 @@ const quranData = {
   24: ["الزمر", "غافر", "فصلت"],
   25: ["فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقا��"],
   26: ["الأحقاف", "محمد", "الفتح", "الحجرات", "ق", "الذاريات"],
-  27: ["الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد"],
-  28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
+  27: ["الذاريات", "الطور", "النجم", "القمر", "ال��حمن", "الواقعة", "الحديد"],
+  28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "الت��ريم"],
   29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات"],
   30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس"]
 };
@@ -2549,8 +2549,8 @@ function renderReadingItems() {
 }
 
 // ====== الاختبار الذكي المستقل ======
-let examQuestions=[]; let examPlanRows=[]; let examEditorActiveIndex=0; let studentExamTimer=null; let studentExamQuestionTimer=null;
-let studentExamQuestionRemaining=[]; let studentExamQuestionStartedAt=[]; let studentExamQuestionElapsed=[]; let studentExamSessionId=''; let studentExamCurrentIndex=0; let studentExamViewIndex=0; let studentExamLockedIndices={};
+  let examQuestions=[]; let examPlanRows=[]; let examEditorActiveIndex=0; let studentExamTimer=null; let studentExamQuestionTimer=null;
+  let studentExamQuestionRemaining=[]; let studentExamQuestionStartedAt=[]; let studentExamQuestionElapsed=[]; let studentExamSessionId=''; let studentExamCurrentIndex=0; let studentExamViewIndex=0; let studentExamLockedIndices={}; let studentExamAnswers=[]; let studentExamAudioAnswers=[];
 
 let examFilesCache=[];
 async function readApiJson(res, fallback){
@@ -2847,8 +2847,10 @@ function viewStudentExamSlide(i){const ex=currentUser&&currentUser.activeExam;if
 function renderStudentExam(){
   const c=document.getElementById('studentExamContent');if(!c)return;
   const s=currentUser,ex=s&&s.activeExam;
-  if(ex&&ex.status==='pending'&&studentExamSessionId!==ex.id){studentExamSessionId=ex.id;studentExamCurrentIndex=0;studentExamViewIndex=0;studentExamQuestionRemaining=ex.questions.map(q=>Math.max(5,parseInt(q.timeLimit)||60));studentExamQuestionStartedAt=[];studentExamQuestionElapsed=[];studentExamLockedIndices={};studentExamAnswers=new Array(ex.questions.length).fill('');studentExamAudioAnswers=new Array(ex.questions.length).fill(null)}
   if(!ex||ex.status!=='pending'){const latest=(s&&s.examResults||[]).slice(-1)[0];c.innerHTML=latest?renderStudentResultHtml(latest):'<div class="alert alert-info">لا يوجد اختبار نشط حالياً.</div>';return}
+  if(!Array.isArray(ex.questions)||ex.questions.length===0){clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);c.innerHTML='<div class="alert alert-danger">تعذر فتح الاختبار لأنه لا يحتوي على أسئلة صالحة. تواصل مع المسؤول لإرسال الاختبار مرة أخرى.</div>';return}
+  if(ex.questions.some(q=>!q||typeof q!=='object')){clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);c.innerHTML='<div class="alert alert-danger">تعذر فتح الاختبار بسبب وجود سؤال غير صالح. تواصل مع المسؤول لإرسال الاختبار مرة أخرى.</div>';return}
+  if(studentExamSessionId!==ex.id){studentExamSessionId=ex.id;studentExamCurrentIndex=0;studentExamViewIndex=0;studentExamQuestionRemaining=ex.questions.map(q=>Math.max(5,parseInt(q.timeLimit)||60));studentExamQuestionStartedAt=[];studentExamQuestionElapsed=[];studentExamLockedIndices={};studentExamAnswers=new Array(ex.questions.length).fill('');studentExamAudioAnswers=new Array(ex.questions.length).fill(null)}
   if(ex.deadlineAt&&Date.now()>=ex.deadlineAt){notifyExamExpired(s,ex);submitStudentExam(true);return}
   if(typeof studentExamCurrentIndex!=='number'||studentExamCurrentIndex<0)studentExamCurrentIndex=0;
   if(studentExamCurrentIndex>=ex.questions.length){submitStudentExam(true);return}
@@ -2942,7 +2944,6 @@ async function submitStudentExam(auto){
   setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبار وإرساله للمسؤول وولي الأمر','success');
 }
 
-let studentExamAudioAnswers=[];
 async function recordStudentExamAudio(i){
   const q=currentUser.activeExam.questions[i];const btn=document.getElementById('examVoiceBtn_'+i),status=document.getElementById('examAudioStatus_'+i),preview=document.getElementById('examAudioPreview_'+i),aiBox=document.getElementById('examAudioAI_'+i);
   if(!btn||!status)return;
@@ -4035,7 +4036,7 @@ function renderStudentDashboard() {
   let html = '<div class="stats">';
   html += '<div class="stat-box"><div class="num">'+s.name+'</div><div class="label">اسم الطالب</div></div>';
   html += '<div class="stat-box" style="background:linear-gradient(135deg,#28a745,#20c997)"><div class="num">'+(s.age || '-')+'</div><div class="label">السن</div></div>';
-  html += '<div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num">'+(s.subjects ? s.subjects.map(sub=>sub.name).join('، ') : '-')+'</div><div class="label">المواد</div></div>';
+  html += '<div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num">'+(s.subjects ? s.subjects.map(sub=>sub.name).join('، ') : '-')+'</div><div class="label">الموا��</div></div>';
   html += '</div>';
 
   html += '<div style="display:flex; gap:20px; flex-wrap:wrap;"><div style="flex:1; min-width:300px;">';
@@ -4836,7 +4837,7 @@ async function sendStudentChat() {
   const chatDiv=document.getElementById('studentChatMessages'); chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="studentAiTyping" class="ai-msg bot">⏳ جاري التفكير...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
   const s=currentUser||{}; const last=(s.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
-    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانات الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
+    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانا�� الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
     const data=await readApiJson(res,'تعذر رد Gemini');
     const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>'); const typing=document.getElementById('studentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
   }catch(e){const typing=document.getElementById('studentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'student'))+'<br><small>رد محلي محدود بسبب تعذر Gemini.</small>'}
@@ -5056,7 +5057,7 @@ function renderParentPendingTasks() {
         html += '<div class="task-card" style="border-right-color:var(--warning);">';
         html += '<h5>'+urgency+' '+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '📖 قراءة' : '🎙️ تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
         if(task.surah) html += '<p><strong>السورة:</strong> '+task.surah+' | <strong>من آية:</strong> '+(task.from || '-')+' | <strong>إلى آية:</strong> '+(task.to || '-')+'</p>';
-        html += '<p style="color:var(--text-light); font-size:0.9rem;">🕐 تم الإرسال: '+sentTime+'</p>';
+        html += '<p style="color:var(--text-light); font-size:0.9rem;">🕐 تم الإرسا��: '+sentTime+'</p>';
         if(hoursPassed > 0) html += '<p style="color:var(--danger); font-size:0.85rem;">⏱️ مر '+hoursPassed+' ساعة على إرسال المهمة</p>';
         html += '</div>';
       });
