@@ -1,6 +1,5 @@
 import { del, get, list, put } from "@vercel/blob"
 import mammoth from "mammoth"
-import { PDFParse } from "pdf-parse"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -35,7 +34,8 @@ async function extractText(buffer: Buffer, extension: string) {
     return normalizeText(result.value)
   }
 
-  // pdf-parse يجب أن يبقى حزمة خادمية خارجية في next.config حتى يجد عامل PDF داخل node_modules.
+  // الاستيراد الكسول يمنع قارئ PDF وعامله من إسقاط GET أو رفع TXT/DOCX أثناء تهيئة المسار.
+  const { PDFParse } = await import("pdf-parse")
   const parser = new PDFParse({ data: new Uint8Array(buffer) })
   try {
     const result = await parser.getText()
@@ -69,21 +69,44 @@ async function readMetadata(pathname: string): Promise<ExamFileMeta | null> {
 function safeError(error: unknown, fallback: string) {
   const message = error instanceof Error ? error.message : fallback
   if (/token|secret|credential|api[_ -]?key/i.test(message)) return fallback
+  if (/store.*public|access.*public|private.*store/i.test(message)) return "إعداد مخزن الملفات لا يطابق التخزين الخاص المطلوب"
   return message.slice(0, 300) || fallback
+}
+
+function ensureBlobConfigured() {
+  if (!(process.env.BLOB_READ_WRITE_TOKEN || "").trim()) {
+    throw new Error("خدمة حفظ ملفات الاختبارات غير مهيأة على الخادم")
+  }
+}
+
+async function listAllMetadataPathnames() {
+  const pathnames: string[] = []
+  let cursor: string | undefined
+  do {
+    const page = await list({ prefix: "exam-files/meta/", cursor, limit: 1000 })
+    pathnames.push(...page.blobs.map((blob) => blob.pathname))
+    cursor = page.hasMore ? page.cursor : undefined
+  } while (cursor)
+  return pathnames
 }
 
 export async function GET() {
   try {
-    const { blobs } = await list({ prefix: "exam-files/meta/" })
-    const files = (await Promise.all(blobs.map((blob) => readMetadata(blob.pathname)))).filter(Boolean)
+    ensureBlobConfigured()
+    const pathnames = await listAllMetadataPathnames()
+    const files = (await Promise.all(pathnames.map(readMetadata)))
+      .filter((file): file is ExamFileMeta => Boolean(file))
+      .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))
     return response({ files })
   } catch (error) {
-    return response({ error: safeError(error, "تعذر تحميل الملفات") }, 500)
+    return response({ error: safeError(error, "تعذر تحميل الملفات") }, 503)
   }
 }
 
 export async function POST(request: Request) {
+  let uploadedPathname = ""
   try {
+    ensureBlobConfigured()
     const form = await request.formData()
     const file = form.get("file")
     if (!(file instanceof File)) return response({ error: "اختر ملفاً صالحاً" }, 400)
@@ -100,16 +123,20 @@ export async function POST(request: Request) {
     if (text.length < 80) return response({ error: "لم نستطع استخراج نص كافٍ من الملف" }, 422)
 
     const uploaded = await put(pathname, buffer, { access: "private", contentType: file.type || "application/octet-stream", addRandomSuffix: false })
-    const metadata: ExamFileMeta = { id, name: file.name, pathname: uploaded.pathname, metadataPathname, type: extension, size: file.size, uploadedAt: new Date().toISOString(), text }
+    uploadedPathname = uploaded.pathname
+    const metadata: ExamFileMeta = { id, name: file.name.slice(0, 180), pathname: uploaded.pathname, metadataPathname, type: extension, size: file.size, uploadedAt: new Date().toISOString(), text }
     await put(metadataPathname, JSON.stringify(metadata), { access: "private", contentType: "application/json", addRandomSuffix: false })
+    uploadedPathname = ""
     return response({ file: metadata }, 201)
   } catch (error) {
+    if (uploadedPathname) await del(uploadedPathname).catch(() => undefined)
     return response({ error: safeError(error, "تعذر رفع الملف") }, 500)
   }
 }
 
 export async function DELETE(request: Request) {
   try {
+    ensureBlobConfigured()
     const { pathname, metadataPathname } = await request.json()
     if (typeof pathname !== "string" || typeof metadataPathname !== "string" || !pathname.startsWith("exam-files/content/") || !metadataPathname.startsWith("exam-files/meta/")) return response({ error: "بيانات الحذف غير صالحة" }, 400)
     await del([pathname, metadataPathname])
