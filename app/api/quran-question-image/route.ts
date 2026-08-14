@@ -9,14 +9,19 @@ Object.assign(globalThis, { DOMMatrix, ImageData, Path2D })
 
 const QUESTION_TYPES = new Set(["mcq", "truefalse", "complete", "audio"])
 
-async function getAyah(surah: number, ayah: number) {
-  const response = await fetch(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}`, {
+async function getAyahRange(surah: number, from: number, to: number) {
+  const response = await fetch(`https://api.alquran.cloud/v1/surah/${surah}/quran-uthmani`, {
     cache: "force-cache",
     signal: AbortSignal.timeout(8_000),
   })
   const data = await response.json().catch(() => null)
-  if (!response.ok || !data?.data?.text) throw new Error("تعذر تحديد الآية المطلوبة")
-  return { text: String(data.data.text), page: Number(data.data.page) || 1 }
+  const ayahs = Array.isArray(data?.data?.ayahs) ? data.data.ayahs : []
+  const selected = ayahs.filter((entry: any) => Number(entry?.numberInSurah) >= from && Number(entry?.numberInSurah) <= to)
+  if (!response.ok || !selected.length) throw new Error("تعذر تحديد الآيات المطلوبة")
+  return {
+    text: selected.map((entry: any) => String(entry.text || "")).join(" "),
+    page: Number(selected[0]?.page) || 1,
+  }
 }
 
 async function getPageAyahs(page: number) {
@@ -52,13 +57,14 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const surah = Number(url.searchParams.get("surah"))
     const ayah = Number(url.searchParams.get("ayah"))
+    const to = Number(url.searchParams.get("to") || ayah)
     const requestedType = url.searchParams.get("type") || "complete"
     const type = QUESTION_TYPES.has(requestedType) ? requestedType : "complete"
-    if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1) {
+    if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1 || !Number.isInteger(to) || to < ayah) {
       return Response.json({ error: "مرجع الآية غير صالح" }, { status: 400 })
     }
 
-    const [targetData, pdfBytes] = await Promise.all([getAyah(surah, ayah), getQuranPdfBytes()])
+    const [targetData, pdfBytes] = await Promise.all([getAyahRange(surah, ayah, to), getQuranPdfBytes()])
     const targetWords = normalizeQuranText(targetData.text).split(" ").filter(Boolean)
     if (targetWords.length < 2) throw new Error("تعذر تجهيز نص الآية")
 

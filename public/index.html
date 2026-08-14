@@ -418,6 +418,15 @@ tr:hover { background: var(--table-hover); }
 .exam-plan-row{background:var(--table-header);border:1px solid var(--border);padding:12px;border-radius:10px;margin-bottom:8px}
 .exam-question{background:var(--input-bg);border:2px solid var(--border);border-radius:14px;padding:15px;margin:12px 0}
  .exam-question.rejected{opacity:.55;border-color:var(--danger);background:rgba(220,53,69,.06)}
+ .exam-slide-strip{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;margin-bottom:12px;scrollbar-width:thin}
+ .exam-slide-tab{flex:0 0 auto;min-width:46px;min-height:42px;border:2px solid var(--border);border-radius:10px;background:var(--card-bg);color:var(--text);font-weight:800;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+ .exam-slide-tab:hover,.exam-slide-tab:focus-visible{border-color:var(--primary);outline:none}
+ .exam-slide-tab.active{border-color:var(--primary);background:var(--primary);color:#fff}
+ .exam-slide-tab.complete{border-color:var(--success);background:rgba(40,167,69,.12)}
+ .exam-slide-tab.expired{border-color:var(--danger);background:rgba(220,53,69,.12)}
+ .exam-slide-tab.locked{opacity:.48;cursor:not-allowed}
+ .exam-slide-panel{animation:examSlideReveal .24s ease-out}
+ @keyframes examSlideReveal{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   .quran-question-media{width:100%;max-width:760px;margin:14px auto}
   .quran-question-loading{padding:18px;text-align:center;border:1px dashed var(--border);border-radius:12px;background:var(--table-header);color:var(--text-light)}
   .quran-question-image{display:block;width:100%;max-height:72vh;object-fit:contain;border:1px solid var(--border);border-radius:12px;background:var(--card-bg)}
@@ -2478,8 +2487,8 @@ function renderReadingItems() {
 }
 
 // ====== الاختبار الذكي المستقل ======
-let examQuestions=[]; let examPlanRows=[]; let studentExamTimer=null; let studentExamQuestionTimer=null;
-let studentExamQuestionRemaining=[]; let studentExamQuestionStartedAt=[]; let studentExamQuestionElapsed=[]; let studentExamSessionId=''; let studentExamCurrentIndex=0; let studentExamLockedIndices={};
+let examQuestions=[]; let examPlanRows=[]; let examEditorActiveIndex=0; let studentExamTimer=null; let studentExamQuestionTimer=null;
+let studentExamQuestionRemaining=[]; let studentExamQuestionStartedAt=[]; let studentExamQuestionElapsed=[]; let studentExamSessionId=''; let studentExamCurrentIndex=0; let studentExamViewIndex=0; let studentExamLockedIndices={};
 
 let examFilesCache=[];
 async function readApiJson(res, fallback){
@@ -2536,7 +2545,7 @@ async function callStudentAI(mode, payload, temperature){
 }
 
 function initExamBuilder(){
-  examQuestions=[];
+  examQuestions=[];examEditorActiveIndex=0;
   examPlanRows=[{count:5,level:'medium',type:'mcq',position:'random',timeLimit:60,completeAyahs:1,reciteAyahs:1,audioShareWithParent:true,optionsCount:4}];
   const base=document.getElementById('examBaseSurah');
   if(base){base.innerHTML=ALL_SURAHS_ORDERED.map(s=>'<option value="'+s+'">'+s+'</option>').join('');base.value=currentRecordMainSurah||ALL_SURAHS_ORDERED[0]}
@@ -2570,7 +2579,7 @@ async function generateLocalQuranQuestions(base,lastSurah,plans){
     else if(plan.type==='truefalse'){const truth=Math.random()>.5,shown=truth?src.surah:(shuffled(range.filter(s=>s!==src.surah))[0]||src.surah);q.prompt='هل المقطع المصور من سورة '+shown+'؟';q.options=['صح','خطأ'];q.correct=truth?'صح':'خطأ'}
     else if(plan.type==='complete'){const words=ayah.split(/\s+/),cut=Math.max(2,Math.floor(words.length*.55));q.prompt='أكمل المقطع المخفي في صورة المصحف';q.correct=words.slice(cut).join(' ')||next}
     else {q.prompt='سجّل تلاوة المقطع المعروض من المصحف';q.correct=src.ayahs.slice(from-1,q.to).join(' ')}
-    q.stem='';q.questionImage='/api/quran-question-image?surah='+(ALL_SURAHS_ORDERED.indexOf(src.surah)+1)+'&ayah='+from+'&type='+plan.type;
+    q.stem='';q.questionImage='/api/quran-question-image?surah='+(ALL_SURAHS_ORDERED.indexOf(src.surah)+1)+'&ayah='+from+'&to='+q.to+'&type='+plan.type;
     out.push(cleanExamQuestion(q));}}
   return out;
 }
@@ -2587,7 +2596,7 @@ function setExamPlanTime(i,part,value){
 function deleteExamPlanRow(index){
   if(!examPlanRows[index]||!confirm('هل تريد حذف خانة السؤال المحددة فقط؟'))return;
   examPlanRows.splice(index,1);renderExamPlanRows();
-  showExamAlert('تم حذف خانة السؤال فقط، ولم تُحذف بقية الخطة أو أسئلة الاختبار.','info');
+  showExamAlert('تم حذف خانة السؤال فقط، ��لم تُحذف بقية الخطة أو أسئلة الاختبار.','info');
 }
 function renderExamPlanRows(){
   const c=document.getElementById('examPlanRows'); if(!c)return;
@@ -2678,7 +2687,7 @@ async function generateExamQuestions(){
         });
       }
     });
-    examQuestions=normalized;
+    examQuestions=normalized;examEditorActiveIndex=0;
     renderExamQuestions(); showExamAlert('تم الحصول على '+examQuestions.length+' سؤالاً بنجاح. راجعها قبل الإرسال.','success');
   }catch(e){showExamAlert(e.message||'تعذر توليد الأسئلة بالذكاء الاصطناعي','danger')}
   finally{overlay?.classList.add('hidden');btns.forEach(b=>b.disabled=false)}
@@ -2691,31 +2700,28 @@ function formatExamTime(total){total=Math.max(0,parseInt(total)||0);return [Math
 function rejectExamQuestion(i){if(examQuestions[i]){examQuestions[i].rejected=true;examQuestions[i].weakened=false;}renderExamQuestions()}
 function restoreExamQuestion(i){if(examQuestions[i])examQuestions[i].rejected=false;renderExamQuestions()}
 function weakenExamQuestion(i){if(examQuestions[i])examQuestions[i].weakened=!examQuestions[i].weakened;renderExamQuestions()}
+function selectExamEditorSlide(i){if(i<0||i>=examQuestions.length)return;examEditorActiveIndex=i;renderExamQuestions()}
 function renderExamQuestions(){
   const c=document.getElementById('examQuestionsEditor');if(!c)return;
-  let active=examQuestions.filter(q=>!q.rejected); document.getElementById('examCountBadge').textContent=active.length+' سؤال'; let h='';
-  examQuestions.forEach((q,i)=>{
-    h+='<div class="exam-question '+(q.rejected?'rejected':'')+'">'+
-      '<div class="exam-question-header"><strong>السؤال '+(i+1)+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">↩️ استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">🚫 رفض</button>')+'</div>'+
-      '<div class="form-row"><div class="form-group"><label>النوع</label><select onchange="updateExamQuestion('+i+',\'type\',this.value);renderExamQuestions()"><option value="mcq" '+(q.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(q.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(q.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(q.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+ 
-      '<div class="form-group"><label>المستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+ 
-      '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
-      (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
-      (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
-      '</div>'+
-      '<div class="form-group"><label>نص السؤال</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+ 
-      '<div class="form-row"><div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"></div><div class="form-group"><label>من آية</label><input type="number" min="1" value="'+(q.from||1)+'" onchange="updateExamQuestion('+i+',\'from\',parseInt(this.value)||1)"></div><div class="form-group"><label>إلى آية</label><input type="number" min="1" value="'+(q.to||q.from||1)+'" onchange="updateExamQuestion('+i+',\'to\',parseInt(this.value)||1)"></div></div>'+ 
-      '<div class="form-group"><label>الآية/النص</label><textarea rows="3" onchange="updateExamQuestion('+i+',\'stem\',this.value)">'+escapeHtml(q.stem||'')+'</textarea></div>';
-    if(q.type==='mcq'||q.type==='truefalse'){
-      h+='<div class="form-group"><label>الاختيارات (كل اختيار في سطر)</label><textarea rows="4" onchange="updateExamQuestion('+i+',\'options\',this.value.split(/\\n/).map(x=>x.trim()).filter(Boolean))">'+escapeHtml((q.options||[]).join('\n'))+'</textarea></div><div class="form-group"><label>الإجابة الصحيحة</label><input value="'+escapeHtml(q.correct||'')+'" onchange="updateExamQuestion('+i+',\'correct\',this.value)"></div>';
-    }else if(q.type==='complete'){
-      h+='<div class="form-group"><label>الإجابة المرجعية/النص المطلوب</label><textarea rows="3" onchange="updateExamQuestion('+i+',\'correct\',this.value)">'+escapeHtml(q.correct||'')+'</textarea></div>';
-    }else{
-      h+='<div class="alert alert-info">🎙️ سيُتحقق من بصمة الطالب أولاً، ثم من محتوى التلاوة. إذا كانت البصمة غير مطابقة فلن يُحفظ التسجيل.</div>';
-    }
-    h+='</div>';
-  });
-  c.innerHTML=h;
+  const active=examQuestions.filter(q=>!q.rejected);document.getElementById('examCountBadge').textContent=active.length+' سؤال';
+  if(!examQuestions.length){c.innerHTML='<div class="alert alert-info">ستظهر شرائح الأسئلة هنا بعد التوليد.</div>';return}
+  examEditorActiveIndex=Math.max(0,Math.min(examEditorActiveIndex,examQuestions.length-1));
+  const q=examQuestions[examEditorActiveIndex],i=examEditorActiveIndex;
+  let h='<div class="exam-slide-strip" role="tablist" aria-label="شرائح أسئلة الاختبار">'+examQuestions.map((item,index)=>'<button type="button" role="tab" aria-selected="'+(index===i)+'" class="exam-slide-tab '+(index===i?'active ':'')+(item.rejected?'expired':'')+'" onclick="selectExamEditorSlide('+index+')" title="السؤال '+(index+1)+'">'+(index+1)+'</button>').join('')+'</div>';
+  h+='<div class="exam-question exam-slide-panel '+(q.rejected?'rejected':'')+'">'+
+    '<div class="exam-question-header"><strong>السؤال '+(i+1)+' من '+examQuestions.length+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">رفض السؤال</button>')+'</div>'+
+    (q.questionImage?'<div class="quran-question-media"><div class="quran-question-loading" aria-hidden="true">جاري تحميل صورة السؤال من المصحف...</div><img class="quran-question-image" src="'+escapeHtml(q.questionImage)+'" alt="المقطع القرآني الخاص بالسؤال '+(i+1)+'" loading="eager" onload="this.previousElementSibling.style.display=\'none\'" onerror="this.parentElement.innerHTML=\'<div class=&quot;alert alert-danger&quot;>تعذر تحميل صورة السؤال من ملف المصحف.</div>\'"></div>':'')+
+    '<div class="form-row"><div class="form-group"><label>النوع</label><select onchange="updateExamQuestion('+i+',\'type\',this.value);renderExamQuestions()"><option value="mcq" '+(q.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(q.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(q.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(q.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+ 
+    '<div class="form-group"><label>المستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+ 
+    '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
+    (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
+    (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+'</div>'+
+    '<div class="form-group"><label>تعليمات السؤال (من دون الإجابة)</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+ 
+    '<div class="form-row"><div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"></div><div class="form-group"><label>من آية</label><input type="number" min="1" value="'+(q.from||1)+'" onchange="updateExamQuestion('+i+',\'from\',parseInt(this.value)||1)"></div><div class="form-group"><label>إلى آية</label><input type="number" min="1" value="'+(q.to||q.from||1)+'" onchange="updateExamQuestion('+i+',\'to\',parseInt(this.value)||1)"></div></div>';
+  if(q.type==='mcq'||q.type==='truefalse')h+='<div class="form-group"><label>الاختيارات (كل اختيار في سطر)</label><textarea rows="4" onchange="updateExamQuestion('+i+',\'options\',this.value.split(/\\n/).map(x=>x.trim()).filter(Boolean))">'+escapeHtml((q.options||[]).join('\n'))+'</textarea></div><div class="form-group"><label>الإجابة الصحيحة — لا تظهر للطالب</label><input value="'+escapeHtml(q.correct||'')+'" onchange="updateExamQuestion('+i+',\'correct\',this.value)"></div>';
+  else if(q.type==='complete')h+='<div class="form-group"><label>الإجابة المرجعية — لا تظهر للطالب</label><textarea rows="3" onchange="updateExamQuestion('+i+',\'correct\',this.value)">'+escapeHtml(q.correct||'')+'</textarea></div>';
+  else h+='<div class="alert alert-info">سيتم التحقق من بصمة الطالب أولاً، ثم من محتوى التلاوة. إذا كانت البصمة غير مطابقة فلن يُحفظ التسجيل.</div>';
+  h+='</div>';c.innerHTML=h;
 }
 function showExamAlert(t,type){const e=document.getElementById('examBuilderAlert');if(e)e.innerHTML='<div class="alert alert-'+(type||'info')+'">'+t+'</div>'}
 function saveExamDraft(){
@@ -2758,36 +2764,31 @@ function notifyStudentExamOnce(student){
 
 function saveManualBoardEdit(){const id=parseInt(document.getElementById('recordStudentId').value);let students=getData('students');const i=students.findIndex(s=>s.id===id);if(i<0)return;students[i].manualBoard={text:document.getElementById('manualBoardText').value,image:document.getElementById('manualBoardImage').value,updatedAt:Date.now()};setData('students',students);showToast('🖼️ تم حفظ التعديل اليدوي مع بقاء الاختيار التلقائي فعالاً','success')}
 function escapeHtml(s){return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+function viewStudentExamSlide(i){const ex=currentUser&&currentUser.activeExam;if(!ex||i<0||i>studentExamCurrentIndex)return;studentExamViewIndex=i;renderStudentExam()}
 function renderStudentExam(){
-  const c=document.getElementById('studentExamContent'); if(!c)return;
-  const s=currentUser, ex=s&&s.activeExam;
-  if(ex&&ex.status==='pending' && studentExamSessionId!==ex.id){
-    studentExamSessionId=ex.id; studentExamCurrentIndex=0; studentExamQuestionRemaining=ex.questions.map(q=>Math.max(5,parseInt(q.timeLimit)||60));
-    studentExamQuestionStartedAt=[]; studentExamQuestionElapsed=[]; studentExamLockedIndices={}; studentExamAnswers=new Array(ex.questions.length).fill(''); studentExamAudioAnswers=new Array(ex.questions.length).fill(null);
-  }
+  const c=document.getElementById('studentExamContent');if(!c)return;
+  const s=currentUser,ex=s&&s.activeExam;
+  if(ex&&ex.status==='pending'&&studentExamSessionId!==ex.id){studentExamSessionId=ex.id;studentExamCurrentIndex=0;studentExamViewIndex=0;studentExamQuestionRemaining=ex.questions.map(q=>Math.max(5,parseInt(q.timeLimit)||60));studentExamQuestionStartedAt=[];studentExamQuestionElapsed=[];studentExamLockedIndices={};studentExamAnswers=new Array(ex.questions.length).fill('');studentExamAudioAnswers=new Array(ex.questions.length).fill(null)}
   if(!ex||ex.status!=='pending'){const latest=(s&&s.examResults||[]).slice(-1)[0];c.innerHTML=latest?renderStudentResultHtml(latest):'<div class="alert alert-info">لا يوجد اختبار نشط حالياً.</div>';return}
   if(ex.deadlineAt&&Date.now()>=ex.deadlineAt){notifyExamExpired(s,ex);submitStudentExam(true);return}
   if(typeof studentExamCurrentIndex!=='number'||studentExamCurrentIndex<0)studentExamCurrentIndex=0;
   if(studentExamCurrentIndex>=ex.questions.length){submitStudentExam(true);return}
-  const i=studentExamCurrentIndex,q=ex.questions[i];
-  const remaining=Math.max(0,studentExamQuestionRemaining[i]||parseInt(q.timeLimit)||60);
-  let h='<div class="exam-sticky"><strong>🧪 اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال '+(i+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)+'</span></div><div>⏱️ لكل سؤال وقت مستقل، ولا ينتقل الوقت إلى السؤال التالي.</div></div>';
-  h+='<div id="studentExamQuestions">';
-  h+='<div class="exam-question" id="examQuestionBox_'+i+'"><h4>س'+(i+1)+'. '+escapeHtml(q.prompt||'')+'</h4>'+
-    (q.questionImage?'<div class="quran-question-media"><div class="quran-question-loading" aria-hidden="true">جاري تحميل صورة السؤال...</div><img class="quran-question-image" src="'+escapeHtml(q.questionImage)+'" alt="مقطع السؤال من صفحة المصحف" loading="eager" onload="this.previousElementSibling.style.display=\'none\'" onerror="this.parentElement.innerHTML=\'<div class=&quot;alert alert-danger&quot; role=&quot;alert&quot;>تعذر تحميل صورة السؤال. لا تُجب قبل إبلاغ المسؤول.</div>\'\"></div>':'')+
-    '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><p style="margin:10px 0;line-height:1.8">'+escapeHtml(q.stem||'')+'</p><span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)+'</span></div>';
-  if(q.type==='mcq'||q.type==='truefalse'){
-    (q.options||[]).forEach((o,oi)=>{h+='<label class="exam-option"><input type="radio" name="examq_current" value="'+escapeHtml(o)+'" '+(studentExamAnswers[i]===o?'checked':'')+' onchange="markExamAnswer('+i+',this.value)"> '+escapeHtml(o)+'</label>';});
-  }else if(q.type==='complete'){
-    h+='<input class="form-group" style="width:100%;padding:12px" id="examComplete_'+i+'" value="'+escapeHtml(studentExamAnswers[i]||'')+'" placeholder="اكتب الإكمال هنا" oninput="studentExamAnswers['+i+']=this.value">';
-  }else{
-    h+='<div id="examAudioArea_'+i+'">'+studentExamAudioHTML(i)+'</div>';
-  }
+  studentExamViewIndex=Math.max(0,Math.min(studentExamViewIndex,studentExamCurrentIndex));
+  const i=studentExamViewIndex,q=ex.questions[i],isCurrent=i===studentExamCurrentIndex;
+  const currentQuestion=ex.questions[studentExamCurrentIndex],remaining=Math.max(0,studentExamQuestionRemaining[studentExamCurrentIndex]||parseInt(currentQuestion.timeLimit)||60);
+  let h='<div class="exam-sticky"><strong>اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال الحالي '+(studentExamCurrentIndex+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)+'</span></div><div>لكل سؤال وقت مستقل. الشرائح السابقة للعرض فقط، والقادمة تُفتح بعد تأكيد الإجابة.</div></div>';
+  h+='<div class="exam-slide-strip" role="tablist" aria-label="شرائح أسئلة الاختبار">'+ex.questions.map((item,index)=>{const future=index>studentExamCurrentIndex,complete=!!studentExamLockedIndices[index]&&studentExamQuestionRemaining[index]>0,expired=!!studentExamLockedIndices[index]&&studentExamQuestionRemaining[index]===0;return '<button type="button" role="tab" aria-selected="'+(index===i)+'" '+(future?'disabled':'')+' class="exam-slide-tab '+(index===i?'active ':'')+(complete?'complete ':'')+(expired?'expired ':'')+(future?'locked':'')+'" onclick="viewStudentExamSlide('+index+')" title="السؤال '+(index+1)+'">'+(index+1)+'</button>'}).join('')+'</div>';
+  h+='<div id="studentExamQuestions"><div class="exam-question exam-slide-panel" id="examQuestionBox_'+i+'"><div class="exam-question-header"><h4>السؤال '+(i+1)+': '+escapeHtml(q.prompt||'')+'</h4>'+(isCurrent?'<span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)+'</span>':'<span class="badge badge-success">تم تأكيد هذا السؤال</span>')+'</div>'+
+    (q.questionImage?'<div class="quran-question-media"><div class="quran-question-loading" aria-hidden="true">جاري تحميل صورة السؤال من المصحف...</div><img class="quran-question-image" src="'+escapeHtml(q.questionImage)+'" alt="المقطع القرآني الخاص بالسؤال '+(i+1)+'" loading="eager" onload="this.previousElementSibling.style.display=\'none\'" onerror="this.parentElement.innerHTML=\'<div class=&quot;alert alert-danger&quot; role=&quot;alert&quot;>تعذر تحميل صورة السؤال. لا تُجب قبل إبلاغ المسؤول.</div>\'"></div>':'');
+  if(q.type==='mcq'||q.type==='truefalse')(q.options||[]).forEach(o=>{h+='<label class="exam-option"><input type="radio" name="examq_current" value="'+escapeHtml(o)+'" '+(studentExamAnswers[i]===o?'checked':'')+' '+(!isCurrent?'disabled':'')+' onchange="markExamAnswer('+i+',this.value)"> '+escapeHtml(o)+'</label>'});
+  else if(q.type==='complete')h+='<input class="form-group" style="width:100%;padding:12px" id="examComplete_'+i+'" value="'+escapeHtml(studentExamAnswers[i]||'')+'" placeholder="اكتب الإكمال هنا" '+(!isCurrent?'disabled':'')+' oninput="studentExamAnswers['+i+']=this.value">';
+  else h+=isCurrent?'<div id="examAudioArea_'+i+'">'+studentExamAudioHTML(i)+'</div>':'<div class="alert alert-info">تم حفظ التسجيل الخاص بهذا السؤال.</div>';
   h+='</div></div>';
-  h+='<button id="confirmExamAnswerBtn" class="btn btn-primary" onclick="confirmStudentExamAnswer('+i+')" style="width:100%;margin-top:15px">'+(i===ex.questions.length-1?'✅ تأكيد الإجابة وإنهاء الاختبار':'➡️ تأكيد الإجابة والانتقال للسؤال التالي')+'</button>';
+  if(isCurrent)h+='<button id="confirmExamAnswerBtn" class="btn btn-primary" onclick="confirmStudentExamAnswer('+i+')" style="width:100%;margin-top:15px">'+(i===ex.questions.length-1?'تأكيد الإجابة وإنهاء الاختبار':'تأكيد الإجابة والانتقال للسؤال التالي')+'</button>';
+  else h+='<button class="btn btn-secondary" onclick="viewStudentExamSlide('+studentExamCurrentIndex+')" style="width:100%;margin-top:15px">العودة إلى السؤال الحالي</button>';
   c.innerHTML=h;
-  if(!studentExamQuestionStartedAt[i])studentExamQuestionStartedAt[i]=Date.now();
-  if(!studentExamQuestionRemaining[i])studentExamQuestionRemaining[i]=Math.max(5,parseInt(q.timeLimit)||60);
+  if(!studentExamQuestionStartedAt[studentExamCurrentIndex])studentExamQuestionStartedAt[studentExamCurrentIndex]=Date.now();
+  if(!studentExamQuestionRemaining[studentExamCurrentIndex])studentExamQuestionRemaining[studentExamCurrentIndex]=Math.max(5,parseInt(currentQuestion.timeLimit)||60);
   startStudentExamTimer(ex);
 }
 function markExamAnswer(i,v){if(studentExamLockedIndices[i])return;studentExamAnswers[i]=v;}
@@ -2811,7 +2812,7 @@ function confirmStudentExamAnswer(i){
   if(ex.questions[i].type!=='audio' && !studentExamAnswers[i]){showToast('اختر أو اكتب الإجابة أولاً','error');return;}
   studentExamLockedIndices[i]=true; clearInterval(studentExamQuestionTimer); studentExamQuestionElapsed[i]=Math.max(0,Math.round((Date.now()-(studentExamQuestionStartedAt[i]||Date.now()))/1000));
   if(i<ex.questions.length-1){
-    studentExamCurrentIndex=i+1;
+    studentExamCurrentIndex=i+1;studentExamViewIndex=studentExamCurrentIndex;
     studentExamQuestionRemaining[studentExamCurrentIndex]=Math.max(5,parseInt(ex.questions[studentExamCurrentIndex].timeLimit)||60);
     studentExamQuestionStartedAt[studentExamCurrentIndex]=Date.now();
     renderStudentExam(); startStudentExamTimer(ex);
@@ -2824,7 +2825,7 @@ function expireExamQuestion(i){
   const t=document.getElementById('examQTimer_'+i);if(t)t.textContent='⏱️ انتهى الوقت';
   setTimeout(()=>{
     if(i<ex.questions.length-1){
-      studentExamCurrentIndex=i+1;studentExamQuestionRemaining[studentExamCurrentIndex]=Math.max(5,parseInt(ex.questions[studentExamCurrentIndex].timeLimit)||60);
+      studentExamCurrentIndex=i+1;studentExamViewIndex=studentExamCurrentIndex;studentExamQuestionRemaining[studentExamCurrentIndex]=Math.max(5,parseInt(ex.questions[studentExamCurrentIndex].timeLimit)||60);
       studentExamQuestionStartedAt[studentExamCurrentIndex]=Date.now();renderStudentExam();startStudentExamTimer(ex);
     }else submitStudentExam(true);
   },350);
@@ -2880,7 +2881,7 @@ async function recordStudentExamAudio(i){
       let usedTranscript=transcript;
       if(aiResult){ usedTranscript=aiResult.transcript||transcript; }
       else {
-        try{const expected=await fetchAyatText(q.surah,q.from,q.to);aiResult=await callStudentAI('grade_recitation',{surah:q.surah,from:q.from,to:q.to,expectedText:expected,studentTranscript:transcript,studentVoiceMatch:match},0.05)}catch(e){aiResult={accepted:false,score:0,matchedPercent:0,reason:'تعذر الاتصال بالذكاء الاصطناعي لتصحيح محتوى التلاوة'};}
+        try{const expected=await fetchAyatText(q.surah,q.from,q.to);aiResult=await callStudentAI('grade_recitation',{surah:q.surah,from:q.from,to:q.to,expectedText:expected,studentTranscript:transcript,studentVoiceMatch:match},0.05)}catch(e){aiResult={accepted:false,score:0,matchedPercent:0,reason:'تعذر الاتصال بالذكاء الاصطنا��ي لتصحيح محتوى التلاوة'};}
       }
       studentExamAudioAnswers[i]={dataUrl,transcript:usedTranscript,voiceMatch:match,aiResult};studentExamAnswers[i]=usedTranscript;
       const pct=aiResult.matchedPercent??0;status.textContent='تم استلام التسجيل بنجاح — النتيجة التفصيلية بانتظار مراجعة المسؤول';
@@ -3033,7 +3034,7 @@ function openHistory(id) {
         });
         html += '<div style="text-align:center; margin-top:15px; padding-top:15px; border-top:2px dashed var(--border);">';
         html += '<span class="score-badge">المجموع: '+sess.totalScore+' درجة</span>';
-        if(sess.finalizedAt) html += '<p style="margin-top:8px; color:var(--success); font-size:0.9rem;">✅ تم الإغلاق النهائي بتاريخ: '+sess.finalizedAt+'</p>';
+        if(sess.finalizedAt) html += '<p style="margin-top:8px; color:var(--success); font-size:0.9rem;">✅ تم الإغلاق النهائي ��تاريخ: '+sess.finalizedAt+'</p>';
         if(sess.notes) html += '<p style="margin-top:10px; color:var(--text-light);"><strong>ملاحظات:</strong> '+sess.notes+'</p>';
         html += '</div>';
       });
@@ -3358,7 +3359,7 @@ function openDevAssistant(){
 }
 
 // ===== سجل التدقيق لمساعد التطوير (Audit Log) =====
-// عبارات تدل على عمليات خطيرة تتطلب تأكيداً صريحاً قبل التنفي�� التلقائي.
+// عبارات تدل على عمليات خطيرة تتطلب تأكيداً صريحاً قبل التنفي�� ال��لقائي.
 const DEV_DANGER_PATTERNS = [
   {re:/حذف\s*(قاعدة|��لقاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
   {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*الملفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
@@ -3599,7 +3600,7 @@ function sendComposeMessage() {
   const person = document.getElementById('composePerson').value;
   const text = document.getElementById('composeText').value.trim();
   const voice = voiceMsgStore['compose'] || '';
-  if(!person || (!text && !voice)) return showToast('�� اختر المستلم واكتب رسالة أو سجّل رسالة صوتية', 'error');
+  if(!person || (!text && !voice)) return showToast('��� اختر المستلم واكتب رسالة أو سجّل رسالة صوتية', 'error');
   let messages = getData('messages');
   const parts = person.split('_');
   const type = parts[0];
