@@ -34,12 +34,20 @@ async function extractText(buffer: Buffer, extension: string) {
     const result = await mammoth.extractRawText({ buffer })
     return normalizeText(result.value)
   }
-  const parser = new PDFParse({ data: buffer })
+
+  // pdf-parse يجب أن يبقى حزمة خادمية خارجية في next.config حتى يجد عامل PDF داخل node_modules.
+  const parser = new PDFParse({ data: new Uint8Array(buffer) })
   try {
     const result = await parser.getText()
     return normalizeText(result.text)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : ""
+    if (/worker|pdf\.worker|fake worker/i.test(message)) {
+      throw new Error("تعذر تشغيل قارئ PDF على الخادم. أعد المحاولة بعد تحديث الصفحة.")
+    }
+    throw error
   } finally {
-    await parser.destroy()
+    await parser.destroy().catch(() => undefined)
   }
 }
 
