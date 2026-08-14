@@ -2,7 +2,7 @@ import { generateText } from "ai"
 
 export const maxDuration = 300
 
-// ===== Gemini عبر مفتاح Google عند صلاحيته، وإلا عبر Vercel AI Gateway المتصل بالمشروع =====
+// ===== اتصال Gemini المباشر من الخادم فقط =====
 const GEMINI = {
   label: "Gemini",
   get key() {
@@ -105,7 +105,7 @@ let resolvedBranch: string | null = null
 
 const GATEWAY_GEMINI_MODEL = "google/gemini-3.7-flash"
 
-async function gatewayGeminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }): Promise<string> {
+async function gatewayGeminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }) {
   const content: any[] = [{ type: "text", text: prompt }]
   if (inlineData) content.push({ type: "file", mediaType: inlineData.mimeType, data: inlineData.data })
   const result = await generateText({
@@ -119,62 +119,50 @@ async function gatewayGeminiText(prompt: string, system: string, temperature: nu
   return result.text.trim()
 }
 
+function isRetryableGeminiError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "")
+  return /429|5\d\d|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|aborted/i.test(message)
+}
+
 async function geminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }): Promise<string> {
   if (!GEMINI.key) return gatewayGeminiText(prompt, system, temperature, inlineData)
   const parts: any[] = [{ text: prompt }]
   if (inlineData) parts.unshift({ inlineData })
   const requestBody = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } })
-  let data: any = null
+  let lastError: unknown = new Error("تعذر بدء اتصال Gemini")
 
   for (let attempt = 0; attempt < 3; attempt++) {
-    let model: string
     try {
-      model = await resolveGeminiModel(attempt > 0 && resolvedGeminiModel === null)
-    } catch (error: any) {
-      const message = String(error?.message || "")
-      if (/HTTP (401|403)|API key|PERMISSION_DENIED|unregistered callers/i.test(message)) {
-        return gatewayGeminiText(prompt, system, temperature, inlineData)
-      }
-      throw error
-    }
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`
-    try {
-      const response = await fetch(url, {
+      const model = await resolveGeminiModel(attempt > 0)
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": GEMINI.key,
-        },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI.key },
         body: requestBody,
         cache: "no-store",
         signal: AbortSignal.timeout(70_000),
       })
-      data = await response.json().catch(() => null)
-      if (response.ok) break
-
-      if (response.status === 401 || response.status === 403) {
-        return gatewayGeminiText(prompt, system, temperature, inlineData)
-      }
-      if (response.status === 404 && attempt < 2) {
-        unavailableGeminiModels.add(model)
-        resolvedGeminiModel = null
-        await resolveGeminiModel(true)
-        continue
-      }
-      const retryable = response.status === 429 || response.status >= 500
-      if (!retryable || attempt === 2) {
+      const data = await response.json().catch(() => null)
+      if (!response.ok) {
+        if (response.status === 404) {
+          unavailableGeminiModels.add(model)
+          resolvedGeminiModel = null
+        }
         throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
       }
-    } catch (error: any) {
-      const timedOut = error?.name === "TimeoutError" || error?.name === "AbortError" || String(error?.message || "").toLowerCase().includes("aborted")
-      if (!timedOut || attempt === 2) throw error
+      const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
+      if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
+      return text.trim()
+    } catch (error) {
+      lastError = error
+      if (!isRetryableGeminiError(error) || attempt === 2) break
+      await new Promise((resolve) => setTimeout(resolve, 900 * (attempt + 1)))
     }
-    await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)))
   }
-
-  const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
-  if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
-  return text.trim()
+  const lastMessage = lastError instanceof Error ? lastError.message : String(lastError || "")
+  if (/HTTP (401|403)|API key|PERMISSION_DENIED|unregistered callers/i.test(lastMessage)) {
+    return gatewayGeminiText(prompt, system, temperature, inlineData)
+  }
+  throw lastError
 }
 
 function json(data: unknown, status = 200) {
@@ -351,7 +339,7 @@ async function githubGetRepo() {
   return await res.json()
 }
 
-// يحل الفرع الفعلي: يستخدم GITHUB_BRANCH إن ضُبط، وإلا الفرع الافتراضي الحقيقي للمستودع.
+// يحل الفرع الفعلي: يستخدم GITHUB_BRANCH إن ضُبط، وإلا الفرع الافتراضي ا��حقيقي للمستودع.
 async function resolveBranch(): Promise<string> {
   if (resolvedBranch) return resolvedBranch
   if (GITHUB_BRANCH_ENV) {
@@ -687,9 +675,12 @@ export async function POST(req: Request) {
       }))
       const requestedCount = Math.max(1, plan.reduce((sum: number, item: any) => sum + Math.max(0, Number(item?.count) || 0), 0))
       const allNumbers = Array.from({ length: endSurahNumber - startSurahNumber + 1 }, (_, index) => startSurahNumber + index)
-      const selectedNumbers = allNumbers.length <= 12
-        ? allNumbers
-        : Array.from(new Set(Array.from({ length: Math.min(12, requestedCount) }, (_, index) => allNumbers[Math.round(index * (allNumbers.length - 1) / Math.max(1, Math.min(12, requestedCount) - 1))])))
+      const alternatingNumbers: number[] = []
+      for (let left = 0, right = allNumbers.length - 1; left <= right; left++, right--) {
+        alternatingNumbers.push(allNumbers[left])
+        if (right !== left) alternatingNumbers.push(allNumbers[right])
+      }
+      const selectedNumbers = alternatingNumbers.slice(0, Math.min(12, Math.max(requestedCount, 6), alternatingNumbers.length))
       const sourceSurahs = await Promise.all(selectedNumbers.map(async (number) => {
         const quranResponse = await fetch(`https://api.alquran.cloud/v1/surah/${number}`, { cache: "no-store", signal: AbortSignal.timeout(12_000) })
         const quran = await quranResponse.json().catch(() => null)
@@ -701,7 +692,7 @@ export async function POST(req: Request) {
         }
       }))
       const safePayload = { plan, startSurahNumber, endSurahNumber, sourceSurahs }
-      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. position=start يعني الثلث الأول، وmiddle الثلث الأوسط، وend الثلث الأخير، وrandom يوزع المواضع. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. sourceSurahs مرتبة بالتناوب بين الماضي القريب والماضي البعيد؛ وزّع الأسئلة عليها بالتتابع ولا تستخدم السورة نفسها مرتين قبل المرور على بقية السور المتاحة. position=start يعني الثلث الأول، وmiddle الثلث الأوسط، وend الثلث الأخير، وrandom يجب أن يتناوب فعلياً بين أول ووسط وآخر السور. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
