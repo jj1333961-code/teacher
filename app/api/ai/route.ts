@@ -21,10 +21,24 @@ const GEMINI = {
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
 const isGeminiConfigured = () => Boolean(GEMINI.key)
 let resolvedGeminiModel: string | null = null
-const unavailableGeminiModels = new Set<string>()
+const geminiModelCooldowns = new Map<string, number>()
+
+function isGeminiModelCoolingDown(model: string) {
+  const until = geminiModelCooldowns.get(model) || 0
+  if (until <= Date.now()) {
+    geminiModelCooldowns.delete(model)
+    return false
+  }
+  return true
+}
+
+function coolDownGeminiModel(model: string, durationMs: number) {
+  geminiModelCooldowns.set(model, Date.now() + durationMs)
+  if (resolvedGeminiModel === model) resolvedGeminiModel = null
+}
 
 async function resolveGeminiModel(forceRefresh = false): Promise<string> {
-  if (resolvedGeminiModel && !forceRefresh && !unavailableGeminiModels.has(resolvedGeminiModel)) return resolvedGeminiModel
+  if (resolvedGeminiModel && !forceRefresh && !isGeminiModelCoolingDown(resolvedGeminiModel)) return resolvedGeminiModel
 
   const configured = GEMINI.model.replace(/^models\//, "")
   const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", {
@@ -50,7 +64,7 @@ async function resolveGeminiModel(forceRefresh = false): Promise<string> {
     ...available,
   ]
   resolvedGeminiModel = preferred.find(
-    (name, index) => preferred.indexOf(name) === index && available.includes(name) && !unavailableGeminiModels.has(name),
+    (name, index) => preferred.indexOf(name) === index && available.includes(name) && !isGeminiModelCoolingDown(name),
   ) || null
   if (!resolvedGeminiModel) throw new Error("Gemini: لا يوجد نموذج يدعم generateContent لهذا المفتاح")
   return resolvedGeminiModel
@@ -111,7 +125,7 @@ async function gatewayGeminiText(prompt: string, system: string, temperature: nu
   if (inlineData) content.push({ type: "file", mediaType: inlineData.mimeType, data: inlineData.data })
   let lastError: unknown = new Error("تعذر بدء اتصال AI Gateway")
 
-  for (const model of GATEWAY_GEMINI_MODELS.slice(0, 1)) {
+  for (const model of GATEWAY_GEMINI_MODELS) {
     try {
       const result = await generateText({
         model,
@@ -136,6 +150,32 @@ function isRetryableGeminiError(error: unknown) {
   return /401|403|404|408|409|429|5\d\d|API key|PERMISSION_DENIED|RESOURCE_EXHAUSTED|UNAVAILABLE|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|AbortError|aborted|رد فارغ|empty/i.test(message)
 }
 
+function classifyAiFailure(error: unknown) {
+  const raw = error instanceof Error ? error.message : String(error || "خطأ غير معروف")
+  const quotaExceeded = /429|RESOURCE_EXHAUSTED|exceeded your current quota|rate.?limit/i.test(raw)
+  const gatewayBillingRequired = /valid credit card|add-credit-card|billing/i.test(raw)
+  const timedOut = /TimeoutError|AbortError|timed out|aborted/i.test(raw)
+
+  if (quotaExceeded) {
+    return {
+      status: 429,
+      code: "AI_QUOTA_EXCEEDED",
+      retryable: true,
+      message: gatewayBillingRequired
+        ? "حصة Gemini الحالية مستنفدة، والاتصال الاحتياطي غير مفعّل لهذا المشروع. انتظر تجدد الحصة ثم أعد المحاولة، أو فعّل فوترة AI Gateway."
+        : "حصة Gemini الحالية مستنفدة مؤقتاً. انتظر قليلاً ثم أعد المحاولة.",
+      raw,
+    }
+  }
+  if (gatewayBillingRequired) {
+    return { status: 503, code: "AI_GATEWAY_BILLING_REQUIRED", retryable: false, message: "الاتصال الاحتياطي بالذكاء الاصطناعي غير مفعّل لهذا المشروع لأنه يتطلب تفعيل فوترة AI Gateway.", raw }
+  }
+  if (timedOut) {
+    return { status: 503, code: "AI_TIMEOUT", retryable: true, message: "انتهت مهلة مزود الذكاء الاصطناعي. أعد المحاولة بطلب أقصر.", raw }
+  }
+  return { status: 502, code: "AI_PROVIDER_ERROR", retryable: isRetryableGeminiError(error), message: "تعذر الاتصال بمزود الذكاء الاصطناعي حالياً.", raw }
+}
+
 async function geminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }): Promise<string> {
   if (!GEMINI.key) return gatewayGeminiText(prompt, system, temperature, inlineData)
   const parts: any[] = [{ text: prompt }]
@@ -157,9 +197,9 @@ async function geminiText(prompt: string, system: string, temperature: number, i
   if (!response.ok) {
   const modelError = new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
   lastError = modelError
-  if (response.status === 404) {
-  unavailableGeminiModels.add(model)
-  resolvedGeminiModel = null
+  if (response.status === 404 || response.status === 429) {
+  coolDownGeminiModel(model, response.status === 429 ? 60_000 : 10 * 60_000)
+  if (response.status === 429 && attempt < 2) await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)))
   continue
   }
   throw modelError
@@ -173,7 +213,7 @@ async function geminiText(prompt: string, system: string, temperature: number, i
   }
   }
   // عند فشل Gemini المباشر نهائياً ننتقل دائماً إلى Gateway؛ فهو مسار مستقل
-  // ويعالج أخطاء المفتاح والحصة والشبكة والنموذج غير المتاح دون تعطيل المستخدم.
+  // ويعالج أخطاء ��لمفتاح والحصة والشبكة والنموذج غير المتاح دون تعطيل المستخدم.
   try {
     return await gatewayGeminiText(prompt, system, temperature, inlineData)
   } catch (gatewayError) {
@@ -275,7 +315,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
 كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
 احسب matchedPercent (0-100) لمدى مطابقة المعنى والألفاظ للنص المرجعي.
-score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إذا نقصت آية واحدة أو خطأ جوه����ي بسيط، 0 إذا كان مختلفاً أو ناقصاً كثيراً.
+score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إذا ن��صت آية واحدة أو خطأ جوه����ي بسيط، 0 إذا كان مختلفاً أو ناقصاً كثيراً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":[]}`
 
 const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة القرآن اعتماداً على تفريغ نصي (transcript) قد يكون غير دقيق بسبب التعرف الآلي.
@@ -335,7 +375,7 @@ const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد 
  "risks": ["مخاطرة أو أثر جانبي محتمل"],
  "clarifications": ["سؤال توضيحي إن كان الطلب غامضاً"]
 }
-قواعد إضافية مهمة: لا تقترح حذف أو إعادة تسمية أي ملف. لا تضع أسراراً أو مفاتيح API في public أو كود المتصفح. يمكنك اختيار أي ملف موجود ف�� قائمة المستودع التي نرسلها لك، ويمكن إنشاء ملف جديد فقط عند الحاجة الواضحة. إذا احتاج الطلب خدمة خارجية غير مضبوطة، اذكر ذلك في risks أو clarifications. لا تضع أسراراً أو مفاتيح API في ملفات public أو كود المتصفح. إن كان الطلب مخالفاً للقيود (مثل حذف المشروع أو إعادة بنائه) اجعل feasible=false واشرح السبب في summary.`
+قواعد إضافية مهمة: لا تقترح حذف أو إعادة تسمية أي ملف. لا تضع أسراراً أو مفاتيح API في public أو كود المتصفح. يمكنك اختيار أي ملف موجود ف�� قائمة المستودع ال��ي نرسلها لك، ويمكن إنشاء ملف جديد فقط عند الحاجة الواضحة. إذا احتاج الطلب خدمة خارجية غير مضبوطة، اذكر ذلك في risks أو clarifications. لا تضع أسراراً أو مفاتيح API في ملفات public أو كود المتصفح. إن كان الطلب مخالفاً للقيود (مثل حذف المشروع أو إعادة بنائه) اجعل feasible=false واشرح السبب في summary.`
 
 
 function githubHeaders() {
@@ -800,7 +840,7 @@ export async function POST(req: Request) {
       const audioBase64 = typeof payload.audioBase64 === "string" ? payload.audioBase64 : ""
       const mimeType = typeof payload.mimeType === "string" ? payload.mimeType.slice(0, 80) : "audio/webm"
       if (!audioBase64) return json({ error: "لم يصل التسجيل الصوتي", diagnostics }, 400)
-      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
+      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من ��لحد المسموح", diagnostics }, 413)
       if (!/^audio\/(webm|wav|mpeg|mp4|ogg)/i.test(mimeType)) return json({ error: "صيغة التسجيل غير مدعومة", diagnostics }, 415)
 
       const system = `أنت تستخرج بيانات طالب من إملاء عربي لمسؤول مدرسة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
@@ -910,7 +950,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       })
     }
 
-    // 6.أ) فحص جاهزية مساعد التطوير (للمس��ول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كشف أي سرّ.
+    // 6.أ) فحص جاهزية مساعد التطوير (للمس��ول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كش�� أي سرّ.
     if (mode === "dev_preflight") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const pf = await preflightAutoApply()
@@ -976,7 +1016,21 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
           const applied = await autoApplyDevRequest(request, plan)
           return json({ result: { ...plan, ...applied, applied: true, autoApplied: true, note: "تم تطبيق التعديلات تلقائياً على المشروع من الخادم. إذا كان Vercel مربوطاً بالمستودع فسيبدأ النشر تلقائياً، أو يمكن استخدام VERCEL_DEPLOY_HOOK_URL." }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
         } catch (e:any) {
-          return json({ error: e?.message || "تعذر التطبيق التلقائي", result: { ...plan, applied: false, autoApplied: false }, diagnostics: { ...diagnostics, stage: "apply", githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } }, 500)
+          const failure = classifyAiFailure(e)
+          const isProviderFailure = /Gemini|AI Gateway|generativelanguage|RESOURCE_EXHAUSTED|exceeded your current quota/i.test(failure.raw)
+          return json({
+            error: isProviderFailure ? failure.message : (e?.message || "تعذر التطبيق التلقائي"),
+            result: { ...plan, applied: false, autoApplied: false },
+            retryable: isProviderFailure ? failure.retryable : false,
+            code: isProviderFailure ? failure.code : "DEV_APPLY_ERROR",
+            diagnostics: {
+              ...diagnostics,
+              stage: "apply",
+              githubConfigured,
+              autoDevEnabled: AUTO_DEV_ENABLED,
+              reason: failure.raw.slice(0, 300),
+            },
+          }, isProviderFailure ? failure.status : 500)
         }
       }
       return json({ result: { ...plan, note: "الخطة فقط — لم يتم تطبيق أي تعديل.", autoApplied: false }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
