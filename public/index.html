@@ -133,6 +133,8 @@ tr:hover { background: var(--table-hover); }
 .stat-box { background:linear-gradient(135deg, #667eea, #764ba2); color:#fff; padding:25px; border-radius:15px; flex:1; min-width:180px; text-align:center; }
 .stat-box .num { font-size:2.2rem; font-weight:bold; }
 .stat-box .label { opacity:0.9; margin-top:5px; }
+.stat-box[onclick] { cursor:pointer; transition:0.2s; }
+.stat-box[onclick]:hover { transform:translateY(-5px); box-shadow:0 5px 15px rgba(0,0,0,0.3); }
 .menu-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:15px; margin-bottom:25px; }
 .menu-btn { padding:20px; border-radius:15px; text-align:center; color:#fff; font-size:1.1rem; font-weight:600; cursor:pointer; transition:0.2s; border:none; }
 .menu-btn:hover { transform:scale(1.03); }
@@ -484,7 +486,7 @@ tr:hover { background: var(--table-hover); }
     </div>
   </div>
   <div class="stats">
-    <div class="stat-box"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div></div>
+    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائمة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div></div>
     <div class="stat-box"><div class="num" id="statTeachers">0</div><div class="label">عدد المعلمين</div></div>
     <div class="stat-box"><div class="num" id="statAdmins">0</div><div class="label">المسؤولين</div></div>
     <div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num" id="statDrafts">0</div><div class="label">تسميعات نشطة</div></div>
@@ -492,7 +494,7 @@ tr:hover { background: var(--table-hover); }
   <div id="activeDraftsSection"></div>
   <div class="menu-grid">
     <button class="menu-btn" style="background:#667eea" onclick="showPage('addStudent')">➕ إضافة طالب جديد</button>
-    <button class="menu-btn" style="background:#28a745" onclick="showPage('studentsList')">👥 قائمة الطلاب</button>
+
     <button class="menu-btn admin-badge" style="background:#17a2b8" onclick="showPage('messagesPage')">
       💬 الرسائل <span id="msgBadge" class="msg-count hidden">0</span>
     </button>
