@@ -275,7 +275,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
 كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
 احسب matchedPercent (0-100) لمدى مطابقة المعنى والألفاظ للنص المرجعي.
-score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إذا نقصت آية واحدة أو خطأ جوه����ي بسيط، 0 إذا كان مختلفاً أو ناقصاً كثيراً.
+score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إذا ن��صت آية واحدة أو خطأ جوه����ي بسيط، 0 إذا كان مختلفاً أو ناقصاً كثيراً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":[]}`
 
 const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة القرآن اعتماداً على تفريغ نصي (transcript) قد يكون غير دقيق بسبب التعرف الآلي.
@@ -335,7 +335,7 @@ const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد 
  "risks": ["مخاطرة أو أثر جانبي محتمل"],
  "clarifications": ["سؤال توضيحي إن كان الطلب غامضاً"]
 }
-قواعد إضافية مهمة: لا تقترح حذف أو إعادة تسمية أي ملف. لا تضع أسراراً أو مفاتيح API في public أو كود المتصفح. يمكنك اختيار أي ملف موجود ف�� قائمة المستودع التي نرسلها لك، ويمكن إنشاء ملف جديد فقط عند الحاجة الواضحة. إذا احتاج الطلب خدمة خارجية غير مضبوطة، اذكر ذلك في risks أو clarifications. لا تضع أسراراً أو مفاتيح API في ملفات public أو كود المتصفح. إن كان الطلب مخالفاً للقيود (مثل حذف المشروع أو إعادة بنائه) اجعل feasible=false واشرح السبب في summary.`
+قواعد إضافية مهمة: لا تقترح حذف أو إعادة تسمية أي ملف. لا تضع أسراراً أو مفاتيح API في public أو كود المتصفح. يمكنك اختيار أي ملف موجود ف�� قائمة المستودع التي ن��سلها لك، ويمكن إنشاء ملف جديد فقط عند الحاجة الواضحة. إذا احتاج الطلب خدمة خارجية غير مضبوطة، اذكر ذلك في risks أو clarifications. لا تضع أسراراً أو مفاتيح API في ملفات public أو كود المتصفح. إن كان الطلب مخالفاً للقيود (مثل حذف المشروع أو إعادة بنائه) اجعل feasible=false واشرح السبب في summary.`
 
 
 function githubHeaders() {
@@ -692,13 +692,19 @@ export async function POST(req: Request) {
 
     // 1.ب) المساعد الذكي لل��الب/ولي الأمر (نص حر مع سياق بيانات الطالب)
     if (mode === "assistant") {
-      const prompt = typeof body.prompt === "string" ? body.prompt.trim() : ""
-      if (!prompt) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)
-      const reference = await getReferenceContext(prompt).catch(() => "")
+      const assistantPayload = body.payload && typeof body.payload === "object" ? body.payload : {}
+      const message = typeof assistantPayload.message === "string" ? assistantPayload.message.trim().slice(0, 4000) : typeof body.prompt === "string" ? body.prompt.trim().slice(0, 4000) : ""
+      if (!message) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)
+      const role = ["admin", "student", "parent"].includes(assistantPayload.role) ? assistantPayload.role : "student"
+      const roleLabel = role === "admin" ? "المسؤول" : role === "parent" ? "ولي الأمر" : "الطالب"
+      const context = JSON.stringify(assistantPayload.context || {}).slice(0, 14_000)
+      const history = (Array.isArray(assistantPayload.history) ? assistantPayload.history : []).slice(-8).map((item: any) => `${item?.role === "assistant" ? "المساعد" : "المستخدم"}: ${String(item?.content || "").slice(0, 1200)}`).join("\n")
+      const quranRelated = /قرآن|قران|آية|ايه|سورة|سوره|تلاوة|تلاوه|حفظ|متشابه|تجويد|مصحف/i.test(message)
+      const reference = quranRelated ? await getReferenceContext(message).catch(() => "") : ""
       const text = await runText(
-        `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أجب عن أي سؤال مسموح، سواء ارتبط بالمنصة أم كان سؤالاً عاماً خارجها. أعط الأولوية لبيانات المنصة فقط عندما يرتبط السؤال بها. اجعل الجواب على قدر السؤال: جواب قصير للسؤال القصير، ولا تتوسع أو تضف أمثلة واقتراحات إلا بطلب صريح. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفرها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة. أعد الجواب مباشرة بلا تحية أو مقدمة ��و عنوان أو خاتمة.",
-        typeof body.temperature === "number" ? body.temperature : 0.35,
+        `دور المستخدم: ${roleLabel}\nبيانات الموقع المنقحة (استخدمها فقط عند صلة السؤال):\n${context || "لا يوجد"}\n${history ? `\nآخر المحادثة:\n${history}\n` : ""}${reference ? `\nمرجع قرآني للتحقق:\n${reference}\n` : ""}\nرسالة المستخدم:\n${message}`,
+        "أنت مساعد عربي عام وودود تتحدث بصورة طبيعية كإنسان خبير. أجب عن الأسئلة داخل المنصة وخارجها، وافهم سياق المحادثة السابقة، وكن مباشراً وسريعاً ومتفاعلاً. طابق طول الإجابة مع السؤال، واسأل سؤال متابعة واحداً فقط عندما تكون معلومة أساسية ناقصة. لا تدّع امتلاك تجربة أو مشاعر بشرية، ولا تختلق بيانات من المنصة أو نصوصاً قرآنية. احمِ البيانات الخاصة، ولا تقدم مساعدة ضارة أو غير قانونية. استخدم العربية الطبيعية ما لم يطلب المستخدم لغة أخرى، ولا تبدأ كل رد بتحية أو عبارات نمطية.",
+        typeof body.temperature === "number" ? Math.min(.8, Math.max(.2, body.temperature)) : 0.55,
       )
       return json({ result: text.trim(), diagnostics })
     }
@@ -800,7 +806,7 @@ export async function POST(req: Request) {
       const audioBase64 = typeof payload.audioBase64 === "string" ? payload.audioBase64 : ""
       const mimeType = typeof payload.mimeType === "string" ? payload.mimeType.slice(0, 80) : "audio/webm"
       if (!audioBase64) return json({ error: "لم يصل التسجيل الصوتي", diagnostics }, 400)
-      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
+      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد الم��موح", diagnostics }, 413)
       if (!/^audio\/(webm|wav|mpeg|mp4|ogg)/i.test(mimeType)) return json({ error: "صيغة التسجيل غير مدعومة", diagnostics }, 415)
 
       const system = `أنت تستخرج بيانات طالب من إملاء عربي لمسؤول مدرسة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
@@ -910,7 +916,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       })
     }
 
-    // 6.أ) فحص جاهزية مساعد التطوير (للمس��ول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كشف أي سرّ.
+    // 6.أ) فحص جاهزية مساعد التطوير (للمس��ول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كش�� أي سرّ.
     if (mode === "dev_preflight") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const pf = await preflightAutoApply()
@@ -1025,7 +1031,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       friendly = "مفتاح Gemini غير متاح في بيئة الخادم"
       status = 503
     } else if (raw.includes("429")) {
-      friendly = `تم تجاوز حد طلبات نموذج ${GEMINI.label}، حاول لاحقاً`
+      friendly = `تم تجاو�� حد طلبات نموذج ${GEMINI.label}، حاول لاحقاً`
       status = 429
     } else if (raw.includes("401") || raw.includes("403") || raw.toLowerCase().includes("api key")) {
       friendly = `تعذر توثيق نموذج ${GEMINI.label}؛ تحقق من صلاحية المفتاح وواجهة Generative Language API`

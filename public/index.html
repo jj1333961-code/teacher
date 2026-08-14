@@ -514,7 +514,7 @@ tr:hover { background: var(--table-hover); }
     </button>
     <button class="menu-btn" style="background:#6c757d" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button>
     <button class="menu-btn" style="background:#fd7e14" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button>
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ����لمرفوعة</button>
+    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ������لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
@@ -524,7 +524,7 @@ tr:hover { background: var(--table-hover); }
 
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد Gemini الإداري</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light);margin-bottom:15px;">محادثة مقيدة ببيانات الطلاب وأولياء الأمور والاختبارات داخل الموقع.</p>
+  <p style="color:var(--text-light);margin-bottom:15px;">مساعد عام سريع للمحادثة الطبيعية، ويمكنه أيضاً الاستفادة من بيانات الموقع عند سؤالك عنها.</p>
   <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو ��لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
@@ -1140,7 +1140,7 @@ const SURAH_AYAH_COUNTS = {
   "ص": 88, "الزمر": 75, "غافر": 85, "فصلت": 54, "الشورى": 53, "الزخرف": 89, "الدخان": 59, "الجاثية": 37, "الأحقاف": 35,
   "محمد": 38, "الفتح": 29, "الحجرات": 18, "ق": 45, "الذاريات": 60, "الطور": 49, "النجم": 62, "القمر": 55, "الرحمن": 78,
   "الواقعة": 96, "الحديد": 29, "المجادلة": 22, "الحشر": 24, "الممتحنة": 13, "الصف": 14, "الجمعة": 11, "المنافقون": 11,
-  "التغابن": 18, "الطلاق": 12, "التحريم": 12, "الملك": 30, "القلم": 52, "الحاقة": 52, "المعارج": 44, "نوح": 28, "الجن": 28,
+  "التغابن": 18, "الطلاق": 12, "التحريم": 12, "الملك": 30, "القلم": 52, "الحاقة": 52, "ا��معارج": 44, "نوح": 28, "الجن": 28,
   "المزمل": 20, "المدثر": 56, "القيامة": 40, "الإنسان": 31, "المرسلا��": 50, "��لنبأ": 40, "النازعات": 46, "عبس": 42,
   "التكوير": 29, "الإنفطار": 19, "المطففين": 36, "الإنشقاق": 25, "البروج": 22, "الطارق": 17, "ا��أعلى": 19, "الغاشية": 26,
   "الفجر": 30, "البلد": 20, "الشمس": 15, "الليل": 21, "الضحى": 11, "الشرح": 8, "التين": 8, "العلق": 19, "القدر": 5,
@@ -1381,7 +1381,7 @@ function buildDailyLog(s) {
     const at = t.approvedAt || t.rejectedAt || t.at || '';
     let day = t.day || '';
     if(!day && at) { const m = String(at).match(/(\d{1,4}[\/-]\d{1,2}[\/-]\d{1,4})/); day = m ? m[1] : ''; }
-    if(!day) day = 'بدون تاريخ';
+    if(!day) day = 'بدون ��اريخ';
     const name = t.name || t.text || '';
     const key = (t.sourceMsgId || '') + '|' + day + '|' + status + '|' + name + '|' + at;
     if(seen[key]) return;
@@ -2274,7 +2274,7 @@ function renderRecordElementHTML(el, i, num) {
   html += '<span class="record-element-title">'+num+'. '+el.name+'</span>';
   html += '<div style="display:flex; gap:6px; flex-wrap:wrap;">';
   html += '<button class="btn btn-xs btn-info" onclick="duplicateRecordElement('+i+')" title="تضعيف (إنشاء نسخة أخرى)">📑 تضعيف</button>';
-  html += '<button class="btn btn-xs btn-danger" onclick="removeRecordElement('+i+')" title="حذف هذا العنصر">🗑️ حذف</button>';
+  html += '<button class="btn btn-xs btn-danger" onclick="removeRecordElement('+i+')" title="حذف ه��ا العنصر">🗑️ حذف</button>';
   html += '<button class="btn btn-xs btn-secondary" onclick="restoreRecordElement('+i+')" title="استرجاع بعد الحذف" disabled style="opacity:0.5;">↩️ استرجاع</button>';
   html += '</div>';
   html += '</div>';
@@ -2594,7 +2594,16 @@ function localSmartChatReply(message,role){
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وبعد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت الهدف والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
 }
-async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';box.innerHTML+='<div class="ai-msg user">'+escapeHtml(message)+'</div><div id="adminAiTyping" class="ai-msg bot">جاري التحليل...</div>';box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await readApiJson(res,'تعذر رد Gemini');document.getElementById('adminAiTyping').outerHTML='<div class="ai-msg bot">'+escapeHtml(data.result).replace(/\n/g,'<br>')+'</div>'}catch(e){document.getElementById('adminAiTyping').textContent=localSmartChatReply(message,'admin')}box.scrollTop=box.scrollHeight}
+const aiChatHistory={admin:[],student:[],parent:[]};
+async function sendUnifiedAIChat(role,inputId,boxId,context){
+  const input=document.getElementById(inputId),box=document.getElementById(boxId),message=input&&input.value.trim();if(!input||!box||!message||input.disabled)return;
+  input.value='';input.disabled=true;const typingId=role+'AiTyping';box.innerHTML+='<div class="ai-msg user">'+escapeHtml(message)+'</div><div id="'+typingId+'" class="ai-msg bot">أفكر في رد مناسب...</div>';box.scrollTop=box.scrollHeight;
+  const history=aiChatHistory[role].slice(-8);aiChatHistory[role].push({role:'user',content:message});
+  try{const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',payload:{role,message,context,history},temperature:.55})});const data=await readApiJson(res,'تعذر الحصول على الرد'),typing=document.getElementById(typingId),reply=String(data.result||'لم يصل رد.');if(typing){typing.id='';typing.innerHTML=escapeHtml(reply).replace(/\n/g,'<br>')}aiChatHistory[role].push({role:'assistant',content:reply})}
+  catch(e){const typing=document.getElementById(typingId);if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(message,role))+'<br><small>تعذر الاتصال حالياً، لذلك عُرض رد محلي.</small>'}
+  finally{input.disabled=false;input.focus();box.scrollTop=box.scrollHeight}
+}
+async function sendAdminChat(){if(currentType!=='admin')return;const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-3),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));return sendUnifiedAIChat('admin','adminChatInput','adminChatMessages',{students,studentCount:students.length,messageCount:getData('messages',[]).length})}
 
 async function callStudentAI(mode, payload, temperature){
   const res = await fetch('/api/ai', {
@@ -2891,6 +2900,7 @@ function confirmStudentExamAnswer(i){
   const ex=currentUser&&currentUser.activeExam;if(!ex||i!==studentExamCurrentIndex||studentExamLockedIndices[i])return;
   if(ex.questions[i].type==='complete'){const el=document.getElementById('examComplete_'+i);studentExamAnswers[i]=el?el.value.trim():'';}
   if(ex.questions[i].type!=='audio' && !studentExamAnswers[i]){showToast('اختر أو اكتب الإجابة أولاً','error');return;}
+  if(ex.questions[i].type==='audio' && (!studentExamAudioAnswers[i]||!studentExamAudioAnswers[i].dataUrl)){showToast('سجّل إجابة صوتية واحفظها أولاً','error');return;}
   studentExamLockedIndices[i]=true; clearInterval(studentExamQuestionTimer); studentExamQuestionElapsed[i]=Math.max(0,Math.round((Date.now()-(studentExamQuestionStartedAt[i]||Date.now()))/1000));
   if(i<ex.questions.length-1){
     studentExamCurrentIndex=i+1;studentExamViewIndex=studentExamCurrentIndex;
@@ -2944,36 +2954,40 @@ async function submitStudentExam(auto){
   setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبار وإرساله للمسؤول وولي الأمر','success');
 }
 
+function studentExamAudioHTML(i){
+  const saved=studentExamAudioAnswers[i];
+  if(!window.MediaRecorder||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return '<div class="alert alert-danger">هذا المتصفح لا يدعم التسجيل الصوتي. افتح الاختبار في إصدار حديث من Chrome أو Edge أو Safari واسمح باستخدام الميكروفون.</div>';
+  return '<div class="exam-audio-recorder"><button type="button" id="examVoiceBtn_'+i+'" class="btn btn-primary" onclick="recordStudentExamAudio('+i+')">'+(saved?'إعادة التسجيل':'بدء التسجيل')+'</button><span id="examAudioStatus_'+i+'" role="status" aria-live="polite" style="display:block;margin-top:10px">'+(saved?'تم حفظ تسجيل صالح ويمكنك تأكيد الإجابة.':'اضغط لبدء التسجيل، ثم اضغط مرة أخرى لإيقافه وحفظه.')+'</span><audio id="examAudioPreview_'+i+'" controls src="'+(saved&&saved.dataUrl?saved.dataUrl:'')+'" style="'+(saved?'display:block':'display:none')+';width:100%;margin-top:10px"></audio><div id="examAudioAI_'+i+'">'+(saved?'<div class="alert alert-info">تم حفظ الإجابة الصوتية. يمكنك الاستماع إليها أو إعادة التسجيل قبل التأكيد.</div>':'')+'</div></div>';
+}
 async function recordStudentExamAudio(i){
-  const q=currentUser.activeExam.questions[i];const btn=document.getElementById('examVoiceBtn_'+i),status=document.getElementById('examAudioStatus_'+i),preview=document.getElementById('examAudioPreview_'+i),aiBox=document.getElementById('examAudioAI_'+i);
-  if(!btn||!status)return;
-  if(btn.dataset.recording==='true')return;
+  const ex=currentUser&&currentUser.activeExam,q=ex&&Array.isArray(ex.questions)?ex.questions[i]:null,btn=document.getElementById('examVoiceBtn_'+i),status=document.getElementById('examAudioStatus_'+i),preview=document.getElementById('examAudioPreview_'+i),aiBox=document.getElementById('examAudioAI_'+i);
+  if(!q||q.type!=='audio'||!btn||!status||!preview||!aiBox)return;
+  const active=activeAudioRecorders['exam-'+i];if(active&&active.recorder.state!=='inactive'){status.textContent='جاري تجهيز التسجيل...';active.recorder.stop();return}
   try{
-    const stream=await safeGetMic();const recorder=new MediaRecorder(stream),chunks=[];const asr=startArabicASR();btn.dataset.recording='true';btn.classList.add('recording');status.textContent='جاري التسجيل... اضغط مرة أخرى للإيقاف';
-    recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+    const stream=await safeGetMic(),supported=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t)),recorder=supported?new MediaRecorder(stream,{mimeType:supported}):new MediaRecorder(stream),chunks=[],asr=startArabicASR();
+    btn.dataset.recording='true';btn.classList.add('recording');btn.textContent='إيقاف وحفظ التسجيل';status.textContent='جاري التسجيل... اضغط الزر مرة أخرى عند الانتهاء';aiBox.innerHTML='';
+    recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+    recorder.onerror=()=>{status.textContent='حدث خطأ أثناء التسجيل. أعد المحاولة.'};
     recorder.onstop=async()=>{
-      stream.getTracks().forEach(t=>t.stop());if(asr)asr.stop();await new Promise(r=>setTimeout(r,400));
-      const blob=new Blob(chunks,{type:'audio/webm'});const dataUrl=await blobToDataURL(blob);const transcript=asr?(asr.text||''):'';preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='🤖 جاري التحقق من البصمة والمحتوى...';
-      const live=await computeVoicePrint(blob), ref=currentUser.voicePrintVec||null;const match=(live&&ref)?voiceMatchPercent(live,ref):null;
-      if(match!==null && match<VOICE_MATCH_THRESHOLD){status.textContent='❌ البصمة غير مطابقة — لم يُحفظ التسجيل';aiBox.innerHTML='<div class="alert alert-danger">🚫 هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل بصوت الطالب نفسه.</div>';showToast('❌ التسجيل غير مطابق للبصمة ولم يتم حفظه','error');studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;btn.dataset.recording='false';btn.classList.remove('recording');return;}
-      // تحليل الصوت على الخادم (تفريغ حقيقي + تصحيح) مع احتياطي المتصفح
-      let aiResult=await serverRecitationAnalysis(blob,{surah:q.surah,from:q.from,to:q.to});
-      let usedTranscript=transcript;
-      if(aiResult){ usedTranscript=aiResult.transcript||transcript; }
-      else {
-        try{const expected=await fetchAyatText(q.surah,q.from,q.to);aiResult=await callStudentAI('grade_recitation',{surah:q.surah,from:q.from,to:q.to,expectedText:expected,studentTranscript:transcript,studentVoiceMatch:match},0.05)}catch(e){aiResult={accepted:false,score:0,matchedPercent:0,reason:'تعذر الاتصال بالذكاء الاصطنا��ي لتصحيح محتوى التلاوة'};}
-      }
-      studentExamAudioAnswers[i]={dataUrl,transcript:usedTranscript,voiceMatch:match,aiResult};studentExamAnswers[i]=usedTranscript;
-      const pct=aiResult.matchedPercent??0;status.textContent='تم استلام التسجيل بنجاح — النتيجة التفصيلية بانتظار مراجعة المسؤول';
-      aiBox.innerHTML='<div class="alert alert-info">🔒 تم حفظ إجابة التسجيل ونتيجة التحليل داخلياً. لن تظهر نتيجة الذكاء الاصطناعي للطالب حتى يقرر المسؤول نشرها.</div>';
-      btn.dataset.recording='false';btn.classList.remove('recording');
+      if(asr)try{asr.stop()}catch(e){};btn.disabled=true;btn.dataset.recording='false';btn.classList.remove('recording');btn.textContent='جاري الحفظ...';
+      try{
+        if(!chunks.length)throw new Error('لم يلتقط المتصفح صوتاً. تحقق من الميكروفون وأعد التسجيل.');
+        const blob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});if(blob.size<1000)throw new Error('التسجيل قصير أو فارغ. أعد التسجيل بصوت واضح.');
+        const dataUrl=await blobToDataURL(blob),transcript=asr?(asr.text||''):'';preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='جاري التحقق من التسجيل والمحتوى...';
+        const live=await computeVoicePrint(blob).catch(()=>null),ref=currentUser.voicePrintVec||null,match=(live&&ref)?voiceMatchPercent(live,ref):null;
+        if(match!==null&&match<VOICE_MATCH_THRESHOLD)throw new Error('هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل بصوت الطالب نفسه.');
+        let aiResult=await serverRecitationAnalysis(blob,{surah:q.surah,from:q.from,to:q.to}).catch(()=>null),usedTranscript=transcript;
+        if(aiResult)usedTranscript=aiResult.transcript||transcript;else{try{const expected=await fetchAyatText(q.surah,q.from,q.to);aiResult=await callStudentAI('grade_recitation',{surah:q.surah,from:q.from,to:q.to,expectedText:expected,studentTranscript:transcript,studentVoiceMatch:match},0.05)}catch(e){aiResult={accepted:false,score:0,matchedPercent:0,reason:'حُفظ التسجيل وستتم مراجعته يدوياً من المسؤول'};}}
+        studentExamAudioAnswers[i]={dataUrl,transcript:usedTranscript,voiceMatch:match,aiResult};studentExamAnswers[i]=usedTranscript||'[تسجيل صوتي محفوظ]';status.textContent='تم حفظ التسجيل بنجاح. يمكنك تأكيد الإجابة الآن.';aiBox.innerHTML='<div class="alert alert-info">تم حفظ الإجابة الصوتية، وستظهر النتيجة بعد مراجعة المسؤول.</div>';btn.textContent='إعادة التسجيل';
+      }catch(e){studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;status.textContent=e&&e.message?e.message:'تعذر حفظ التسجيل. أعد المحاولة.';aiBox.innerHTML='<div class="alert alert-danger">'+escapeHtml(status.textContent)+'</div>';btn.textContent='إعادة التسجيل';}
+      finally{btn.disabled=false}
     };
-    recorder.start();registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});btn.onclick=()=>{if(recorder.state!=='inactive')recorder.stop()};
-  }catch(e){status.textContent='تعذر الوصول إلى الميكروفون';btn.dataset.recording='false';btn.classList.remove('recording')}
+    recorder.start(250);registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});
+  }catch(e){status.textContent=e&&e.message?e.message:'تعذر الوصول إلى الميكروفون. اسمح للمتصفح باستخدامه ثم أعد المحاولة.';btn.dataset.recording='false';btn.classList.remove('recording');btn.textContent='إعادة المحاولة'}
 }
 function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختبار</h3><p>النتيجة معلّقة لحين مراجعة المسؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
 function renderStudentExamResult(ex){const c=document.getElementById('studentExamContent');if(c)c.innerHTML=renderStudentResultHtml(ex)}
-function notifyExamExpired(student,ex){if(ex.expiryNotified)return;ex.expiryNotified=true;const text='انتهى الوقت المحدد لاختبار '+student.name+' بتاريخ '+(ex.date||'');let msgs=getData('messages');msgs.push({type:'system',sender:'النظام',receiverType:'student',receiverId:student.id,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'parent',receiverName:student.parent,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'admin',text,studentId:student.id,parentPhone:student.parentPhone||student.parentMobile||'',time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});setData('messages',msgs)}
+function notifyExamExpired(student,ex){if(ex.expiryNotified)return;ex.expiryNotified=true;const text='انتهى الو��ت المحدد لاختبار '+student.name+' بتاريخ '+(ex.date||'');let msgs=getData('messages');msgs.push({type:'system',sender:'النظام',receiverType:'student',receiverId:student.id,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'parent',receiverName:student.parent,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'admin',text,studentId:student.id,parentPhone:student.parentPhone||student.parentMobile||'',time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});setData('messages',msgs)}
 function examWhatsAppLink(phone,text){const p=String(phone||'').replace(/\D/g,'').replace(/^0/,'20');return p?'https://wa.me/'+p+'?text='+encodeURIComponent(text):''}
 function checkExamDeadlines(){let students=getData('students',[]),changed=false;students.forEach(s=>{const ex=s.activeExam;if(ex&&ex.status==='pending'&&ex.deadlineAt&&Date.now()>=ex.deadlineAt&&!ex.expiryNotified){notifyExamExpired(s,ex);changed=true}});if(changed)setData('students',students)}
 setInterval(checkExamDeadlines,30000);setTimeout(checkExamDeadlines,1500);
@@ -3445,7 +3459,7 @@ const DEV_DANGER_PATTERNS = [
   {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*الملفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
   {re:/حذف\s*(المستخدمين|كل\s*المستخدمين|جميع\s*المستخدمين)|delete\s+users/i, label:'حذف المستخدمين'},
   {re:/حذف\s*(الطلاب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},
-  {re:/(المصادقة|تسجيل\s*الدخول|نظام\s*الدخول|كلمة\s*المرور\s*الرئيسية|authentication|login\s*system)/i, label:'تغيير نظام المصادقة'},
+  {re:/(الم��ادقة|تسجيل\s*الدخول|نظام\s*الدخول|كلمة\s*المرور\s*الرئيسية|authentication|login\s*system)/i, label:'تغيير نظام المصادقة'},
   {re:/(تغيير|تعديل|حذف)\s*(الصلاحيات|الأذونات|permissions)/i, label:'تغيير الصلاحيات'},
   {re:/(تغيير|تعديل|حذف)\s*(مفاتيح|متغيرات)\s*الب��ئة|env(ironment)?\s*var|\.env/i, label:'تغيير مفاتيح البيئة'},
   {re:/(تغيير|تعطيل|إزالة)\s*(إعدادات\s*)?الأمان|security/i, label:'تغيير إعدادات الأمان'},
@@ -3718,7 +3732,7 @@ function renderMessages() {
   let html = '';
   adminMsgs.slice().reverse().forEach((m, idx) => {
     const realIdx = msgs.indexOf(m);
-    const hasFile = m.fileData ? '<div style="margin:8px 0;"><button onclick="openMessageFile('+realIdx+')" class="btn btn-sm btn-primary">👁️ عرض الملف: '+(m.fileName || 'ملف')+'</button></div>' : '';
+    const hasFile = m.fileData ? '<div style="margin:8px 0;"><button onclick="openMessageFile('+realIdx+')" class="btn btn-sm btn-primary">👁️ عرض الملف: '+(m.fileName || '��لف')+'</button></div>' : '';
     let shareBtn = '';
     if(m.fileData) {
       shareBtn = '<div style="margin:8px 0;"><button class="btn btn-sm '+(m.shareWithParent ? 'btn-success' : 'btn-secondary')+'" onclick="toggleShareWithParent('+realIdx+')">'+(m.shareWithParent ? '👨‍👩‍👧 ولي الأ��ر يمكنه الاطلاع (اضغط للمنع)' : '🔒 السماح لولي الأمر بالاطلاع على الملف')+'</button></div>';
@@ -4051,7 +4065,7 @@ function renderStudentDashboard() {
   document.getElementById('studentInfo').innerHTML = html;
 
   if(s.activeExam && s.activeExam.status==='pending'){
-    document.getElementById('studentInfo').innerHTML += '<div class="alert alert-warning" style="margin-top:15px;border:2px solid var(--warning);font-size:1.05rem"><strong>🔔 لديك اختبار جديد!</strong><br>أرسله المسؤول ويجب حله. <button class="btn btn-warning" style="margin-top:8px" onclick="showPage(\'studentExamPage\')">🧪 فتح الاختبار الآن</button></div>';
+    document.getElementById('studentInfo').innerHTML += '<div class="alert alert-warning" style="margin-top:15px;border:2px solid var(--warning);font-size:1.05rem"><strong>🔔 لديك اختبار جديد!</strong><br>أرسله المسؤول ويجب حله. <button class="btn btn-warning" style="margin-top:8px" onclick="showPage(\'studentExamPage\')">🧪 فتح ال��ختبار الآن</button></div>';
     notifyStudentExamOnce(s);
   }
 
@@ -4833,15 +4847,8 @@ function updateStudentMsgBadge() {
 }
 
 async function sendStudentChat() {
-  const input = document.getElementById('studentChatInput'); const text=input.value.trim(); if(!text)return; input.value='';
-  const chatDiv=document.getElementById('studentChatMessages'); chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="studentAiTyping" class="ai-msg bot">⏳ جاري التفكير...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
-  const s=currentUser||{}; const last=(s.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
-  try{
-    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانا�� الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
-    const data=await readApiJson(res,'تعذر رد Gemini');
-    const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>'); const typing=document.getElementById('studentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
-  }catch(e){const typing=document.getElementById('studentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'student'))+'<br><small>رد محلي محدود بسبب تعذر Gemini.</small>'}
-  chatDiv.scrollTop=chatDiv.scrollHeight;
+  const s=currentUser||{},last=(s.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
+  return sendUnifiedAIChat('student','studentChatInput','studentChatMessages',{name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)});
 }
 
 function parentLogin() {
@@ -4965,14 +4972,8 @@ function updateParentMsgBadge() {
 }
 
 async function sendParentChat() {
-  const input=document.getElementById('parentChatInput');const text=input.value.trim();if(!text)return;input.value='';
-  const chatDiv=document.getElementById('parentChatMessages');chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="parentAiTyping" class="ai-msg bot">��� جاري تحليل البيانات...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
-  const child=currentUser&&currentUser[0]?currentUser[0]:{}; const last=(child.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
-  try{
-    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال ولي الأمر: '+text+'\nبيانات الابن/الابنة: '+JSON.stringify({name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)})})});
-    const data=await readApiJson(res,'تعذر رد Gemini');const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');const typing=document.getElementById('parentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
-  }catch(e){const typing=document.getElementById('parentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'parent'))+'<br><small>رد محلي محدود بسبب تعذر Gemini.</small>'}
-  chatDiv.scrollTop=chatDiv.scrollHeight;
+  const child=currentUser&&currentUser[0]?currentUser[0]:{},last=(child.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
+  return sendUnifiedAIChat('parent','parentChatInput','parentChatMessages',{name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)});
 }
 
 function renderParentRecords() {
@@ -5312,7 +5313,7 @@ function generateAIReport(student) {
   const avgScore = last3.reduce((sum, s) => sum + s.totalScore, 0) / last3.length;
   let report = '';
   if(avgScore >= 14) report = 'ممتاز يا '+student.name+'! 🌟 مستواك رائع جداً. أنت تحفظ بثبات وتميز. استمر في المراجعة وستكون من حفاظ كتاب الله.';
-  else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرارية.';
+  else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! ��� أداؤك ممتاز مع مجال للتحسين في المراجعة. ح��فظ على الاستمرارية.';
   else if(avgScore >= 6) report = 'جيد يا '+student.name+'! 📚 مستواك في تقدم مستمر. أنصحك بزيادة وقت المراجعة اليومي.';
   else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على التكرار والمراجعة اليومية وسترى التحسن قريباً.';
   report += '<br><br>📊 متوسط آخر 3 تسميعات: <strong>'+avgScore.toFixed(1)+' / 16</strong><br>📈 عدد التسميعات المسجلة: '+finalizedSessions.length;
