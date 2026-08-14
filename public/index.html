@@ -514,7 +514,7 @@ tr:hover { background: var(--table-hover); }
     </button>
     <button class="menu-btn" style="background:#6c757d" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button>
     <button class="menu-btn" style="background:#fd7e14" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button>
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ��لمرفوعة</button>
+    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ����لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
@@ -1126,7 +1126,7 @@ const quranData = {
   24: ["الزمر", "غافر", "فصلت"],
   25: ["فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقا��"],
   26: ["الأحقاف", "محمد", "الفتح", "الحجرات", "ق", "الذاريات"],
-  27: ["الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد"],
+  27: ["الذاريات", "الطور", "النجم", "القمر", "ال��حمن", "الواقعة", "الحديد"],
   28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
   29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات"],
   30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس"]
@@ -1150,7 +1150,7 @@ const SURAH_AYAH_COUNTS = {
 
 const ALL_SURAHS_ORDERED = [
   "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
-  "الإس��اء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
+  "الإس��اء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "��لعنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
   "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الإنفطار",
@@ -2561,7 +2561,7 @@ async function readApiJson(res, fallback){
   if(contentType.includes('application/json')){try{data=JSON.parse(text)}catch(e){}}
   else{try{data=JSON.parse(text)}catch(e){data={error:text.slice(0,300)}}}
   if(!data)throw new Error(fallback+' — استجابة غير صالحة (HTTP '+res.status+').');
-  if(!res.ok){const reason=data.error||fallback;const stage=data.diagnostics&&data.diagnostics.stage?' — المرحلة: '+data.diagnostics.stage:'';throw new Error(reason+stage+' (HTTP '+res.status+')')}
+  if(!res.ok){const reason=data.error||fallback;const stage=data.diagnostics&&data.diagnostics.stage?' — المرحلة: '+data.diagnostics.stage:'';const error=new Error(reason+stage+' (HTTP '+res.status+')');error.status=res.status;error.code=data.code||'';error.retryable=data.retryable===true;throw error}
   return data;
 }
 async function loadExamFiles(){
@@ -3545,10 +3545,12 @@ async function runDevAssistant(){
     showToast(plan && plan.applied ? '✅ تم تنفيذ التعديل بنجاح' : '⚠️ تم تحليل الطلب ولم يكتمل التطبيق', plan && plan.applied ? 'success' : 'info');
   } catch(err) {
     const reason = err && err.message ? err.message : 'سبب غير معروف';
+    const canRetry = !!(err && err.retryable);
     resultBox.innerHTML =
-      '<div style="background:#fdecea; color:#b02a37; padding:16px 18px; border-radius:10px; line-height:1.9;">'+
-      '<div style="font-weight:bold; font-size:1.15rem; margin-bottom:6px;">❌ تعذر تنفيذ التعديل</div>'+
+      '<div style="background:#fdecea; color:#b02a37; padding:16px 18px; border-radius:10px; line-height:1.9;" role="alert">'+
+      '<div style="font-weight:bold; font-size:1.15rem; margin-bottom:6px;">تعذر تنفيذ التعديل</div>'+
       '<div><strong>سبب الخطأ:</strong> '+escapeHtmlAi(reason)+'</div>'+
+      (canRetry?'<button type="button" class="btn btn-sm btn-primary" style="margin-top:12px;" onclick="runDevAssistant()">إعادة المحاولة</button>':'')+
       '</div>';
     recordDevAudit({ status:'failed', request, error:reason, flagged:dangers });
     renderDevAudit();
