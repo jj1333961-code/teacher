@@ -14,7 +14,7 @@ const GEMINI = {
     ).trim()
   },
   get model() {
-    return (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim()
+    return (process.env.GEMINI_MODEL || "gemini-3-flash-preview").trim()
   },
 }
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
@@ -43,8 +43,8 @@ async function resolveGeminiModel(forceRefresh = false): Promise<string> {
 
   const preferred = [
     configured,
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
+    "gemini-3-flash-preview",
+    "gemini-3-flash",
     ...available.filter((name: string) => name.includes("flash") && !name.includes("image") && !name.includes("tts")),
     ...available,
   ]
@@ -309,7 +309,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد�� /api/ai.
   • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
-- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم OpenRouter (OPENROUTER_API_KEY) وتدعم الأوضاع: generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant, بالإضافة إلى وضع النص الحر (prompt).
+- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم Gemini مباشرةً عبر GEMINI_API_KEY مع AI Gateway كمسار احتياطي، وتدعم الأوضاع: assistant, admin_assistant, generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant، بالإضافة إلى وضع النص الحر (prompt).
 - "app/layout.tsx": تخطيط الجذر.
 - "app/page.tsx": صفحة Next.js احتياطية؛ الجذر يعاد توجيهه إلى public/index.html عبر next.config.mjs.
 - "app/globals.css": الأنماط العامة لـNext.js.
@@ -662,7 +662,14 @@ export async function POST(req: Request) {
     return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured: isGeminiConfigured() } }, 400)
   }
 
-  const diagnostics = { executedOn: "server", keyConfigured: isGeminiConfigured(), providerStatus: 200, provider: "gemini", providerLabel: GEMINI.label }
+  const diagnostics = {
+    executedOn: "server",
+    keyConfigured: isGeminiConfigured(),
+    providerStatus: 200,
+    provider: "gemini",
+    providerLabel: GEMINI.label,
+    configuredModel: GEMINI.model.replace(/^models\//, ""),
+  }
 
   try {
     // 1) وضع ��لنص الحر (صندوق اختبار الذكاء الاصطناعي)
