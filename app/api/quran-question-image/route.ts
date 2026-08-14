@@ -70,8 +70,11 @@ export async function GET(request: Request) {
 
     document = await getDocument({ data: pdfBytes, useSystemFonts: true, isEvalSupported: false }).promise
     let selected: { page: any; items: any[] } | null = null
+    const estimatedPage = Math.max(1, Math.min(document.numPages, Math.round(((targetData.page - 1) / 603) * (document.numPages - 1)) + 1))
+    const candidatePages = Array.from(new Set([estimatedPage, estimatedPage - 1, estimatedPage + 1, estimatedPage - 2, estimatedPage + 2]))
+      .filter((pageNumber) => pageNumber >= 1 && pageNumber <= document.numPages)
 
-    for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber++) {
+    for (const pageNumber of candidatePages) {
       const page = await document.getPage(pageNumber)
       const content = await page.getTextContent()
       const items = (content.items as any[]).filter((item) => itemText(item))
@@ -90,7 +93,6 @@ export async function GET(request: Request) {
 
     let pageAyahs: any[] = []
     if (!selected) {
-      const estimatedPage = Math.max(1, Math.min(document.numPages, Math.round(((targetData.page - 1) / 603) * (document.numPages - 1)) + 1))
       selected = { page: await document.getPage(estimatedPage), items: [] }
       pageAyahs = await getPageAyahs(targetData.page)
     }
