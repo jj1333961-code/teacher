@@ -1,6 +1,8 @@
+import { generateText } from "ai"
+
 export const maxDuration = 300
 
-// ===== Gemini هو محرك الذكاء الاصطناعي الوحيد (المفتاح يبقى على الخادم) =====
+// ===== Gemini عبر مفتاح Google عند صلاحيته، وإلا عبر Vercel AI Gateway المتصل بالمشروع =====
 const GEMINI = {
   label: "Gemini",
   get key() {
@@ -101,15 +103,40 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
+const GATEWAY_GEMINI_MODEL = "google/gemini-3.7-flash"
+
+async function gatewayGeminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }): Promise<string> {
+  const content: any[] = [{ type: "text", text: prompt }]
+  if (inlineData) content.push({ type: "file", mediaType: inlineData.mimeType, data: inlineData.data })
+  const result = await generateText({
+    model: GATEWAY_GEMINI_MODEL,
+    system,
+    messages: [{ role: "user", content }],
+    temperature,
+    abortSignal: AbortSignal.timeout(70_000),
+  })
+  if (!result.text?.trim()) throw new Error("Gemini عبر AI Gateway: وصل رد فارغ")
+  return result.text.trim()
+}
+
 async function geminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }): Promise<string> {
-  if (!GEMINI.key) throw new Error("Gemini: مفتاح API غير مهيأ على الخادم")
+  if (!GEMINI.key) return gatewayGeminiText(prompt, system, temperature, inlineData)
   const parts: any[] = [{ text: prompt }]
   if (inlineData) parts.unshift({ inlineData })
   const requestBody = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } })
   let data: any = null
 
   for (let attempt = 0; attempt < 3; attempt++) {
-    const model = await resolveGeminiModel(attempt > 0 && resolvedGeminiModel === null)
+    let model: string
+    try {
+      model = await resolveGeminiModel(attempt > 0 && resolvedGeminiModel === null)
+    } catch (error: any) {
+      const message = String(error?.message || "")
+      if (/HTTP (401|403)|API key|PERMISSION_DENIED|unregistered callers/i.test(message)) {
+        return gatewayGeminiText(prompt, system, temperature, inlineData)
+      }
+      throw error
+    }
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`
     try {
       const response = await fetch(url, {
@@ -125,6 +152,9 @@ async function geminiText(prompt: string, system: string, temperature: number, i
       data = await response.json().catch(() => null)
       if (response.ok) break
 
+      if (response.status === 401 || response.status === 403) {
+        return gatewayGeminiText(prompt, system, temperature, inlineData)
+      }
       if (response.status === 404 && attempt < 2) {
         unavailableGeminiModels.add(model)
         resolvedGeminiModel = null
@@ -690,7 +720,7 @@ export async function POST(req: Request) {
       const message = typeof payload.message === "string" ? payload.message.trim().slice(0, 3000) : ""
       if (!message) return json({ error: "اكتب رسالتك أولاً", diagnostics }, 400)
       const context = JSON.stringify(payload.context || {}).slice(0, 18_000)
-      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\nسؤال المسؤول:\n${message}`, "أنت مساعد إداري عربي داخل منصة تحفيظ قرآن. أعطِ الأولوية القصوى لبيانات الموقع المرفقة عن الطلاب وأولياء الأمور والاختبارات والنتائج والملفات، ثم أجب أيضاً عن الأسئلة العامة وقدم اقتراحات وأفكاراً عملية جديدة عند فائدتها. ميّز بوضوح بين بيانات الموقع والمعلومات العامة، ولا تكشف أسراراً ولا تخترع بيانات.", 0.25)
+      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\nسؤال المسؤول:\n${message}`, "أنت مساعد إداري عربي داخل منصة تحفيظ قرآن. أعطِ الأولوية القصوى لبيانات الموقع المرفقة عن الطلاب وأولياء الأمور والاختبارات والنتائج والملفات، ثم أجب أيضاً عن الأسئلة ��لعامة وقدم اقتراحات وأفكاراً عملية جديدة عند فائدتها. ميّز بوضوح بين بيانات الموقع والمعلومات العامة، ولا تكشف أسراراً ولا تخترع بيانات.", 0.25)
       return json({ result, diagnostics })
     }
 
