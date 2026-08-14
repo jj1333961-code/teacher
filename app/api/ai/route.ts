@@ -103,25 +103,40 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-const GATEWAY_GEMINI_MODEL = "google/gemini-3.7-flash"
+const GATEWAY_GEMINI_MODELS = ["google/gemini-3.7-flash", "google/gemini-2.5-flash"]
 
 async function gatewayGeminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }) {
   const content: any[] = [{ type: "text", text: prompt }]
   if (inlineData) content.push({ type: "file", mediaType: inlineData.mimeType, data: inlineData.data })
-  const result = await generateText({
-    model: GATEWAY_GEMINI_MODEL,
-    system,
-    messages: [{ role: "user", content }],
-    temperature,
-    abortSignal: AbortSignal.timeout(70_000),
-  })
-  if (!result.text?.trim()) throw new Error("Gemini عبر AI Gateway: وصل رد فارغ")
-  return result.text.trim()
+  let lastError: unknown = new Error("تعذر بدء اتصال AI Gateway")
+
+  for (const model of GATEWAY_GEMINI_MODELS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const result = await generateText({
+          model,
+          system,
+          messages: [{ role: "user", content }],
+          temperature,
+          abortSignal: AbortSignal.timeout(70_000),
+        })
+        if (!result.text?.trim()) throw new Error("AI Gateway: وصل رد فارغ")
+        return result.text.trim()
+      } catch (error) {
+        lastError = error
+        if (!isRetryableGeminiError(error) || attempt === 1) break
+        await new Promise((resolve) => setTimeout(resolve, 750 * (attempt + 1)))
+      }
+    }
+  }
+
+  const message = lastError instanceof Error ? lastError.message : String(lastError || "خطأ غير معروف")
+  throw new Error(`فشل Gemini المباشر والاتصال الاحتياطي: ${message.slice(0, 300)}`)
 }
 
 function isRetryableGeminiError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "")
-  return /429|5\d\d|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|aborted/i.test(message)
+  return /401|403|404|408|409|429|5\d\d|API key|PERMISSION_DENIED|RESOURCE_EXHAUSTED|UNAVAILABLE|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|AbortError|aborted|رد فارغ|empty/i.test(message)
 }
 
 async function geminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }): Promise<string> {
@@ -158,11 +173,15 @@ async function geminiText(prompt: string, system: string, temperature: number, i
       await new Promise((resolve) => setTimeout(resolve, 900 * (attempt + 1)))
     }
   }
-  const lastMessage = lastError instanceof Error ? lastError.message : String(lastError || "")
-  if (/HTTP (401|403)|API key|PERMISSION_DENIED|unregistered callers/i.test(lastMessage)) {
-    return gatewayGeminiText(prompt, system, temperature, inlineData)
+  // عند فشل Gemini المباشر نهائياً ننتقل دائماً إلى Gateway؛ فهو مسار مستقل
+  // ويعالج أخطاء المفتاح والحصة والشبكة والنموذج غير المتاح دون تعطيل المستخدم.
+  try {
+    return await gatewayGeminiText(prompt, system, temperature, inlineData)
+  } catch (gatewayError) {
+    const directMessage = lastError instanceof Error ? lastError.message : String(lastError || "خطأ غير معروف")
+    const gatewayMessage = gatewayError instanceof Error ? gatewayError.message : String(gatewayError || "خطأ غير معروف")
+    throw new Error(`Gemini المباشر: ${directMessage.slice(0, 220)} | Gateway: ${gatewayMessage.slice(0, 220)}`)
   }
-  throw lastError
 }
 
 function json(data: unknown, status = 200) {
@@ -553,7 +572,11 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 {"summary":"وصف عربي واضح لما تم تعديله فعلياً وكيف","patches":[{"path":"...","content":"المحتوى الكامل الجديد للملف","reason":"سبب التعديل وما تغيّر في هذا الملف بالتحديد"}],"tests":["ملاحظة تحقق أو خطوة اختبار يدوي مقترحة"]}`
   const prompt = `طلب المسؤول:\n${request}\n\nخطة التحليل السابقة:\n${JSON.stringify(plan)}\n\nمحتويات الملفات التي يمكن تعديلها:\n${source}`
   const text = await runText(prompt, system, 0.1)
-  return extractJson(text) || {}
+  const parsed = extractJson(text)
+  if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.patches)) {
+    throw new Error("مرحلة إنشاء التعديلات: أعاد النموذج JSON غير صالح، ولم يُكتب أي ملف")
+  }
+  return parsed
 }
 
 async function autoApplyDevRequest(request: string, plan: any) {
@@ -582,18 +605,24 @@ async function autoApplyDevRequest(request: string, plan: any) {
   if (!patches.length) throw new Error("لم ينتج الذكاء الاصطناعي ��عديلات قابلة للتطبيق")
   if (patches.length > 12) throw new Error("عدد التعديلات المقترحة يتجاوز ال��د الآمن")
   const currentMap = new Map(current.map(x => [x.path, x]))
-  const applied = []
-  for (const patch of patches) {
+  // نتحقق من جميع الملفات قبل أول كتابة، حتى لا يبدأ التطبيق برد ناقص أو مسار غير مصرح به.
+  const validatedPatches = patches.map((patch: any) => {
     const path = String(patch?.path || "")
     const content = typeof patch?.content === "string" ? patch.content : null
-    if (!safeProjectPath(path) || content === null || content.length > 500_000) continue
+    if (!safeProjectPath(path) || content === null || content.length > 500_000 || !selected.includes(path)) {
+      throw new Error(`مرحلة التحقق: تعديل غير صالح للملف ${path || "غير المحدد"}، ولم يُكتب أي ملف`)
+    }
     const old = currentMap.get(path)
-    // منع الحذف المقنّع: الملف الجديد لا يمكن أن يكون فارغاً إذا كان الملف القديم غير فارغاً.
-    if (old && old.content && !content.trim()) continue
-    const result = await githubPutFile(path, content, old?.sha, `chore: AI assistant - ${request.slice(0, 70)}`)
-    applied.push({ path, reason: patch.reason || "", commitUrl: result?.commit?.html_url || null })
+    if (old && old.content && !content.trim()) throw new Error(`مرحلة التحقق: رُفض تفريغ الملف ${path}، ولم يُكتب أي ملف`)
+    return { path, content, reason: typeof patch?.reason === "string" ? patch.reason : "", old }
+  })
+  if (!validatedPatches.length) throw new Error("لم يتم تطبيق أي ملف بعد التحقق من التعديلات")
+
+  const applied = []
+  for (const patch of validatedPatches) {
+    const result = await githubPutFile(patch.path, patch.content, patch.old?.sha, `chore: AI assistant - ${request.slice(0, 70)}`)
+    applied.push({ path: patch.path, reason: patch.reason, commitUrl: result?.commit?.html_url || null })
   }
-  if (!applied.length) throw new Error("لم يتم تطبيق أي ملف بعد التحقق من التعديلات")
   let deployTriggered = false
   let deployError = ""
   if (VERCEL_DEPLOY_HOOK_URL) {
@@ -830,7 +859,10 @@ export async function POST(req: Request) {
       ] }
       const userPrompt = `بنية المشروع الحالية:\n${PROJECT_MANIFEST}\n\nقائمة الملفات الفعلية في المستودع:\n${tree.files.join("\n")}\n\nطلب المسؤول:\n${request}\n\nحلّل الطلب وأعد خطة التعديل بصيغة JSON فقط كما هو محدد. اختر الملفات الفعلية من قائمة المستودع كلما أمكن.`
       const text = await runText(userPrompt, SYS_DEV_ASSISTANT, 0.2)
-      const parsed = extractJson(text) || {}
+      const parsed = extractJson(text)
+      if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.files)) {
+        return json({ error: "مرحلة تحليل الطلب: أعاد النموذج JSON غير صالح، ولم يُكتب أي ملف", diagnostics: { ...diagnostics, stage: "planning", githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } }, 502)
+      }
       const knownPaths = new Set(tree.files)
       const files = Array.isArray(parsed.files) ? parsed.files.map((f: any) => ({
         path: typeof f?.path === "string" ? f.path.trim() : "",
@@ -853,7 +885,7 @@ export async function POST(req: Request) {
           const applied = await autoApplyDevRequest(request, plan)
           return json({ result: { ...plan, ...applied, applied: true, autoApplied: true, note: "تم تطبيق التعديلات تلقائياً على المشروع من الخادم. إذا كان Vercel مربوطاً بالمستودع فسيبدأ النشر تلقائياً، أو يمكن استخدام VERCEL_DEPLOY_HOOK_URL." }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
         } catch (e:any) {
-          return json({ error: e?.message || "تعذر التطبيق التلقائي", result: { ...plan, applied: false, autoApplied: false }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } }, 500)
+          return json({ error: e?.message || "تعذر التطبيق التلقائي", result: { ...plan, applied: false, autoApplied: false }, diagnostics: { ...diagnostics, stage: "apply", githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } }, 500)
         }
       }
       return json({ result: { ...plan, note: "الخطة فقط — لم يتم تطبيق أي تعديل.", autoApplied: false }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })

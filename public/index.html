@@ -684,7 +684,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>رقم الهاتف (11 رقم)</label><input type="text" id="editPhone" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>تاري�� الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>
+    <div class="form-group"><label>تاري���� الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>
     <div class="form-group"><label>السن</label><input type="number" id="editAge" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="form-row">
@@ -1056,7 +1056,7 @@ function getAIModelLabel(){return 'Gemini';}
 function showToast(msg, type){
   if(!type){
     var t = String(msg);
-    type = (/(❌|🚫|فشل|خطأ|لا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
+    type = (/(❌|���|فشل|خطأ|لا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
   }
   var box = document.getElementById('toastBox');
   if(!box){ box = document.createElement('div'); box.id='toastBox'; document.body.appendChild(box); }
@@ -1986,7 +1986,7 @@ async function toggleEditVoiceRecord(){
       editVoiceBlob=new Blob(editVoiceChunks,{type:'audio/webm'}); stream.getTracks().forEach(t=>t.stop());
       preview.src=URL.createObjectURL(editVoiceBlob);preview.style.display='block';status.textContent='🤖 جاري تحليل البصمة الجديدة...';
       editVoiceFingerprint=await computeVoicePrint(editVoiceBlob);editVoiceDataUrl=await blobToDataURL(editVoiceBlob);
-      status.textContent=editVoiceFingerprint?'تم إنشاء بصمة جديدة — اضغط حفظ التعدي��ات':'تعذر تحل��ل الصوت، أعد التسجيل';
+      status.textContent=editVoiceFingerprint?'تم إنشاء بصمة جديدة — اضغط حفظ ��لتعدي��ات':'تعذر تحل��ل الصوت، أعد التسجيل';
       btn.classList.remove('recording');
     };
     editVoiceRecorder.start();btn.classList.add('recording');status.textContent='جاري التسجيل... (20 ثانية)';
@@ -2479,17 +2479,24 @@ let studentExamQuestionRemaining=[]; let studentExamQuestionStartedAt=[]; let st
 let examFilesCache=[];
 async function readApiJson(res, fallback){
   const text=await res.text();
-  if(!text.trim())throw new Error(fallback+' (استجابة الخادم فارغة، الحالة '+res.status+')');
-  let data;try{data=JSON.parse(text)}catch(e){throw new Error(fallback+' (استجابة الخادم ليست JSON صالحاً)')}
-  if(!res.ok)throw new Error(data.error||fallback+' ('+res.status+')');
+  const contentType=(res.headers.get('content-type')||'').toLowerCase();
+  if(!text.trim())throw new Error(fallback+' — لم يرسل الخادم تفاصيل (HTTP '+res.status+'). أعد المحاولة، وإن استمر الخطأ تحقق من سجل النشر.');
+  let data=null;
+  if(contentType.includes('application/json')){try{data=JSON.parse(text)}catch(e){}}
+  else{try{data=JSON.parse(text)}catch(e){data={error:text.slice(0,300)}}}
+  if(!data)throw new Error(fallback+' — استجابة غير صالحة (HTTP '+res.status+').');
+  if(!res.ok){const reason=data.error||fallback;const stage=data.diagnostics&&data.diagnostics.stage?' — المرحلة: '+data.diagnostics.stage:'';throw new Error(reason+stage+' (HTTP '+res.status+')')}
   return data;
 }
 async function loadExamFiles(){
-  const res=await fetch('/api/exam-files',{cache:'no-store'});const data=await readApiJson(res,'تعذر تحميل ملفات الاختبارات');examFilesCache=Array.isArray(data.files)?data.files:[];
-  const select=document.getElementById('examFileSource');if(select)select.innerHTML='<option value="">اختر ملفاً...</option>'+examFilesCache.map(f=>'<option value="'+f.id+'">'+escapeHtml(f.name)+'</option>').join('');
-  const box=document.getElementById('examFilesList');if(box)box.innerHTML=examFilesCache.length?examFilesCache.map(f=>'<div class="exam-plan-row"><strong>'+escapeHtml(f.name)+'</strong><div style="color:var(--text-light);font-size:.85rem">'+(f.text||'').length+' حرف — '+new Date(f.uploadedAt).toLocaleString('ar-EG')+'</div><button class="btn btn-sm btn-danger" onclick="deleteExamFile(\''+f.id+'\')">حذف الملف</button></div>').join(''):'<div class="alert alert-info">لا توجد ملفات اختبارات محفوظة.</div>';
+  const box=document.getElementById('examFilesList');
+  try{
+    const res=await fetch('/api/exam-files',{cache:'no-store'});const data=await readApiJson(res,'تعذر تحميل ملفات الاختبارات');examFilesCache=Array.isArray(data.files)?data.files:[];
+    const select=document.getElementById('examFileSource');if(select)select.innerHTML='<option value="">اختر ملفاً...</option>'+examFilesCache.map(f=>'<option value="'+f.id+'">'+escapeHtml(f.name)+'</option>').join('');
+    if(box)box.innerHTML=examFilesCache.length?examFilesCache.map(f=>'<div class="exam-plan-row"><strong>'+escapeHtml(f.name)+'</strong><div style="color:var(--text-light);font-size:.85rem">'+(f.text||'').length+' حرف — '+new Date(f.uploadedAt).toLocaleString('ar-EG')+'</div><button class="btn btn-sm btn-danger" onclick="deleteExamFile(\''+f.id+'\')">حذف الملف</button></div>').join(''):'<div class="alert alert-info">لا توجد ملفات اختبارات محفوظة.</div>';
+  }catch(e){examFilesCache=[];if(box)box.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر تحميل الملفات')+' <button class="btn btn-sm btn-primary" onclick="loadExamFiles()">إعادة المحاولة</button></div>';throw e}
 }
-async function uploadExamFile(input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById('examFileUploadStatus');status.innerHTML='<div class="alert alert-info">جاري رفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);const res=await fetch('/api/exam-files',{method:'POST',body:form});await readApiJson(res,'تعذر رفع الملف');status.innerHTML='<div class="alert alert-success">تم حفظ الملف واستخراج النص.</div>';await loadExamFiles()}catch(e){status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر رفع الملف')+'</div>'}finally{input.value=''}}
+async function uploadExamFile(input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById('examFileUploadStatus');if(status)status.innerHTML='<div class="alert alert-info">جاري رفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);const res=await fetch('/api/exam-files',{method:'POST',body:form});await readApiJson(res,'تعذر رفع الملف');if(status)status.innerHTML='<div class="alert alert-success">تم حفظ الملف واستخراج النص.</div>';await loadExamFiles()}catch(e){if(status)status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر رفع الملف')+' <button class="btn btn-sm btn-primary" onclick="document.getElementById(\'examFileInput\')?.click()">اختيار ملف آخر</button></div>'}finally{input.value=''}}
 async function deleteExamFile(id){const file=examFilesCache.find(f=>f.id===id);if(!file||!confirm('هل تريد حذف هذا الملف نهائياً؟'))return;try{const res=await fetch('/api/exam-files',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({pathname:file.pathname,metadataPathname:file.metadataPathname})});await readApiJson(res,'تعذر حذف الملف');await loadExamFiles()}catch(e){alert(e.message||'تعذر الحذف')}}
 function toggleExamSource(){const local=document.getElementById('examQuestionSource')?.value==='file';document.getElementById('examFileSourceGroup')?.classList.toggle('hidden',!local);if(local)loadExamFiles().catch(e=>showExamAlert(e.message,'danger'))}
 function shuffled(values){return values.slice().sort(()=>Math.random()-.5)}
@@ -3242,7 +3249,7 @@ function escapeHtmlAi(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ===== مزامنة GitHub (للمسؤول فقط) =====
+// ===== مزامنة GitHub (��لمسؤول فقط) =====
 function openGithubSync(){
   if(currentType !== 'admin'){ showToast('❌ هذه الميزة متاحة للمسؤول فقط', 'error'); return; }
   const a = document.getElementById('githubSyncAlert'); if(a) a.innerHTML = '';
@@ -3624,7 +3631,7 @@ function renderMessages() {
     const hasFile = m.fileData ? '<div style="margin:8px 0;"><button onclick="openMessageFile('+realIdx+')" class="btn btn-sm btn-primary">👁️ عرض الملف: '+(m.fileName || 'ملف')+'</button></div>' : '';
     let shareBtn = '';
     if(m.fileData) {
-      shareBtn = '<div style="margin:8px 0;"><button class="btn btn-sm '+(m.shareWithParent ? 'btn-success' : 'btn-secondary')+'" onclick="toggleShareWithParent('+realIdx+')">'+(m.shareWithParent ? '👨‍👩‍👧 ولي الأمر يمكنه الاطلاع (اضغط للمنع)' : '🔒 السماح لولي الأمر بالاطلاع على الملف')+'</button></div>';
+      shareBtn = '<div style="margin:8px 0;"><button class="btn btn-sm '+(m.shareWithParent ? 'btn-success' : 'btn-secondary')+'" onclick="toggleShareWithParent('+realIdx+')">'+(m.shareWithParent ? '👨‍👩‍👧 ولي الأ��ر يمكنه الاطلاع (اضغط للمنع)' : '🔒 السماح لولي الأمر بالاطلاع على الملف')+'</button></div>';
     }
     let approvalBtns = '';
     if((m.type === 'student' || m.type === 'parent') && !m.approved && !m.rejected) {
@@ -4050,7 +4057,7 @@ function checkExpiredTasks(studentId) {
 function studentAyatBlock(task, key) {
   if(!task.showAyat || !task.surah || !task.from) return '';
   let h = '<div style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap;">';
-  h += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+task.surah+'\', \''+task.from+'\', \''+(task.to||task.from)+'\')">📖 عرض الآيات بحجم كبير</button>';
+  h += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+task.surah+'\', \''+task.from+'\', \''+(task.to||task.from)+'\')">📖 ع��ض الآيات بحجم كبير</button>';
   h += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'stAyat_'+key+'\', \''+task.surah+'\', \''+task.from+'\', \''+(task.to||task.from)+'\')">👁️ إظهار/إخفاء الآيات</button>';
   h += '</div><div id="stAyat_'+key+'" data-open="0"></div>';
   return h;
@@ -4470,7 +4477,7 @@ async function recordStudentVoice(taskIdx) {
     recorder.start();
     btn.dataset.recording = 'true';
     btn.classList.add('recording');
-    status.textContent = 'جاري التسجيل... (اضغط مرة أخرى للإيقاف)';
+    status.textContent = '��اري التسجيل... (اضغط مرة أخرى للإيقاف)';
     btn.onclick = function() { if(recorder.state === 'recording') recorder.stop(); };
   } catch(err) { alert('لا يمكن الوصول للميكروفون.'); }
 }
@@ -5257,7 +5264,7 @@ function generateParentWelcome(student) {
   if(last) {
     base.body += '<br><br>📊 آخر تسميع نهائي لـ '+student.name+' كان بتاريخ '+last.date+' بمجموع <strong>'+last.totalScore+' درجة</strong>. ';
     if(last.totalScore >= 14) base.body += 'أداء ممتاز! ابنك يُظهر تفوقاً واضحاً. استمر في تشجيعه. 🌟';
-    else if(last.totalScore >= 10) base.body += 'مستوى جيد جداً. مع دعمك المستمر سيصل للتميز. 👍';
+    else if(last.totalScore >= 10) base.body += 'مستوى جي�� جداً. مع دعمك المستمر سيصل للتميز. 👍';
     else base.body += 'يحتاج لبعض الدعم والمراجعة. جالسه يومياً وشاركه الحفظ. 💪';
   }
   return base;
@@ -5400,7 +5407,7 @@ if(restoreSession()) {
 
 
 <script>
-/* 🔔 صلاحيات الإشعارات والميكروفون عند أول تفاعل */
+/* 🔔 صلاحيات الإشع��رات والميكروفون عند أول تفاعل */
 (function(){
   var asked = false;
   function askPerms(){
