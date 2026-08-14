@@ -1,5 +1,5 @@
 import { generateText } from "ai"
-import { getReferenceContext } from "@/lib/quran-reference"
+import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
 
 export const maxDuration = 300
 
@@ -259,6 +259,9 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - points=1 دائماً.
 - timeLimit لا يخرج عن الوقت الذي حدده المسؤول في plan؛ إذا كان موجوداً فاستخدمه كما هو.
 - لا تضع إجابة صحيحة خارج الخيارات.
+- لا تذكر الإجابة أو نصاً يكشفها في prompt مطلقاً، ولا تنسخ نص الآية في prompt؛ ستُعرض الآية من صورة المصحف.
+- في أسئلة الاختيار والصح/الخطأ اختر مشتتات معقولة وغير ملتبسة، وإجابة واحدة قابلة للتحقق فقط.
+- استفد من مرجع المتشابهات لاختيار مواضع دقيقة في المستوى الصعب، لكنه مرجع مساعد وليس قيداً على قدرتك في الاختيار.
 - أعد مصفوفة JSON فقط، دون Markdown أو شرح.
 
 شكل كل عنصر:
@@ -674,7 +677,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt}`,
-        "أجب عن أي سؤال مسموح بدقة. في الأسئلة القرآنية اعتمد المرجع المرفق فقط ولا تختلق نصاً. أعد الإجابة المطلوبة فقط دون مقدمة أو تحية أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
+        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجملة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -691,7 +694,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أجب عن أي سؤال مسموح بدقة. أعط الأولوية لبيانات المنصة عند ارتباط السؤال بها. في القرآن والمتشابهات اعتمد مقتطفات المرجعين المرفقين ولا تختلق آية أو معلومة. أعد الإجابة فقط: بلا تحية أو مقدمة أو عناوين حالة أو خاتمة أو اقتراحات لم يطلبها السائل.",
+        "أجب عن أي سؤال مسموح، سواء ارتبط بالمنصة أم كان سؤالاً عاماً خارجها. أعط الأولوية لبيانات المنصة فقط عندما يرتبط السؤال بها. اجعل الجواب على قدر السؤال: جواب قصير للسؤال القصير، ولا تتوسع أو تضف أمثلة واقتراحات إلا بطلب صريح. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفرها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -745,16 +748,26 @@ export async function POST(req: Request) {
         const correct = complete
           ? source.verses.slice(from - 1, to).map((verse) => verse.text).join(" ")
           : String(question?.correct || "")
+        const defaultPrompts: Record<string, string> = {
+          mcq: "اختر الإجابة الصحيحة اعتماداً على المقطع المصور من المصحف",
+          truefalse: "حدد صحة العبارة اعتماداً على المقطع المصور من المصحف",
+          complete: "أكمل المقطع المخفي في صورة المصحف",
+          audio: "سجّل تلاوة المقطع المعروض من المصحف",
+        }
+        let prompt = String(question?.prompt || defaultPrompts[type]).trim()
+        const verseText = source.verses[from - 1]?.text || ""
+        if (!prompt || (verseText && normalizeQuranText(prompt).includes(normalizeQuranText(verseText)))) prompt = defaultPrompts[type]
+        if (correct && normalizeQuranText(prompt).includes(normalizeQuranText(correct))) prompt = defaultPrompts[type]
         return {
           ...question,
           type,
           surah: source.surah,
           from,
           to,
-          prompt: complete ? "أكمل الآية المخفية في صورة المصحف" : String(question?.prompt || "اختر الإجابة الصحيحة"),
-          stem: complete ? "" : source.verses[from - 1]?.text || "",
+          prompt,
+          stem: "",
           correct,
-          questionImage: complete ? `/api/quran-question-image?surah=${source.surahNumber}&ayah=${from}` : "",
+          questionImage: `/api/quran-question-image?surah=${source.surahNumber}&ayah=${from}&type=${type}`,
           source: "المصحف وملف المتشابهات المرفقان",
         }
       })
@@ -767,7 +780,7 @@ export async function POST(req: Request) {
       if (!message) return json({ error: "اكتب رسالتك أولاً", diagnostics }, 400)
       const context = JSON.stringify(payload.context || {}).slice(0, 18_000)
       const reference = await getReferenceContext(message).catch(() => "")
-      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أجب عن أي سؤال مسموح. أعط الأولوية لبيانات الموقع عند ارتباطها بالسؤال، واعتمد المرجعين المرفقين في المسائل القرآنية والمتشابهات. لا تختلق بيانات أو آيات. أعد الإجابة فقط بلا تحية أو مقدمة أو عناوين حالة أو خاتمة أو ذكر للذكاء الاصطناعي.", 0.25)
+      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أجب عن أي سؤال مسموح، داخل موضوع الموقع أو خارجه. أعط الأولوية لبيانات الموقع عند صلتها بالسؤال، واجعل طول الجواب على قدر السؤال دون توسع غير مطلوب. استخدم المرجعين للمساعدة في المسائل القرآنية والمتشابهات دون حصر معرفتك فيهما، ولا تختلق بيانات أو آيات. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للذكاء الاصطناعي.", 0.25)
       return json({ result: result.trim(), diagnostics })
     }
 
@@ -933,7 +946,7 @@ export async function POST(req: Request) {
       if (!path) return json({ error: "يرجى تحديد مسار الملف المراد حذفه", diagnostics }, 400)
       // الحذف عملية يدوية صريحة بتأكيد المسؤول، لا تتطلب تفعيل الدفع التلقائي — يكفي اتصال المستودع وصلاحية الكتابة.
       const st = await getGithubSyncStatus()
-      if (!st.connected) return json({ error: st.reason || "المزامنة مع GitHub غير متصلة", diagnostics }, 400)
+      if (!st.connected) return json({ error: st.reason || "��لمزامنة مع GitHub غير متصلة", diagnostics }, 400)
       if (!st.canWrite) return json({ error: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على ${st.repo}`, diagnostics }, 400)
       try {
         const message = `chore: delete ${path} (admin request via sync panel)`
