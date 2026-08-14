@@ -213,7 +213,8 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceVerses.
 - كل سؤال يجب أن يكون متعلقاً مباشرة بحفظ القرآن أو نص الآية أو السورة.
 - لا تنشئ أسئلة ثقافة عامة أو دين عام أو معلومات خارج نصوص القرآن.
-- التزم تماماً بعدد الأسئلة count المطلوب لكل plan، وبالنوع والمستوى المحددين في كل plan.
+- التزم تماماً بعدد الأسئلة count المطلوب لكل plan، وبالنوع والمستوى وموضع السؤال position المحددين في كل plan.
+  - position=start: اختر من الثلث الأول للسورة، position=middle: الثلث الأوسط، position=end: الثلث الأخير، position=random: نوّع بين جميع المواضع.
 - إذا كان type=mcq فعدد الخيارات يجب أن يساوي optionsCount لذلك plan، مع إجابة صحيحة واحدة فقط.
 - إذا كان type=truefalse فاجعل options=["صح","خطأ"] فقط، وبدّل بين العبارات الصحيحة والخاطئة بذكاء. مثال: "الآية ... من سورة الناس، صح أم خطأ؟"
 - إذا كان type=complete فاختر بداية آية حقيقية، ثم اجعل الطالب يكمل عدداً يساوي completeAyahs بالضبط. يجب أن يكون from/to صحيحين وفي السورة نفسها.
@@ -260,7 +261,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 // ===== مساعد تطوير الموقع (للمسؤول فقط) =====
 // وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج ��سياق للتحليل.
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
-الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيقه تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
+الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيق�� تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
 - "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي على:
   • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') وا��رجوع عبر goBack().
@@ -637,40 +638,51 @@ export async function POST(req: Request) {
       if (!prompt) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)
       const text = await runText(
         prompt.slice(0, 6000),
-        "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه ومساعد لمتابعة الطالب في التحفيظ. أجب بالعربية الفصحى بدقة وإيجاز وبأسلوب مشجّع. اعتمد على بيانات الطالب المرفقة عند و��ودها، ولا تخترع نصوصاً قرآنية.",
+        "أنت مساعد عربي مفيد. أعطِ الأولوية لبيانات منصة التحفيظ والقرآن ومتابعة الطالب عندما تكون مرتبطة بالسؤال، ويمكنك أيضاً الإجابة عن الموضوعات العامة باختصار ودقة واقتراح أفكار وخطوات متابعة جديدة. لا تخترع بيانات طالب أو نصوصاً قرآنية، ولا تدّعِ الاطلاع على معلومات غير مرفقة.",
         typeof body.temperature === "number" ? body.temperature : 0.4,
       )
       return json({ result: text, diagnostics })
     }
 
-    // 2) جلب السورة من Al Quran Cloud ثم توليد الأسئلة عبر Gemini فقط.
+    // 2) جلب نطاق السور المحدد كاملاً ثم توليد الأسئلة عبر Gemini.
     if (mode === "generate_exam") {
-      const surahNumber = Number(payload.surahNumber)
-      if (!Number.isInteger(surahNumber) || surahNumber < 1 || surahNumber > 114) return json({ error: "رقم السورة غير صالح", diagnostics }, 400)
-      const quranResponse = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}`, { cache: "no-store", signal: AbortSignal.timeout(12_000) })
-      const quran = await quranResponse.json().catch(() => null)
-      if (!quranResponse.ok || quran?.code !== 200 || !Array.isArray(quran?.data?.ayahs)) return json({ error: "تعذر جلب السورة من Al Quran Cloud", diagnostics }, 502)
-      const sourceVerses = quran.data.ayahs.map((ayah: any) => ({ number: Number(ayah.numberInSurah), text: String(ayah.text || "") }))
-      const safePayload = { plan: Array.isArray(payload.plan) ? payload.plan : [], surah: String(quran.data.name || ""), surahNumber, sourceVerses }
-      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nممنوع إعادة كتابة أو تعديل أو تصحيح نص أي آية. استخدم النص المرجعي حرفياً فقط عند الحاجة.", temperature)
+      const startSurahNumber = Number(payload.surahNumber)
+      const endSurahNumber = payload.endSurahNumber == null ? 114 : Number(payload.endSurahNumber)
+      if (!Number.isInteger(startSurahNumber) || startSurahNumber < 1 || startSurahNumber > 114) return json({ error: "رقم أول سورة غير صالح", diagnostics }, 400)
+      if (!Number.isInteger(endSurahNumber) || endSurahNumber < startSurahNumber || endSurahNumber > 114) return json({ error: "آخر سورة يجب أن تكون بعد أول سورة داخل النطاق", diagnostics }, 400)
+
+      const plan = (Array.isArray(payload.plan) ? payload.plan : []).map((item: any) => ({
+        ...item,
+        position: ["start", "middle", "end", "random"].includes(item?.position) ? item.position : "random",
+      }))
+      const requestedCount = Math.max(1, plan.reduce((sum: number, item: any) => sum + Math.max(0, Number(item?.count) || 0), 0))
+      const allNumbers = Array.from({ length: endSurahNumber - startSurahNumber + 1 }, (_, index) => startSurahNumber + index)
+      const selectedNumbers = allNumbers.length <= 12
+        ? allNumbers
+        : Array.from(new Set(Array.from({ length: Math.min(12, requestedCount) }, (_, index) => allNumbers[Math.round(index * (allNumbers.length - 1) / Math.max(1, Math.min(12, requestedCount) - 1))])))
+      const sourceSurahs = await Promise.all(selectedNumbers.map(async (number) => {
+        const quranResponse = await fetch(`https://api.alquran.cloud/v1/surah/${number}`, { cache: "no-store", signal: AbortSignal.timeout(12_000) })
+        const quran = await quranResponse.json().catch(() => null)
+        if (!quranResponse.ok || quran?.code !== 200 || !Array.isArray(quran?.data?.ayahs)) throw new Error(`تعذر جلب السورة رقم ${number} من المصدر القرآني`)
+        return {
+          surah: String(quran.data.name || ""),
+          surahNumber: number,
+          verses: quran.data.ayahs.map((ayah: any) => ({ number: Number(ayah.numberInSurah), text: String(ayah.text || "") })),
+        }
+      }))
+      const safePayload = { plan, startSurahNumber, endSurahNumber, sourceSurahs }
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. position=start يعني الثلث الأول، وmiddle الثلث الأوسط، وend الثلث الأخير، وrandom يوزع المواضع. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
-      const verseTexts = new Set(sourceVerses.map((verse: any) => verse.text))
+      const sourcesByName = new Map(sourceSurahs.map((source) => [source.surah, source]))
       const safeQuestions = questions.map((question: any) => {
-        const from = Math.max(1, Math.min(sourceVerses.length, Number(question?.from) || 1))
-        const requestedTo = Number(question?.to) || from
-        const to = Math.max(from, Math.min(sourceVerses.length, requestedTo))
-        const trustedStem = sourceVerses[from - 1]?.text || ""
-        const suppliedStem = typeof question?.stem === "string" ? question.stem.trim() : ""
-        return {
-          ...question,
-          from,
-          to,
-          stem: suppliedStem && verseTexts.has(suppliedStem) ? suppliedStem : trustedStem,
-        }
+        const source = sourcesByName.get(String(question?.surah || "")) || sourceSurahs[0]
+        const from = Math.max(1, Math.min(source.verses.length, Number(question?.from) || 1))
+        const to = Math.max(from, Math.min(source.verses.length, Number(question?.to) || from))
+        return { ...question, surah: source.surah, from, to, stem: source.verses[from - 1]?.text || "" }
       })
-      return json({ result: safeQuestions, diagnostics, source: "Al Quran Cloud" })
+      return json({ result: safeQuestions, diagnostics, source: "Al Quran Cloud", range: { startSurahNumber, endSurahNumber } })
     }
 
     if (mode === "admin_assistant") {
@@ -678,7 +690,7 @@ export async function POST(req: Request) {
       const message = typeof payload.message === "string" ? payload.message.trim().slice(0, 3000) : ""
       if (!message) return json({ error: "اكتب رسالتك أولاً", diagnostics }, 400)
       const context = JSON.stringify(payload.context || {}).slice(0, 18_000)
-      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\nسؤال المسؤول:\n${message}`, "أنت مساعد إداري داخل منصة تحفيظ قرآن. أجب فقط عن الطلاب وأولياء الأمور والاختبارات والنتائج والملفات التعليمية الموجودة في سياق الموقع. ارفض بإيجاز أي موضوع خارج هذا النطاق. لا تكشف كلمات مرور أو أسراراً ولا تخترع بيانات.", 0.25)
+      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\nسؤال المسؤول:\n${message}`, "أنت مساعد إداري عربي داخل منصة تحفيظ قرآن. أعطِ الأولوية القصوى لبيانات الموقع المرفقة عن الطلاب وأولياء الأمور والاختبارات والنتائج والملفات، ثم أجب أيضاً عن الأسئلة العامة وقدم اقتراحات وأفكاراً عملية جديدة عند فائدتها. ميّز بوضوح بين بيانات الموقع والمعلومات العامة، ولا تكشف أسراراً ولا تخترع بيانات.", 0.25)
       return json({ result, diagnostics })
     }
 

@@ -44,10 +44,24 @@ async function extractText(buffer: Buffer, extension: string) {
 }
 
 async function readMetadata(pathname: string): Promise<ExamFileMeta | null> {
-  const result = await get(pathname, { access: "private" })
-  if (!result || result.statusCode !== 200) return null
-  const text = await new Response(result.stream).text()
-  return JSON.parse(text) as ExamFileMeta
+  try {
+    const result = await get(pathname, { access: "private" })
+    if (!result || result.statusCode !== 200) return null
+    const text = await new Response(result.stream).text()
+    if (!text.trim()) return null
+    const parsed = JSON.parse(text) as Partial<ExamFileMeta>
+    if (!parsed.id || !parsed.pathname || !parsed.metadataPathname) return null
+    return parsed as ExamFileMeta
+  } catch {
+    // لا يجب أن يمنع ملف وصف تالف عرض بقية الملفات السليمة.
+    return null
+  }
+}
+
+function safeError(error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message : fallback
+  if (/token|secret|credential|api[_ -]?key/i.test(message)) return fallback
+  return message.slice(0, 300) || fallback
 }
 
 export async function GET() {
@@ -56,7 +70,7 @@ export async function GET() {
     const files = (await Promise.all(blobs.map((blob) => readMetadata(blob.pathname)))).filter(Boolean)
     return response({ files })
   } catch (error) {
-    return response({ error: error instanceof Error ? error.message : "تعذر تحميل الملفات" }, 500)
+    return response({ error: safeError(error, "تعذر تحميل الملفات") }, 500)
   }
 }
 
@@ -82,7 +96,7 @@ export async function POST(request: Request) {
     await put(metadataPathname, JSON.stringify(metadata), { access: "private", contentType: "application/json", addRandomSuffix: false })
     return response({ file: metadata }, 201)
   } catch (error) {
-    return response({ error: error instanceof Error ? error.message : "تعذر رفع الملف" }, 500)
+    return response({ error: safeError(error, "تعذر رفع الملف") }, 500)
   }
 }
 
@@ -93,6 +107,6 @@ export async function DELETE(request: Request) {
     await del([pathname, metadataPathname])
     return response({ success: true })
   } catch (error) {
-    return response({ error: error instanceof Error ? error.message : "تعذر حذف الملف" }, 500)
+    return response({ error: safeError(error, "تعذر حذف الملف") }, 500)
   }
 }
