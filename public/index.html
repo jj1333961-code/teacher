@@ -514,7 +514,7 @@ tr:hover { background: var(--table-hover); }
     </button>
     <button class="menu-btn" style="background:#6c757d" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button>
     <button class="menu-btn" style="background:#fd7e14" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button>
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ��لمرفوعة</button>
+    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ����لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
@@ -682,7 +682,7 @@ tr:hover { background: var(--table-hover); }
       <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، و��مكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتح��ق من هوية الطالب.</small>
     </div>
   </div>
-  <div class="form-group"><label>ملاحظات إضافية</label><textarea id="stNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea></div>
+  <div class="form-group"><label>ملاح��ات إضافية</label><textarea id="stNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea></div>
   <button class="btn btn-primary" onclick="saveStudent()">💾 حفظ الطالب</button>
 </div>
 
@@ -1138,7 +1138,7 @@ const SURAH_AYAH_COUNTS = {
 
 const ALL_SURAHS_ORDERED = [
   "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
-  "الإس��اء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
+  "الإس��اء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "الس��دة",
   "ال��حزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
   "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الإنفطار",
@@ -2019,7 +2019,7 @@ function updateStudent() {
   const phone = document.getElementById('editPhone').value.trim();
   const studentPass = document.getElementById('editStudentPass').value;
   const parentPass = document.getElementById('editParentPass').value.trim();
-  if(national.length !== 14) return alert('الرقم القومي يجب أن يكون 14 رقم');
+  if(national.length !== 14) return alert('الرقم القومي يجب أن ��كون 14 رقم');
   if(phone && phone.length !== 11) return alert('رقم الهاتف يجب أن يكون 11 رقم');
   // ✅ مسموح تطابق الرقم السري للطالب مع ولي الأمر
 
@@ -2527,7 +2527,7 @@ function localSmartChatReply(message,role){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
       return 'ملخص البيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت الماضي البعيد.';
     }
-    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر المواضع الضعيفة ثلاث مرات ثم أعد الاختبار دون ا��نظر إلى المصحف.';
+    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر المواضع الضعيفة ثلاث مرات ثم أعد ا��اختبار دون ا��نظر إلى المصحف.';
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكره|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أو سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
@@ -2682,8 +2682,10 @@ async function generateExamQuestions(){
     }else if(source==='local-quran'){
       list=await generateLocalQuranQuestions(base,lastSurah,normalizedPlans);showExamAlert('يعمل المولّد القرآني المحلي داخل المتصفح...','info');
     }else{
-      try{const surahNumber=startIndex+1,endSurahNumber=endIndex+1;const ai=await callStudentAI('generate_exam',{surahNumber,endSurahNumber,plan:normalizedPlans},0.1);list=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[]);if(!list.length)throw new Error('استجابة فارغة')}
-      catch(aiError){list=await generateLocalQuranQuestions(base,lastSurah,normalizedPlans);showExamAlert('تع��ر Gemini، فتم استخدام المولّد القرآني المحلي بنجاح.','warning')}
+      const surahNumber=startIndex+1,endSurahNumber=endIndex+1;
+      const ai=await callStudentAI('generate_exam',{surahNumber,endSurahNumber,plan:normalizedPlans},0.1);
+      list=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[]);
+      if(!list.length)throw new Error('لم يُرجع Gemini أسئلة صالحة. أعد المحاولة.');
     }
     list=list.map(cleanExamQuestion).filter(q=>q.prompt&&q.correct!==undefined);
     if(!list.length) throw new Error('لم ينشئ الذكاء الاصطناعي أسئلة.');
@@ -2728,7 +2730,7 @@ function renderExamQuestions(){
   const q=examQuestions[examEditorActiveIndex],i=examEditorActiveIndex;
   let h='<div class="exam-slide-strip" role="tablist" aria-label="شرائح أسئلة الاختبار">'+examQuestions.map((item,index)=>'<button type="button" role="tab" aria-selected="'+(index===i)+'" class="exam-slide-tab '+(index===i?'active ':'')+(item.rejected?'expired':'')+'" onclick="selectExamEditorSlide('+index+')" title="السؤال '+(index+1)+'">'+(index+1)+'</button>').join('')+'</div>';
   h+='<div class="exam-question exam-slide-panel '+(q.rejected?'rejected':'')+'">'+
-    '<div class="exam-question-header"><strong>السؤال '+(i+1)+' من '+examQuestions.length+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">رفض السؤال</button>')+'</div>'+
+    '<div class="exam-question-header"><strong>السؤا�� '+(i+1)+' من '+examQuestions.length+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">رفض السؤال</button>')+'</div>'+
     quranQuestionMediaHtml(q,i)+
     '<div class="form-row"><div class="form-group"><label>النوع</label><select onchange="updateExamQuestion('+i+',\'type\',this.value);renderExamQuestions()"><option value="mcq" '+(q.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(q.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(q.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(q.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+ 
     '<div class="form-group"><label>المستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+ 
@@ -4466,7 +4468,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   return true;
 }
 
-// رفع ملف تسجيل صوتي جاهز من جهاز الطالب (يمر بنفس التحقق)
+// ��فع ملف تسجيل صوتي جاهز من جهاز الطالب (يمر بنفس التحقق)
 async function uploadVoiceTaskFile(taskIdx, input) {
   const file = input.files[0];
   if(!file) return;

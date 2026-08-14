@@ -43,10 +43,12 @@ async function resolveGeminiModel(forceRefresh = false): Promise<string> {
     .filter(Boolean)
 
   const preferred = [
-    configured,
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
     "gemini-3-flash-preview",
-    "gemini-3-flash",
-    ...available.filter((name: string) => name.includes("flash") && !name.includes("image") && !name.includes("tts")),
+    configured,
+    ...available.filter((name: string) => name.includes("flash") && !name.includes("image") && !name.includes("video") && !name.includes("tts")),
     ...available,
   ]
   resolvedGeminiModel = preferred.find(
@@ -143,9 +145,9 @@ async function geminiText(prompt: string, system: string, temperature: number, i
   const requestBody = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } })
   let lastError: unknown = new Error("تعذر بدء اتصال Gemini")
 
-  for (let attempt = 0; attempt < 1; attempt++) {
+  for (let attempt = 0; attempt < 4; attempt++) {
     try {
-      const model = await resolveGeminiModel(false)
+      const model = await resolveGeminiModel(attempt > 0)
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI.key },
@@ -166,7 +168,7 @@ async function geminiText(prompt: string, system: string, temperature: number, i
       return text.trim()
     } catch (error) {
       lastError = error
-      break
+      if (!isRetryableGeminiError(error) || attempt === 3) break
     }
   }
   // عند فشل Gemini المباشر نهائياً ننتقل دائماً إلى Gateway؛ فهو مسار مستقل
@@ -569,7 +571,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 
 أعد JSON فقط بالشكل التالي (بدون أي نص خارجه):
 {"summary":"وصف عربي واضح لما تم تعديله فعلياً وكيف","patches":[{"path":"...","content":"المحتوى الكامل الجديد للملف","reason":"سبب التعديل وما تغيّر في هذا الملف بالتحديد"}],"tests":["ملاحظة تحقق أو خطوة اختبار يدوي مقترحة"]}`
-  const prompt = `طلب المسؤول:\n${request}\n\nخطة التحليل السابقة:\n${JSON.stringify(plan)}\n\nمحتويات الملفات التي يمكن تعديلها:\n${source}`
+  const prompt = `طلب المسؤول:\n${request}\n\nخطة ا��تحليل السابقة:\n${JSON.stringify(plan)}\n\nمحتويات الملفات التي يمكن تعديلها:\n${source}`
   const text = await runText(prompt, system, 0.1)
   const parsed = extractJson(text)
   if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.patches)) {
@@ -694,7 +696,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أجب عن أي سؤال مسموح، سواء ارتبط بالمنصة أم كان سؤالاً عاماً خارجها. أعط الأولوية لبيانات المنصة فقط عندما يرتبط السؤال بها. اجعل الجواب على قدر السؤال: جواب قصير للسؤال القصير، ولا تتوسع أو تضف أمثلة واقتراحات إلا بطلب صريح. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفرها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة. أعد الجواب مباشرة بلا تحية أو مقدمة ��و عنوان أو خاتمة.",
+        "أجب عن أي سؤال مسموح، سواء ارتبط بالمنصة أم كان سؤالاً عاماً خارجها. أعط الأولوية لبيانات المنصة فقط عندما يرتبط السؤال بها. اجعل الج��اب على قدر السؤال: جواب قصير للسؤال القصير، ولا تتوسع أو تضف أمثلة واقتراحات إلا بطلب صريح. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفرها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة. أعد الجواب مباشرة بلا تحية أو مقدمة ��و عنوان أو خاتمة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -787,7 +789,7 @@ export async function POST(req: Request) {
           source: "مرجع قرآني موثوق",
         }
       })
-      return json({ result: safeQuestions, diagnostics, source: "Al Quran Cloud", range: { startSurahNumber, endSurahNumber } })
+      return json({ result: safeQuestions, diagnostics, source: "المصحف المحمّل داخل الموقع", range: { startSurahNumber, endSurahNumber } })
     }
 
     if (mode === "admin_assistant") {
@@ -949,7 +951,7 @@ export async function POST(req: Request) {
 
     // 7) حالة مزامنة GitHub — للمسؤول فقط. يتحقق من الاتصال بمستودع المسؤول ويعرض آخر commit وسجل التعديلات.
     if (mode === "github_status") {
-      if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
+      if (payload?.role !== "admin") return json({ error: "��ذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const status = await getGithubSyncStatus()
       return json({ result: status, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
     }
