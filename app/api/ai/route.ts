@@ -143,31 +143,34 @@ async function geminiText(prompt: string, system: string, temperature: number, i
   const requestBody = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } })
   let lastError: unknown = new Error("تعذر بدء اتصال Gemini")
 
-  for (let attempt = 0; attempt < 1; attempt++) {
-    try {
-      const model = await resolveGeminiModel(false)
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI.key },
-        body: requestBody,
-        cache: "no-store",
-        signal: AbortSignal.timeout(25_000),
-      })
-      const data = await response.json().catch(() => null)
-      if (!response.ok) {
-        if (response.status === 404) {
-          unavailableGeminiModels.add(model)
-          resolvedGeminiModel = null
-        }
-        throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
-      }
-      const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
-      if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
-      return text.trim()
-    } catch (error) {
-      lastError = error
-      break
-    }
+  for (let attempt = 0; attempt < 3; attempt++) {
+  try {
+  const model = await resolveGeminiModel(attempt > 0)
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI.key },
+  body: requestBody,
+  cache: "no-store",
+  signal: AbortSignal.timeout(inlineData ? 60_000 : 25_000),
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok) {
+  const modelError = new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
+  lastError = modelError
+  if (response.status === 404) {
+  unavailableGeminiModels.add(model)
+  resolvedGeminiModel = null
+  continue
+  }
+  throw modelError
+  }
+  const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
+  if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
+  return text.trim()
+  } catch (error) {
+  lastError = error
+  break
+  }
   }
   // عند فشل Gemini المباشر نهائياً ننتقل دائماً إلى Gateway؛ فهو مسار مستقل
   // ويعالج أخطاء المفتاح والحصة والشبكة والنموذج غير المتاح دون تعطيل المستخدم.
