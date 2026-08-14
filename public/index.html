@@ -512,7 +512,7 @@ tr:hover { background: var(--table-hover); }
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد Gemini الإداري</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light);margin-bottom:15px;">محادثة مقيدة ببيانات الطلاب وأولياء الأمور والاختبارات داخل الموقع.</p>
-  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو الاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
+  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو ��لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
@@ -746,8 +746,7 @@ tr:hover { background: var(--table-hover); }
 <div class="form-group"><label for="examBaseSurah">أول سورة في النطاق</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يمكنك تعديل بداية النطاق قبل التوليد.</small></div>
  <div class="form-group"><label for="examLastSurah">آخر سورة في النطاق (اختياري)</label><select id="examLastSurah"><option value="">سورة الناس تلقائياً</option></select><small style="color:var(--text-light)">إذا تركتها فارغة فقط، ينتهي النطاق تلقائياً بسورة الناس.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
- <div class="form-group"><label for="examQuestionSource">مصدر الأسئلة</label><select id="examQuestionSource" onchange="toggleExamSource()"><option value="quran">Gemini مع بديل قرآني محلي تلقائي</option><option value="local-quran">المولّد القرآني المحلي فقط</option><option value="file">توليد محلي من ملف مرفوع</option></select></div>
- <div class="form-group hidden" id="examFileSourceGroup"><label for="examFileSource">ملف الاختبار</label><select id="examFileSource"><option value="">اختر ملفاً...</option></select></div>
+<div class="form-group"><label for="examQuestionSource">مصدر الأسئلة</label><select id="examQuestionSource"><option value="quran">Gemini مع مرجعي المصحف والمتشابهات</option><option value="local-quran">المولّد القرآني المحلي الاحتياطي</option></select></div>
  </div>
  <div class="alert alert-info">يعمل Gemini أولاً، وعند تعطله ينتقل النظام تلقائياً إلى المولّد القرآني داخل المتصفح. لا تُعرض الإجابة الصحيحة داخل نص السؤال.</div>
     <div id="examPlanRows"></div>
@@ -1010,10 +1009,12 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>📁 الملفات المرفوعة</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="filesAlert"></div>
   <section style="background:var(--table-header);border:2px solid var(--primary);border-radius:15px;padding:20px;margin-bottom:20px;">
-    <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
-    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها محلياً دون إرساله إلى Gemini.</p>
-    <input id="examFileUpload" type="file" accept=".pdf,.docx,.txt" onchange="uploadExamFile(this)">
-    <div id="examFileUploadStatus" style="margin-top:10px;"></div>
+    <h3 style="color:var(--primary);margin-bottom:8px;">مراجع الذكاء الاصطناعي والاختبارات</h3>
+    <p style="color:var(--text-light);margin-bottom:15px;">يُحفظ المرجعان بشكل خاص على الخادم. يستخدم المصحف لإنشاء صور الأسئلة، ويستخدم ملف المتشابهات لصياغة أسئلة أدق.</p>
+    <div class="form-row">
+      <div class="exam-plan-row" style="flex:1;min-width:260px"><h4>مرجع المصحف</h4><p style="color:var(--text-light)">ملف PDF فقط، ويُستبدل المرجع السابق بعد نجاح الرفع.</p><input id="mushafReferenceInput" type="file" accept=".pdf" onchange="uploadExamReference('mushaf',this)"><div id="mushafReferenceStatus" style="margin-top:10px;"></div></div>
+      <div class="exam-plan-row" style="flex:1;min-width:260px"><h4>مرجع المتشابهات</h4><p style="color:var(--text-light)">PDF أو Word أو TXT لصياغة الأسئلة الاحترافية.</p><input id="mutashabihatReferenceInput" type="file" accept=".pdf,.docx,.txt" onchange="uploadExamReference('mutashabihat',this)"><div id="mutashabihatReferenceStatus" style="margin-top:10px;"></div></div>
+    </div>
     <div id="examFilesList" style="margin-top:15px;"></div>
   </section>
   <div style="background:linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); border-radius:15px; padding:20px; margin-bottom:20px; border:2px solid var(--primary);">
@@ -1116,7 +1117,7 @@ const SURAH_AYAH_COUNTS = {
   "محمد": 38, "الفتح": 29, "الحجرات": 18, "ق": 45, "الذاريات": 60, "الطور": 49, "النجم": 62, "القمر": 55, "الرحمن": 78,
   "الواقعة": 96, "الحديد": 29, "المجادلة": 22, "الحشر": 24, "الممتحنة": 13, "الصف": 14, "الجمعة": 11, "المنافقون": 11,
   "التغابن": 18, "الطلاق": 12, "التحريم": 12, "الملك": 30, "القلم": 52, "الحاقة": 52, "المعارج": 44, "نوح": 28, "الجن": 28,
-  "المزمل": 20, "المدثر": 56, "القيامة": 40, "الإنسان": 31, "المرسلا��": 50, "النبأ": 40, "النازعات": 46, "عبس": 42,
+  "المزمل": 20, "المدثر": 56, "القيامة": 40, "الإنسان": 31, "المرسلا��": 50, "��لنبأ": 40, "النازعات": 46, "عبس": 42,
   "التكوير": 29, "الإنفطار": 19, "المطففين": 36, "الإنشقاق": 25, "البروج": 22, "الطارق": 17, "الأعلى": 19, "الغاشية": 26,
   "الفجر": 30, "البلد": 20, "الشمس": 15, "الليل": 21, "الضحى": 11, "الشرح": 8, "التين": 8, "العلق": 19, "القدر": 5,
   "البينة": 8, "الزلزلة": 8, "العاديات": 11, "القارعة": 11, "التكاثر": 8, "العصر": 3, "الهمزة": 9, "الفيل": 5, "قريش": 4,
@@ -1396,7 +1397,7 @@ function renderTaskArchiveHtml(s) {
   return html;
 }
 
-// صندوق التسجيلات للطالب: كل التسميعات + المهام مرتبة بالأيام
+// صندوق ال��سجيلات للطالب: كل التسميعات + المهام مرتبة بالأيام
 function renderStudentRecordsBox() {
   const s = currentUser;
   const box = document.getElementById('studentRecordsContent');
@@ -2425,7 +2426,7 @@ async function recordReadingAudio(idx) {
     };
     recorder.start();
     if(btn) { btn.dataset.recording = 'true'; btn.classList.add('recording'); btn.onclick = function(){ if(recorder.state==='recording') recorder.stop(); }; }
-    if(status) status.textContent = 'جاري التسجيل... (اضغط للإيقاف)';
+    if(status) status.textContent = 'جاري التسجيل... (اضغط للإ��قاف)';
     setTimeout(() => { if(recorder.state === 'recording') recorder.stop(); }, 120000);
   } catch(err) { showToast('❌ لا يمكن الوصول للميكروفون', 'error'); }
 }
@@ -2494,13 +2495,13 @@ async function readApiJson(res, fallback){
 async function loadExamFiles(){
   const box=document.getElementById('examFilesList');
   try{
-    const res=await fetch('/api/exam-files',{cache:'no-store'});const data=await readApiJson(res,'تعذر تحميل ملفات الاختبارات');examFilesCache=Array.isArray(data.files)?data.files:[];
-    const select=document.getElementById('examFileSource');if(select)select.innerHTML='<option value="">اختر ملفاً...</option>'+examFilesCache.map(f=>'<option value="'+f.id+'">'+escapeHtml(f.name)+'</option>').join('');
-    if(box)box.innerHTML=examFilesCache.length?examFilesCache.map(f=>'<div class="exam-plan-row"><strong>'+escapeHtml(f.name)+'</strong><div style="color:var(--text-light);font-size:.85rem">'+(f.text||'').length+' حرف — '+new Date(f.uploadedAt).toLocaleString('ar-EG')+'</div><button class="btn btn-sm btn-danger" onclick="deleteExamFile(\''+f.id+'\')">حذف الملف</button></div>').join(''):'<div class="alert alert-info">لا توجد ملفات اختبارات محفوظة.</div>';
-  }catch(e){examFilesCache=[];if(box)box.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر تحميل الملفات')+' <button class="btn btn-sm btn-primary" onclick="loadExamFiles()">إعادة المحاولة</button></div>';throw e}
+    const res=await fetch('/api/exam-files',{cache:'no-store'});const data=await readApiJson(res,'تعذر تحميل المراجع');examFilesCache=Array.isArray(data.references)?data.references:[];
+    ['mushaf','mutashabihat'].forEach(function(role){const item=examFilesCache.find(f=>f.role===role),status=document.getElementById(role+'ReferenceStatus');if(!status)return;status.innerHTML=item?'<div class="alert alert-success"><strong>'+escapeHtml(item.name)+'</strong><br><small>'+item.textLength+' حرف — '+new Date(item.uploadedAt).toLocaleString('ar-EG')+'</small><br><button class="btn btn-sm btn-danger" onclick="deleteExamReference(\''+role+'\')">حذف المرجع</button></div>':'<div class="alert alert-info">لم يُرفع هذا المرجع بعد.</div>';});
+    if(box)box.innerHTML=examFilesCache.length===2?'<div class="alert alert-success">المرجعان جاهزان لتوليد الاختبارات والصور.</div>':'<div class="alert alert-warning">أكمل رفع المرجعين قبل توليد اختبار جديد.</div>';
+  }catch(e){examFilesCache=[];if(box)box.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر تحميل المراجع')+' <button class="btn btn-sm btn-primary" onclick="loadExamFiles()">إعادة المحاولة</button></div>';throw e}
 }
-async function uploadExamFile(input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById('examFileUploadStatus');if(status)status.innerHTML='<div class="alert alert-info">جاري رفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);const res=await fetch('/api/exam-files',{method:'POST',body:form});await readApiJson(res,'تعذر رفع الملف');if(status)status.innerHTML='<div class="alert alert-success">تم حفظ الملف واستخراج النص.</div>';await loadExamFiles()}catch(e){if(status)status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر رفع الملف')+' <button class="btn btn-sm btn-primary" onclick="document.getElementById(\'examFileInput\')?.click()">اختيار ملف آخر</button></div>'}finally{input.value=''}}
-async function deleteExamFile(id){const file=examFilesCache.find(f=>f.id===id);if(!file||!confirm('هل تريد حذف هذا الملف نهائياً؟'))return;try{const res=await fetch('/api/exam-files',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({pathname:file.pathname,metadataPathname:file.metadataPathname})});await readApiJson(res,'تعذر حذف الملف');await loadExamFiles()}catch(e){alert(e.message||'تعذر الحذف')}}
+async function uploadExamReference(role,input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById(role+'ReferenceStatus');if(status)status.innerHTML='<div class="alert alert-info">جاري الرفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);form.append('role',role);const res=await fetch('/api/exam-files',{method:'POST',body:form});await readApiJson(res,'تعذر رفع المرجع');showToast('تم حفظ المرجع بنجاح','success');await loadExamFiles()}catch(e){if(status)status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر رفع المرجع')+'</div>'}finally{input.value=''}}
+async function deleteExamReference(role){if(!confirm('هل تريد حذف هذا المرجع؟ لن تعمل الأسئلة المعتمدة عليه حتى ترفع بديلاً.'))return;try{const res=await fetch('/api/exam-files',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({role})});await readApiJson(res,'تعذر حذف المرجع');await loadExamFiles()}catch(e){showToast(e.message||'تعذر الحذف','error')}}
 function toggleExamSource(){const local=document.getElementById('examQuestionSource')?.value==='file';document.getElementById('examFileSourceGroup')?.classList.toggle('hidden',!local);if(local)loadExamFiles().catch(e=>showExamAlert(e.message,'danger'))}
 function shuffled(values){return values.slice().sort(()=>Math.random()-.5)}
 function generateLocalFileQuestions(file,plans){const sentences=String(file.text||'').split(/[.!؟\n]+/).map(s=>s.trim()).filter(s=>s.length>=25&&s.length<=260);if(sentences.length<6)throw new Error('لا يحتوي الملف على جمل كافية لإنشاء اختبار متنوع.');const words=shuffled(Array.from(new Set(sentences.join(' ').split(/\s+/).filter(w=>w.length>4))));let cursor=0;const output=[];plans.forEach(plan=>{for(let i=0;i<plan.count;i++){const sentence=sentences[(cursor++)%sentences.length];const type=plan.type==='audio'?'complete':plan.type;let q={id:'file_'+Date.now()+'_'+output.length,type,level:plan.level,surah:'',prompt:'',stem:sentence,options:[],correct:'',from:1,to:1,timeLimit:plan.timeLimit,completeAyahs:1,reciteAyahs:1,audioShareWithParent:false,points:1,rejected:false,weakened:false,source:'file',sourceFileId:file.id,sourceFileName:file.name,optionsCount:plan.optionsCount||4};if(type==='truefalse'){const truthful=Math.random()>.5;q.prompt='هل العبارة التالية وردت في الملف؟';q.stem=truthful?sentence:sentences[(cursor+2)%sentences.length].split(' ').reverse().join(' ');q.options=['صح','خطأ'];q.correct=truthful?'صح':'خطأ'}else if(type==='complete'){const candidates=sentence.split(/\s+/).filter(w=>w.length>4);const answer=candidates[Math.floor(Math.random()*candidates.length)]||words[0];q.prompt='أكمل الكلمة الناقصة من النص المرفوع';q.correct=answer;q.stem=sentence.replace(answer,'_____')}else{const correct=(sentence.split(/\s+/).filter(w=>w.length>4)[0]||words[0]);q.prompt='أي كلمة وردت في النص التالي؟';q.correct=correct;q.options=shuffled([correct].concat(words.filter(w=>w!==correct).slice(0,Math.max(1,(plan.optionsCount||4)-1))))}output.push(q)}});return output}
@@ -2669,7 +2670,7 @@ async function generateExamQuestions(){
           timeLimit:Math.max(5,Math.min(3600,parseInt(plan.timeLimit)||60)),
           completeAyahs:parseInt(plan.completeAyahs)||1,reciteAyahs:parseInt(plan.reciteAyahs)||1,
           audioShareWithParent:plan.audioShareWithParent!==false,points:typeof q.points==='number'?q.points:1,
-          rejected:false,weakened:false,source:q.source||'gemini',sourceFileId:q.sourceFileId||'',sourceFileName:q.sourceFileName||'',questionImage:q.questionImage||'',optionsCount:plan.optionsCount||4
+          rejected:false,weakened:false,source:q.source||'gemini',sourceFileId:q.sourceFileId||'',sourceFileName:q.sourceFileName||'',answerMode:q.answerMode||(plan.type==='audio'?'audio':'text'),questionImage:q.questionImage||('/api/quran-question-image?surah='+(ALL_SURAHS_ORDERED.indexOf(q.surah||base)+1)+'&ayah='+(parseInt(q.from)||1)+'&to='+(parseInt(q.to)||parseInt(q.from)||1)),optionsCount:plan.optionsCount||4
         });
       }
     });
@@ -2693,7 +2694,8 @@ function renderExamQuestions(){
     h+='<div class="exam-question '+(q.rejected?'rejected':'')+'">'+
       '<div class="exam-question-header"><strong>السؤال '+(i+1)+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">↩️ استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">🚫 رفض</button>')+'</div>'+
       '<div class="form-row"><div class="form-group"><label>النوع</label><select onchange="updateExamQuestion('+i+',\'type\',this.value);renderExamQuestions()"><option value="mcq" '+(q.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(q.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(q.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(q.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+ 
-      '<div class="form-group"><label>المستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+ 
+      '<div class="form-group"><label>المستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+
+      '<div class="form-group"><label>طريقة الإجابة</label><select onchange="updateExamQuestion('+i+',\'answerMode\',this.value)"><option value="text" '+(q.answerMode!=='audio'?'selected':'')+'>كتابة</option><option value="audio" '+(q.answerMode==='audio'?'selected':'')+'>تلاوة صوتية</option></select></div>'+
       '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
       (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
       (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
@@ -2771,12 +2773,12 @@ function renderStudentExam(){
   h+='<div class="exam-question" id="examQuestionBox_'+i+'"><h4>س'+(i+1)+'. '+escapeHtml(q.prompt||'')+'</h4>'+
     (q.questionImage?'<img class="quran-question-image" src="'+escapeHtml(q.questionImage)+'" alt="صفحة من المصحف أُخفيت منها الآية المطلوب إكمالها" loading="eager" onerror="this.outerHTML=\'<div class=&quot;alert alert-danger&quot;>تعذر تحميل صورة السؤال. لا تُجب قبل إبلاغ المسؤول.</div>\'">':'')+
     '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><p style="margin:10px 0;line-height:1.8">'+escapeHtml(q.stem||'')+'</p><span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)+'</span></div>';
-  if(q.type==='mcq'||q.type==='truefalse'){
-    (q.options||[]).forEach((o,oi)=>{h+='<label class="exam-option"><input type="radio" name="examq_current" value="'+escapeHtml(o)+'" '+(studentExamAnswers[i]===o?'checked':'')+' onchange="markExamAnswer('+i+',this.value)"> '+escapeHtml(o)+'</label>';});
-  }else if(q.type==='complete'){
-    h+='<input class="form-group" style="width:100%;padding:12px" id="examComplete_'+i+'" value="'+escapeHtml(studentExamAnswers[i]||'')+'" placeholder="اكتب الإكمال هنا" oninput="studentExamAnswers['+i+']=this.value">';
-  }else{
+  if(q.answerMode==='audio'||q.type==='audio'){
     h+='<div id="examAudioArea_'+i+'">'+studentExamAudioHTML(i)+'</div>';
+  }else if(q.type==='mcq'||q.type==='truefalse'){
+    (q.options||[]).forEach((o,oi)=>{h+='<label class="exam-option"><input type="radio" name="examq_current" value="'+escapeHtml(o)+'" '+(studentExamAnswers[i]===o?'checked':'')+' onchange="markExamAnswer('+i+',this.value)"> '+escapeHtml(o)+'</label>';});
+  }else{
+    h+='<input class="form-group" style="width:100%;padding:12px" id="examComplete_'+i+'" value="'+escapeHtml(studentExamAnswers[i]||'')+'" placeholder="اكتب إجابتك هنا" oninput="studentExamAnswers['+i+']=this.value">';
   }
   h+='</div></div>';
   h+='<button id="confirmExamAnswerBtn" class="btn btn-primary" onclick="confirmStudentExamAnswer('+i+')" style="width:100%;margin-top:15px">'+(i===ex.questions.length-1?'✅ تأكيد الإجابة وإنهاء الاختبار':'➡️ تأكيد الإجابة والانتقال للسؤال التالي')+'</button>';
@@ -2802,8 +2804,8 @@ const top=document.getElementById('studentExamTimer');if(top)top.textContent='ا
 }
 function confirmStudentExamAnswer(i){
   const ex=currentUser&&currentUser.activeExam;if(!ex||i!==studentExamCurrentIndex||studentExamLockedIndices[i])return;
-  if(ex.questions[i].type==='complete'){const el=document.getElementById('examComplete_'+i);studentExamAnswers[i]=el?el.value.trim():'';}
-  if(ex.questions[i].type!=='audio' && !studentExamAnswers[i]){showToast('اختر أو اكتب الإجابة أولاً','error');return;}
+  if(ex.questions[i].answerMode!=='audio'&&ex.questions[i].type!=='audio'&&ex.questions[i].type!=='mcq'&&ex.questions[i].type!=='truefalse'){const el=document.getElementById('examComplete_'+i);studentExamAnswers[i]=el?el.value.trim():'';}
+  if(ex.questions[i].answerMode==='audio'||ex.questions[i].type==='audio'){if(!studentExamAudioAnswers[i]){showToast('سجّل التلاوة أولاً','error');return;}}else if(!studentExamAnswers[i]){showToast('اختر أو اكتب الإجابة أولاً','error');return;}
   studentExamLockedIndices[i]=true; clearInterval(studentExamQuestionTimer); studentExamQuestionElapsed[i]=Math.max(0,Math.round((Date.now()-(studentExamQuestionStartedAt[i]||Date.now()))/1000));
   if(i<ex.questions.length-1){
     studentExamCurrentIndex=i+1;
@@ -2828,15 +2830,15 @@ async function submitStudentExam(auto){
   const s=currentUser;if(!s||!s.activeExam)return;clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);
   const ex=JSON.parse(JSON.stringify(s.activeExam)); let answers=[]; let score=0;
   for(let i=0;i<ex.questions.length;i++){
-    const q=ex.questions[i]; let a=studentExamAnswers[i]||''; if(q.type==='complete'){const el=document.getElementById('examComplete_'+i);a=el?el.value.trim():''}
+    const q=ex.questions[i]; let a=studentExamAnswers[i]||''; if(q.answerMode!=='audio'&&q.type!=='audio'&&q.type!=='mcq'&&q.type!=='truefalse'){const el=document.getElementById('examComplete_'+i);a=el?el.value.trim():''}
     const audio=studentExamAudioAnswers[i]||null; let result={accepted:false,score:0,reason:'لم تتم الإجابة',matchedPercent:0,mistakes:[],missingAyahs:[]};
-    if(q.type==='mcq'||q.type==='truefalse'){
-      result.accepted=normalizeExamText(a)===normalizeExamText(q.correct);result.score=result.accepted?1:0;result.matchedPercent=result.accepted?100:0;result.reason=result.accepted?'إجابة صحيحة':'الإجابة غير صحيحة';
-    }else if(q.type==='complete'){
-      try{result=await callStudentAI('grade_text',{question:q.prompt,expected:q.correct,studentAnswer:a,sourceAyah:q.stem},0.05)}catch(e){result.accepted=normalizeExamText(a)===normalizeExamText(q.correct);result.score=result.accepted?1:0;result.reason='تم التصحيح محلياً بسبب تعذر الذكاء الاصطناعي'}
-    }else if(q.type==='audio'){
+    if(q.answerMode==='audio'||q.type==='audio'){
       result=audio&&audio.aiResult?audio.aiResult:{accepted:false,score:0,reason:'لم يتم تسجيل إجابة صوتية',matchedPercent:0};
       a=audio&&audio.transcript?audio.transcript:'';
+    }else if(q.type==='mcq'||q.type==='truefalse'){
+      result.accepted=normalizeExamText(a)===normalizeExamText(q.correct);result.score=result.accepted?1:0;result.matchedPercent=result.accepted?100:0;result.reason=result.accepted?'إجابة صحيحة':'الإجابة غير صحيحة';
+    }else{
+      try{result=await callStudentAI('grade_text',{question:q.prompt,expected:q.correct,studentAnswer:a},0.05)}catch(e){result.accepted=normalizeExamText(a)===normalizeExamText(q.correct);result.score=result.accepted?1:0;result.reason='تم التصحيح محلياً بسبب تعذر الذكاء الاصطناعي'}
     }
     // الدرجة النهائية تعتمد على عدد الآيات المطلوبة والناقصة، لا على حكم النموذج وحده.
     if((q.type==='complete'||q.type==='audio') && Array.isArray(result.missingAyahs)){
@@ -2850,7 +2852,7 @@ async function submitStudentExam(auto){
     const pts=Math.max(0,Math.min(1,Number(result.score)||0)); score+=pts;
     answers.push({answer:a,correct:pts>=1,score:pts,timeSeconds:Math.max(0,Number(studentExamQuestionElapsed[i])||0),aiResult:result,audioData:audio&&audio.dataUrl?audio.dataUrl:null,audioShareWithParent:q.audioShareWithParent!==false});
   }
-  const hasAudio=ex.questions.some(q=>q.type==='audio');ex.status=hasAudio?'pending_audio_review':'graded';ex.submittedAt=Date.now();ex.answers=answers;ex.score=score;ex.maxScore=ex.questions.reduce((n,q)=>n+(Number(q.points)||1),0);ex.totalDurationSeconds=Math.round((Date.now()-(ex.createdAt||Date.now()))/1000);ex.autoSubmitted=!!auto;ex.reviewedAt=hasAudio?null:Date.now();
+  const hasAudio=ex.questions.some(q=>q.type==='audio'||q.answerMode==='audio');ex.status=hasAudio?'pending_audio_review':'graded';ex.submittedAt=Date.now();ex.answers=answers;ex.score=score;ex.maxScore=ex.questions.reduce((n,q)=>n+(Number(q.points)||1),0);ex.totalDurationSeconds=Math.round((Date.now()-(ex.createdAt||Date.now()))/1000);ex.autoSubmitted=!!auto;ex.reviewedAt=hasAudio?null:Date.now();
   let students=getData('students');const idx=students.findIndex(x=>x.id===s.id);if(idx<0)return;students[idx].activeExam=null;students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].completedTasks=students[idx].completedTasks||[];students[idx].completedTasks.push({type:'exam',name:'اختبار '+ex.date,date:ex.date,completedAt:new Date().toLocaleString('ar-EG'),score,maxScore:ex.maxScore});setData('students',students);currentUser=students[idx];
   let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوتي — النتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة التسجيل الصوتي':'نتيجة اختبار '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
@@ -3413,6 +3415,20 @@ function renderDevAudit(){
   box.innerHTML = h;
 }
 
+async function waitForDeploymentAndReload(plan){
+  if(!plan||!plan.commitSha)return;
+  const label=document.getElementById('devProgressLabel'),eta=document.getElementById('devEta'),started=Date.now(),timeout=4*60*1000;
+  if(label)label.textContent='تم الحفظ — جارٍ انتظار اكتمال النشر';
+  while(Date.now()-started<timeout){
+    const seconds=Math.max(0,Math.ceil((timeout-(Date.now()-started))/1000));if(eta)eta.textContent='مهلة الانتظار: '+formatExamTime(seconds);
+    await new Promise(function(resolve){setTimeout(resolve,8000)});
+    try{const status=await callStudentAI('deployment_status',{role:'admin',commitSha:plan.commitSha},0.1);if(status&&status.ready){if(label)label.textContent='النسخة الجديدة جاهزة — جارٍ تحديث الموقع';const url=new URL(location.href);url.searchParams.set('deployed',plan.commitSha.slice(0,7));location.replace(url.toString());return;}}catch(e){}
+  }
+  if(label)label.textContent='تم الحفظ، لكن لم نتأكد من اكتمال النشر';
+  if(eta)eta.textContent='يمكن إعادة التحقق أو تحديث الصفحة لاحقاً';
+  showToast('تم تسجيل التعديل في المستودع، وما زال النشر قيد الانتظار','info');
+}
+
 async function runDevAssistant(){
   if(currentType !== 'admin'){ showToast('❌ هذه الميزة متاحة للمسؤول فقط', 'error'); return; }
   const input = document.getElementById('devAssistantInput');
@@ -3457,7 +3473,8 @@ async function runDevAssistant(){
       flagged: dangers,
     });
     renderDevAudit();
-    showToast(plan && plan.applied ? '✅ تم تنفيذ التعديل بنجاح' : '⚠️ تم تحليل الطلب ولم يكتمل التطبيق', plan && plan.applied ? 'success' : 'info');
+    showToast(plan && plan.applied ? 'تم حفظ التعديل في المستودع وبدأ النشر' : 'تم تحليل الطلب ولم يكتمل التطبيق', plan && plan.applied ? 'success' : 'info');
+    if(plan&&plan.applied&&plan.commitSha){clearInterval(progressTimer);await waitForDeploymentAndReload(plan);}
   } catch(err) {
     const reason = err && err.message ? err.message : 'سبب غير معروف';
     resultBox.innerHTML =

@@ -36,12 +36,14 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const surah = Number(url.searchParams.get("surah"))
     const ayah = Number(url.searchParams.get("ayah"))
-    if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1) {
+    const to = Number(url.searchParams.get("to") || ayah)
+    if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1 || !Number.isInteger(to) || to < ayah || to - ayah > 20) {
       return Response.json({ error: "مرجع الآية غير صالح" }, { status: 400 })
     }
 
-    const [targetData, pdfBytes] = await Promise.all([getAyah(surah, ayah), getQuranPdfBytes()])
-    const target = targetData.text
+    const [targetAyahs, pdfBytes] = await Promise.all([Promise.all(Array.from({ length: to - ayah + 1 }, (_, index) => getAyah(surah, ayah + index))), getQuranPdfBytes()])
+    const targetData = targetAyahs[0]
+    const target = targetAyahs.map((entry) => entry.text).join(" ")
     const targetWords = normalizeQuranText(target).split(" ").filter(Boolean)
     if (targetWords.length < 2) throw new Error("تعذر تجهيز نص الآية")
 

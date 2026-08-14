@@ -583,7 +583,7 @@ async function autoApplyDevRequest(request: string, plan: any) {
   const repoFiles = new Set(tree.files)
   const selected = Array.isArray(plan?.files) ? plan.files.map((f:any) => String(f?.path || "")).filter((p:string) => safeProjectPath(p)) : []
   if (!selected.length) throw new Error("لم يحدد الذكاء الاصطناعي ملفات صالحة للتعديل")
-  if (selected.length > 12) throw new Error("الطلب يحتاج تعديل عدد كبير من الملفات؛ الحد التلقائي 12 ملفاً")
+  if (selected.length > 12) throw new Error("ا��طلب يحتاج تعديل عدد كبير من الملفات؛ الحد التلقائي 12 ملفاً")
   for (const path of selected) {
     const action = plan.files.find((f:any) => String(f?.path || "") === path)?.action
     if (action !== "create" && !repoFiles.has(path)) throw new Error(`الملف ${path} غير موجود في المستودع`)
@@ -615,9 +615,11 @@ async function autoApplyDevRequest(request: string, plan: any) {
   if (!validatedPatches.length) throw new Error("لم يتم تطبيق أي ملف بعد التحقق من التعديلات")
 
   const applied = []
+  let commitSha = ""
   for (const patch of validatedPatches) {
-    const result = await githubPutFile(patch.path, patch.content, patch.old?.sha, `chore: AI assistant - ${request.slice(0, 70)}`)
-    applied.push({ path: patch.path, reason: patch.reason, commitUrl: result?.commit?.html_url || null })
+  const result = await githubPutFile(patch.path, patch.content, patch.old?.sha, `chore: AI assistant - ${request.slice(0, 70)}`)
+  commitSha = String(result?.commit?.sha || commitSha)
+  applied.push({ path: patch.path, reason: patch.reason, commitUrl: result?.commit?.html_url || null })
   }
   let deployTriggered = false
   let deployError = ""
@@ -647,6 +649,9 @@ async function autoApplyDevRequest(request: string, plan: any) {
     deployTriggered,
     deployStatus,
     deploymentMode,
+    commitSha,
+    branch: await resolveBranch(),
+    deploymentStartedAt: new Date().toISOString(),
   }
 }
 
@@ -674,7 +679,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt}`,
-        "أجب عن أي سؤال مسموح بدقة. في الأسئلة القرآنية اعتمد المرجع المرفق فقط ولا تختلق نصاً. أعد الإجابة المطلوبة فقط دون مقدمة أو تحية أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
+        "أجب عن أي موضوع يسأل عنه المستخدم، حتى إن كان خارج نطاق المنصة. اجعل الرد مختصراً قدر الإمكان لكنه كاملاً ويجيب عن المطلوب كله دون بتر. في الأسئلة القرآنية اعتمد المرجع المرفق فقط ولا تختلق نصاً. أعد الإجابة مباشرة دون مقدمة أو تحية أو عنوان حالة أو خاتمة أو ذكر للنموذج أو للمرجع.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -691,7 +696,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أجب عن أي سؤال مسموح بدقة. أعط الأولوية لبيانات المنصة عند ارتباط السؤال بها. في القرآن والمتشابهات اعتمد مقتطفات المرجعين المرفقين ولا تختلق آية أو معلومة. أعد الإجابة فقط: بلا تحية أو مقدمة أو عناوين حالة أو خاتمة أو اقتراحات لم يطلبها السائل.",
+        "أجب عن أي موضوع يسأل عنه المستخدم، سواء ارتبط بالمنصة أم لا. أعط الأولوية لبيانات المنصة عندما تكون ذات صلة، واجعل الرد موجزاً لكنه مكتملاً ويغطي كل أجزاء السؤال. في القرآن والمتشابهات اعتمد مقتطفات المرجعين المرفقين ولا تختلق آية أو معلومة. أعد الإجابة مباشرة بلا تحية أو مقدمة أو عناوين حالة أو خاتمة أو اقتراحات غير مطلوبة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -728,7 +733,7 @@ export async function POST(req: Request) {
       }))
       const referenceContext = await getReferenceContext(
         sourceSurahs.map((source) => source.surah).join(" "),
-        sourceSurahs.flatMap((source) => source.verses.slice(0, 2).map((verse) => verse.text)),
+        sourceSurahs.flatMap((source) => source.verses.slice(0, 2).map((verse: any) => verse.text)),
       ).catch(() => "")
       const safePayload = { plan, startSurahNumber, endSurahNumber, sourceSurahs, referenceContext }
       const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط، واستفد من referenceContext لصياغة أسئلة متشابهات ومواضع أكثر احترافية. وزّع الأسئلة بالتتابع ولا تستخدم السورة نفسها مرتين قبل المرور على بقية السور. في سؤال complete لا تضع كلمات الإجابة في prompt أو stem مطلقاً؛ سيعرض النظام صورة المصحف مع إخفاء الآية المطلوبة. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
@@ -743,7 +748,7 @@ export async function POST(req: Request) {
         const type = ["mcq", "truefalse", "complete", "audio"].includes(question?.type) ? question.type : "mcq"
         const complete = type === "complete"
         const correct = complete
-          ? source.verses.slice(from - 1, to).map((verse) => verse.text).join(" ")
+          ? source.verses.slice(from - 1, to).map((verse: any) => verse.text).join(" ")
           : String(question?.correct || "")
         return {
           ...question,
@@ -751,10 +756,11 @@ export async function POST(req: Request) {
           surah: source.surah,
           from,
           to,
-          prompt: complete ? "أكمل الآية المخفية في صورة المصحف" : String(question?.prompt || "اختر الإجابة الصحيحة"),
-          stem: complete ? "" : source.verses[from - 1]?.text || "",
+          prompt: complete ? "أكمل المقطع المخفي في صورة المصحف" : String(question?.prompt || "أجب اعتماداً على موضع الآية المخفي في صورة المصحف"),
+          stem: "",
           correct,
-          questionImage: complete ? `/api/quran-question-image?surah=${source.surahNumber}&ayah=${from}` : "",
+          answerMode: type === "audio" ? "audio" : "text",
+          questionImage: `/api/quran-question-image?surah=${source.surahNumber}&ayah=${from}&to=${to}`,
           source: "المصحف وملف المتشابهات المرفقان",
         }
       })
@@ -767,7 +773,7 @@ export async function POST(req: Request) {
       if (!message) return json({ error: "اكتب رسالتك أولاً", diagnostics }, 400)
       const context = JSON.stringify(payload.context || {}).slice(0, 18_000)
       const reference = await getReferenceContext(message).catch(() => "")
-      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أجب عن أي سؤال مسموح. أعط الأولوية لبيانات الموقع عند ارتباطها بالسؤال، واعتمد المرجعين المرفقين في المسائل القرآنية والمتشابهات. لا تختلق بيانات أو آيات. أعد الإجابة فقط بلا تحية أو مقدمة أو عناوين حالة أو خاتمة أو ذكر للذكاء الاصطناعي.", 0.25)
+      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أجب عن أي موضوع يطرحه المسؤول حتى لو كان خارج موضوع المنصة. أعط الأولوية لبيانات الموقع عند ارتباطها بالسؤال، واجعل الرد مختصراً لكنه كاملاً. اعتمد المرجعين المرفقين في المسائل القرآنية والمتشابهات ولا تختلق بيانات أو آيات. أعد الإجابة مباشرة بلا تحية أو مقدمة أو عناوين حالة أو خاتمة أو ذكر للذكاء الاصطناعي.", 0.25)
       return json({ result: result.trim(), diagnostics })
     }
 
@@ -918,7 +924,17 @@ export async function POST(req: Request) {
       return json({ result: { ...plan, note: "الخطة فقط — لم يتم تطبيق أي تعديل.", autoApplied: false }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
     }
 
-    // 7) حالة مزامنة GitHub — للمسؤول فقط. يتحقق من الاتصال بمستودع المسؤول ويعرض آخر commit وسجل التعديلات.
+    // 7) التحقق من أن نطاق الموقع أصبح يعمل على commit الجديد قبل إعادة التحميل.
+    if (mode === "deployment_status") {
+      if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
+      const expectedSha = typeof payload?.commitSha === "string" ? payload.commitSha.trim() : ""
+      if (!/^[a-f0-9]{7,40}$/i.test(expectedSha)) return json({ error: "معرف commit غير صالح", diagnostics }, 400)
+      const deployedSha = String(process.env.VERCEL_GIT_COMMIT_SHA || "")
+      const ready = Boolean(deployedSha && (deployedSha === expectedSha || deployedSha.startsWith(expectedSha) || expectedSha.startsWith(deployedSha)))
+      return json({ result: { ready, expectedSha: expectedSha.slice(0, 7), deployedSha: deployedSha ? deployedSha.slice(0, 7) : null }, diagnostics })
+    }
+
+    // 8) حالة مزامنة GitHub — للمسؤول فقط. يتحقق من الاتصال بمستودع المسؤول ويعرض آخر commit وسجل التعديلات.
     if (mode === "github_status") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const status = await getGithubSyncStatus()
@@ -933,7 +949,7 @@ export async function POST(req: Request) {
       if (!path) return json({ error: "يرجى تحديد مسار الملف المراد حذفه", diagnostics }, 400)
       // الحذف عملية يدوية صريحة بتأكيد المسؤول، لا تتطلب تفعيل الدفع التلقائي — يكفي اتصال المستودع وصلاحية الكتابة.
       const st = await getGithubSyncStatus()
-      if (!st.connected) return json({ error: st.reason || "المزامنة مع GitHub غير متصلة", diagnostics }, 400)
+      if (!st.connected) return json({ error: st.reason || "��لمزامنة مع GitHub غير متصلة", diagnostics }, 400)
       if (!st.canWrite) return json({ error: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على ${st.repo}`, diagnostics }, 400)
       try {
         const message = `chore: delete ${path} (admin request via sync panel)`
