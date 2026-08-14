@@ -1,6 +1,7 @@
 import { createCanvas, DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas"
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs"
-import { getQuranPdfBytes, normalizeQuranText } from "@/lib/quran-reference"
+import { findPage } from "quran-meta/hafs"
+import { getLocalQuranSurah, getQuranPdfBytes, normalizeQuranText } from "@/lib/quran-reference"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -10,27 +11,13 @@ Object.assign(globalThis, { DOMMatrix, ImageData, Path2D })
 const QUESTION_TYPES = new Set(["mcq", "truefalse", "complete", "audio"])
 
 async function getAyahRange(surah: number, from: number, to: number) {
-  const response = await fetch(`https://api.alquran.cloud/v1/surah/${surah}/quran-uthmani`, {
-    cache: "force-cache",
-    signal: AbortSignal.timeout(8_000),
-  })
-  const data = await response.json().catch(() => null)
-  const ayahs = Array.isArray(data?.data?.ayahs) ? data.data.ayahs : []
-  const selected = ayahs.filter((entry: any) => Number(entry?.numberInSurah) >= from && Number(entry?.numberInSurah) <= to)
-  if (!response.ok || !selected.length) throw new Error("تعذر تحديد الآيات المطلوبة")
+  const localSurah = await getLocalQuranSurah(surah)
+  const selected = localSurah.verses.filter((entry) => entry.id >= from && entry.id <= to)
+  if (!selected.length) throw new Error("تعذر تحديد الآيات المطلوبة من المصحف المحلي")
   return {
-    text: selected.map((entry: any) => String(entry.text || "")).join(" "),
-    page: Number(selected[0]?.page) || 1,
+    text: selected.map((entry) => entry.text).join(" "),
+    page: findPage(surah, from),
   }
-}
-
-async function getPageAyahs(page: number) {
-  const response = await fetch(`https://api.alquran.cloud/v1/page/${page}/quran-uthmani`, {
-    cache: "force-cache",
-    signal: AbortSignal.timeout(8_000),
-  })
-  const data = await response.json().catch(() => null)
-  return Array.isArray(data?.data?.ayahs) ? data.data.ayahs : []
 }
 
 function itemText(item: any) {
@@ -91,10 +78,8 @@ export async function GET(request: Request) {
       }
     }
 
-    let pageAyahs: any[] = []
     if (!selected) {
       selected = { page: await document.getPage(estimatedPage), items: [] }
-      pageAyahs = await getPageAyahs(targetData.page)
     }
 
     const viewport = selected.page.getViewport({ scale: 2 })
@@ -119,16 +104,6 @@ export async function GET(request: Request) {
       cropY = Math.max(0, Math.floor(top - paddingY))
       cropWidth = Math.min(pageCanvas.width - cropX, Math.ceil(right - left + paddingX * 2))
       cropHeight = Math.min(pageCanvas.height - cropY, Math.ceil(bottom - top + paddingY * 2))
-    } else if (pageAyahs.length) {
-      const lengths = pageAyahs.map((entry) => Math.max(1, normalizeQuranText(String(entry?.text || "")).length))
-      const targetIndex = Math.max(0, pageAyahs.findIndex((entry) => Number(entry?.numberInSurah) === ayah && Number(entry?.surah?.number) === surah))
-      const total = Math.max(1, lengths.reduce((sum, length) => sum + length, 0))
-      const before = lengths.slice(0, targetIndex).reduce((sum, length) => sum + length, 0) / total
-      const share = Math.max(0.07, (lengths[targetIndex] || targetData.text.length) / total)
-      const textTop = pageCanvas.height * (pageAyahs.length <= 12 ? 0.38 : 0.15)
-      const textHeight = pageCanvas.height * (pageAyahs.length <= 12 ? 0.54 : 0.7)
-      cropY = Math.max(0, Math.round(textTop + before * textHeight - 70))
-      cropHeight = Math.min(pageCanvas.height - cropY, Math.max(150, Math.round(textHeight * share + 140)))
     }
 
     if (type === "complete") {

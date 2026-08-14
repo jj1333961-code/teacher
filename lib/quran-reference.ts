@@ -4,12 +4,16 @@ import { get } from "@vercel/blob"
 import { PDFParse } from "pdf-parse"
 
 const QURAN_PATH = "references/quran.pdf"
+const QURAN_DATA_PATH = "references/quran.json"
 const MUTASHABIHAT_PATH = "references/mutashabihat.pdf"
 const MAX_REFERENCE_CHARS = 240_000
 
+type QuranVerse = { id: number; text: string }
+type QuranSurah = { id: number; name: string; total_verses: number; verses: QuranVerse[] }
 type ReferenceCache = { quran: string; mutashabihat: string; loadedAt: number }
 let cache: ReferenceCache | null = null
 let pending: Promise<ReferenceCache> | null = null
+let quranDataCache: QuranSurah[] | null = null
 
 function normalize(value: string) {
   return value
@@ -88,6 +92,18 @@ export async function getReferenceContext(query: string, extraTerms: string[] = 
 
 export async function getQuranPdfBytes() {
   return readReference(QURAN_PATH)
+}
+
+export async function getLocalQuranSurah(surahNumber: number) {
+  if (!quranDataCache) {
+    const file = await readFile(path.join(process.cwd(), QURAN_DATA_PATH), "utf8")
+    const parsed = JSON.parse(file)
+    if (!Array.isArray(parsed) || parsed.length !== 114) throw new Error("بيانات المصحف المحلي غير مكتملة")
+    quranDataCache = parsed as QuranSurah[]
+  }
+  const surah = quranDataCache.find((entry) => entry.id === surahNumber)
+  if (!surah) throw new Error(`تعذر العثور على السورة رقم ${surahNumber} في المصحف المحلي`)
+  return surah
 }
 
 export function normalizeQuranText(value: string) {

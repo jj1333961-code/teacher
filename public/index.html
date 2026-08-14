@@ -514,7 +514,7 @@ tr:hover { background: var(--table-hover); }
     </button>
     <button class="menu-btn" style="background:#6c757d" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button>
     <button class="menu-btn" style="background:#fd7e14" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button>
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات المرفوعة</button>
+    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ��لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
@@ -679,7 +679,7 @@ tr:hover { background: var(--table-hover); }
         <span id="voiceRecordStatus">اضغط للتسجيل (20 ثانية)</span>
         <audio id="voicePreview" controls style="display:none; height:40px;"></audio>
       </div>
-      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، ويمكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتح��ق من هوية الطالب.</small>
+      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، و��مكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتح��ق من هوية الطالب.</small>
     </div>
   </div>
   <div class="form-group"><label>ملاحظات إضافية</label><textarea id="stNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea></div>
@@ -911,7 +911,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>📬 صندوق الرسائل</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div class="page" style="margin-top:0;">
     <h4 style="color:var(--primary); margin-bottom:10px;">✉️ مراسلة المسؤول (نص أو رسالة صوتية)</h4>
-    <div class="form-group"><textarea id="studentMsgText" rows="3" placeholder="اكتب رسالتك للمسؤول..."></textarea></div>
+    <div class="form-group"><textarea id="studentMsgText" rows="3" placeholder="ا��تب رسالتك للمسؤول..."></textarea></div>
     <div id="voiceBox_student"></div>
     <button class="btn btn-primary" onclick="sendUserMessageToAdmin('student')">📤 إرسال</button>
   </div>
@@ -1139,7 +1139,7 @@ const SURAH_AYAH_COUNTS = {
 const ALL_SURAHS_ORDERED = [
   "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
   "الإس��اء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
-  "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
+  "ال��حزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
   "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الإنفطار",
   "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة",
@@ -1426,7 +1426,7 @@ function renderStudentRecordsBox() {
       html += '<div class="history-day"><div class="history-day-header">📅 ' + date + '</div>';
       grouped[date].forEach(function(sess){
         html += '<div style="margin-bottom:10px;">';
-        html += '<div style="margin-bottom:6px;">' + (sess.isDraft ? '<span class="badge badge-warning">📝 مسودة اليوم</span>' : '<span class="badge badge-success">✅ نهائي</span>') + ' <span class="score-badge">المجموع: ' + (sess.totalScore || 0) + ' درجة</span></div>';
+        html += '<div style="margin-bottom:6px;">' + (sess.isDraft ? '<span class="badge badge-warning">📝 مسودة اليوم</span>' : '<span class="badge badge-success">✅ نهائي</span>') + ' <span class="score-badge">المجموع: ' + (sess.totalScore || 0) + ' ��رجة</span></div>';
         (sess.elements || []).forEach(function(el, ei){
           html += '<div class="history-element" style="border-right-color:' + (el.color || 'var(--info)') + ';">';
           html += '<div class="history-element-name">' + (ei + 1) + '. ' + el.name + '</div>';
@@ -1668,7 +1668,7 @@ function adminLogin() {
     showPage('adminDashboard');
     document.getElementById('adminLoginAlert').innerHTML = '';
   } else {
-    document.getElementById('adminLoginAlert').innerHTML = '<div class="alert alert-danger">❌ رقم الموبايل أو الرقم السري غير صحيح</div>';
+    document.getElementById('adminLoginAlert').innerHTML = '<div class="alert alert-danger">❌ رقم ال��وبايل أو الرقم السري غير صحيح</div>';
   }
 }
 
@@ -2527,7 +2527,7 @@ function localSmartChatReply(message,role){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
       return 'ملخص البيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت الماضي البعيد.';
     }
-    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر المواضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
+    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر المواضع الضعيفة ثلاث مرات ثم أعد الاختبار دون ا��نظر إلى المصحف.';
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكره|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أو سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
@@ -2910,7 +2910,7 @@ async function recordStudentExamAudio(i){
     recorder.start();btn.onclick=()=>{if(recorder.state==='recording')recorder.stop()};
   }catch(e){status.textContent='تعذر الوصول إلى الميكروفون';btn.dataset.recording='false';btn.classList.remove('recording')}
 }
-function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختبار</h3><p>النتيجة معلّقة لحين مراجعة المسؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
+function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختبار</h3><p>النتيجة معلّقة لحين مراجعة المسؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>��لتقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
 function renderStudentExamResult(ex){const c=document.getElementById('studentExamContent');if(c)c.innerHTML=renderStudentResultHtml(ex)}
 function notifyExamExpired(student,ex){if(ex.expiryNotified)return;ex.expiryNotified=true;const text='انتهى الوقت المحدد لاختبار '+student.name+' بتاريخ '+(ex.date||'');let msgs=getData('messages');msgs.push({type:'system',sender:'النظام',receiverType:'student',receiverId:student.id,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'parent',receiverName:student.parent,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'admin',text,studentId:student.id,parentPhone:student.parentPhone||student.parentMobile||'',time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});setData('messages',msgs)}
 function examWhatsAppLink(phone,text){const p=String(phone||'').replace(/\D/g,'').replace(/^0/,'20');return p?'https://wa.me/'+p+'?text='+encodeURIComponent(text):''}
@@ -4258,10 +4258,10 @@ async function fetchAyatText(surah, from, to) {
     const cache = JSON.parse(localStorage.getItem(AYAT_CACHE_KEY) || '{}');
     const key = num + ':' + f + '-' + t;
     if(cache[key]) return cache[key];
-    const res = await fetch('https://api.alquran.cloud/v1/surah/' + num + '/quran-uthmani');
+    const res = await fetch('/api/quran?surah=' + num);
     const json = await res.json();
-    const ayat = (json && json.data && json.data.ayahs) ? json.data.ayahs : [];
-    const txt = ayat.filter(function(a){ return a.numberInSurah >= f && a.numberInSurah <= t; })
+    const ayat = (json && Array.isArray(json.verses)) ? json.verses : [];
+    const txt = ayat.filter(function(a){ return a.id >= f && a.id <= t; })
                     .map(function(a){ return a.text; }).join(' ');
     if(txt) { cache[key] = txt; try { localStorage.setItem(AYAT_CACHE_KEY, JSON.stringify(cache)); } catch(e){} }
     return txt;
@@ -5169,7 +5169,7 @@ function renderUserFiles(role) {
   const box = document.getElementById(role === 'student' ? 'studentFilesContent' : 'parentFilesContent');
   if(!box) return;
   const files = getFilesForUser(role);
-  if(files.length === 0) { box.innerHTML = '<div class="alert alert-info">لا توجد ملفات مرسلة إليك حتى الآن</div>'; return; }
+  if(files.length === 0) { box.innerHTML = '<div class="alert alert-info">لا توجد ملفات مرسلة إ��يك حتى الآن</div>'; return; }
   let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px;">';
   files.slice().reverse().forEach(f => {
     const sizeMB = (f.size / (1024*1024)).toFixed(2);
@@ -5361,7 +5361,7 @@ function generateAIResponse(text, student) {
   }
   // خطة الحفظ
   if(has('خطة','جدول','تنظيم','وقت','كيف احفظ','كيف أحفظ')) {
-    return '🗓️ <strong>خطة يومية مقترحة لك '+name+':</strong><br>• بعد الفجر (20 د): حفظ جديد — كرر الآية 7 مرات نظراً ثم 3 مرات غيباً.<br>• بعد العصر (10 د): تثبيت حفظ اليوم.<br>• قبل النوم (15 د): مراجعة حفظ الأمس + صفحة قديمة.<br>• يوم الجمعة: مراجعة شاملة لكل ما حفظته في الأسبوع.<br><br>الاستمرار القليل الدائم خير من الكثير المنقطع.';
+    return '🗓️ <strong>خطة يومية مقترحة لك '+name+':</strong><br>• بعد الفج�� (20 د): حفظ جديد — كرر الآية 7 مرات نظراً ثم 3 مرات غيباً.<br>• بعد العصر (10 د): تثبيت حفظ اليوم.<br>• قبل النوم (15 د): مراجعة حفظ الأمس + صفحة قديمة.<br>• يوم الجمعة: مراجعة شاملة لكل ما حفظته في الأسبوع.<br><br>الاستمرار القليل الدائم خير من الكثير المنقطع.';
   }
   // نصائح
   if(has('نصيحة','نصائح','ساعدني','مساعدة','انسى','أنسى','نسيت','صعب')) {

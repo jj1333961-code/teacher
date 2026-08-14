@@ -25,6 +25,7 @@
     "pdf-parse": "^2.4.5",
     "pdfjs-dist": "5.4.296",
     "pg": "^8.23.0",
+    "quran-meta": "^6.0.17",
     "react": "^19",
     "react-dom": "^19",
     "shadcn": "^4.8.0",

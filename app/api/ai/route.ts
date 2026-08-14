@@ -1,5 +1,5 @@
 import { generateText } from "ai"
-import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
+import { getLocalQuranSurah, getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
 
 export const maxDuration = 300
 
@@ -332,7 +332,7 @@ const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد 
  "risks": ["مخاطرة أو أثر جانبي محتمل"],
  "clarifications": ["سؤال توضيحي إن كان الطلب غامضاً"]
 }
-قواعد إضافية مهمة: لا تقترح حذف أو إعادة تسمية أي ملف. لا تضع أسراراً أو مفاتيح API في public أو كود المتصفح. يمكنك اختيار أي ملف موجود ف�� قائمة المستودع التي نرسلها لك، ويمكن إنشاء ملف جديد فقط عند الحاجة الواضحة. إذا احتاج الطلب خدمة خارجية غير مضبوطة، اذكر ذلك في risks أو clarifications. لا تضع أسراراً أو مفاتيح API في ملفات public أو كود المتصفح. إن كان الطلب مخالفاً للقيود (مثل حذف المشروع أو إعادة بنائه) اجعل feasible=false واشرح السبب في summary.`
+قواعد إضافية مهمة: لا تقترح حذف أو إعادة تسمية أي ملف. لا تضع أسراراً أو مفاتيح API في public أو كود المتصفح. يمكنك اختيار أي ملف موجود ف�� قائمة المستود�� التي نرسلها لك، ويمكن إنشاء ملف جديد فقط عند الحاجة الواضحة. إذا احتاج الطلب خدمة خارجية غير مضبوطة، اذكر ذلك في risks أو clarifications. لا تضع أسراراً أو مفاتيح API في ملفات public أو كود المتصفح. إن كان الطلب مخالفاً للقيود (مثل حذف المشروع أو إعادة بنائه) اجعل feasible=false واشرح السبب في summary.`
 
 
 function githubHeaders() {
@@ -446,7 +446,7 @@ async function getGithubSyncStatus() {
   if (!GITHUB_OWNER) missing.push("GITHUB_OWNER")
   if (!GITHUB_REPO) missing.push("GITHUB_REPO")
   if (missing.length) {
-    return { connected: false, reason: `متغيرات البيئة التالية غير مهيأة على الخادم: ${missing.join("، ")}`, missing }
+    return { connected: false, reason: `متغيرات البيئة التالية غير م��يأة على الخادم: ${missing.join("، ")}`, missing }
   }
   let repo: any
   try {
@@ -720,13 +720,11 @@ export async function POST(req: Request) {
       }
       const selectedNumbers = alternatingNumbers.slice(0, Math.min(12, Math.max(requestedCount, 6), alternatingNumbers.length))
       const sourceSurahs = await Promise.all(selectedNumbers.map(async (number) => {
-        const quranResponse = await fetch(`https://api.alquran.cloud/v1/surah/${number}`, { cache: "no-store", signal: AbortSignal.timeout(12_000) })
-        const quran = await quranResponse.json().catch(() => null)
-        if (!quranResponse.ok || quran?.code !== 200 || !Array.isArray(quran?.data?.ayahs)) throw new Error(`تعذر جلب السورة رقم ${number} من المصدر القرآني`)
+        const surah = await getLocalQuranSurah(number)
         return {
-          surah: String(quran.data.name || ""),
+          surah: surah.name,
           surahNumber: number,
-          verses: quran.data.ayahs.map((ayah: any) => ({ number: Number(ayah.numberInSurah), text: String(ayah.text || "") })),
+          verses: surah.verses.map((ayah) => ({ number: ayah.id, text: ayah.text })),
         }
       }))
       const referenceContext = await getReferenceContext(
