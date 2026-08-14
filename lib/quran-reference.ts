@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises"
+import path from "node:path"
 import { get } from "@vercel/blob"
 import { PDFParse } from "pdf-parse"
 
@@ -21,10 +23,18 @@ function normalize(value: string) {
     .trim()
 }
 
-async function readPrivateBlob(pathname: string) {
-  const result = await get(pathname, { access: "private" })
-  if (!result || result.statusCode !== 200) throw new Error(`تعذر قراءة المرجع الخاص: ${pathname}`)
-  return new Uint8Array(await new Response(result.stream).arrayBuffer())
+async function readReference(pathname: string) {
+  try {
+    const localFile = await readFile(path.join(process.cwd(), "references", path.basename(pathname)))
+    return new Uint8Array(localFile)
+  } catch (localError) {
+    if (!(process.env.BLOB_READ_WRITE_TOKEN || "").trim()) {
+      throw new Error(`تعذر قراءة المرجع المحلي: ${pathname}`, { cause: localError })
+    }
+    const result = await get(pathname, { access: "private" })
+    if (!result || result.statusCode !== 200) throw new Error(`تعذر قراءة المرجع الخاص: ${pathname}`)
+    return new Uint8Array(await new Response(result.stream).arrayBuffer())
+  }
 }
 
 async function extractPdf(data: Uint8Array) {
@@ -40,7 +50,7 @@ async function extractPdf(data: Uint8Array) {
 export async function loadQuranReferences() {
   if (cache && Date.now() - cache.loadedAt < 6 * 60 * 60 * 1000) return cache
   if (!pending) {
-    pending = Promise.all([readPrivateBlob(QURAN_PATH), readPrivateBlob(MUTASHABIHAT_PATH)])
+    pending = Promise.all([readReference(QURAN_PATH), readReference(MUTASHABIHAT_PATH)])
       .then(async ([quranData, mutashabihatData]) => {
         const [quran, mutashabihat] = await Promise.all([extractPdf(quranData), extractPdf(mutashabihatData)])
         cache = { quran, mutashabihat, loadedAt: Date.now() }
@@ -77,7 +87,7 @@ export async function getReferenceContext(query: string, extraTerms: string[] = 
 }
 
 export async function getQuranPdfBytes() {
-  return readPrivateBlob(QURAN_PATH)
+  return readReference(QURAN_PATH)
 }
 
 export function normalizeQuranText(value: string) {
