@@ -428,8 +428,10 @@ tr:hover { background: var(--table-hover); }
  .exam-slide-panel{animation:examSlideReveal .24s ease-out}
  @keyframes examSlideReveal{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   .quran-question-media{width:100%;max-width:760px;margin:14px auto}
-  .quran-question-loading{padding:18px;text-align:center;border:1px dashed var(--border);border-radius:12px;background:var(--table-header);color:var(--text-light)}
+  .quran-question-loading,.quran-question-error{padding:18px;text-align:center;border:1px dashed var(--border);border-radius:12px;background:var(--table-header);color:var(--text-light)}
+  .quran-question-error{color:var(--danger)}
   .quran-question-image{display:block;width:100%;max-height:72vh;object-fit:contain;border:1px solid var(--border);border-radius:12px;background:var(--card-bg)}
+  .quran-question-retry{margin-top:10px}
  .exam-question-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .exam-option{display:flex;gap:8px;align-items:center;margin:7px 0}
 .exam-timer{font-size:1.3rem;font-weight:bold;color:var(--danger)}
@@ -677,7 +679,7 @@ tr:hover { background: var(--table-hover); }
         <span id="voiceRecordStatus">اضغط للتسجيل (20 ثانية)</span>
         <audio id="voicePreview" controls style="display:none; height:40px;"></audio>
       </div>
-      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، ويمكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتحقق من هوية الطالب.</small>
+      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، ويمكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتح��ق من هوية الطالب.</small>
     </div>
   </div>
   <div class="form-group"><label>ملاحظات إضافية</label><textarea id="stNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea></div>
@@ -870,7 +872,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header">
     <h2>👨‍🎓 صفحة الطالب</h2>
     <div>
-      <button class="btn btn-outline admin-badge" onclick="showPage('studentInbox')">📬 الرسائل <span id="studentMsgBadge" class="msg-count hidden">0</span></button>
+      <button class="btn btn-outline admin-badge" onclick="showPage('studentInbox')">📬 الرسا��ل <span id="studentMsgBadge" class="msg-count hidden">0</span></button>
       <button class="btn btn-outline" onclick="showPage('studentAIChat')">🤖 مساعد AI</button>
       <button class="btn btn-outline" onclick="showPage('studentRecordsPage')">📦 صندوق التسجيلات</button>
       <button class="btn btn-outline" onclick="showPage('studentExamPage')">🧪 الاختبارات</button>
@@ -998,7 +1000,7 @@ tr:hover { background: var(--table-hover); }
   </div>
 </div>
 
-<!-- صفحة سجلات الطالب لولي الأمر -->
+<!-- صفحة سجلات الطال�� لولي الأمر -->
 <div id="parentRecordsPage" class="page hidden">
   <div class="page-header">
     <h2>📋 سجلات التسميعات النهائية</h2>
@@ -2560,10 +2562,27 @@ function syncExamSurahRange(){
   last.value=allowed.includes(previous)?previous:'';
 }
 
+function quranQuestionImageUrl(q){
+  const surahNumber=ALL_SURAHS_ORDERED.indexOf(String(q.surah||''))+1,from=Math.max(1,parseInt(q.from)||1),to=Math.max(from,parseInt(q.to)||from),type=['mcq','truefalse','complete','audio'].includes(q.type)?q.type:'mcq';
+  return surahNumber>0?'/api/quran-question-image?surah='+surahNumber+'&ayah='+from+'&to='+to+'&type='+type:'';
+}
+function quranQuestionMediaHtml(q,index){
+  const generated=q.source!=='file'&&!q.sourceFileId?quranQuestionImageUrl(q):'';const src=generated||q.questionImage;if(!src)return '';
+  return '<div class="quran-question-media"><div class="quran-question-loading" role="status">جاري تحميل صورة السؤال من المصحف...</div><img class="quran-question-image" src="'+escapeHtml(src)+'" alt="المقطع القرآني الخاص بالسؤال '+(index+1)+'" loading="eager" onload="this.previousElementSibling.style.display=\'none\'" onerror="showQuranQuestionImageError(this)"></div>';
+}
+function showQuranQuestionImageError(image){
+  const box=image&&image.parentElement;if(!box)return;const src=image.getAttribute('src')||'';
+  box.innerHTML='<div class="quran-question-error" role="alert">تعذر تحميل صورة السؤال من المصحف.<br><button type="button" class="btn btn-sm btn-secondary quran-question-retry" onclick="retryQuranQuestionImage(this,\''+escapeHtml(src)+'\')">إعادة المحاولة</button></div>';
+}
+function retryQuranQuestionImage(button,src){
+  const box=button&&button.closest('.quran-question-media');if(!box)return;const separator=src.includes('?')?'&':'?';
+  box.innerHTML='<div class="quran-question-loading" role="status">جاري إعادة تحميل صورة السؤال...</div><img class="quran-question-image" src="'+src+separator+'retry='+Date.now()+'" alt="المقطع القرآني الخاص بالسؤال" loading="eager" onload="this.previousElementSibling.style.display=\'none\'" onerror="showQuranQuestionImageError(this)">';
+}
 function cleanExamQuestion(q){
   q=Object.assign({},q);q.prompt=String(q.prompt||'').replace(/(?:الإجابة|الجواب)\s*(?:الصحيحة)?\s*[:：].*$/gi,'').trim();
   const normalizedCorrect=normalizeExamText(q.correct||'');
   if(normalizedCorrect.length>2&&normalizeExamText(q.prompt).includes(normalizedCorrect))q.prompt=q.type==='complete'?'أكمل المقطع المخفي في صورة المصحف':'اختر الإجابة الصحيحة اعتماداً على المقطع المصور من المصحف';
+  if(q.source!=='file'&&!q.sourceFileId)q.questionImage=quranQuestionImageUrl(q)||q.questionImage||'';
   if(q.questionImage)q.stem='';
   return q;
 }
@@ -2710,7 +2729,7 @@ function renderExamQuestions(){
   let h='<div class="exam-slide-strip" role="tablist" aria-label="شرائح أسئلة الاختبار">'+examQuestions.map((item,index)=>'<button type="button" role="tab" aria-selected="'+(index===i)+'" class="exam-slide-tab '+(index===i?'active ':'')+(item.rejected?'expired':'')+'" onclick="selectExamEditorSlide('+index+')" title="السؤال '+(index+1)+'">'+(index+1)+'</button>').join('')+'</div>';
   h+='<div class="exam-question exam-slide-panel '+(q.rejected?'rejected':'')+'">'+
     '<div class="exam-question-header"><strong>السؤال '+(i+1)+' من '+examQuestions.length+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">رفض السؤال</button>')+'</div>'+
-    (q.questionImage?'<div class="quran-question-media"><div class="quran-question-loading" aria-hidden="true">جاري تحميل صورة السؤال من المصحف...</div><img class="quran-question-image" src="'+escapeHtml(q.questionImage)+'" alt="المقطع القرآني الخاص بالسؤال '+(i+1)+'" loading="eager" onload="this.previousElementSibling.style.display=\'none\'" onerror="this.parentElement.innerHTML=\'<div class=&quot;alert alert-danger&quot;>تعذر تحميل صورة السؤال من ملف المصحف.</div>\'"></div>':'')+
+    quranQuestionMediaHtml(q,i)+
     '<div class="form-row"><div class="form-group"><label>النوع</label><select onchange="updateExamQuestion('+i+',\'type\',this.value);renderExamQuestions()"><option value="mcq" '+(q.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(q.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(q.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(q.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+ 
     '<div class="form-group"><label>المستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+ 
     '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
@@ -2725,7 +2744,7 @@ function renderExamQuestions(){
 }
 function showExamAlert(t,type){const e=document.getElementById('examBuilderAlert');if(e)e.innerHTML='<div class="alert alert-'+(type||'info')+'">'+t+'</div>'}
 function saveExamDraft(){
-  const id=parseInt(document.getElementById('recordStudentId').value);let students=getData('students');const i=students.findIndex(s=>s.id===id);const qs=examQuestions.filter(q=>!q.rejected);
+  const id=parseInt(document.getElementById('recordStudentId').value);let students=getData('students');const i=students.findIndex(s=>s.id===id);const qs=examQuestions.filter(q=>!q.rejected).map(cleanExamQuestion);
   if(i<0||!qs.length){showExamAlert('أضف سؤالاً واحداً على الأقل قبل الحفظ.','danger');return}
   const totalSeconds=qs.reduce((n,q)=>n+Math.max(5,parseInt(q.timeLimit)||60),0);
   const deadlineValue=document.getElementById('examDeadline')?.value||'';const deadlineAt=deadlineValue?new Date(deadlineValue).getTime():Date.now()+24*60*60*1000;if(!Number.isFinite(deadlineAt)||deadlineAt<=Date.now()){showExamAlert('حدد موعد انتهاء لاحقاً للوقت الحالي.','danger');return}
@@ -2779,7 +2798,7 @@ function renderStudentExam(){
   let h='<div class="exam-sticky"><strong>اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال الحالي '+(studentExamCurrentIndex+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)+'</span></div><div>لكل سؤال وقت مستقل. الشرائح السابقة للعرض فقط، والقادمة تُفتح بعد تأكيد الإجابة.</div></div>';
   h+='<div class="exam-slide-strip" role="tablist" aria-label="شرائح أسئلة الاختبار">'+ex.questions.map((item,index)=>{const future=index>studentExamCurrentIndex,complete=!!studentExamLockedIndices[index]&&studentExamQuestionRemaining[index]>0,expired=!!studentExamLockedIndices[index]&&studentExamQuestionRemaining[index]===0;return '<button type="button" role="tab" aria-selected="'+(index===i)+'" '+(future?'disabled':'')+' class="exam-slide-tab '+(index===i?'active ':'')+(complete?'complete ':'')+(expired?'expired ':'')+(future?'locked':'')+'" onclick="viewStudentExamSlide('+index+')" title="السؤال '+(index+1)+'">'+(index+1)+'</button>'}).join('')+'</div>';
   h+='<div id="studentExamQuestions"><div class="exam-question exam-slide-panel" id="examQuestionBox_'+i+'"><div class="exam-question-header"><h4>السؤال '+(i+1)+': '+escapeHtml(q.prompt||'')+'</h4>'+(isCurrent?'<span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)+'</span>':'<span class="badge badge-success">تم تأكيد هذا السؤال</span>')+'</div>'+
-    (q.questionImage?'<div class="quran-question-media"><div class="quran-question-loading" aria-hidden="true">جاري تحميل صورة السؤال من المصحف...</div><img class="quran-question-image" src="'+escapeHtml(q.questionImage)+'" alt="المقطع القرآني الخاص بالسؤال '+(i+1)+'" loading="eager" onload="this.previousElementSibling.style.display=\'none\'" onerror="this.parentElement.innerHTML=\'<div class=&quot;alert alert-danger&quot; role=&quot;alert&quot;>تعذر تحميل صورة السؤال. لا تُجب قبل إبلاغ المسؤول.</div>\'"></div>':'');
+    quranQuestionMediaHtml(q,i);
   if(q.type==='mcq'||q.type==='truefalse')(q.options||[]).forEach(o=>{h+='<label class="exam-option"><input type="radio" name="examq_current" value="'+escapeHtml(o)+'" '+(studentExamAnswers[i]===o?'checked':'')+' '+(!isCurrent?'disabled':'')+' onchange="markExamAnswer('+i+',this.value)"> '+escapeHtml(o)+'</label>'});
   else if(q.type==='complete')h+='<input class="form-group" style="width:100%;padding:12px" id="examComplete_'+i+'" value="'+escapeHtml(studentExamAnswers[i]||'')+'" placeholder="اكتب الإكمال هنا" '+(!isCurrent?'disabled':'')+' oninput="studentExamAnswers['+i+']=this.value">';
   else h+=isCurrent?'<div id="examAudioArea_'+i+'">'+studentExamAudioHTML(i)+'</div>':'<div class="alert alert-info">تم حفظ التسجيل الخاص بهذا السؤال.</div>';
@@ -3822,7 +3841,7 @@ function replyMessage(idx) {
   msgs[idx].reply = replyText || '🎙️ رد صوتي';
   msgs[idx].replyVoice = voice;
   clearVoiceMsg('reply' + idx);
-  showToast('✅ تم إرسال الرد', 'success');
+  showToast('✅ تم إرسال الر��', 'success');
   setData('messages', msgs);
   renderMessages();
 }
@@ -5268,7 +5287,7 @@ function generateParentWelcome(student) {
   const templates = [
     {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطوات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
     {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
-    {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' ��لى الاستمرار، وذكّ��ه بأ�� الله يُضاعف الأجر لمن يتعب في سبيله.'}
+    {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' ��لى الاستمرار، وذكّ��ه بأ�� الله يُضاعف الأجر لمن يت��ب في سبيله.'}
   ];
   const base = templates[Math.floor(Math.random() * templates.length)];
   if(last) {
@@ -5349,7 +5368,7 @@ function generateAIResponse(text, student) {
     return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتقل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
   }
   // تحفيز
-  if(has('تحفيز','همة','ملل','تعبان','زهقان','احبطت','أحبطت')) {
+  if(has('تحفيز','همة','ملل','تعبان','زهقان','احب��ت','أحبطت')) {
     const quotes = [
       '🌟 «وَلَقَدْ يَسَّرْنَا الْقُ��ْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ فقط.',
       '💚 قال ﷺ: «خيركم من تعلم القرآن وعلمه». أنت اليوم في أفضل طريق.',
