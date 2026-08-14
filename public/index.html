@@ -593,7 +593,7 @@ tr:hover { background: var(--table-hover); }
   <div id="adminsTable"></div>
 </div>
 
-<!-- إعدادات المسؤول -->
+<!-- إعداد��ت المسؤول -->
 <div id="adminSettings" class="page hidden" style="max-width:600px;">
   <div class="page-header"><h2>⚙️ إعدادات المسؤول</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="adminSettingsAlert"></div>
@@ -2553,7 +2553,8 @@ function syncExamSurahRange(){
 
 function cleanExamQuestion(q){
   q=Object.assign({},q);q.prompt=String(q.prompt||'').replace(/(?:الإجابة|الجواب)\s*(?:الصحيحة)?\s*[:：].*$/gi,'').trim();
-  if(q.correct&&normalizeExamText(q.prompt).includes(normalizeExamText(q.correct)))q.prompt=q.type==='complete'?'أكمل المقطع المخفي في صورة المصحف':'اختر الإجابة الصحيحة اعتماداً على المقطع المصور من المصحف';
+  const normalizedCorrect=normalizeExamText(q.correct||'');
+  if(normalizedCorrect.length>2&&normalizeExamText(q.prompt).includes(normalizedCorrect))q.prompt=q.type==='complete'?'أكمل المقطع المخفي في صورة المصحف':'اختر الإجابة الصحيحة اعتماداً على المقطع المصور من المصحف';
   if(q.questionImage)q.stem='';
   return q;
 }
@@ -2654,7 +2655,7 @@ async function generateExamQuestions(){
       list=await generateLocalQuranQuestions(base,lastSurah,normalizedPlans);showExamAlert('يعمل المولّد القرآني المحلي داخل المتصفح...','info');
     }else{
       try{const surahNumber=startIndex+1,endSurahNumber=endIndex+1;const ai=await callStudentAI('generate_exam',{surahNumber,endSurahNumber,plan:normalizedPlans},0.1);list=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[]);if(!list.length)throw new Error('استجابة فارغة')}
-      catch(aiError){list=await generateLocalQuranQuestions(base,lastSurah,normalizedPlans);showExamAlert('تعذر Gemini، فتم استخدام المولّد القرآني المحلي بنجاح.','warning')}
+      catch(aiError){list=await generateLocalQuranQuestions(base,lastSurah,normalizedPlans);showExamAlert('تع��ر Gemini، فتم استخدام المولّد القرآني المحلي بنجاح.','warning')}
     }
     list=list.map(cleanExamQuestion).filter(q=>q.prompt&&q.correct!==undefined);
     if(!list.length) throw new Error('لم ينشئ الذكاء الاصطناعي أسئلة.');
@@ -3359,7 +3360,7 @@ function openDevAssistant(){
 // ===== سجل التدقيق لمساعد التطوير (Audit Log) =====
 // عبارات تدل على عمليات خطيرة تتطلب تأكيداً صريحاً قبل التنفي�� التلقائي.
 const DEV_DANGER_PATTERNS = [
-  {re:/حذف\s*(قاعدة|القاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
+  {re:/حذف\s*(قاعدة|��لقاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
   {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*الملفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
   {re:/حذف\s*(المستخدمين|كل\s*المستخدمين|جميع\s*المستخدمين)|delete\s+users/i, label:'حذف المستخدمين'},
   {re:/حذف\s*(الطلاب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},

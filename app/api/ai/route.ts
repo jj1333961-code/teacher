@@ -276,7 +276,7 @@ score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إ�
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":[]}`
 
 const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة القرآن اعتماداً على تفريغ نصي (transcript) قد يكون غير دقيق بسبب التعرف الآلي.
-قارن ما تلاه الطالب بالنص المتوقع expectedText للمقطع المطلوب (surah من from إلى to).
+قارن ما تلاه الطالب بالنص المتوقع expectedText للمقطع المطلوب (surah ��ن from إلى to).
 كن متساهلاً: يكفي وجود القليل من الآيات أو الكلمات الصحيحة المطابقة للمق��ع المطلوب لقبول أن الطالب يتلو نفس المقطع. تجاوز أخطاء التعرف الآلي و��لتشكيل.
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
@@ -454,7 +454,7 @@ async function getGithubSyncStatus() {
   } catch (e: any) {
     const msg = String(e?.message || "")
     if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|getaddrinfo/i.test(msg)) {
-      return { connected: false, reason: "تعذر الاتصال بخوادم GitHub (مشكلة في الشبكة)." }
+      return { connected: false, reason: "تعذر الاتصال بخوادم GitHub (مشكلة في الش��كة)." }
     }
     return { connected: false, reason: msg }
   }
@@ -694,7 +694,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أجب عن أي سؤال مسموح، سواء ارتبط بالمنصة أم كان سؤالاً عاماً خارجها. أعط الأولوية لبيانات المنصة فقط عندما يرتبط السؤال بها. اجعل الجواب على قدر السؤال: جواب قصير للسؤال القصير، ولا تتوسع أو تضف أمثلة واقتراحات إلا بطلب صريح. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفرها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة.",
+        "أجب عن أي سؤال مسموح، سواء ارتبط بالمنصة أم كان سؤالاً عاماً خارجها. أعط الأولوية لبيانات المنصة فقط عندما يرتبط السؤال بها. اجعل الجواب على قدر السؤال: جواب قصير للسؤال القصير، ولا تتوسع أو تضف أمثلة واقتراحات إلا بطلب صريح. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفرها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة. أعد الجواب مباشرة بلا تحية أو مقدمة ��و عنوان أو خاتمة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -757,7 +757,20 @@ export async function POST(req: Request) {
         let prompt = String(question?.prompt || defaultPrompts[type]).trim()
         const verseText = source.verses[from - 1]?.text || ""
         if (!prompt || (verseText && normalizeQuranText(prompt).includes(normalizeQuranText(verseText)))) prompt = defaultPrompts[type]
-        if (correct && normalizeQuranText(prompt).includes(normalizeQuranText(correct))) prompt = defaultPrompts[type]
+        // لا نعامل كلمتي «صح/خطأ» كتسريب للإجابة؛ فهما جزء طبيعي من صياغة هذا النوع.
+        // أما الإجابات الأطول (اسم سورة أو تكملة) فلا يجوز أن تظهر في نص السؤال.
+        const normalizedCorrect = normalizeQuranText(correct)
+        if (normalizedCorrect.length > 2 && normalizeQuranText(prompt).includes(normalizedCorrect)) prompt = defaultPrompts[type]
+
+        let options = Array.isArray(question?.options)
+          ? question.options.map((option: unknown) => String(option || "").trim()).filter(Boolean)
+          : []
+        if (type === "truefalse") options = ["صح", "خطأ"]
+        if (type === "mcq") {
+          options = Array.from(new Set(options))
+          if (correct && !options.includes(correct)) options.unshift(correct)
+        }
+
         return {
           ...question,
           type,
@@ -766,9 +779,10 @@ export async function POST(req: Request) {
           to,
           prompt,
           stem: "",
+          options,
           correct,
           questionImage: `/api/quran-question-image?surah=${source.surahNumber}&ayah=${from}&type=${type}`,
-          source: "المصحف وملف المتشابهات المرفقان",
+          source: "مرجع قرآني موثوق",
         }
       })
       return json({ result: safeQuestions, diagnostics, source: "Al Quran Cloud", range: { startSurahNumber, endSurahNumber } })
