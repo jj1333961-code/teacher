@@ -240,10 +240,10 @@ async function transcribeAudio(audioBase64: string, audioFormat: string): Promis
 // ===== أنظمة التعليمات لكل وضع =====
 
 const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم واختبارات الحفظ لطلاب التحفيظ.
-مهمتك توليد أسئلة اختبار قرآنية فقط، دقيقة ومبنية حصراً على نصوص الآيات المرسلة في sourceVerses.
+مهمتك انتقاء أسئلة اختبار قرآنية احترافية ومتنوعة، والتحقق من مواضعها من الآيات المرسلة داخل sourceSurahs. مقتطفا المصحف والمتشابهات مراجع مساعدة للتحقق وتحسين الاختيار، وليسا حدوداً لمعرفتك العامة أو المصدر الوحيد لاستدلالك.
 
 قواعد صارمة:
-- ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceVerses.
+- ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceSurahs.
 - كل سؤال يجب أن يكون متعلقاً مباشرة بحفظ القرآن أو نص الآية أو السورة.
 - لا تنشئ أسئلة ثقافة عامة أو دين عام أو معلومات خارج نصوص القرآن.
 - التزم تماماً بعدد الأسئلة count المطلوب لكل plan، وبالنوع والمستوى وموضع السؤال position المحددين في كل plan.
@@ -255,13 +255,13 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - level=easy: سؤال مباشر من النص.
 - level=medium: تمييز وربط أدق بين الآية والسورة أو موضعها.
 - level=hard: مواضع متشا��هة وتمييز دقيق دون غموض أو معلومات من خارج النص.
-- لا تكرر السؤال نفسه.
+- لا تكرر السؤال نفسه، ووزّع الاختيارات على سور ومواضع مختلفة قدر ما يسمح النطاق.
 - points=1 دائماً.
 - timeLimit لا يخرج عن الوقت الذي حدده المسؤول في plan؛ إذا كان موجوداً فاستخدمه كما هو.
 - لا تضع إجابة صحيحة خارج الخيارات.
-- لا تذكر الإجابة أو نصاً يكشفها في prompt مطلقاً، ولا تنسخ نص الآية في prompt؛ ستُعرض الآية من صورة المصحف.
-- في أسئلة الاختيار والصح/الخطأ اختر مشتتات معقولة وغير ملتبسة، وإجابة واحدة قابلة للتحقق فقط.
-- استفد من مرجع المتشابهات لاختيار مواضع دقيقة في المستوى الصعب، لكنه مرجع مساعد وليس قيداً على قدرتك في الاختيار.
+- prompt توجيه قصير فقط؛ لا تذكر فيه الإجابة، ولا كلمات منها، ولا نص الآية، ولا بداية الآية أو نهايتها، ولا أي تلميح يكشف الحل. اجعل stem فارغاً دائماً لأن المقطع سيظهر بصورة مقتطعة من ملف المصحف.
+- في أسئلة الاختيار والصح/الخطأ اختر مشتتات معقولة وغير ملتبسة، وإجابة واحدة قابلة للتحقق فقط. لا تجعل الخيارات نسخاً من نصوص الآيات.
+- للمستوى الصعب، استفد من referenceContext لاختيار متشابهات صحيحة ومميزة، ثم تحقق من المرجع القرآني المنظم. المرجعان مساعدان وليسا قيداً على معرفتك.
 - أعد مصفوفة JSON فقط، دون Markdown أو شرح.
 
 شكل كل عنصر:
@@ -276,7 +276,7 @@ score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إ�
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":[]}`
 
 const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة القرآن اعتماداً على تفريغ نصي (transcript) قد يكون غير دقيق بسبب التعرف الآلي.
-قارن ما تلاه الطالب بالنص المتوقع expectedText للمقطع المطلوب (surah ��ن from إلى to).
+قارن ما تلاه الطالب بالنص المتوقع expectedText للمقطع المطلوب (surah ����ن from إلى to).
 كن متساهلاً: يكفي وجود القليل من الآيات أو الكلمات الصحيحة المطابقة للمق��ع المطلوب لقبول أن الطالب يتلو نفس المقطع. تجاوز أخطاء التعرف الآلي و��لتشكيل.
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
@@ -454,7 +454,7 @@ async function getGithubSyncStatus() {
   } catch (e: any) {
     const msg = String(e?.message || "")
     if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|getaddrinfo/i.test(msg)) {
-      return { connected: false, reason: "تعذر الاتصال بخوادم GitHub (مشكلة في الش��كة)." }
+      return { connected: false, reason: "تعذر الاتصال بخوادم GitHub (مشكلة في ا��ش��كة)." }
     }
     return { connected: false, reason: msg }
   }
@@ -700,7 +700,7 @@ export async function POST(req: Request) {
       return json({ result: text.trim(), diagnostics })
     }
 
-    // 2) جلب نطاق السور المحدد كاملاً ثم توليد الأسئلة عبر Gemini.
+    // 2) جلب نطاق الس��ر المحدد كاملاً ثم توليد الأسئلة عبر Gemini.
     if (mode === "generate_exam") {
       const startSurahNumber = Number(payload.surahNumber)
       const endSurahNumber = payload.endSurahNumber == null ? 114 : Number(payload.endSurahNumber)
@@ -754,13 +754,17 @@ export async function POST(req: Request) {
           complete: "أكمل المقطع المخفي في صورة المصحف",
           audio: "سجّل تلاوة المقطع المعروض من المصحف",
         }
-        let prompt = String(question?.prompt || defaultPrompts[type]).trim()
-        const verseText = source.verses[from - 1]?.text || ""
-        if (!prompt || (verseText && normalizeQuranText(prompt).includes(normalizeQuranText(verseText)))) prompt = defaultPrompts[type]
-        // لا نعامل كلمتي «صح/خطأ» كتسريب للإجابة؛ فهما جزء طبيعي من صياغة هذا النوع.
-        // أما الإجابات الأطول (اسم سورة أو تكملة) فلا يجوز أن تظهر في نص السؤال.
+        let prompt = String(question?.prompt || defaultPrompts[type])
+          .replace(/(?:الإجابة|الجواب)\s*(?:الصحيحة)?\s*[:：].*$/giu, "")
+          .replace(/\s+/g, " ")
+          .trim()
+        const verseTexts = source.verses.slice(from - 1, to).map((verse) => normalizeQuranText(verse.text)).filter(Boolean)
+        const normalizedPrompt = normalizeQuranText(prompt)
         const normalizedCorrect = normalizeQuranText(correct)
-        if (normalizedCorrect.length > 2 && normalizeQuranText(prompt).includes(normalizedCorrect)) prompt = defaultPrompts[type]
+        const answerWords = normalizedCorrect.split(" ").filter((word) => word.length > 2)
+        const leaksVerse = verseTexts.some((verse) => verse.length > 5 && (normalizedPrompt.includes(verse) || verse.includes(normalizedPrompt)))
+        const leaksAnswer = normalizedCorrect.length > 2 && (normalizedPrompt.includes(normalizedCorrect) || answerWords.filter((word) => normalizedPrompt.includes(word)).length >= Math.min(2, answerWords.length))
+        if (!prompt || leaksVerse || leaksAnswer) prompt = defaultPrompts[type]
 
         let options = Array.isArray(question?.options)
           ? question.options.map((option: unknown) => String(option || "").trim()).filter(Boolean)
@@ -781,7 +785,7 @@ export async function POST(req: Request) {
           stem: "",
           options,
           correct,
-          questionImage: `/api/quran-question-image?surah=${source.surahNumber}&ayah=${from}&type=${type}`,
+          questionImage: `/api/quran-question-image?surah=${source.surahNumber}&ayah=${from}&to=${to}&type=${type}`,
           source: "مرجع قرآني موثوق",
         }
       })
