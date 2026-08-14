@@ -731,7 +731,7 @@ export async function POST(req: Request) {
       }))
       const referenceContext = await getReferenceContext(
         sourceSurahs.map((source) => source.surah).join(" "),
-        sourceSurahs.flatMap((source) => source.verses.slice(0, 2).map((verse) => verse.text)),
+        sourceSurahs.flatMap((source) => source.verses.slice(0, 2).map((verse: { text: string }) => verse.text)),
       ).catch(() => "")
       const safePayload = { plan, startSurahNumber, endSurahNumber, sourceSurahs, referenceContext }
       const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط، واستفد من referenceContext لصياغة أسئلة متشابهات ومواضع أكثر احترافية. وزّع الأسئلة بالتتابع ولا تستخدم السورة نفسها مرتين قبل المرور على بقية السور. في سؤال complete لا تضع كلمات الإجابة في prompt أو stem مطلقاً؛ سيعرض النظام صورة المصحف مع إخفاء الآية المطلوبة. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
@@ -746,7 +746,7 @@ export async function POST(req: Request) {
         const type = ["mcq", "truefalse", "complete", "audio"].includes(question?.type) ? question.type : "mcq"
         const complete = type === "complete"
         const correct = complete
-          ? source.verses.slice(from - 1, to).map((verse) => verse.text).join(" ")
+          ? source.verses.slice(from - 1, to).map((verse: { text: string }) => verse.text).join(" ")
           : String(question?.correct || "")
         const defaultPrompts: Record<string, string> = {
           mcq: "اختر الإجابة الصحيحة اعتماداً على المقطع المصور من المصحف",
@@ -758,11 +758,11 @@ export async function POST(req: Request) {
           .replace(/(?:الإجابة|الجواب)\s*(?:الصحيحة)?\s*[:：].*$/giu, "")
           .replace(/\s+/g, " ")
           .trim()
-        const verseTexts = source.verses.slice(from - 1, to).map((verse) => normalizeQuranText(verse.text)).filter(Boolean)
+        const verseTexts = source.verses.slice(from - 1, to).map((verse: { text: string }) => normalizeQuranText(verse.text)).filter(Boolean)
         const normalizedPrompt = normalizeQuranText(prompt)
         const normalizedCorrect = normalizeQuranText(correct)
         const answerWords = normalizedCorrect.split(" ").filter((word) => word.length > 2)
-        const leaksVerse = verseTexts.some((verse) => verse.length > 5 && (normalizedPrompt.includes(verse) || verse.includes(normalizedPrompt)))
+        const leaksVerse = verseTexts.some((verse: string) => verse.length > 5 && (normalizedPrompt.includes(verse) || verse.includes(normalizedPrompt)))
         const leaksAnswer = normalizedCorrect.length > 2 && (normalizedPrompt.includes(normalizedCorrect) || answerWords.filter((word) => normalizedPrompt.includes(word)).length >= Math.min(2, answerWords.length))
         if (!prompt || leaksVerse || leaksAnswer) prompt = defaultPrompts[type]
 
@@ -790,6 +790,36 @@ export async function POST(req: Request) {
         }
       })
       return json({ result: safeQuestions, diagnostics, source: "Al Quran Cloud", range: { startSurahNumber, endSurahNumber } })
+    }
+
+    if (mode === "student_voice_intake") {
+      if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
+      const audioBase64 = typeof payload.audioBase64 === "string" ? payload.audioBase64 : ""
+      const mimeType = typeof payload.mimeType === "string" ? payload.mimeType.slice(0, 80) : "audio/webm"
+      if (!audioBase64) return json({ error: "لم يصل التسجيل الصوتي", diagnostics }, 400)
+      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
+      if (!/^audio\/(webm|wav|mpeg|mp4|ogg)/i.test(mimeType)) return json({ error: "صيغة التسجيل غير مدعومة", diagnostics }, 415)
+
+      const system = `أنت تستخرج بيانات طالب من إملاء عربي لمسؤول مدرسة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
+transcript,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
+subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ كلمات المرور فقط إذا نطقها المسؤول صراحة. transcript هو التفريغ الكامل المسموع.`
+      const text = await geminiText("استخرج بيانات الطالب من هذا التسجيل الصوتي.", system, 0.05, { mimeType, data: audioBase64 })
+      const parsed = extractJson(text) || {}
+      const clean = (value: unknown, max = 300) => typeof value === "string" ? value.trim().slice(0, max) : ""
+      const digits = (value: unknown, max: number) => clean(value, max * 2).replace(/[^0-9]/g, "").slice(0, max)
+      const birth = /^\d{4}-\d{2}-\d{2}$/.test(clean(parsed.birth, 10)) ? clean(parsed.birth, 10) : ""
+      const juzNumber = Math.min(30, Math.max(0, Number.parseInt(digits(parsed.juz, 2), 10) || 0))
+      return json({ result: {
+        transcript: clean(parsed.transcript, 4000),
+        fields: {
+          name: clean(parsed.name, 120), username: clean(parsed.username, 80),
+          national: digits(parsed.national, 14), phone: digits(parsed.phone, 11), birth,
+          studentPass: clean(parsed.studentPass, 100), parent: clean(parsed.parent, 120),
+          parentPass: clean(parsed.parentPass, 100),
+          subjects: Array.isArray(parsed.subjects) ? parsed.subjects.map((x: unknown) => clean(x, 80)).filter(Boolean).slice(0, 12) : [],
+          juz: juzNumber ? String(juzNumber) : "", surah: clean(parsed.surah, 80), notes: clean(parsed.notes, 1000),
+        },
+      }, diagnostics })
     }
 
     if (mode === "admin_assistant") {
@@ -915,7 +945,7 @@ export async function POST(req: Request) {
         "app/globals.css", "next.config.mjs", "package.json", "components/ui/button.tsx",
         "lib/utils.ts", ".env.example", "DEPLOY.md",
       ] }
-      const userPrompt = `بنية المشروع الحالية:\n${PROJECT_MANIFEST}\n\nقائمة الملفات الفعلية في المستودع:\n${tree.files.join("\n")}\n\nطلب المسؤول:\n${request}\n\nحلّل الطلب وأعد خطة التعديل بصيغة JSON فقط كما هو محدد. اختر الملفات الفعلية من قائمة المستودع كلما أمكن.`
+      const userPrompt = `بنية المشروع الحالية:\n${PROJECT_MANIFEST}\n\nقائمة الملفات الفعلية في المس��ودع:\n${tree.files.join("\n")}\n\nطلب المسؤول:\n${request}\n\nحلّل الطلب وأعد خطة التعديل بصيغة JSON فقط كما هو محدد. اختر الملفات الفعلية من قائمة المستودع كلما أمكن.`
       const text = await runText(userPrompt, SYS_DEV_ASSISTANT, 0.2)
       const parsed = extractJson(text)
       if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.files)) {
