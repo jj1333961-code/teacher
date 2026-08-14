@@ -1,4 +1,5 @@
 import { generateText } from "ai"
+import { getReferenceContext } from "@/lib/quran-reference"
 
 export const maxDuration = 300
 
@@ -110,23 +111,19 @@ async function gatewayGeminiText(prompt: string, system: string, temperature: nu
   if (inlineData) content.push({ type: "file", mediaType: inlineData.mimeType, data: inlineData.data })
   let lastError: unknown = new Error("تعذر بدء اتصال AI Gateway")
 
-  for (const model of GATEWAY_GEMINI_MODELS) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const result = await generateText({
-          model,
-          system,
-          messages: [{ role: "user", content }],
-          temperature,
-          abortSignal: AbortSignal.timeout(70_000),
-        })
-        if (!result.text?.trim()) throw new Error("AI Gateway: وصل رد فارغ")
-        return result.text.trim()
-      } catch (error) {
-        lastError = error
-        if (!isRetryableGeminiError(error) || attempt === 1) break
-        await new Promise((resolve) => setTimeout(resolve, 750 * (attempt + 1)))
-      }
+  for (const model of GATEWAY_GEMINI_MODELS.slice(0, 1)) {
+    try {
+      const result = await generateText({
+        model,
+        system,
+        messages: [{ role: "user", content }],
+        temperature,
+        abortSignal: AbortSignal.timeout(25_000),
+      })
+      if (!result.text?.trim()) throw new Error("AI Gateway: وصل رد فارغ")
+      return result.text.trim()
+    } catch (error) {
+      lastError = error
     }
   }
 
@@ -146,15 +143,15 @@ async function geminiText(prompt: string, system: string, temperature: number, i
   const requestBody = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } })
   let lastError: unknown = new Error("تعذر بدء اتصال Gemini")
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 1; attempt++) {
     try {
-      const model = await resolveGeminiModel(attempt > 0)
+      const model = await resolveGeminiModel(false)
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI.key },
         body: requestBody,
         cache: "no-store",
-        signal: AbortSignal.timeout(70_000),
+        signal: AbortSignal.timeout(25_000),
       })
       const data = await response.json().catch(() => null)
       if (!response.ok) {
@@ -169,8 +166,7 @@ async function geminiText(prompt: string, system: string, temperature: number, i
       return text.trim()
     } catch (error) {
       lastError = error
-      if (!isRetryableGeminiError(error) || attempt === 2) break
-      await new Promise((resolve) => setTimeout(resolve, 900 * (attempt + 1)))
+      break
     }
   }
   // عند فشل Gemini المباشر نهائياً ننتقل دائماً إلى Gateway؛ فهو مسار مستقل
@@ -278,7 +274,7 @@ score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إ�
 
 const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة القرآن اعتماداً على تفريغ نصي (transcript) قد يكون غير دقيق بسبب التعرف الآلي.
 قارن ما تلاه الطالب بالنص المتوقع expectedText للمقطع المطلوب (surah من from إلى to).
-كن متساهلاً: يكفي وجود القليل من الآيات أو الكلمات الصحيحة المطابقة للمق��ع المطلوب لقبول أن الطالب يتلو نفس المقطع. تجاوز أخطاء التعرف الآلي والتشكيل.
+كن متساهلاً: يكفي وجود القليل من الآيات أو الكلمات الصحيحة المطابقة للمق��ع المطلوب لقبول أن الطالب يتلو نفس المقطع. تجاوز أخطاء التعرف الآلي و��لتشكيل.
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
@@ -674,12 +670,14 @@ export async function POST(req: Request) {
   try {
     // 1) وضع ��لنص الحر (صندوق اختبار الذكاء الاصطناعي)
     if (typeof body.prompt === "string" && body.prompt.trim() && !body.mode) {
+      const prompt = body.prompt.trim().slice(0, 6000)
+      const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
-        body.prompt.trim(),
-        "أنت مساعد ذكاء اصطناعي خبير في القرآن الكريم وعلومه. أجب بالعربية الفصحى بدقة وإيجاز.",
-        typeof body.temperature === "number" ? body.temperature : 0.4,
+        `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt}`,
+        "أجب عن أي سؤال مسموح بدقة. في الأسئلة القرآنية اعتمد المرجع المرفق فقط ولا تختلق نصاً. أعد الإجابة المطلوبة فقط دون مقدمة أو تحية أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
+        typeof body.temperature === "number" ? body.temperature : 0.35,
       )
-      return json({ result: text, diagnostics })
+      return json({ result: text.trim(), diagnostics })
     }
 
     const mode = body.mode as string
@@ -690,12 +688,13 @@ export async function POST(req: Request) {
     if (mode === "assistant") {
       const prompt = typeof body.prompt === "string" ? body.prompt.trim() : ""
       if (!prompt) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)
+      const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
-        prompt.slice(0, 6000),
-        "أنت مساعد عربي مفيد. أعطِ الأولوية لبيانات منصة التحفيظ والقرآن ومتابعة الطالب عندما تكون مرتبطة بالسؤال، ويمكنك أيضاً الإجابة عن الموضوعات العامة باختصار ودقة واقتراح أفكار وخطوات متابعة جديدة. لا تخترع بيانات طالب أو نصوصاً قرآنية، ولا تدّعِ الاطلاع على معلومات غير مرفقة.",
-        typeof body.temperature === "number" ? body.temperature : 0.4,
+        `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
+        "أجب عن أي سؤال مسموح بدقة. أعط الأولوية لبيانات المنصة عند ارتباط السؤال بها. في القرآن والمتشابهات اعتمد مقتطفات المرجعين المرفقين ولا تختلق آية أو معلومة. أعد الإجابة فقط: بلا تحية أو مقدمة أو عناوين حالة أو خاتمة أو اقتراحات لم يطلبها السائل.",
+        typeof body.temperature === "number" ? body.temperature : 0.35,
       )
-      return json({ result: text, diagnostics })
+      return json({ result: text.trim(), diagnostics })
     }
 
     // 2) جلب نطاق السور المحدد كاملاً ثم توليد الأسئلة عبر Gemini.
@@ -727,17 +726,37 @@ export async function POST(req: Request) {
           verses: quran.data.ayahs.map((ayah: any) => ({ number: Number(ayah.numberInSurah), text: String(ayah.text || "") })),
         }
       }))
-      const safePayload = { plan, startSurahNumber, endSurahNumber, sourceSurahs }
-      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. sourceSurahs مرتبة بالتناوب بين الماضي القريب والماضي البعيد؛ وزّع الأسئلة عليها بالتتابع ولا تستخدم السورة نفسها مرتين قبل المرور على بقية السور المتاحة. position=start يعني الثلث الأول، وmiddle الثلث الأوسط، وend الثلث الأخير، وrandom يجب أن يتناوب فعلياً بين أول ووسط وآخر السور. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
+      const referenceContext = await getReferenceContext(
+        sourceSurahs.map((source) => source.surah).join(" "),
+        sourceSurahs.flatMap((source) => source.verses.slice(0, 2).map((verse) => verse.text)),
+      ).catch(() => "")
+      const safePayload = { plan, startSurahNumber, endSurahNumber, sourceSurahs, referenceContext }
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط، واستفد من referenceContext لصياغة أسئلة متشابهات ومواضع أكثر احترافية. وزّع الأسئلة بالتتابع ولا تستخدم السورة نفسها مرتين قبل المرور على بقية السور. في سؤال complete لا تضع كلمات الإجابة في prompt أو stem مطلقاً؛ سيعرض النظام صورة المصحف مع إخفاء الآية المطلوبة. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
       const sourcesByName = new Map(sourceSurahs.map((source) => [source.surah, source]))
-      const safeQuestions = questions.map((question: any) => {
+      const safeQuestions = questions.slice(0, requestedCount).map((question: any) => {
         const source = sourcesByName.get(String(question?.surah || "")) || sourceSurahs[0]
         const from = Math.max(1, Math.min(source.verses.length, Number(question?.from) || 1))
         const to = Math.max(from, Math.min(source.verses.length, Number(question?.to) || from))
-        return { ...question, surah: source.surah, from, to, stem: source.verses[from - 1]?.text || "" }
+        const type = ["mcq", "truefalse", "complete", "audio"].includes(question?.type) ? question.type : "mcq"
+        const complete = type === "complete"
+        const correct = complete
+          ? source.verses.slice(from - 1, to).map((verse) => verse.text).join(" ")
+          : String(question?.correct || "")
+        return {
+          ...question,
+          type,
+          surah: source.surah,
+          from,
+          to,
+          prompt: complete ? "أكمل الآية المخفية في صورة المصحف" : String(question?.prompt || "اختر الإجابة الصحيحة"),
+          stem: complete ? "" : source.verses[from - 1]?.text || "",
+          correct,
+          questionImage: complete ? `/api/quran-question-image?surah=${source.surahNumber}&ayah=${from}` : "",
+          source: "المصحف وملف المتشابهات المرفقان",
+        }
       })
       return json({ result: safeQuestions, diagnostics, source: "Al Quran Cloud", range: { startSurahNumber, endSurahNumber } })
     }
@@ -747,8 +766,9 @@ export async function POST(req: Request) {
       const message = typeof payload.message === "string" ? payload.message.trim().slice(0, 3000) : ""
       if (!message) return json({ error: "اكتب رسالتك أولاً", diagnostics }, 400)
       const context = JSON.stringify(payload.context || {}).slice(0, 18_000)
-      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\nسؤال المسؤول:\n${message}`, "أنت مساعد إداري عربي داخل منصة تحفيظ قرآن. أعطِ الأولوية القصوى لبيانات الموقع المرفقة عن الطلاب وأولياء الأمور والاختبارات والنتائج والملفات، ثم أجب أيضاً عن الأسئلة ��لعامة وقدم اقتراحات وأفكاراً عملية جديدة عند فائدتها. ميّز بوضوح بين بيانات الموقع والمعلومات العامة، ولا تكشف أسراراً ولا تخترع بيانات.", 0.25)
-      return json({ result, diagnostics })
+      const reference = await getReferenceContext(message).catch(() => "")
+      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أجب عن أي سؤال مسموح. أعط الأولوية لبيانات الموقع عند ارتباطها بالسؤال، واعتمد المرجعين المرفقين في المسائل القرآنية والمتشابهات. لا تختلق بيانات أو آيات. أعد الإجابة فقط بلا تحية أو مقدمة أو عناوين حالة أو خاتمة أو ذكر للذكاء الاصطناعي.", 0.25)
+      return json({ result: result.trim(), diagnostics })
     }
 
     // 3) تصحيح نص (أكمل)
@@ -958,8 +978,8 @@ export async function POST(req: Request) {
       raw.toLowerCase().includes("timed out") ||
       raw.toLowerCase().includes("aborted")
     ) {
-      friendly = `استغرق نموذج ${GEMINI.label} وقتاً أطول من المتوقع بعد إعادة المحاولة`
-      status = 504
+      friendly = `انتهت مهلة نموذج ${GEMINI.label} قبل اكتمال الرد. حاول مرة أخرى بطلب أقصر.`
+      status = 503
     } else if (raw.toLowerCase().includes("empty") || raw.includes("رد فارغ")) {
       friendly = `أعاد نموذج ${GEMINI.label} رداً فارغاً`
     }
