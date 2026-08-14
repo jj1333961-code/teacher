@@ -514,7 +514,7 @@ tr:hover { background: var(--table-hover); }
     </button>
     <button class="menu-btn" style="background:#6c757d" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button>
     <button class="menu-btn" style="background:#fd7e14" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button>
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات المرفوعة</button>
+    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ��لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
@@ -645,6 +645,18 @@ tr:hover { background: var(--table-hover); }
 <div id="addStudent" class="page hidden">
   <div class="page-header"><h2>➕ إضافة طالب جديد</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="addStudentAlert"></div>
+  <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
+    <label style="font-size:1.05rem;">الإملاء الصوتي لبيانات الطالب</label>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البيانات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم القومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، المواد القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ الخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button type="button" id="studentIntakeRecordBtn" class="btn btn-primary" onclick="toggleStudentIntakeRecord()">بدء التسجيل</button>
+      <button type="button" id="studentIntakePauseBtn" class="btn btn-secondary" onclick="toggleAudioPause('student-intake')" disabled>إيقاف مؤقت</button>
+      <span id="studentIntakeStatus" aria-live="polite">جاهز للتسجيل</span>
+      <span id="studentIntakeTimer" style="font-variant-numeric:tabular-nums;">00:00</span>
+    </div>
+    <audio id="studentIntakePreview" controls style="display:none;height:40px;margin-top:10px;width:100%;"></audio>
+    <div id="studentIntakeResult" aria-live="polite" style="margin-top:10px;"></div>
+  </div>
   <div class="form-row">
     <div class="form-group"><label>اسم الطالب *</label><input type="text" id="stName"></div>
     <div class="form-group"><label>اسم المستخدم *</label><input type="text" id="stUsername" placeholder="اسم المستخدم لتسجيل الدخول"></div>
@@ -679,7 +691,7 @@ tr:hover { background: var(--table-hover); }
         <span id="voiceRecordStatus">اضغط للتسجيل (20 ثانية)</span>
         <audio id="voicePreview" controls style="display:none; height:40px;"></audio>
       </div>
-      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، ويمكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتح��ق من هوية الطالب.</small>
+      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، و��مكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتح��ق من هوية الطالب.</small>
     </div>
   </div>
   <div class="form-group"><label>ملاحظات إضافية</label><textarea id="stNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea></div>
@@ -911,7 +923,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>📬 صندوق الرسائل</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div class="page" style="margin-top:0;">
     <h4 style="color:var(--primary); margin-bottom:10px;">✉️ مراسلة المسؤول (نص أو رسالة صوتية)</h4>
-    <div class="form-group"><textarea id="studentMsgText" rows="3" placeholder="اكتب رسالتك للمسؤول..."></textarea></div>
+    <div class="form-group"><textarea id="studentMsgText" rows="3" placeholder="ا��تب رسالتك للمسؤول..."></textarea></div>
     <div id="voiceBox_student"></div>
     <button class="btn btn-primary" onclick="sendUserMessageToAdmin('student')">📤 إرسال</button>
   </div>
@@ -1562,13 +1574,68 @@ function updateEditSurahSelect() {
   select.innerHTML = html;
 }
 
+// ====== UNIFIED AUDIO RECORDING CONTROLS ======
+const activeAudioRecorders = {};
+function registerAudioRecorder(key, recorder, stream, options) {
+  const config = options || {};
+  activeAudioRecorders[key] = { recorder, stream, statusId: config.statusId || '', pauseBtnId: config.pauseBtnId || '', elapsed: 0, startedAt: Date.now(), timer: null };
+  const state = activeAudioRecorders[key];
+  let pauseBtn = state.pauseBtnId ? document.getElementById(state.pauseBtnId) : null;
+  if(!pauseBtn && config.buttonId){const mainBtn=document.getElementById(config.buttonId);if(mainBtn){pauseBtn=document.createElement('button');pauseBtn.type='button';pauseBtn.className='btn btn-xs btn-secondary';pauseBtn.textContent='إيقاف مؤقت';pauseBtn.onclick=function(){toggleAudioPause(key)};mainBtn.insertAdjacentElement('afterend',pauseBtn)}}
+  if(pauseBtn) { pauseBtn.disabled = false; pauseBtn.textContent = 'إيقاف مؤقت'; state.pauseButton=pauseBtn; }
+  state.timer = setInterval(function(){
+    if(recorder.state === 'recording') state.elapsed += 250;
+    if(config.timerId) { const el=document.getElementById(config.timerId); if(el){const total=Math.floor(state.elapsed/1000);el.textContent=String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');} }
+    if(config.maxMs && state.elapsed >= config.maxMs && recorder.state !== 'inactive') recorder.stop();
+  },250);
+  recorder.addEventListener('stop', function(){
+    clearInterval(state.timer); if(stream) stream.getTracks().forEach(function(t){t.stop()});
+    if(pauseBtn) { pauseBtn.disabled = true; pauseBtn.textContent = 'إيقاف مؤقت'; if(!state.pauseBtnId)pauseBtn.remove(); }
+    delete activeAudioRecorders[key];
+  }, {once:true});
+}
+function toggleAudioPause(key) {
+  const state=activeAudioRecorders[key]; if(!state) return;
+  const recorder=state.recorder, btn=state.pauseBtnId?document.getElementById(state.pauseBtnId):null, status=state.statusId?document.getElementById(state.statusId):null;
+  if(typeof recorder.pause!=='function' || typeof recorder.resume!=='function'){ if(status)status.textContent='المتصفح لا يدعم الإيقاف المؤقت'; return; }
+  if(recorder.state==='recording'){ recorder.pause(); if(btn)btn.textContent='استكمال التسجيل'; if(status)status.textContent='التسجيل متوقف مؤقتاً'; }
+  else if(recorder.state==='paused'){ recorder.resume(); if(btn)btn.textContent='إيقاف مؤقت'; if(status)status.textContent='تم استكمال التسجيل...'; }
+}
+function stopAudioRecorder(key){const state=activeAudioRecorders[key];if(state&&state.recorder.state!=='inactive')state.recorder.stop()}
+function audioBlobToBase64(blob){return new Promise(function(resolve,reject){const reader=new FileReader();reader.onload=function(){resolve(String(reader.result).split(',')[1]||'')};reader.onerror=reject;reader.readAsDataURL(blob)})}
+function normalizeArabicMatch(value){return String(value||'').normalize('NFKD').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[\u064B-\u065F\s_-]/g,'').toLowerCase()}
+function applyStudentVoiceFields(fields){
+  const map={name:'stName',username:'stUsername',national:'stNational',phone:'stPhone',birth:'stBirth',studentPass:'stStudentPass',parent:'stParent',parentPass:'stParentPass',notes:'stNotes'},filled=[];
+  Object.keys(map).forEach(function(key){if(fields[key]){const el=document.getElementById(map[key]);if(el){el.value=fields[key];filled.push(key)}}});
+  if(fields.birth) calcAge();
+  if(Array.isArray(fields.subjects)&&fields.subjects.length){const select=document.getElementById('stSubject'),wanted=fields.subjects.map(normalizeArabicMatch);Array.from(select.options).forEach(function(opt){const subjectName=normalizeArabicMatch(opt.textContent.split(' - ')[0]);opt.selected=wanted.some(function(x){return subjectName.includes(x)||x.includes(subjectName)})});toggleQuranFields();filled.push('subjects')}
+  if(fields.juz){document.getElementById('stJuz').value=fields.juz;updateSurahSelect();filled.push('juz')}
+  if(fields.surah){const select=document.getElementById('stSurah'),wanted=normalizeArabicMatch(fields.surah),option=Array.from(select.options).find(function(o){return normalizeArabicMatch(o.textContent)===wanted||normalizeArabicMatch(o.textContent).includes(wanted)});if(option){select.value=option.value;filled.push('surah')}}
+  return filled;
+}
+let studentIntakeRecorder=null, studentIntakeChunks=[];
+async function toggleStudentIntakeRecord(){
+  const btn=document.getElementById('studentIntakeRecordBtn'),status=document.getElementById('studentIntakeStatus'),preview=document.getElementById('studentIntakePreview'),result=document.getElementById('studentIntakeResult');
+  if(studentIntakeRecorder&&studentIntakeRecorder.state!=='inactive'){stopAudioRecorder('student-intake');btn.disabled=true;status.textContent='جاري تجهيز التسجيل...';return}
+  try{
+    const stream=await safeGetMic();studentIntakeChunks=[];studentIntakeRecorder=new MediaRecorder(stream);
+    studentIntakeRecorder.ondataavailable=function(e){if(e.data.size)studentIntakeChunks.push(e.data)};
+    studentIntakeRecorder.onstop=async function(){
+      const blob=new Blob(studentIntakeChunks,{type:studentIntakeRecorder.mimeType||'audio/webm'});preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='جاري فهم البيانات وتوزيعها...';result.innerHTML='';
+      try{const audioBase64=await audioBlobToBase64(blob),data=await callStudentAI('student_voice_intake',{role:'admin',audioBase64:audioBase64,mimeType:blob.type},0.05),filled=applyStudentVoiceFields(data.fields||{});result.innerHTML='<div class="alert alert-success">تم ملء '+filled.length+' خانة. راجع جميع البيانات قبل الحفظ.<br><small>النص المسموع: '+escapeHtml(data.transcript||'لم يُرجع تفريغاً')+'</small></div>';status.textContent='اكتمل التحليل';}catch(e){result.innerHTML='<div class="alert alert-danger">تعذر تحليل التسجيل: '+escapeHtml(e.message||'خطأ غير معروف')+'</div>';status.textContent='فشل التحليل';}
+      btn.disabled=false;btn.textContent='إعادة التسجيل';studentIntakeRecorder=null;
+    };
+    studentIntakeRecorder.start();registerAudioRecorder('student-intake',studentIntakeRecorder,stream,{statusId:'studentIntakeStatus',pauseBtnId:'studentIntakePauseBtn',timerId:'studentIntakeTimer',maxMs:120000});btn.textContent='إنهاء وتحليل';status.textContent='جاري التسجيل...';
+  }catch(e){status.textContent='لا يمكن الوصول إلى الميكروفون'}
+}
+
 // ====== VOICE RECORDING (20 seconds) ======
 async function toggleVoiceRecord() {
   const btn = document.getElementById('voiceRecordBtn');
   const status = document.getElementById('voiceRecordStatus');
   const preview = document.getElementById('voicePreview');
   if(!btn || !status || !preview) return;
-  if(mediaRecorder && mediaRecorder.state === 'recording') {
+  if(mediaRecorder && mediaRecorder.state !== 'inactive') {
     mediaRecorder.stop(); 
     btn.classList.remove('recording'); 
     status.textContent = 'تم التسجيل ✅'; 
@@ -1592,16 +1659,10 @@ async function toggleVoiceRecord() {
       if(voiceFingerprint) { status.textContent = 'تم إنشاء البصمة الصوتية ✅'; showToast('🤖 تم تحليل البصمة الصوتية بنجاح', 'success'); }
       else { status.textContent = 'تعذّر تحليل الصوت ❌'; showToast('❌ تعذّر تحليل التسجيل — أعد التسجيل', 'error'); }
     };
-    mediaRecorder.start(); 
+    mediaRecorder.start();
+    registerAudioRecorder('student-fingerprint',mediaRecorder,stream,{statusId:'voiceRecordStatus',buttonId:'voiceRecordBtn',maxMs:20000});
     btn.classList.add('recording'); 
-    status.textContent = 'جاري التسجيل... (20 ثانية)';
-    setTimeout(() => { 
-      if(mediaRecorder && mediaRecorder.state === 'recording') { 
-        mediaRecorder.stop(); 
-        btn.classList.remove('recording'); 
-        status.textContent = 'تم التسجيل ✅'; 
-      } 
-    }, 20000);
+    status.textContent = 'جاري التسجيل... (20 ثانية فعلية)';
   } catch(err) { alert('لا يمكن الوصول للميكروفون. يرجى السماح بالوصول.'); }
 }
 
@@ -1668,7 +1729,7 @@ function adminLogin() {
     showPage('adminDashboard');
     document.getElementById('adminLoginAlert').innerHTML = '';
   } else {
-    document.getElementById('adminLoginAlert').innerHTML = '<div class="alert alert-danger">❌ رقم الموبايل أو الرقم السري غير صحيح</div>';
+    document.getElementById('adminLoginAlert').innerHTML = '<div class="alert alert-danger">❌ رقم ال��وبايل أو الرقم السري غير صحيح</div>';
   }
 }
 
@@ -1994,7 +2055,7 @@ let editVoiceBlob=null, editVoiceFingerprint=null, editVoiceDataUrl=null, editVo
 async function toggleEditVoiceRecord(){
   const btn=document.getElementById('editVoiceBtn'),status=document.getElementById('editVoiceStatus'),preview=document.getElementById('editVoicePreview');
   if(!btn||!status||!preview)return;
-  if(editVoiceRecorder && editVoiceRecorder.state==='recording'){editVoiceRecorder.stop();return;}
+  if(editVoiceRecorder && editVoiceRecorder.state!=='inactive'){editVoiceRecorder.stop();return;}
   try{
     const stream=await safeGetMic(); editVoiceChunks=[]; editVoiceRecorder=new MediaRecorder(stream);
     editVoiceRecorder.ondataavailable=e=>{if(e.data.size)editVoiceChunks.push(e.data)};
@@ -2005,8 +2066,7 @@ async function toggleEditVoiceRecord(){
       status.textContent=editVoiceFingerprint?'تم إنشاء بصمة جديدة — اضغط حفظ ��لتعدي��ات':'تعذر تحل��ل الصوت، أعد التسجيل';
       btn.classList.remove('recording');
     };
-    editVoiceRecorder.start();btn.classList.add('recording');status.textContent='جاري التسجيل... (20 ثانية)';
-    setTimeout(()=>{if(editVoiceRecorder&&editVoiceRecorder.state==='recording')editVoiceRecorder.stop()},20000);
+    editVoiceRecorder.start();registerAudioRecorder('edit-fingerprint',editVoiceRecorder,stream,{statusId:'editVoiceStatus',buttonId:'editVoiceBtn',maxMs:20000});btn.classList.add('recording');status.textContent='جاري التسجيل... (20 ثانية فعلية)';
   }catch(e){status.textContent='لا يمكن الوصول إلى الميكروفون'}
 }
 
@@ -2437,9 +2497,9 @@ async function recordReadingAudio(idx) {
       showToast('🎙️ تم حفظ التسجيل الصوتي للقراءة الإضافية', 'success');
     };
     recorder.start();
-    if(btn) { btn.dataset.recording = 'true'; btn.classList.add('recording'); btn.onclick = function(){ if(recorder.state==='recording') recorder.stop(); }; }
+    registerAudioRecorder('reading-'+idx,recorder,stream,{statusId:'readAudioStatus_'+idx,buttonId:'readAudioBtn_'+idx,maxMs:120000});
+    if(btn) { btn.dataset.recording = 'true'; btn.classList.add('recording'); btn.onclick = function(){ if(recorder.state!=='inactive') recorder.stop(); }; }
     if(status) status.textContent = 'جاري التسجيل... (اضغط للإيقاف)';
-    setTimeout(() => { if(recorder.state === 'recording') recorder.stop(); }, 120000);
   } catch(err) { showToast('❌ لا يمكن الوصول للميكروفون', 'error'); }
 }
 function clearReadingAudio(idx) { readingItems[idx].audio = ''; renderReadingItems(); showToast('🗑️ تم حذف التسجيل الصوتي', 'error'); }
@@ -2907,7 +2967,7 @@ async function recordStudentExamAudio(i){
       aiBox.innerHTML='<div class="alert alert-info">🔒 تم حفظ إجابة التسجيل ونتيجة التحليل داخلياً. لن تظهر نتيجة الذكاء الاصطناعي للطالب حتى يقرر المسؤول نشرها.</div>';
       btn.dataset.recording='false';btn.classList.remove('recording');
     };
-    recorder.start();btn.onclick=()=>{if(recorder.state==='recording')recorder.stop()};
+    recorder.start();registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});btn.onclick=()=>{if(recorder.state!=='inactive')recorder.stop()};
   }catch(e){status.textContent='تعذر الوصول إلى الميكروفون';btn.dataset.recording='false';btn.classList.remove('recording')}
 }
 function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختبار</h3><p>النتيجة معلّقة لحين مراجعة المسؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
@@ -3230,7 +3290,7 @@ function renderVoiceBox(key) {
 function clearVoiceMsg(key) { delete voiceMsgStore[key]; renderVoiceBox(key); }
 async function toggleVoiceMsg(key) {
   const rec = voiceMsgRecorders[key];
-  if(rec && rec.state === 'recording') { rec.stop(); return; }
+  if(rec && rec.state !== 'inactive') { rec.stop(); return; }
   try {
     const stream = await safeGetMic();
     const recorder = new MediaRecorder(stream);
@@ -3246,11 +3306,11 @@ async function toggleVoiceMsg(key) {
       showToast('🎙️ تم تسجيل الرسالة الصوتية — اضغط إرسال', 'success');
     };
     recorder.start();
+    registerAudioRecorder('message-'+key,recorder,stream,{statusId:'vmStatus_'+key,buttonId:'vmBtn_'+key,maxMs:180000});
     const btn = document.getElementById('vmBtn_' + key);
     const st = document.getElementById('vmStatus_' + key);
     if(btn) btn.classList.add('recording');
     if(st) st.textContent = 'جاري التسجيل... (اضغط للإيقاف)';
-    setTimeout(() => { if(recorder.state === 'recording') recorder.stop(); }, 180000);
   } catch(err) { showToast('❌ لا يمكن الوصول للميكروفون', 'error'); }
 }
 function voiceAudioHTML(m) {
@@ -4504,10 +4564,11 @@ async function recordStudentVoice(taskIdx) {
       btn.classList.remove('recording');
     };
     recorder.start();
+    registerAudioRecorder('student-task-'+taskIdx,recorder,stream,{statusId:'stVoiceStatus_'+taskIdx,buttonId:'stVoiceBtn_'+taskIdx});
     btn.dataset.recording = 'true';
     btn.classList.add('recording');
     status.textContent = '��اري التسجيل... (اضغط مرة أخرى للإيقاف)';
-    btn.onclick = function() { if(recorder.state === 'recording') recorder.stop(); };
+    btn.onclick = function() { if(recorder.state !== 'inactive') recorder.stop(); };
   } catch(err) { alert('لا يمكن الوصول للميكروفون.'); }
 }
 
