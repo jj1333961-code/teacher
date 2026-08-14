@@ -139,14 +139,22 @@ function isRetryableGeminiError(error: unknown) {
   return /401|403|404|408|409|429|5\d\d|API key|PERMISSION_DENIED|RESOURCE_EXHAUSTED|UNAVAILABLE|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|AbortError|aborted|رد فارغ|empty/i.test(message)
 }
 
-async function geminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }): Promise<string> {
+async function geminiText(
+  prompt: string,
+  system: string,
+  temperature: number,
+  inlineData?: { mimeType: string; data: string },
+  options: { timeoutMs?: number; maxAttempts?: number } = {},
+): Promise<string> {
   if (!GEMINI.key) return gatewayGeminiText(prompt, system, temperature, inlineData)
   const parts: any[] = [{ text: prompt }]
   if (inlineData) parts.unshift({ inlineData })
   const requestBody = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } })
+  const timeoutMs = Math.max(15_000, Math.min(options.timeoutMs || 70_000, 240_000))
+  const maxAttempts = Math.max(1, Math.min(options.maxAttempts || 3, 3))
   let lastError: unknown = new Error("تعذر بدء اتصال Gemini")
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const model = await resolveGeminiModel(attempt > 0)
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -154,7 +162,7 @@ async function geminiText(prompt: string, system: string, temperature: number, i
         headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI.key },
         body: requestBody,
         cache: "no-store",
-        signal: AbortSignal.timeout(70_000),
+        signal: AbortSignal.timeout(timeoutMs),
       })
       const data = await response.json().catch(() => null)
       if (!response.ok) {
@@ -169,16 +177,20 @@ async function geminiText(prompt: string, system: string, temperature: number, i
       return text.trim()
     } catch (error) {
       lastError = error
-      if (!isRetryableGeminiError(error) || attempt === 2) break
+      if (!isRetryableGeminiError(error) || attempt === maxAttempts - 1) break
       await new Promise((resolve) => setTimeout(resolve, 900 * (attempt + 1)))
     }
   }
-  // عند فشل Gemini المباشر نهائياً ننتقل دائماً إلى Gateway؛ فهو مسار مستقل
-  // ويعالج أخطاء المفتاح والحصة والشبكة والنموذج غير المتاح دون تعطيل المستخدم.
+
+  const directMessage = lastError instanceof Error ? lastError.message : String(lastError || "خطأ غير معروف")
+  // لا نستدعي Gateway تلقائياً دون مفتاح صريح؛ حسابات Gateway غير المفعّلة ببطاقة
+  // كانت تستبدل خطأ Gemini المفيد برسالة فوترة لا علاقة لها بالمفتاح المباشر.
+  if (!(process.env.AI_GATEWAY_API_KEY || "").trim()) {
+    throw new Error(`Gemini المباشر: ${directMessage.slice(0, 300)}`)
+  }
   try {
     return await gatewayGeminiText(prompt, system, temperature, inlineData)
   } catch (gatewayError) {
-    const directMessage = lastError instanceof Error ? lastError.message : String(lastError || "خطأ غير معروف")
     const gatewayMessage = gatewayError instanceof Error ? gatewayError.message : String(gatewayError || "خطأ غير معروف")
     throw new Error(`Gemini المباشر: ${directMessage.slice(0, 220)} | Gateway: ${gatewayMessage.slice(0, 220)}`)
   }
@@ -278,7 +290,7 @@ score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إ�
 
 const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة القرآن اعتماداً على تفريغ نصي (transcript) قد يكون غير دقيق بسبب التعرف الآلي.
 قارن ما تلاه الطالب بالنص المتوقع expectedText للمقطع المطلوب (surah من from إلى to).
-كن متساهلاً: يكفي وجود القليل من الآيات أو الكلمات الصحيحة المطابقة للمق��ع المطلوب لقبول أن الطالب يتلو نفس المقطع. تجاوز أخطاء التعرف الآلي والتشكيل.
+كن متساهلاً: يكفي وجود القليل من الآيات أو الكلمات الصحيحة المطابقة للمق��ع المطلوب لقبول أن الطالب يتلو نفس المقطع. تجاوز أخطاء التعرف الآلي و��لتشكيل.
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
@@ -528,7 +540,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
   if (perms && perms.push !== true && perms.admin !== true && perms.maintain !== true) {
     return {
       ok: false,
-      reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
+      reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المس��ودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
   // التحقق من أن الفرع المُحدد/الافتراضي قا��ل ��لحل.
@@ -562,16 +574,19 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 - لا تحذف ملفات ولا تعيد بناء المشروع من الصفر.
 - عدّل أقل عدد ممكن من الملفات، وحافظ على كل الوظائف والتصميم الحالي وسلوك الصفحات القائمة.
 - لا تضع أي سرّ أو API key أو Token في public أو في أي JavaScript يصل إل�� المتصفح؛ الأسرار تبقى على الخادم فقط.
-- content يجب أن يكون المحتوى الكامل والنهائي للملف بعد التعديل، وليس diff، ودون اقتطاع أو حذف أجزاء لم تكن مقصودة بالتعديل.
+- استخدم edits كتعديلات بحث واستبدال دقيقة بدلاً من إعادة الملف كاملاً، خصوصاً للملفات الكبيرة. يجب أن تكون search قطعة موجودة حرفياً مرة واحدة فقط، وreplace بديلها النهائي الكامل.
 - لا تُرجع ملفاً لم يتغير فعلاً.
 - لا تُرجع أي مسار غير موجود في الملفات المعطاة إلا إذا كانت الخطة تقول create وكان إنشاء الملف ضرورياً.
 - لا تنشئ أو تعدل ملفات الأسرار مثل .env.
 - إذا كان الطلب غير آمن أو غير واضح أو يخالف القيود، أعد patches=[] واشرح السبب في summary.
 
 أعد JSON فقط بالشكل التالي (بدون أي نص خارجه):
-{"summary":"وصف عربي واضح لما تم تعديله فعلياً وكيف","patches":[{"path":"...","content":"المحتوى الكامل الجديد للملف","reason":"سبب التعديل وما تغيّر في هذا الملف بالتحديد"}],"tests":["ملاحظة تحقق أو خطوة اختبار يدوي مقترحة"]}`
+{"summary":"وصف عربي واضح لما تم تعديله فعلياً وكيف","patches":[{"path":"...","edits":[{"search":"نص حالي مطابق حرفياً وفريد","replace":"النص البديل النهائي"}],"reason":"سبب التعديل وما تغيّر في هذا الملف بالتحديد"}],"tests":["ملاحظة تحقق أو خطوة اختبار يدوي مقترحة"]}
+للملف الجديد فقط استخدم content بدلاً من edits. لا تُعد محتوى ملف موجود كاملاً.`
   const prompt = `طلب المسؤول:\n${request}\n\nخطة التحليل السابقة:\n${JSON.stringify(plan)}\n\nمحتويات الملفات التي يمكن تعديلها:\n${source}`
-  const text = await runText(prompt, system, 0.1)
+  // إنشاء محتوى ملفات كاملة قد يحتاج زمناً أطول بكثير من إجابة الدردشة القصيرة.
+  // محاولة واحدة طويلة تمنع إهدار مدة الدالة في ثلاث محاولات قصيرة تنتهي كلها بالمهلة.
+  const text = await geminiText(prompt, system, 0.1, undefined, { timeoutMs: 240_000, maxAttempts: 1 })
   const parsed = extractJson(text)
   if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.patches)) {
     throw new Error("مرحلة إنشاء التعديلات: أعاد النموذج JSON غير صالح، ولم يُكتب أي ملف")
@@ -608,12 +623,26 @@ async function autoApplyDevRequest(request: string, plan: any) {
   // نتحقق من جميع الملفات قبل أول كتابة، حتى لا يبدأ التطبيق برد ناقص أو مسار غير مصرح به.
   const validatedPatches = patches.map((patch: any) => {
     const path = String(patch?.path || "")
-    const content = typeof patch?.content === "string" ? patch.content : null
+    const old = currentMap.get(path)
+    let content = typeof patch?.content === "string" ? patch.content : null
+    if (content === null && old && Array.isArray(patch?.edits) && patch.edits.length) {
+      content = old.content
+      for (const edit of patch.edits) {
+        const search = typeof edit?.search === "string" ? edit.search : ""
+        const replace = typeof edit?.replace === "string" ? edit.replace : ""
+        if (!search) throw new Error(`مرحلة التحقق: نص البحث فارغ في ${path}، ولم يُكتب أي ملف`)
+        const first = content.indexOf(search)
+        if (first < 0 || content.indexOf(search, first + search.length) >= 0) {
+          throw new Error(`مرحلة التحقق: يجب أن يطابق نص البحث موضعاً واحداً فقط في ${path}، ولم يُكتب أي ملف`)
+        }
+        content = content.slice(0, first) + replace + content.slice(first + search.length)
+      }
+    }
     if (!safeProjectPath(path) || content === null || content.length > 500_000 || !selected.includes(path)) {
       throw new Error(`مرحلة التحقق: تعديل غير صالح للملف ${path || "غير المحدد"}، ولم يُكتب أي ملف`)
     }
-    const old = currentMap.get(path)
     if (old && old.content && !content.trim()) throw new Error(`مرحلة التحقق: رُفض تفريغ الملف ${path}، ولم يُكتب أي ملف`)
+    if (old && content === old.content) throw new Error(`مرحلة التحقق: لم يتغير محتوى الملف ${path}، ولم يُكتب أي ملف`)
     return { path, content, reason: typeof patch?.reason === "string" ? patch.reason : "", old }
   })
   if (!validatedPatches.length) throw new Error("لم يتم تطبيق أي ملف بعد التحقق من التعديلات")
