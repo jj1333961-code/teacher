@@ -747,8 +747,11 @@ export async function POST(req: Request) {
         sourceSurahs.map((source) => source.surah).join(" "),
         sourceSurahs.flatMap((source) => source.verses.slice(0, 2).map((verse: { text: string }) => verse.text)),
       ).catch(() => "")
-      const safePayload = { plan, startSurahNumber, endSurahNumber, sourceSurahs, referenceContext }
-      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط، واستفد من referenceContext لصياغة أسئلة متشابهات ومواضع أكثر احترافية. وزّع الأسئلة بالتتابع ولا تستخدم السورة نفسها مرتين قبل المرور على بقية السور. في سؤال complete لا تضع كلمات الإجابة في prompt أو stem مطلقاً؛ سيعرض النظام صورة المصحف مع إخفاء الآية المطلوبة. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
+      const pastScope = ["near", "far", "both"].includes(payload.pastScope) ? payload.pastScope : "both"
+      const nearSurahs = Array.isArray(payload.nearSurahs) ? payload.nearSurahs.map(String).slice(0, 114) : []
+      const farSurahs = Array.isArray(payload.farSurahs) ? payload.farSurahs.map(String).slice(0, 114) : []
+      const safePayload = { plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext }
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both وزّع الأسئلة بالتساوي قدر الإمكان بين nearSurahs وfarSurahs. استفد من referenceContext لصياغة أسئلة متشابهات ومواضع أكثر احترافية. نوّع صيغ الاختيار بين الآية التالية والتكملة واسم السورة، وصيغ الصح والخطأ بين صحة التكملة وصحة نسبة الآية للسورة. لا تستخدم السورة نفسها مرتين قبل المرور على بقية السور. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem؛ سيعرض النظام صورتي البداية والنهاية منفصلتين. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
@@ -843,7 +846,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (!message) return json({ error: "اكتب رسالتك أولاً", diagnostics }, 400)
       const context = JSON.stringify(payload.context || {}).slice(0, 18_000)
       const reference = await getReferenceContext(message).catch(() => "")
-      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أنت Gemini، مساعد إداري عربي دقيق وطبيعي. أجب عن أي سؤال مسموح داخل الموقع أو خارجه، واستخدم بيانات الموقع عند صلتها فقط. اجعل الرد على قدر السؤال، مباشراً ومبسطاً، ولا تضف اقتراحات أو تفاصيل لم تُطلب. رد على التحيات والمجاملات بود وباختصار، ويمكنك استخدام رمز تعبيري مناسب باعتدال، وتجنبه في الردود العلمية والحساسة. استخدم المرجعين للمسائل القرآنية والمتشابهات دون حصر معرفتك فيهما، ولا تختلق بيانات أو آيات.", 0.25)
+      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أنت Gemini، مساعد عربي دقيق واحترافي وطبيعي. أجب عن أي سؤال مسموح داخل الموقع أو خارجه، واستخدم بيانات الموقع عند صلتها فقط. افهم مقصد المستخدم قبل الرد، وميّز بوضوح بين الحقيقة والاقتراح، ولا تختلق بيانات أو آيات. اجعل الرد مبسطاً ومهذباً وعلى قدر السؤال، مع تنظيم الخطوات عند الحاجة فقط. رد على التحيات بصورة ودودة وطبيعية؛ فإذا قال المستخدم السلام عليكم فابدأ بـ: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ 🤔 أنا في خدمتك! 🫡. استخدم الرموز التعبيرية باعتدال لتوضيح الحالة في الحديث الودي، وتجنبها في الردود العلمية والحساسة. استخدم المرجعين للمسائل القرآنية والمتشابهات للتحقق دون حصر معرفتك فيهما.", 0.2)
       return json({ result: result.trim(), diagnostics })
     }
 
