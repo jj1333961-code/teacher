@@ -143,8 +143,10 @@ function classifyAiFailure(error: unknown) {
 }
 
 function geminiTimeout(system: string, inlineData?: { mimeType: string; data: string }) {
-  if (inlineData) return 90_000
-  if (/اختبار|JSON|تطوير|برمج/i.test(system)) return 120_000
+  // يجب أن تنتهي مهلة المزود قبل مهلة الدالة على Vercel حتى نعيد JSON مفيداً
+  // بدلاً من أن يقطع الخادم الاتصال باستجابة HTTP 500 فارغة.
+  if (inlineData) return 48_000
+  if (/اختبار|JSON|تطوير|برمج/i.test(system)) return 48_000
   return 35_000
 }
 
@@ -158,8 +160,11 @@ async function geminiText(prompt: string, system: string, temperature: number, i
     generationConfig: { temperature },
   })
   let lastError: unknown = new Error("تعذر بدء اتصال Gemini المباشر")
+  // التسجيلات كبيرة؛ إعادة طلبها داخل الاستدعاء نفسه قد تتجاوز مهلة Vercel.
+  // الواجهة تعيد المحاولة مرة واحدة عند الأخطاء المؤقتة.
+  const maxAttempts = inlineData ? 1 : 2
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const model = await resolveGeminiModel(attempt > 0)
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -274,7 +279,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - timeLimit لا يخرج عن الوقت الذي حدده المسؤول في plan؛ إذا كان موجوداً فاستخدمه كما هو.
 - لا تضع إجابة صحيحة خارج الخيارات.
 - prompt توجيه قصير فقط؛ لا تذكر فيه الإجابة، ولا كلمات منها، ولا نص الآية ولا بدايتها أو نهايتها، ولا اسم السورة إذا كان هو الإجابة، ولا أي تلميح يكشف الحل. اجعل stem فارغاً دائماً لأن المقطع سيظهر بصورة مقتطعة من ملف المصحف، وسيحجب الخادم نطاق الإجابة داخل الصورة لجميع الأنواع.
-- في أسئلة الاختيار والصح/الخطأ اختر مشتتات معقولة وغير ملتبسة، وإجابة واحدة قابلة للتحقق فقط. لا تجعل الخيارات نسخاً من نصوص الآيات.
+- في أسئلة الاختيار والصح/الخطأ ا��تر مشتتات معقولة وغير ملتبسة، وإجابة واحدة قابلة للتحقق فقط. لا تجعل الخيارات نسخاً من نصوص الآيات.
 - للمستوى الصعب، استفد من referenceContext لاختيار متشابهات صحيحة ومميزة، ثم تحقق من المرجع القرآني المنظم. المرجعان مساعدان وليسا قيداً على معرفتك.
 - أعد مصفوفة JSON فقط، دون Markdown أو شرح.
 
@@ -898,7 +903,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (mt.includes("mpeg") || mt.includes("mp3")) audioFormat = "mp3"
       else if (mt.includes("wav")) audioFormat = "wav"
 
-      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ضبطه، وإلا OpenRouter).
+      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ض��طه، وإلا OpenRouter).
       const transcript = await transcribeAudio(audioBase64, audioFormat)
 
       // المرحلة الثانية: مقارنة التفريغ بالنص القرآني المطلوب وحساب الدرجة.

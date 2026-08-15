@@ -108,9 +108,7 @@ function safeError(error: unknown, fallback: string) {
 }
 
 function ensureBlobConfigured() {
-  if (!(process.env.BLOB_READ_WRITE_TOKEN || "").trim()) {
-    throw new Error("خدمة حفظ ملفات الاختبارات غير مهيأة على الخادم")
-  }
+  return Boolean((process.env.BLOB_READ_WRITE_TOKEN || "").trim())
 }
 
 async function listAllMetadataPathnames() {
@@ -148,7 +146,14 @@ export async function GET() {
 export async function POST(request: Request) {
   let uploadedPathname = ""
   try {
-    ensureBlobConfigured()
+    if (!ensureBlobConfigured()) {
+      return response({
+        error: "رفع الملفات الإضافية غير متاح في إعداد الخادم الحالي؛ يمكنك إنشاء الاختبار كاملاً بواسطة Gemini أو استخدام المراجع المثبتة",
+        code: "EXAM_STORAGE_UNAVAILABLE",
+        retryable: false,
+        storageAvailable: false,
+      }, 501)
+    }
     const form = await request.formData()
     const file = form.get("file")
     if (!(file instanceof File)) return response({ error: "اختر ملفاً صالحاً" }, 400)
@@ -178,7 +183,9 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    ensureBlobConfigured()
+    if (!ensureBlobConfigured()) {
+      return response({ error: "لا توجد ملفات مرفوعة قابلة للحذف في إعداد الخادم الحالي", code: "EXAM_STORAGE_UNAVAILABLE", retryable: false }, 501)
+    }
     const { pathname, metadataPathname } = await request.json()
     if (typeof pathname === "string" && pathname.startsWith("references/")) return response({ error: "المرجع المثبت للقراءة فقط ولا يمكن حذفه" }, 403)
     if (typeof pathname !== "string" || typeof metadataPathname !== "string" || !pathname.startsWith("exam-files/content/") || !metadataPathname.startsWith("exam-files/meta/")) return response({ error: "بيانات الحذف غير صالحة" }, 400)
