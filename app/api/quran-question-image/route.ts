@@ -84,9 +84,14 @@ export async function GET(request: Request) {
       const signature = targetWords.slice(0, Math.min(5, targetWords.length)).join(" ")
       if (!pageText.includes(signature)) continue
 
-      const wanted = new Set(targetWords)
-      const matchedItems = items.filter((item) => normalizeQuranText(itemText(item)).split(" ").some((word) => wanted.has(word)))
-      if (matchedItems.length >= 2) {
+      const wanted = new Set(targetWords.filter((word) => word.length > 2))
+      const matchedItems = items.filter((item) => {
+        const normalized = normalizeQuranText(itemText(item))
+        const words = normalized.split(" ").filter(Boolean)
+        const score = words.filter((word) => wanted.has(word)).length
+        return normalized.includes(signature) || score >= Math.max(1, Math.min(2, wanted.size))
+      })
+      if (matchedItems.length) {
         selected = { page, items: matchedItems }
         break
       }
