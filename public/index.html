@@ -447,11 +447,23 @@ tr:hover { background: var(--table-hover); }
  .exam-generation-card{display:flex;flex-direction:column;align-items:center;gap:14px;width:min(92vw,420px);padding:28px;border:1px solid var(--border);border-radius:18px;background:var(--card-bg);color:var(--text);box-shadow:var(--shadow);text-align:center}
  .exam-generation-mark{display:grid;place-items:center;width:64px;height:64px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:examSpin .8s linear infinite;font-size:24px}
  @keyframes examSpin{to{transform:rotate(360deg)}}
+ .language-toggle{position:fixed;top:20px;left:82px;z-index:1000;width:50px;height:50px;border-radius:50%;border:2px solid var(--primary);background:var(--card-bg);color:var(--primary);font-weight:800;cursor:pointer;box-shadow:var(--shadow)}
+ .stat-action{margin-top:12px;padding:8px 14px;border:1px solid rgba(255,255,255,.55);border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-weight:700;cursor:pointer}
+ .top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+ .registration-methods{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+ .registration-method{padding:18px;border:2px solid var(--border);border-radius:14px;background:var(--input-bg);color:var(--text);cursor:pointer;font-weight:700}
+ .registration-method.active{border-color:var(--primary);background:rgba(102,126,234,.12)}
+ .verification-box{padding:18px;border:2px solid var(--primary);border-radius:14px;background:rgba(102,126,234,.08);margin:16px 0}
+ .verification-code{font-size:2rem;letter-spacing:.3em;font-weight:900;color:var(--primary);direction:ltr;text-align:center;margin:12px 0}
+ .countdown{font-variant-numeric:tabular-nums;font-weight:800;color:var(--danger)}
+ .inline-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+ @media(max-width:768px){.language-toggle{top:10px;left:60px;width:40px;height:40px}.registration-methods{grid-template-columns:1fr}.top-actions{width:100%}.top-actions .btn{flex:1}}
  </style>
 </head>
 <body>
 
-  <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع">🌙</button>
+  <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع" aria-label="تبديل الوضع">🌙</button>
+  <button class="language-toggle" onclick="toggleLanguage()" title="English" aria-label="Change language">EN</button>
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
     <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong>جاري الحصول على الأسئلة</strong><span>يتم الآن تجهيز اختبارك داخل النطاق المحدد.</span></div>
   </div>
@@ -466,6 +478,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group"><label>اسم المستخدم</label><input type="text" id="unifiedUser" placeholder="اسم المستخدم (أو رقم الموبايل للمسؤول)" onkeypress="if(event.key==='Enter')unifiedLogin()"></div>
   <div class="form-group"><label>الرقم السري</label><div style="position:relative;"><input type="password" id="unifiedPass" placeholder="أدخل الرقم السري" style="padding-left:45px;" onkeypress="if(event.key==='Enter')unifiedLogin()"><span onclick="togglePassVisibility('unifiedPass', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span></div></div>
   <button class="btn btn-primary" onclick="unifiedLogin()" style="width:100%">🔓 دخول</button>
+  <button class="btn btn-outline" onclick="showPage('registrationPage')" style="width:100%;margin-top:10px">إنشاء حساب جديد</button>
 </div>
 
 <!-- الصفحة الرئيسية -->
@@ -477,6 +490,36 @@ tr:hover { background: var(--table-hover); }
     <div class="card" onclick="showPage('studentLogin')"><div class="icon">👨‍🎓</div><h3>الطالب</h3><p>متابعة المواد والواجبات والحفظ</p></div>
     <div class="card" onclick="showPage('parentLogin')"><div class="icon">👨‍👩‍👧</div><h3>ولي الأمر</h3><p>متابعة ابنك/ابنتك والتقارير</p></div>
   </div>
+  <button class="btn btn-outline" onclick="showPage('registrationPage')" style="margin-top:24px;background:var(--card-bg)">إنشاء حساب جديد</button>
+</div>
+
+<!-- إنشاء حساب جديد -->
+<div id="registrationPage" class="page hidden" style="max-width:760px;margin:40px auto;">
+  <div class="page-header"><h2>إنشاء حساب جديد</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <p style="color:var(--text-light)">اختر طريقة التحقق أولًا. بعد التحقق يمكنك إدخال بيانات طلب الانضمام.</p>
+  <div class="registration-methods">
+    <button id="googleRegisterBtn" class="registration-method" onclick="startGoogleRegistration()">G &nbsp; التسجيل بحساب Google</button>
+    <button id="phoneRegisterBtn" class="registration-method" onclick="selectPhoneRegistration()">التسجيل برقم الهاتف</button>
+  </div>
+  <div id="phoneVerificationStart" class="hidden">
+    <div class="form-group"><label>رقم الهاتف</label><input id="registrationPhone" inputmode="tel" maxlength="15" placeholder="مثال: 01554542019"></div>
+    <button class="btn btn-primary" onclick="createVerificationCode()">إنشاء كود التحقق</button>
+  </div>
+  <div id="verificationBox" class="verification-box hidden">
+    <p>أرسل الكود التالي إلى واتساب المسؤول ليقوم بتفعيل حسابك قبل انتهاء الوقت:</p>
+    <div id="generatedVerificationCode" class="verification-code">------</div>
+    <div class="inline-actions"><a id="verificationWhatsappLink" class="btn btn-success" target="_blank" rel="noopener">فتح واتساب وإرسال الكود</a><span>الوقت المتبقي: <b id="verificationCountdown" class="countdown">--:--</b></span></div>
+    <p id="verificationStatus" class="alert alert-info" style="margin-top:14px">بانتظار تفعيل المسؤول...</p>
+  </div>
+  <form id="registrationDetailsForm" class="hidden" onsubmit="submitRegistrationRequest(event)">
+    <div class="alert alert-success">تم التحقق بنجاح. أكمل بيانات طلبك.</div>
+    <div class="form-row"><div class="form-group"><label>الاسم بالكامل</label><input id="requestFullName" required minlength="3"></div><div class="form-group"><label>الرقم القومي</label><input id="requestNationalId" required inputmode="numeric" maxlength="14" pattern="[0-9]{14}"></div></div>
+    <div class="form-group"><label>رقم الهاتف للتواصل</label><input id="requestContactPhone" required inputmode="tel" maxlength="15"></div>
+    <div class="form-group"><label>نوع الحساب</label><select id="requestRole"><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
+    <div class="form-group"><label>ملاحظات</label><textarea id="requestNotes" rows="4" placeholder="ملاحظات اختيارية"></textarea></div>
+    <button class="btn btn-success" type="submit" style="width:100%">إرسال طلب الانضمام</button>
+  </form>
+  <div id="registrationAlert" style="margin-top:15px"></div>
 </div>
 
 <!-- دخول المسؤول -->
@@ -495,26 +538,19 @@ tr:hover { background: var(--table-hover); }
     <h2>📊 لوحة تحكم المسؤول</h2>
     <div>
       <span id="adminDeviceInfo" style="color:var(--text-light); margin-left:15px; font-size:0.9rem"></span>
-      <button class="btn btn-outline" onclick="showPage('adminSettings')">⚙️ الإعدادات</button>
-      <button class="btn btn-outline" onclick="logout()">خروج</button>
+      <span class="top-actions"><button class="btn btn-outline admin-badge" onclick="showPage('messagesPage')">الرسائل <span id="msgBadge" class="msg-count hidden">0</span></button><button class="btn btn-outline" onclick="showPage('adminSettings')">الإعدادات</button><button class="btn btn-outline" onclick="logout()">خروج</button></span>
     </div>
   </div>
   <div class="stats">
-    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائمة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div></div>
-    <div class="stat-box"><div class="num" id="statTeachers">0</div><div class="label">عدد المعلمين</div></div>
-    <div class="stat-box"><div class="num" id="statAdmins">0</div><div class="label">المسؤولين</div></div>
+    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائمة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div><button class="stat-action" onclick="event.stopPropagation();showPage('addStudent')">إضافة طالب جديد</button></div>
+    <div class="stat-box" onclick="showPage('subjectsPage')"><div class="num" id="statTeachers">0</div><div class="label">عدد المعلمين</div><button class="stat-action" onclick="event.stopPropagation();showPage('subjectsPage')">المواد والمعلمون</button></div>
+    <div class="stat-box" onclick="showPage('adminsPage')"><div class="num" id="statAdmins">0</div><div class="label">عدد المسؤولين</div><button class="stat-action" onclick="event.stopPropagation();showPage('adminsPage')">إدارة المسؤولين</button></div>
     <div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num" id="statDrafts">0</div><div class="label">تسميعات نشطة</div></div>
   </div>
   <div id="activeDraftsSection"></div>
+  <section id="registrationRequestsSection" style="margin-bottom:22px"></section>
   <div class="menu-grid">
-    <button class="menu-btn" style="background:#667eea" onclick="showPage('addStudent')">➕ إضافة طالب جديد</button>
-
-    <button class="menu-btn admin-badge" style="background:#17a2b8" onclick="showPage('messagesPage')">
-      💬 الرسائل <span id="msgBadge" class="msg-count hidden">0</span>
-    </button>
-    <button class="menu-btn" style="background:#6c757d" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button>
-    <button class="menu-btn" style="background:#fd7e14" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button>
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ����لمرفوعة</button>
+    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ������لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
@@ -602,12 +638,17 @@ tr:hover { background: var(--table-hover); }
     </div>
   </div>
   <div id="adminsTable"></div>
+  <section style="margin-top:28px;border-top:2px solid var(--border);padding-top:22px"><h3 style="color:var(--primary);margin-bottom:8px">تفعيل حساب برقم الهاتف</h3><p style="color:var(--text-light);margin-bottom:15px">أدخل الهاتف والكود الذي وصلك عبر واتساب. لا يمكن قبول الكود بعد انتهاء صلاحيته.</p><div class="form-row"><div class="form-group"><label>رقم الهاتف</label><input id="approvalPhone" inputmode="tel"></div><div class="form-group"><label>كود التحقق</label><input id="approvalCode" inputmode="numeric" maxlength="6"></div></div><div class="form-row"><div class="form-group"><label>رقم المسؤول للتأكيد</label><input id="approvalAdminMobile" inputmode="tel"></div><div class="form-group"><label>كلمة مرور المسؤول</label><input id="approvalAdminPassword" type="password"></div></div><button class="btn btn-success" onclick="approvePhoneVerification()">تفعيل الحساب</button><div id="approvalAlert" style="margin-top:12px"></div></section>
 </div>
 
 <!-- إعداد��ت المسؤول -->
 <div id="adminSettings" class="page hidden" style="max-width:600px;">
   <div class="page-header"><h2>⚙️ إعدادات المسؤول</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="adminSettingsAlert"></div>
+  <h4 style="color:var(--primary);margin:20px 0 15px;border-bottom:2px solid var(--border);padding-bottom:10px;">إعدادات المنصة والتسجيل</h4>
+  <div class="form-row"><div class="form-group"><label>رقم واتساب المسؤول</label><input id="settingsAdminPhone" inputmode="tel" placeholder="201554542019"></div><div class="form-group"><label>صلاحية كود التحقق بالدقائق</label><input id="settingsVerificationMinutes" type="number" min="5" max="60" value="10"></div></div>
+  <div class="form-row"><div class="form-group"><label>اسم المنصة</label><input id="settingsPlatformName" placeholder="نظام إدارة الطلاب"></div><div class="form-group"><label>اللغة الافتراضية</label><select id="settingsDefaultLanguage"><option value="ar">العربية</option><option value="en">English</option></select></div></div>
+  <button class="btn btn-primary" onclick="savePortalSettings()">حفظ إعدادات المنصة</button>
   <h4 style="color:var(--primary); margin:20px 0 15px; border-bottom:2px solid var(--border); padding-bottom:10px;">🔐 تأكيد الهوية</h4>
   <div class="form-group">
     <label>رقم الموبايل الحالي (للتأكيد)</label>
@@ -1127,7 +1168,7 @@ const quranData = {
   25: ["فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقا��"],
   26: ["الأحقاف", "محمد", "الفتح", "الحجرات", "ق", "الذاريات"],
   27: ["الذاريات", "الطور", "النجم", "القمر", "ال��حمن", "الواقعة", "الحديد"],
-  28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
+  28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الط��اق", "التحريم"],
   29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات"],
   30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس"]
 };
@@ -1182,8 +1223,40 @@ if(localStorage.getItem('theme') === 'dark') {
   document.querySelector('.theme-toggle').textContent = '☀️';
 }
 
+const UI_TRANSLATIONS = {
+  'دخول النظام':'System sign in','اسم المستخدم':'Username','الرقم السري':'Password','دخول':'Sign in','إنشاء حساب جديد':'Create account','نظام إدارة الطلاب':'Student Management System','مرحباً بك — اختر طريقة استخدامك للموقع':'Welcome — choose how you use the platform','المسؤول':'Administrator','الطالب':'Student','ولي الأمر':'Parent','التحكم الكامل في النظام والطلاب':'Full control of the system and students','متابعة المواد والواجبات والحفظ':'Track subjects, homework, and memorization','متابعة ابنك/ابنتك والتقارير':'Track your child and reports','لوحة تحكم المسؤول':'Admin dashboard','الإعدادات':'Settings','الرسائل':'Messages','خروج':'Sign out','عدد الطلاب':'Students','عدد المعلمين':'Teachers','عدد المسؤولين':'Administrators','إضافة طالب جديد':'Add student','المواد والمعلمون':'Subjects & teachers','إدارة المسؤولين':'Manage admins','إنشاء كود التحقق':'Create verification code','رقم الهاتف':'Phone number','الاسم بالكامل':'Full name','الرقم القومي':'National ID','نوع الحساب':'Account type','ملاحظات':'Notes','إرسال طلب الانضمام':'Submit registration request','رجوع':'Back','حفظ إعدادات المنصة':'Save platform settings','تفعيل الحساب':'Activate account'
+};
+let currentLanguage = localStorage.getItem('siteLanguage') || 'ar';
+function applyLanguage(language){
+  const reverse=Object.fromEntries(Object.entries(UI_TRANSLATIONS).map(function(entry){return [entry[1],entry[0]]}));
+  const dictionary=language==='en'?UI_TRANSLATIONS:reverse;
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let node;
+  while((node=walker.nextNode())){const value=node.nodeValue||'';const trimmed=value.trim();if(dictionary[trimmed])node.nodeValue=value.replace(trimmed,dictionary[trimmed]);}
+  document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';
+  const button=document.querySelector('.language-toggle');if(button){button.textContent=language==='ar'?'EN':'ع';button.title=language==='ar'?'English':'العربية';}
+  currentLanguage=language;localStorage.setItem('siteLanguage',language);
+}
+function toggleLanguage(){applyLanguage(currentLanguage==='ar'?'en':'ar')}
+window.addEventListener('DOMContentLoaded',function(){if(currentLanguage==='en')applyLanguage('en')});
+
+let verificationSession=null, verificationTimer=null, verificationPoll=null, googleRegistrationCredential=null;
+function selectPhoneRegistration(){googleRegistrationCredential=null;document.getElementById('phoneVerificationStart').classList.remove('hidden');document.getElementById('phoneRegisterBtn').classList.add('active');document.getElementById('googleRegisterBtn').classList.remove('active')}
+async function startGoogleRegistration(){
+  const alertBox=document.getElementById('registrationAlert');document.getElementById('googleRegisterBtn').classList.add('active');document.getElementById('phoneRegisterBtn').classList.remove('active');document.getElementById('phoneVerificationStart').classList.add('hidden');
+  try{const config=await fetch('/api/google-config',{cache:'no-store'}).then(function(response){return response.json()});if(!config.clientId)throw new Error('تسجيل Google غير مهيأ حاليًا');if(!window.google){await new Promise(function(resolve,reject){const script=document.createElement('script');script.src='https://accounts.google.com/gsi/client';script.async=true;script.onload=resolve;script.onerror=reject;document.head.appendChild(script)})}window.google.accounts.id.initialize({client_id:config.clientId,callback:function(result){googleRegistrationCredential=result.credential;document.getElementById('registrationDetailsForm').classList.remove('hidden');document.getElementById('verificationBox').classList.add('hidden');alertBox.innerHTML='<div class="alert alert-success">تم التحقق بحساب Google. أكمل بياناتك.</div>'}});window.google.accounts.id.prompt()}catch(error){alertBox.innerHTML='<div class="alert alert-danger">'+escapeHtml(error.message||'تعذر تسجيل Google')+'</div>'}
+}
+function formatRemaining(milliseconds){const seconds=Math.max(0,Math.ceil(milliseconds/1000));return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')}
+function expireVerification(){clearInterval(verificationTimer);clearInterval(verificationPoll);verificationSession=null;document.getElementById('verificationCountdown').textContent='00:00';document.getElementById('verificationWhatsappLink').classList.add('hidden');document.getElementById('verificationStatus').className='alert alert-danger';document.getElementById('verificationStatus').textContent='انتهت صلاحية هذه الخدمة حاليًا، يرجى المحاولة مرة أخرى لاحقًا'}
+async function createVerificationCode(){
+  const phone=document.getElementById('registrationPhone').value.trim();const alertBox=document.getElementById('registrationAlert');alertBox.innerHTML='';
+  try{const response=await fetch('/api/verification',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',phone:phone})});const data=await response.json();if(!response.ok)throw new Error(data.error);verificationSession=data;document.getElementById('verificationBox').classList.remove('hidden');document.getElementById('generatedVerificationCode').textContent=data.code;const text='طلب تفعيل حساب جديد%0Aرقم الهاتف: '+encodeURIComponent(data.phone)+'%0Aكود التحقق: '+encodeURIComponent(data.code);const link=document.getElementById('verificationWhatsappLink');link.href='https://wa.me/'+data.adminPhone+'?text='+text;link.classList.remove('hidden');const tick=function(){const left=new Date(data.expiresAt).getTime()-Date.now();document.getElementById('verificationCountdown').textContent=formatRemaining(left);if(left<=0)expireVerification()};tick();clearInterval(verificationTimer);verificationTimer=setInterval(tick,1000);clearInterval(verificationPoll);verificationPoll=setInterval(checkVerificationStatus,4000)}catch(error){alertBox.innerHTML='<div class="alert alert-danger">'+escapeHtml(error.message||'تعذر إنشاء الكود')+'</div>'}
+}
+async function checkVerificationStatus(){if(!verificationSession)return;try{const response=await fetch('/api/verification',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status',id:verificationSession.id,phone:verificationSession.phone})});const data=await response.json();if(data.status==='approved'){clearInterval(verificationTimer);clearInterval(verificationPoll);document.getElementById('verificationStatus').className='alert alert-success';document.getElementById('verificationStatus').textContent='تم تفعيل رقم الهاتف بنجاح';document.getElementById('registrationDetailsForm').classList.remove('hidden')}else if(data.status==='expired')expireVerification()}catch(e){}}
+async function approvePhoneVerification(){const box=document.getElementById('approvalAlert');try{const response=await fetch('/api/verification',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'approve',phone:document.getElementById('approvalPhone').value,code:document.getElementById('approvalCode').value,adminMobile:document.getElementById('approvalAdminMobile').value,adminPassword:document.getElementById('approvalAdminPassword').value})});const data=await response.json();if(!response.ok)throw new Error(data.error);box.innerHTML='<div class="alert alert-success">تم تفعيل الحساب بنجاح</div>'}catch(error){box.innerHTML='<div class="alert alert-danger">'+escapeHtml(error.message||'تعذر التفعيل')+'</div>'}}
+async function submitRegistrationRequest(event){event.preventDefault();if(!verificationSession&&!googleRegistrationCredential)return;const box=document.getElementById('registrationAlert');const contactPhone=document.getElementById('requestContactPhone').value;try{const response=await fetch('/api/verification',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'submit',id:verificationSession&&verificationSession.id,phone:verificationSession?verificationSession.phone:contactPhone,googleCredential:googleRegistrationCredential,name:document.getElementById('requestFullName').value,nationalId:document.getElementById('requestNationalId').value,role:document.getElementById('requestRole').value,notes:document.getElementById('requestNotes').value})});const data=await response.json();if(!response.ok)throw new Error(data.error);document.getElementById('registrationDetailsForm').classList.add('hidden');document.getElementById('verificationBox').classList.add('hidden');box.innerHTML='<div class="alert alert-success">تم إرسال طلبك إلى المسؤول على المنصة بنجاح.</div>'}catch(error){box.innerHTML='<div class="alert alert-danger">'+escapeHtml(error.message||'تعذر إرسال الطلب')+'</div>'}}
+
 let neonSaveTimer = null;
-const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','recordElements','extraElements'];
+const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','recordElements','extraElements','portalSettings','registrationRequests'];
 function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
@@ -1277,7 +1350,7 @@ function showPage(id) {
   checkAndFinalizeDrafts();
   updateBackButton();
 
-  if(id === 'adminDashboard') { renderAdminStats(); updateMsgBadge(); renderActiveDrafts(); }
+  if(id === 'adminDashboard') { renderAdminStats(); updateMsgBadge(); renderActiveDrafts(); renderRegistrationRequests(); }
   if(id === 'studentsList') renderStudents();
   if(id === 'messagesPage') { renderMessages(); markAdminMessagesRead(); }
   if(id === 'subjectsPage') renderSubjects();
@@ -1381,7 +1454,7 @@ function buildDailyLog(s) {
     const at = t.approvedAt || t.rejectedAt || t.at || '';
     let day = t.day || '';
     if(!day && at) { const m = String(at).match(/(\d{1,4}[\/-]\d{1,2}[\/-]\d{1,4})/); day = m ? m[1] : ''; }
-    if(!day) day = 'بدون تاريخ';
+    if(!day) day = 'بدون ��اريخ';
     const name = t.name || t.text || '';
     const key = (t.sourceMsgId || '') + '|' + day + '|' + status + '|' + name + '|' + at;
     if(seen[key]) return;
@@ -1809,9 +1882,14 @@ function loadAdminSettings() {
   document.getElementById('newMobile').value = '';
   document.getElementById('newPass').value = '';
   document.getElementById('adminSettingsAlert').innerHTML = '';
-}
-
-function saveAdminSettings() {
+  const portal=getData('portalSettings',{});document.getElementById('settingsAdminPhone').value=portal.adminPhone||'201554542019';document.getElementById('settingsVerificationMinutes').value=portal.verificationMinutes||10;document.getElementById('settingsPlatformName').value=portal.platformName||'نظام إدارة الطلاب';document.getElementById('settingsDefaultLanguage').value=portal.defaultLanguage||'ar';
+  }
+  function savePortalSettings(){
+    const phone=document.getElementById('settingsAdminPhone').value.replace(/\D/g,'');const minutes=Math.min(60,Math.max(5,Number(document.getElementById('settingsVerificationMinutes').value)||10));if(phone.length<10)return alert('أدخل رقم واتساب صحيحًا');
+    const settings={adminPhone:phone,verificationMinutes:minutes,platformName:document.getElementById('settingsPlatformName').value.trim()||'نظام إدارة الطلاب',defaultLanguage:document.getElementById('settingsDefaultLanguage').value};setData('portalSettings',settings);document.getElementById('adminSettingsAlert').innerHTML='<div class="alert alert-success">تم حفظ إعدادات المنصة</div>';
+  }
+  
+  function saveAdminSettings() {
   const admins = getData('admins');
   const idx = admins.findIndex(a => a.id === currentAdminId);
   if(idx === -1) return;
@@ -1847,7 +1925,10 @@ function saveAdminSettings() {
   document.getElementById('newPass').value = '';
 }
 
-function renderAdminStats() {
+  function renderRegistrationRequests(){
+    const box=document.getElementById('registrationRequestsSection');if(!box)return;const requests=getData('registrationRequests',[]);if(!requests.length){box.innerHTML='';return}box.innerHTML='<div class="page-header" style="margin-bottom:12px"><h3>طلبات إنشاء الحساب الجديدة</h3><span class="badge badge-danger">'+requests.length+'</span></div>'+requests.map(function(request){return '<div class="msg-item"><div class="sender">'+escapeHtml(request.name)+'</div><div>'+escapeHtml(request.role==='parent'?'ولي أمر':'طالب')+' · '+escapeHtml(request.phone)+'</div><div>الرقم القومي: '+escapeHtml(request.nationalId)+'</div>'+(request.notes?'<p style="margin-top:6px">'+escapeHtml(request.notes)+'</p>':'')+'<div class="time">'+new Date(request.createdAt).toLocaleString('ar-EG')+'</div></div>'}).join('')
+  }
+  function renderAdminStats() {
   const students = getData('students');
   const subjects = getData('subjects');
   const admins = getData('admins');
@@ -2163,7 +2244,7 @@ function deleteStudent(id) {
 }
 
 // ====== RECORD SESSION - FIXED ELEMENTS WITH SURAH & COLOR ======
-const FIXED_ELEMENTS = ['اللوح', 'السورة', 'الماضي القريب', 'الماضي البعيد'];
+const FIXED_ELEMENTS = ['اللوح', 'السور��', 'الماضي القريب', 'الماضي البعيد'];
 
 function openRecord(id) {
   const students = getData('students');
@@ -3584,7 +3665,7 @@ function renderDevPlan(plan){
   if(plan.summary) h += '<div style="margin-bottom:12px;"><strong>الملخص:</strong> '+esc(plan.summary)+'</div>';
 
   if(Array.isArray(plan.files) && plan.files.length){
-    h += '<div style="font-weight:bold; margin:14px 0 8px; color:var(--primary);">📁 الملفات التي ستتغيّر</div>';
+    h += '<div style="font-weight:bold; margin:14px 0 8px; color:var(--primary);">📁 المل��ات التي ستتغيّر</div>';
     plan.files.forEach(function(f){
       const badge = f.action === 'create'
         ? '<span style="background:#28a745;color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;">إنشاء</span>'
