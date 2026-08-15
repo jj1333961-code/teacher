@@ -85,11 +85,14 @@ export async function GET(request: Request) {
       if (!pageText.includes(signature)) continue
 
       const wanted = new Set(targetWords.filter((word) => word.length > 2))
+      const targetNormalized = normalizeQuranText(targetData.text)
       const matchedItems = items.filter((item) => {
         const normalized = normalizeQuranText(itemText(item))
-        const words = normalized.split(" ").filter(Boolean)
+        const words = normalized.split(" ").filter((word) => word.length > 2)
         const score = words.filter((word) => wanted.has(word)).length
-        return normalized.includes(signature) || score >= Math.max(1, Math.min(2, wanted.size))
+        const overlap = score / Math.max(1, Math.min(words.length, wanted.size))
+        // لا يكفي تشابه كلمة أو كلمتين؛ فهذا كان يُدخل أسطراً من الآيات المجاورة.
+        return normalized.includes(targetNormalized) || targetNormalized.includes(normalized) || (score >= 3 && overlap >= 0.72)
       })
       if (matchedItems.length) {
         selected = { page, items: matchedItems }
@@ -126,6 +129,12 @@ export async function GET(request: Request) {
       cropY = Math.max(0, Math.floor(top - paddingY))
       cropWidth = Math.min(pageCanvas.width - cropX, Math.ceil(right - left + paddingX * 2))
       cropHeight = Math.min(pageCanvas.height - cropY, Math.ceil(bottom - top + paddingY * 2))
+      if (to === ayah) {
+        // بعض ملفات المصحف تعيد سطر الصفحة كاملاً كعنصر نصي واحد؛ نحد القص بعدد
+        // الأسطر المتوقع للآية حتى لا يظهر أول سطر من الآية التالية.
+        const expectedLines = Math.max(1, Math.ceil(normalizeQuranText(targetData.text).length / 52))
+        cropHeight = Math.min(cropHeight, expectedLines * 190 + paddingY)
+      }
 
       // ظل بلون خلفية المصحف فوق أي نص يقع خارج حدود الآية داخل القصاصة.
       context.fillStyle = "#f8f5ec"
