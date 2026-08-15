@@ -79,6 +79,7 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --font-sans: var(--font-noto-arabic), Arial, sans-serif;
 }
 
 .dark {
@@ -160,4 +161,93 @@
   body {
     @apply bg-background text-foreground;
   }
+  button, input, select, textarea { @apply outline-none; }
+  button { @apply cursor-pointer; }
+}
+
+@layer components {
+  .auth-shell { @apply relative flex min-h-screen items-center justify-center bg-muted px-4 py-16 text-foreground; }
+  .auth-card { @apply w-full max-w-md rounded-3xl border border-border bg-card p-7 shadow-sm md:p-10; }
+  .auth-card-wide { @apply max-w-2xl; }
+  .brand-mark { @apply flex shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground; }
+  .brand-mark svg { @apply size-6; }
+  .field-label { @apply flex flex-col gap-2 text-sm font-semibold; }
+  .field-label input, .field-label select, .field-label textarea { @apply w-full rounded-xl border border-input bg-background px-4 py-3 font-normal text-foreground transition focus:border-primary focus:ring-2 focus:ring-ring/20; }
+  .input-wrap { @apply flex items-center gap-3 rounded-xl border border-input bg-background px-4 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/20; }
+  .input-wrap svg { @apply size-5 text-muted-foreground; }
+  .input-wrap input { @apply flex-1 border-0 bg-transparent px-0 ring-0 focus:ring-0; }
+  .primary-button { @apply flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground transition hover:opacity-90; }
+  .primary-button svg, .secondary-button svg, .choice-button svg, .header-action svg, .icon-action svg, .language-action svg, .mobile-nav svg, .card-action svg, .status-badge svg { @apply size-5; }
+  .secondary-button { @apply flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-3 font-semibold transition hover:bg-accent; }
+  .back-button { @apply flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground; }
+  .back-button svg { @apply size-4; }
+  .choice-button { @apply flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold transition hover:bg-accent; }
+  .choice-button.selected { @apply border-primary bg-primary text-primary-foreground; }
+  .google-g { @apply font-mono text-lg font-bold; }
+  .success-mark { @apply mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground; }
+  .success-mark svg { @apply size-7; }
+  .error-text { @apply rounded-xl bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive; }
+  .icon-action { @apply flex size-10 items-center justify-center rounded-xl border border-border bg-card transition hover:bg-accent; }
+  .language-action { @apply flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold transition hover:bg-accent; }
+  .header-action { @apply relative flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition hover:bg-accent; }
+  .header-action b, .mobile-nav b { @apply flex size-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground; }
+  .mobile-nav { @apply flex items-center gap-3 rounded-xl px-3 py-3 text-start font-semibold hover:bg-accent; }
+  .eyebrow { @apply text-sm font-bold text-primary; }
+  .stat-card { @apply rounded-2xl border border-border bg-card p-5 shadow-sm; }
+  .stat-icon { @apply flex size-11 items-center justify-center rounded-xl bg-secondary text-primary; }
+  .stat-icon svg { @apply size-6; }
+  .card-action { @apply mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-3 text-sm font-bold transition hover:bg-primary hover:text-primary-foreground; }
+  .panel { @apply rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6; }
+  .count-badge { @apply flex size-9 items-center justify-center rounded-full bg-primary font-mono font-bold text-primary-foreground; }
+  .request-row { @apply flex w-full items-center gap-3 rounded-xl border border-border p-3 text-start transition hover:bg-accent; }
+  .avatar { @apply flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary; }
+  .avatar svg { @apply size-5; }
+  .request-row > svg { @apply size-4 text-muted-foreground; }
+  .new-dot { @apply rounded-full bg-primary px-2 py-1 text-xs font-bold text-primary-foreground; }
+  .activity-dot { @apply size-2 shrink-0 rounded-full bg-primary; }
+  .modal-backdrop { @apply fixed inset-0 flex items-end justify-center bg-foreground/40 p-0 backdrop-blur-sm md:items-center md:p-6; }
+  .modal-panel { @apply flex max-h-[90vh] w-full max-w-xl flex-col rounded-t-3xl bg-background shadow-2xl md:rounded-3xl; }
+  .message-card { @apply rounded-2xl border border-border bg-card p-4; }
+  .status-badge { @apply flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-bold; }
+  .status-badge svg { @apply size-3; }
+  .details-grid { @apply my-5 grid gap-4 rounded-xl bg-muted p-4 sm:grid-cols-2; }
+  .details-grid dt { @apply text-xs text-muted-foreground; }
+  .details-grid dd { @apply mt-1 text-sm font-semibold break-words; }
+  .demo-badge { @apply rounded-full bg-secondary px-3 py-1 text-xs font-bold text-secondary-foreground; }
+}
+
+:root {
+  --background: oklch(0.985 0.008 165);
+  --foreground: oklch(0.19 0.025 165);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.19 0.025 165);
+  --primary: oklch(0.43 0.12 164);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.025 165);
+  --secondary-foreground: oklch(0.28 0.07 164);
+  --muted: oklch(0.96 0.012 165);
+  --muted-foreground: oklch(0.48 0.025 165);
+  --accent: oklch(0.94 0.025 165);
+  --accent-foreground: oklch(0.22 0.05 164);
+  --border: oklch(0.89 0.02 165);
+  --input: oklch(0.86 0.022 165);
+  --ring: oklch(0.43 0.12 164);
+}
+
+.dark {
+  --background: oklch(0.16 0.025 165);
+  --foreground: oklch(0.96 0.01 165);
+  --card: oklch(0.205 0.027 165);
+  --card-foreground: oklch(0.96 0.01 165);
+  --primary: oklch(0.7 0.12 164);
+  --primary-foreground: oklch(0.14 0.025 165);
+  --secondary: oklch(0.27 0.035 165);
+  --secondary-foreground: oklch(0.94 0.01 165);
+  --muted: oklch(0.22 0.025 165);
+  --muted-foreground: oklch(0.7 0.02 165);
+  --accent: oklch(0.27 0.035 165);
+  --accent-foreground: oklch(0.96 0.01 165);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.7 0.12 164);
 }
