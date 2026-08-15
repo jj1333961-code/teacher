@@ -80,6 +80,9 @@ function classifyAiFailure(error: unknown) {
   if (/402|insufficient credits|payment required/i.test(raw)) {
     return { status: 402, code: "OPENROUTER_CREDITS_REQUIRED", retryable: false, message: "رصيد OpenRouter غير كافٍ لتشغيل الطلب الحالي.", raw }
   }
+  if (/AUDIO_PAYLOAD_TOO_LARGE|payload too large|request entity too large|413/i.test(raw)) {
+    return { status: 413, code: "AUDIO_PAYLOAD_TOO_LARGE", retryable: false, message: "التسجيل طويل جداً للتحليل. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.", raw }
+  }
   if (/429|rate.?limit|quota/i.test(raw)) {
     return { status: 429, code: "OPENROUTER_RATE_LIMITED", retryable: true, message: "بلغ OpenRouter حد الطلبات مؤقتاً. انتظر قليلاً ثم أعد المحاولة.", raw }
   }
@@ -106,7 +109,12 @@ function readOpenRouterText(content: unknown): string {
 
 async function openRouterText(prompt: string, system: string, temperature: number, audio?: { mimeType: string; data: string }): Promise<string> {
   if (!OPENROUTER.key) throw new Error("OPENROUTER_API_KEY غير موجود على الخادم")
-  const audioFormat = audio?.mimeType === "audio/mpeg" ? "mp3" : "wav"
+  if (audio && audio.data.length > 4_050_000) throw new Error("AUDIO_PAYLOAD_TOO_LARGE: التسجيل طويل جداً للتحليل")
+  const normalizedMime = audio?.mimeType.toLowerCase().split(";")[0]
+  const audioFormat = normalizedMime === "audio/mpeg" || normalizedMime === "audio/mp3" ? "mp3"
+    : normalizedMime === "audio/ogg" ? "ogg"
+    : normalizedMime === "audio/mp4" || normalizedMime === "audio/m4a" ? "m4a"
+    : "wav"
   const userContent = audio
     ? [
         { type: "text", text: prompt },
@@ -675,7 +683,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت OpenRouter، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفرها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت OpenRouter، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توف��ها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
