@@ -526,15 +526,15 @@ tr:hover { background: var(--table-hover); }
     <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ������لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
-<button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
+<button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة OpenRouter الإدارية</button>
     <button class="menu-btn" style="background:#24292e" onclick="openGithubSync()">🔗 مزامنة GitHub</button>
   </div>
 </div>
 
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
-  <div class="page-header"><h2>مساعد Gemini الإداري</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>مساعد OpenRouter الإداري</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بيانات الموقع عندما تكون مرتبطة بسؤالك.</p>
-  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو ��لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
+  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو ��لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">OpenRouter</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
@@ -542,7 +542,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغ��ّرت وروابط الـcommit. مفتاحا Gemini وGitHub يبقيان على الخادم فقط.
+    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغ��ّرت وروابط الـcommit. مفتاحا OpenRouter وGitHub يبقيان على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
@@ -781,10 +781,10 @@ tr:hover { background: var(--table-hover); }
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة الناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدوياً قبل تقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
- <div class="form-group" id="examFileSourceGroup"><label for="examFileSource">المرجع الأساسي</label><select id="examFileSource"><option value="">اختر مرجعاً...</option></select><small style="color:var(--text-light)">تأتي منه النسبة المكملة لأسئلة Gemini.</small></div>
- <div class="form-group"><label for="examAiPercentage">نسبة أسئلة Gemini المستقلة</label><input id="examAiPercentage" type="number" min="0" max="100" step="5" value="30" oninput="updateExamSourceDistribution()"><small id="examSourceDistribution" style="color:var(--text-light)">30% Gemini، 70% من المرجع</small></div>
+ <div class="form-group" id="examFileSourceGroup"><label for="examFileSource">المرجع الأساسي</label><select id="examFileSource"><option value="">اختر مرجعاً...</option></select><small style="color:var(--text-light)">تأتي منه النسبة المكملة لأسئلة OpenRouter.</small></div>
+ <div class="form-group"><label for="examAiPercentage">نسبة أسئلة OpenRouter المستقلة</label><input id="examAiPercentage" type="number" min="0" max="100" step="5" value="30" oninput="updateExamSourceDistribution()"><small id="examSourceDistribution" style="color:var(--text-light)">30% OpenRouter، 70% من المرجع</small></div>
  </div>
- <div class="alert alert-info"><strong>توزيع مرن:</strong> اختر نسبة Gemini من 0% إلى 100%. النسبة المكملة تُنشأ من المرجع المحدد، والمراجع الأساسية مثبتة دائماً ولا يمكن حذفها. لا تظهر الإجابة داخل صورة السؤال.</div>
+ <div class="alert alert-info"><strong>توزيع مرن:</strong> اختر نسبة OpenRouter من 0% إلى 100%. النسبة المكملة تُنشأ من المرجع المحدد، والمراجع الأساسية مثبتة دائماً ولا يمكن حذفها. لا تظهر الإجابة داخل صورة السؤال.</div>
     <div id="examPlanRows"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
       <button class="btn btn-info" onclick="addExamPlanRow()">➕ مستوى/نوع جديد</button>
@@ -946,7 +946,7 @@ tr:hover { background: var(--table-hover); }
   <div class="ai-chat">
     <div id="studentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
-<span class="badge badge-primary">Gemini</span>
+<span class="badge badge-primary">OpenRouter</span>
       <input type="text" id="studentChatInput" placeholder="اسألني عن مستواك أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendStudentChat()">
       <button class="btn btn-primary" onclick="sendStudentChat()">إرسال</button>
     </div>
@@ -1015,7 +1015,7 @@ tr:hover { background: var(--table-hover); }
   <div class="ai-chat">
     <div id="parentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
-<span class="badge badge-primary">Gemini</span>
+<span class="badge badge-primary">OpenRouter</span>
       <input type="text" id="parentChatInput" placeholder="اسألني عن مستوى ابنك، أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendParentChat()">
       <button class="btn btn-primary" onclick="sendParentChat()">إرسال</button>
     </div>
@@ -1046,7 +1046,7 @@ tr:hover { background: var(--table-hover); }
   <div id="filesAlert"></div>
   <section style="background:var(--table-header);border:2px solid var(--primary);border-radius:15px;padding:20px;margin-bottom:20px;">
     <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
-    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها محلياً دون إرساله إلى Gemini.</p>
+    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها محلياً دون إرساله إلى OpenRouter.</p>
     <input id="examFileUpload" type="file" accept=".pdf,.docx,.txt" onchange="uploadExamFile(this)">
     <div id="examFileUploadStatus" style="margin-top:10px;"></div>
     <div id="examFilesList" style="margin-top:15px;"></div>
@@ -1088,13 +1088,13 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <script>
-function getSelectedAIModel(){return 'gemini';}
-function getAIModelLabel(){return 'Gemini';}
+function getSelectedAIModel(){return 'openrouter';}
+function getAIModelLabel(){return 'OpenRouter';}
 
 function showToast(msg, type){
   if(!type){
     var t = String(msg);
-    type = (/(❌|���|فشل|خطأ|لا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
+    type = (/(❌|���|فشل|��طأ|لا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
   }
   var box = document.getElementById('toastBox');
   if(!box){ box = document.createElement('div'); box.id='toastBox'; document.body.appendChild(box); }
@@ -1138,7 +1138,7 @@ const quranData = {
   26: ["الأحقاف", "محمد", "الفتح", "الحجرات", "ق", "الذاريات"],
   27: ["الذاريات", "الطور", "النجم", "القمر", "ال��حمن", "الواقعة", "الحديد"],
   28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "ال��معة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
-  29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات"],
+  29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المز��ل", "المدثر", "القيامة", "الإنسان", "المرسلات"],
   30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "��لضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص��", "المسد", "الإخلاص", "الفلق", "الناس"]
 };
 
@@ -2091,7 +2091,7 @@ function updateStudent() {
   const parentPass = document.getElementById('editParentPass').value.trim();
   if(national.length !== 14) return alert('الرقم القومي يجب أن يكون 14 رقم');
   if(phone && phone.length !== 11) return alert('رقم الهاتف يجب أن يكون 11 رقم');
-  // ✅ مسموح تطابق الرقم السري للطالب مع ولي الأمر
+  // ✅ مسموح ت��ابق الرقم السري للطالب مع ولي الأمر
 
   students[idx].name = document.getElementById('editName').value.trim();
   students[idx].username = document.getElementById('editUsername').value.trim();
@@ -2584,7 +2584,7 @@ async function loadExamFiles(){
     updateExamSourceDistribution();
   }catch(e){examFilesCache=[];if(box)box.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر تحميل الملفات')+' <button class="btn btn-sm btn-primary" onclick="loadExamFiles()">إعادة المحاولة</button></div>';throw e}
 }
-function updateExamSourceDistribution(){const input=document.getElementById('examAiPercentage'),percentage=Math.max(0,Math.min(100,parseInt(input?.value)||0)),filePercentage=100-percentage,source=document.getElementById('examFileSource'),label=document.getElementById('examSourceDistribution');if(input&&String(percentage)!==input.value)input.value=percentage;if(source)source.disabled=percentage===100;if(label)label.textContent=percentage+'% Gemini، '+filePercentage+'% من المرجع'+(percentage===100?' — لا يلزم اختيار مرجع':'')}
+function updateExamSourceDistribution(){const input=document.getElementById('examAiPercentage'),percentage=Math.max(0,Math.min(100,parseInt(input?.value)||0)),filePercentage=100-percentage,source=document.getElementById('examFileSource'),label=document.getElementById('examSourceDistribution');if(input&&String(percentage)!==input.value)input.value=percentage;if(source)source.disabled=percentage===100;if(label)label.textContent=percentage+'% OpenRouter، '+filePercentage+'% من المرجع'+(percentage===100?' — لا يلزم اختيار مرجع':'')}
 function getExamAiPercentage(){return Math.max(0,Math.min(100,parseInt(document.getElementById('examAiPercentage')?.value)||0))}
 async function uploadExamFile(input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById('examFileUploadStatus');if(status)status.innerHTML='<div class="alert alert-info">جاري رفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);const res=await fetch('/api/exam-files',{method:'POST',body:form});await readApiJson(res,'تعذر رفع الملف');if(status)status.innerHTML='<div class="alert alert-success">تم حفظ الملف واستخراج النص.</div>';await loadExamFiles()}catch(e){if(status)status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر رفع الملف')+' <button class="btn btn-sm btn-primary" onclick="document.getElementById(\'examFileInput\')?.click()">اختيار ملف آخر</button></div>'}finally{input.value=''}}
 async function deleteExamFile(id){const file=examFilesCache.find(f=>f.id===id);if(!file||!confirm('هل تريد حذف هذا الملف نهائياً؟'))return;try{const res=await fetch('/api/exam-files',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({pathname:file.pathname,metadataPathname:file.metadataPathname})});await readApiJson(res,'تعذر حذف الملف');await loadExamFiles()}catch(e){alert(e.message||'تعذر الحذف')}}
@@ -2608,7 +2608,7 @@ function localSmartChatReply(message,role){
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم و��عد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت الهدف والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
 }
-async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';box.innerHTML+='<div class="ai-msg user">'+escapeHtml(message)+'</div><div id="adminAiTyping" class="ai-msg bot">جاري التحليل...</div>';box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await readApiJson(res,'تعذر رد Gemini');document.getElementById('adminAiTyping').outerHTML='<div class="ai-msg bot">'+escapeHtml(data.result).replace(/\n/g,'<br>')+'</div>'}catch(e){document.getElementById('adminAiTyping').textContent=localSmartChatReply(message,'admin')}box.scrollTop=box.scrollHeight}
+async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';box.innerHTML+='<div class="ai-msg user">'+escapeHtml(message)+'</div><div id="adminAiTyping" class="ai-msg bot">جاري التحليل...</div>';box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await readApiJson(res,'تعذر رد OpenRouter');document.getElementById('adminAiTyping').outerHTML='<div class="ai-msg bot">'+escapeHtml(data.result).replace(/\n/g,'<br>')+'</div>'}catch(e){document.getElementById('adminAiTyping').textContent=localSmartChatReply(message,'admin')}box.scrollTop=box.scrollHeight}
 
 async function callStudentAI(mode, payload, temperature){
   const res = await fetch('/api/ai', {
@@ -2754,7 +2754,7 @@ function startExamGenerationProgress(questionCount){
   const overlay=document.getElementById('examGenerationOverlay'),stage=document.getElementById('examGenerationStage'),bar=document.getElementById('examGenerationBar'),eta=document.getElementById('examGenerationEta');
   let elapsed=0,total=Math.max(45,Math.min(180,35+(Math.max(1,questionCount||1)*7)));overlay?.classList.remove('hidden');
   clearInterval(examGenerationTimer);
-  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينتقي Gemini الأسئلة ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ومنع كشف الإجابات...';elapsed++};
+  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينتقي OpenRouter الأسئلة ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية و��نع كشف الإجابات...';elapsed++};
   update();examGenerationTimer=setInterval(update,1000);
 }
 function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'اكتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
@@ -2768,7 +2768,7 @@ async function generateExamQuestions(){
   const btns=document.querySelectorAll('#examBuilderSection button');btns.forEach(b=>b.disabled=true);
   const requestedTotal=plans.reduce((n,r)=>n+(parseInt(r.count)||0),0);let generationSucceeded=false;
   const aiPercentage=getExamAiPercentage(),aiCount=Math.min(requestedTotal,Math.round(requestedTotal*aiPercentage/100)),fileCount=requestedTotal-aiCount;
-  startExamGenerationProgress(requestedTotal);showExamAlert('جاري إنشاء '+fileCount+' سؤال من المرجع و'+aiCount+' سؤال مستقل من Gemini...','info');
+  startExamGenerationProgress(requestedTotal);showExamAlert('جاري إنشاء '+fileCount+' سؤال من المرجع و'+aiCount+' سؤال مستقل من OpenRouter...','info');
   try{
     if(!examFilesCache.length)await loadExamFiles();
     const file=examFilesCache.find(f=>f.id===document.getElementById('examFileSource')?.value);if(fileCount&&!file)throw new Error('اختر مرجعاً لتوليد نسبة '+(100-aiPercentage)+'% من الأسئلة.');
@@ -2776,12 +2776,12 @@ async function generateExamQuestions(){
     const expandedPlans=expandExamPlans(normalizedPlans),filePlans=expandedPlans.slice(0,fileCount).map(p=>Object.assign({},p,{count:1})),aiPlans=expandedPlans.slice(fileCount).map(p=>Object.assign({},p,{count:1}));
     const range=getExamPastRange(),startIndex=ALL_SURAHS_ORDERED.indexOf(range.start),endIndex=ALL_SURAHS_ORDERED.indexOf(range.end);
     let fileQuestions=fileCount?generateLocalFileQuestions(file,filePlans):[],aiQuestions=[];
-    if(aiCount){try{const ai=await callStudentAI('generate_exam',{surahNumber:startIndex+1,endSurahNumber:endIndex+1,plan:aiPlans,pastScope:range.scope,nearSurahs:range.near,farSurahs:range.far,useReferenceFiles:false},0.08);aiQuestions=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[]);if(aiQuestions.length<aiCount)throw new Error('أعاد Gemini عدداً أقل من المطلوب')}
-      catch(aiError){aiQuestions=await generateLocalQuranQuestions(range.start,range.end,aiPlans);showExamAlert('تعذر Gemini المباشر مؤقتاً، فتم إنشاء حصته من المرجع القرآني الموثوق مع الاحتفاظ بنسبة المصدر التي اخترتها.','warning')}}
+    if(aiCount){try{const ai=await callStudentAI('generate_exam',{surahNumber:startIndex+1,endSurahNumber:endIndex+1,plan:aiPlans,pastScope:range.scope,nearSurahs:range.near,farSurahs:range.far,useReferenceFiles:false},0.08);aiQuestions=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[]);if(aiQuestions.length<aiCount)throw new Error('أعاد OpenRouter عدداً أقل من المطلوب')}
+      catch(aiError){aiQuestions=await generateLocalQuranQuestions(range.start,range.end,aiPlans);showExamAlert('تعذر OpenRouter المباشر مؤقتاً، فتم إنشاء حصته من المرجع القرآني الموثوق مع الاحتفاظ بنسبة المصدر التي اخترتها.','warning')}}
     const sourcePlans=filePlans.concat(aiPlans),list=fileQuestions.concat(aiQuestions).map(cleanExamQuestion).filter(q=>q.prompt&&q.correct!==undefined);
     if(list.length<requestedTotal)throw new Error('تعذر إكمال العدد المطلوب من الأسئلة ('+list.length+' من '+requestedTotal+').');
-    examQuestions=list.slice(0,requestedTotal).map((q,index)=>{const plan=sourcePlans[index]||normalizedPlans[0];return {id:'exam_'+Date.now()+'_'+index,type:plan.type,level:plan.level,surah:q.surah||base,prompt:q.prompt||'',stem:q.stem||'',options:Array.isArray(q.options)?q.options:[],correct:q.correct||'',from:parseInt(q.from)||1,to:parseInt(q.to)||parseInt(q.from)||1,surahNumber:parseInt(q.surahNumber)||0,timeLimit:plan.timeLimit,completeAyahs:plan.completeAyahs,reciteAyahs:plan.reciteAyahs,audioShareWithParent:plan.audioShareWithParent!==false,points:typeof q.points==='number'?q.points:1,rejected:false,weakened:false,source:q.source||'gemini',sourceFileId:q.sourceFileId||'',sourceFileName:q.sourceFileName||'',questionImage:q.questionImage||'',optionsCount:plan.optionsCount||4,pastScope:range.scope}});
-    examQuestions=shuffled(examQuestions);examEditorActiveIndex=0;generationSucceeded=true;renderExamQuestions();showExamAlert('تم إنشاء '+examQuestions.length+' سؤالاً: '+fileCount+' من الملف و'+aiCount+' من Gemini/المرجع القرآني.','success');
+    examQuestions=list.slice(0,requestedTotal).map((q,index)=>{const plan=sourcePlans[index]||normalizedPlans[0];return {id:'exam_'+Date.now()+'_'+index,type:plan.type,level:plan.level,surah:q.surah||base,prompt:q.prompt||'',stem:q.stem||'',options:Array.isArray(q.options)?q.options:[],correct:q.correct||'',from:parseInt(q.from)||1,to:parseInt(q.to)||parseInt(q.from)||1,surahNumber:parseInt(q.surahNumber)||0,timeLimit:plan.timeLimit,completeAyahs:plan.completeAyahs,reciteAyahs:plan.reciteAyahs,audioShareWithParent:plan.audioShareWithParent!==false,points:typeof q.points==='number'?q.points:1,rejected:false,weakened:false,source:q.source||'openrouter',sourceFileId:q.sourceFileId||'',sourceFileName:q.sourceFileName||'',questionImage:q.questionImage||'',optionsCount:plan.optionsCount||4,pastScope:range.scope}});
+    examQuestions=shuffled(examQuestions);examEditorActiveIndex=0;generationSucceeded=true;renderExamQuestions();showExamAlert('تم إنشاء '+examQuestions.length+' سؤالاً: '+fileCount+' من الملف و'+aiCount+' من OpenRouter/المرجع القرآني.','success');
   }catch(e){showExamAlert((e.message||'تعذر توليد الأسئلة')+' يمكنك إعادة المحاولة من دون فقد إعدادات الخطة.','danger')}
   finally{finishExamGenerationProgress(generationSucceeded);btns.forEach(b=>b.disabled=false)}
 }
@@ -3061,7 +3061,7 @@ function saveSession(isFinal) {
   messages.push({type:'system',sender:'النظام',senderId:0,receiverType:'student',receiverId:id,text:report,reply:'',time:nowText,approved:true,read:false});
   messages.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:students[idx].parent,text:report,reply:'',time:nowText,approved:true,read:false,reportDate:date,reportSession:JSON.parse(JSON.stringify(session))});
   setData('messages',messages);
-  showToast('✅ تم الحفظ النهائي — أُغلقت مهام '+date+' وانتقل النظام إلى '+nextDateStr, 'success');
+  showToast('✅ تم الحفظ النهائي — أُغلقت مهام '+date+' وانتقل النظام إل�� '+nextDateStr, 'success');
   resetRecordForm();
   document.getElementById('recordDate').value=nextDateStr;
 }
@@ -3461,7 +3461,7 @@ const DEV_DANGER_PATTERNS = [
   {re:/(المصادقة|تسجيل\s*الدخول|نظام\s*الدخول|كلمة\s*المرور\s*الرئيسية|authentication|login\s*system)/i, label:'تغيير نظام المصادقة'},
   {re:/(تغيير|تعديل|حذف)\s*(الصلاحيات|الأذونات|permissions)/i, label:'تغيير الصلاحيات'},
   {re:/(تغيير|تعديل|حذف)\s*(مفاتيح|متغيرات)\s*الب��ئة|env(ironment)?\s*var|\.env/i, label:'تغيير مفاتيح البيئة'},
-  {re:/(تغيير|تعطيل|إزالة)\s*(إعدادات\s*)?الأمان|security/i, label:'تغيير إعدادات الأمان'},
+  {re:/(تغيير|تعطيل|إزالة)\s*(إعدادات\s*)?الأمان|security/i, label:'تغيير إعدادات الأم��ن'},
 ];
 function detectDevDanger(request){
   const hits = [];
@@ -3876,7 +3876,7 @@ function approveMessage(idx, approved) {
         msgs.push({
           type:'admin', sender:'المسؤول', senderId:0,
           receiverType: 'student', receiverId: studentId,
-          text: '❌ تم رفض ملفك من المسؤول. يرجى المحاولة مرة أخرى وإرسال ملف جديد.',
+          text: '❌ تم رفض ملفك من المسؤول. يرجى المحاو��ة مرة أخرى وإرسال ملف جديد.',
           reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false
         });
 
@@ -4215,7 +4215,7 @@ function renderStudentTasks() {
 
     } else if(task.type === 'reading') {
       html += '<div class="task-card" style="border-right-color:var(--warning);"><h5>📖 قراءة: '+(task.text || (task.surah ? 'سورة '+task.surah : ''))+'</h5>';
-      if(task.surah) html += '<p>السورة: '+task.surah+' | من آية '+(task.from || '-')+' إلى آية '+(task.to || '-')+'</p>';
+      if(task.surah) html += '<p>��لسورة: '+task.surah+' | من آية '+(task.from || '-')+' إلى آية '+(task.to || '-')+'</p>';
       if(task.audio) html += '<div style="margin:8px 0;">🎙️ تسجيل من المسؤول: <audio controls src="'+task.audio+'" style="height:40px; vertical-align:middle;"></audio></div>';
       html += studentAyatBlock(task, 'rd'+originalIdx);
       html += status;
@@ -4853,9 +4853,9 @@ async function sendStudentChat() {
   const s=currentUser||{}; const last=(s.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
     const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانات الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
-    const data=await readApiJson(res,'تعذر رد Gemini');
+    const data=await readApiJson(res,'تعذر رد OpenRouter');
     const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>'); const typing=document.getElementById('studentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
-  }catch(e){const typing=document.getElementById('studentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'student'))+'<br><small>رد محلي محدود بسبب تعذر Gemini.</small>'}
+  }catch(e){const typing=document.getElementById('studentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'student'))+'<br><small>رد محلي محدود بسبب تعذر OpenRouter.</small>'}
   chatDiv.scrollTop=chatDiv.scrollHeight;
 }
 
@@ -4985,8 +4985,8 @@ async function sendParentChat() {
   const child=currentUser&&currentUser[0]?currentUser[0]:{}; const last=(child.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
     const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال ولي الأمر: '+text+'\nب��انات الابن/الابنة: '+JSON.stringify({name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)})})});
-    const data=await readApiJson(res,'تعذر رد Gemini');const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');const typing=document.getElementById('parentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
-  }catch(e){const typing=document.getElementById('parentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'parent'))+'<br><small>رد محلي محدود بسبب تعذر Gemini.</small>'}
+    const data=await readApiJson(res,'تعذر رد OpenRouter');const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');const typing=document.getElementById('parentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
+  }catch(e){const typing=document.getElementById('parentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'parent'))+'<br><small>رد محلي محدود بسبب تعذر OpenRouter.</small>'}
   chatDiv.scrollTop=chatDiv.scrollHeight;
 }
 
@@ -5417,7 +5417,7 @@ function generateAIResponse(text, student) {
     return r;
   }
   // المهام / الواجب
-  if(has('واجب','مهام','مهمة','مطلوب','تسجيل صوتي','قراءة')) {
+  if(has('واجب','مهام','مهمة','مطلوب','تسجيل صوتي','��راءة')) {
     if(pending.length === 0) return '🎉 لا توجد مهام معلّقة الآن يا '+name+'. استغل الوقت في مراجعة ما حفظته سابقاً.';
     let r = '📋 <strong>مهامك الحالية ('+pending.length+'):</strong><br>';
     pending.forEach(t => {
@@ -5430,7 +5430,7 @@ function generateAIResponse(text, student) {
   }
   // الآيات والصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم أزرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>الآيات تُعرض بالرسم العثماني الم��شكَّل كصورة مطابقة تماماً ��لمصحف.';
+    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم أزرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>الآيات تُعرض بالر��م العثماني الم��شكَّل كصورة مطابقة تماماً ��لمصحف.';
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صوت','ميكروفون','تحق��')) {
