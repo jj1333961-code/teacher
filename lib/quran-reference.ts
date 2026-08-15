@@ -5,7 +5,7 @@ import { PDFParse } from "pdf-parse"
 
 const QURAN_PATH = "references/quran.pdf"
 const MUTASHABIHAT_PATH = "references/mutashabihat.pdf"
-const EXAM_GUIDE_PATH = "references/exam-question-guide.pdf"
+const EXAM_GUIDE_PATH = "references/daleel.pdf"
 const MAX_REFERENCE_CHARS = 240_000
 
 type ReferenceCache = { mutashabihat: string; examGuide: string; loadedAt: number }
