@@ -79,12 +79,23 @@ body { background: var(--bg); min-height:100vh; color: var(--text); transition:0
 .container { max-width:1400px; margin:0 auto; padding:20px; padding-bottom:100px; }
   .hidden { display:none !important; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-.theme-toggle {
-  position:fixed; top:20px; left:20px; z-index:1000;
+.theme-toggle, .language-toggle {
+  position:fixed; top:20px; z-index:1000;
   background: var(--card-bg); border:2px solid var(--primary); color: var(--primary);
-  width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:1.3rem;
-  display:flex; align-items:center; justify-content:center; box-shadow: var(--shadow);
+  width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:1rem;
+  display:flex; align-items:center; justify-content:center; box-shadow: var(--shadow); font-weight:700;
 }
+.theme-toggle { left:20px; font-size:1.3rem; }
+.language-toggle { left:80px; }
+.stat-action { display:inline-flex; margin-top:12px; padding:7px 13px; border-radius:999px; border:1px solid rgba(255,255,255,.7); background:rgba(255,255,255,.15); color:#fff; font-size:.82rem; font-weight:700; cursor:pointer; }
+.header-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.account-request-card { max-width:760px; margin:28px auto 0; text-align:start; }
+.verification-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+.verification-option { border:2px solid var(--border); border-radius:12px; padding:14px; cursor:pointer; background:var(--input-bg); }
+.verification-option:has(input:checked) { border-color:var(--primary); background:rgba(102,126,234,.1); }
+.request-item { padding:16px; margin-bottom:12px; border:1px solid var(--border); border-radius:12px; background:var(--table-header); }
+[dir="ltr"] .page-header, [dir="ltr"] .form-group, [dir="ltr"] th, [dir="ltr"] td, [dir="ltr"] .account-request-card { text-align:left; }
+@media(max-width:768px){ .language-toggle{left:58px;top:10px;width:40px;height:40px;font-size:.78rem}.verification-options{grid-template-columns:1fr}.header-actions{width:100%}.header-actions .btn{flex:1}.stat-action{font-size:.76rem} }
 .home-page { text-align:center; padding-top:60px; }
 .home-page h1 { color:#fff; font-size:2.5rem; margin-bottom:10px; text-shadow:0 2px 10px rgba(0,0,0,0.3); }
 .home-page p { color:rgba(255,255,255,0.9); font-size:1.2rem; margin-bottom:40px; }
@@ -451,7 +462,8 @@ tr:hover { background: var(--table-hover); }
 </head>
 <body>
 
-  <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع">🌙</button>
+  <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع" aria-label="تبديل الوضع">🌙</button>
+  <button class="language-toggle" onclick="toggleLanguage()" title="Change language" aria-label="Change language">EN</button>
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
     <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong>جاري الحصول على الأسئلة</strong><span>يتم الآن تجهيز اختبارك داخل النطاق المحدد.</span></div>
   </div>
@@ -466,6 +478,23 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group"><label>اسم المستخدم</label><input type="text" id="unifiedUser" placeholder="اسم المستخدم (أو رقم الموبايل للمسؤول)" onkeypress="if(event.key==='Enter')unifiedLogin()"></div>
   <div class="form-group"><label>الرقم السري</label><div style="position:relative;"><input type="password" id="unifiedPass" placeholder="أدخل الرقم السري" style="padding-left:45px;" onkeypress="if(event.key==='Enter')unifiedLogin()"><span onclick="togglePassVisibility('unifiedPass', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span></div></div>
   <button class="btn btn-primary" onclick="unifiedLogin()" style="width:100%">🔓 دخول</button>
+  <button class="btn btn-outline" onclick="showPage('accountRequestPage')" style="width:100%;margin-top:10px" data-ar="إنشاء حساب جديد" data-en="Create new account">إنشاء حساب جديد</button>
+</div>
+
+<!-- طلب إنشاء حساب -->
+<div id="accountRequestPage" class="page hidden account-request-card">
+  <div class="page-header"><h2 data-ar="إنشاء حساب جديد" data-en="Create a new account">إنشاء حساب جديد</h2><button class="btn btn-secondary" onclick="goBack()" data-ar="رجوع" data-en="Back">رجوع</button></div>
+  <div class="alert alert-info" data-ar="اختر طريقة التحقق أولاً. تم تجهيز Google وWhatsApp OTP، وسيتم تفعيل الإرسال الفعلي عند إضافة بيانات المزودين." data-en="Choose verification first. Google and WhatsApp OTP are prepared and will activate when provider credentials are added.">اختر طريقة التحقق أولاً. تم تجهيز Google وWhatsApp OTP، وسيتم تفعيل الإرسال الفعلي عند إضافة بيانات المزودين.</div>
+  <div class="verification-options">
+    <label class="verification-option"><input type="radio" name="verificationMethod" value="google"> <strong>Google</strong><br><small data-ar="يتطلب إعداد Google OAuth" data-en="Google OAuth setup required">يتطلب إعداد Google OAuth</small></label>
+    <label class="verification-option"><input type="radio" name="verificationMethod" value="whatsapp"> <strong>WhatsApp OTP</strong><br><small data-ar="يتطلب إعداد WhatsApp Business API" data-en="WhatsApp Business API setup required">يتطلب إعداد WhatsApp Business API</small></label>
+  </div>
+  <div id="accountRequestAlert"></div>
+  <div class="form-row"><div class="form-group"><label data-ar="نوع الحساب" data-en="Account type">نوع الحساب</label><select id="requestRole"><option value="student">طالب</option><option value="parent">ولي الأمر</option></select></div><div class="form-group"><label data-ar="الاسم بالكامل" data-en="Full name">الاسم بالكامل</label><input id="requestFullName" maxlength="120"></div></div>
+  <div class="form-row"><div class="form-group"><label data-ar="الرقم القومي (14 رقم)" data-en="National ID (14 digits)">الرقم القومي (14 رقم)</label><input id="requestNationalId" maxlength="14" inputmode="numeric"></div><div class="form-group"><label data-ar="رقم الهاتف" data-en="Phone number">رقم الهاتف</label><input id="requestPhone" inputmode="tel" placeholder="+201xxxxxxxxx"></div></div>
+  <div class="form-row"><div class="form-group"><label data-ar="الجزء" data-en="Juz">الجزء</label><select id="requestJuz" onchange="updateRequestSurahs()"></select></div><div class="form-group"><label data-ar="السورة" data-en="Surah">السورة</label><select id="requestSurah"></select></div></div>
+  <div class="form-group"><label data-ar="ملاحظات" data-en="Notes">ملاحظات</label><textarea id="requestNotes" rows="3"></textarea></div>
+  <button class="btn btn-primary" id="submitAccountRequestBtn" onclick="submitAccountRequest()" style="width:100%" data-ar="إرسال الطلب" data-en="Submit request">إرسال الطلب</button>
 </div>
 
 <!-- الصفحة الرئيسية -->
@@ -493,28 +522,22 @@ tr:hover { background: var(--table-hover); }
 <div id="adminDashboard" class="page hidden">
   <div class="page-header">
     <h2>📊 لوحة تحكم المسؤول</h2>
-    <div>
+    <div class="header-actions">
       <span id="adminDeviceInfo" style="color:var(--text-light); margin-left:15px; font-size:0.9rem"></span>
+      <button class="btn btn-outline admin-badge" onclick="showPage('messagesPage');renderAccountRequests()">💬 الرسائل <span id="msgBadge" class="msg-count hidden">0</span></button>
       <button class="btn btn-outline" onclick="showPage('adminSettings')">⚙️ الإعدادات</button>
       <button class="btn btn-outline" onclick="logout()">خروج</button>
     </div>
   </div>
   <div class="stats">
-    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائمة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div></div>
-    <div class="stat-box"><div class="num" id="statTeachers">0</div><div class="label">عدد المعلمين</div></div>
-    <div class="stat-box"><div class="num" id="statAdmins">0</div><div class="label">المسؤولين</div></div>
+    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائمة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div><button class="stat-action" onclick="event.stopPropagation();showPage('addStudent')">إضافة طالب</button></div>
+    <div class="stat-box" onclick="showPage('subjectsPage')"><div class="num" id="statTeachers">0</div><div class="label">عدد المعلمين</div><button class="stat-action" onclick="event.stopPropagation();showPage('subjectsPage')">المواد والمعلمين</button></div>
+    <div class="stat-box" onclick="showPage('adminsPage')"><div class="num" id="statAdmins">0</div><div class="label">المسؤولين</div><button class="stat-action" onclick="event.stopPropagation();showPage('adminsPage')">إدارة المسؤولين</button></div>
     <div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num" id="statDrafts">0</div><div class="label">تسميعات نشطة</div></div>
   </div>
   <div id="activeDraftsSection"></div>
   <div class="menu-grid">
-    <button class="menu-btn" style="background:#667eea" onclick="showPage('addStudent')">➕ إضافة طالب جديد</button>
-
-    <button class="menu-btn admin-badge" style="background:#17a2b8" onclick="showPage('messagesPage')">
-      💬 الرسائل <span id="msgBadge" class="msg-count hidden">0</span>
-    </button>
-    <button class="menu-btn" style="background:#6c757d" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button>
-    <button class="menu-btn" style="background:#fd7e14" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button>
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ����لمرفوعة</button>
+    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ������لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
@@ -602,6 +625,11 @@ tr:hover { background: var(--table-hover); }
     </div>
   </div>
   <div id="adminsTable"></div>
+  <div style="margin-top:28px;padding-top:20px;border-top:2px solid var(--border)">
+    <h3 style="color:var(--primary);margin-bottom:12px">رقم واتساب استقبال طلبات الحساب</h3>
+    <div class="form-row"><div class="form-group"><label>رقم المسؤول بصيغة دولية</label><input id="adminWhatsappSetting" inputmode="tel" placeholder="+201554542019"></div><div class="form-group" style="display:flex;align-items:flex-end"><button class="btn btn-primary" onclick="savePlatformSettings()">حفظ الرقم</button></div></div>
+    <div id="platformSettingsAlert"></div>
+  </div>
 </div>
 
 <!-- إعداد��ت المسؤول -->
@@ -844,7 +872,10 @@ tr:hover { background: var(--table-hover); }
     <div class="msg-tab" onclick="switchMsgTab('compose', this)">✉️ التواصل</div>
   </div>
   <div id="msgInboxSection">
-    <div id="messagesList"></div>
+  <h3 style="margin-bottom:12px;color:var(--primary)">طلبات إنشاء الحساب</h3>
+  <div id="accountRequestsList"><div class="alert alert-info">جاري تحميل الطلبات...</div></div>
+  <h3 style="margin:24px 0 12px;color:var(--primary)">الرسائل الأخرى</h3>
+  <div id="messagesList"></div>
   </div>
   <div id="msgComposeSection" class="hidden">
     <div class="form-row">
@@ -1381,7 +1412,7 @@ function buildDailyLog(s) {
     const at = t.approvedAt || t.rejectedAt || t.at || '';
     let day = t.day || '';
     if(!day && at) { const m = String(at).match(/(\d{1,4}[\/-]\d{1,2}[\/-]\d{1,4})/); day = m ? m[1] : ''; }
-    if(!day) day = 'بدون تاريخ';
+    if(!day) day = 'بدون ��اريخ';
     const name = t.name || t.text || '';
     const key = (t.sourceMsgId || '') + '|' + day + '|' + status + '|' + name + '|' + at;
     if(seen[key]) return;
@@ -2306,7 +2337,7 @@ function renderRecordElementHTML(el, i, num) {
     if(mainSurahIndex === -1) {
       html += '<small style="color:var(--text-light)">لم يتم تحديد السورة الأساسية للطالب</small>';
     } else {
-      html += '<small style="color:var(--text-light)">يتم عرض السور من بعد '+mainSurah+' حتى الناس</small>';
+      html += '<small style="color:var(--text-light)">يتم عرض ال��ور من بعد '+mainSurah+' حتى الناس</small>';
     }
   } else if(el.isExtra) {
     html += '<select onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="margin-bottom:8px; width:100%;">';
@@ -3584,7 +3615,7 @@ function renderDevPlan(plan){
   if(plan.summary) h += '<div style="margin-bottom:12px;"><strong>الملخص:</strong> '+esc(plan.summary)+'</div>';
 
   if(Array.isArray(plan.files) && plan.files.length){
-    h += '<div style="font-weight:bold; margin:14px 0 8px; color:var(--primary);">📁 الملفات التي ستتغيّر</div>';
+    h += '<div style="font-weight:bold; margin:14px 0 8px; color:var(--primary);">📁 المل��ات التي ستتغيّر</div>';
     plan.files.forEach(function(f){
       const badge = f.action === 'create'
         ? '<span style="background:#28a745;color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;">إنشاء</span>'
@@ -3664,7 +3695,7 @@ function renderDevPlan(plan){
 }
 
 function approveDevPlan(){
-  showToast('ℹ️ التعديل يتم تلقائياً بعد إرسال الطلب', 'info');
+  showToast('ℹ️ التعديل يتم تلقائياً ��عد إرسال الطلب', 'info');
 }
 
 function rejectDevPlan(){
@@ -5466,6 +5497,87 @@ function logout() {
   const ua = document.getElementById('unifiedLoginAlert'); if(ua) ua.innerHTML = '';
   showPage('lockScreen');
 }
+
+// ====== ACCOUNT REQUESTS, PLATFORM SETTINGS & LANGUAGE ======
+let currentLanguage = sessionStorage.getItem('platformLanguage') || 'ar';
+let platformAdminWhatsapp = '+201554542019';
+
+function applyLanguage() {
+  const isEnglish = currentLanguage === 'en';
+  document.documentElement.lang = currentLanguage;
+  document.documentElement.dir = isEnglish ? 'ltr' : 'rtl';
+  const button = document.querySelector('.language-toggle');
+  if(button) button.textContent = isEnglish ? 'AR' : 'EN';
+  document.querySelectorAll('[data-ar][data-en]').forEach(function(el){ el.textContent = el.getAttribute(isEnglish ? 'data-en' : 'data-ar'); });
+}
+function toggleLanguage() {
+  currentLanguage = currentLanguage === 'ar' ? 'en' : 'ar';
+  sessionStorage.setItem('platformLanguage', currentLanguage);
+  applyLanguage();
+}
+function initRequestJuz() {
+  const select = document.getElementById('requestJuz');
+  if(!select) return;
+  let html = '<option value="">اختر الجزء...</option>';
+  for(let i=1;i<=30;i++) html += '<option value="'+i+'">الجزء '+i+'</option>';
+  select.innerHTML = html;
+  updateRequestSurahs();
+}
+function updateRequestSurahs() {
+  const juz = document.getElementById('requestJuz');
+  const surah = document.getElementById('requestSurah');
+  if(!juz || !surah) return;
+  if(!juz.value || !quranData[juz.value]) { surah.innerHTML = '<option value="">اختر الجزء أولاً...</option>'; return; }
+  surah.innerHTML = '<option value="">اختر السورة...</option>' + quranData[juz.value].map(function(name){ return '<option value="'+name+'">'+name+'</option>'; }).join('');
+}
+async function loadPlatformSettings() {
+  try {
+    const response = await fetch('/api/platform-settings');
+    const data = await response.json();
+    platformAdminWhatsapp = data.adminWhatsapp || '+201554542019';
+    const input = document.getElementById('adminWhatsappSetting');
+    if(input) input.value = platformAdminWhatsapp;
+  } catch(e) {}
+}
+async function savePlatformSettings() {
+  const input = document.getElementById('adminWhatsappSetting');
+  const alertBox = document.getElementById('platformSettingsAlert');
+  if(!input || !alertBox) return;
+  const response = await fetch('/api/platform-settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({adminWhatsapp:input.value.trim()})});
+  const data = await response.json();
+  if(!response.ok) { alertBox.innerHTML='<div class="alert alert-danger">'+escapeHtml(data.error||'تعذر الحفظ')+'</div>'; return; }
+  platformAdminWhatsapp = data.adminWhatsapp;
+  alertBox.innerHTML='<div class="alert alert-success">تم حفظ رقم واتساب المسؤول في Neon</div>';
+}
+async function submitAccountRequest() {
+  const alertBox = document.getElementById('accountRequestAlert');
+  const button = document.getElementById('submitAccountRequestBtn');
+  const checked = document.querySelector('input[name="verificationMethod"]:checked');
+  if(!checked) { alertBox.innerHTML='<div class="alert alert-danger">اختر Google أو WhatsApp OTP أولاً</div>'; return; }
+  const payload = {role:document.getElementById('requestRole').value,fullName:document.getElementById('requestFullName').value,nationalId:document.getElementById('requestNationalId').value,phone:document.getElementById('requestPhone').value,juz:document.getElementById('requestJuz').value,surah:document.getElementById('requestSurah').value,notes:document.getElementById('requestNotes').value,verificationMethod:checked.value};
+  button.disabled=true; button.textContent='جاري الإرسال...';
+  try {
+    const response=await fetch('/api/account-requests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await response.json();
+    if(!response.ok) throw new Error(data.error||'تعذر إرسال الطلب');
+    const text='طلب إنشاء حساب جديد%0Aالنوع: '+(payload.role==='student'?'طالب':'ولي أمر')+'%0Aالاسم: '+encodeURIComponent(payload.fullName)+'%0Aالرقم القومي: '+encodeURIComponent(payload.nationalId)+'%0Aالهاتف: '+encodeURIComponent(payload.phone)+'%0Aالجزء: '+encodeURIComponent(payload.juz)+'%0Aالسورة: '+encodeURIComponent(payload.surah)+'%0Aالملاحظات: '+encodeURIComponent(payload.notes||'لا توجد');
+    alertBox.innerHTML='<div class="alert alert-success">تم حفظ طلبك على المنصة. سيتم فتح واتساب لإرسال نسخة للمسؤول. التحقق عبر '+(checked.value==='google'?'Google':'WhatsApp OTP')+' يحتاج إكمال إعداد المزود.</div>';
+    const number=platformAdminWhatsapp.replace(/\D/g,'');
+    window.open('https://wa.me/'+number+'?text='+text,'_blank','noopener');
+  } catch(e) { alertBox.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message)+'</div>'; }
+  finally { button.disabled=false; button.textContent=currentLanguage==='en'?'Submit request':'إرسال الطلب'; }
+}
+async function renderAccountRequests() {
+  const box=document.getElementById('accountRequestsList'); if(!box)return;
+  try {
+    const response=await fetch('/api/account-requests'); const data=await response.json();
+    if(!response.ok) throw new Error(data.error||'تعذر التحميل');
+    if(!data.requests.length){box.innerHTML='<div class="alert alert-info">لا توجد طلبات إنشاء حساب حتى الآن</div>';return;}
+    box.innerHTML=data.requests.map(function(r){return '<div class="request-item"><strong>'+escapeHtml(r.fullName)+'</strong> <span class="badge badge-primary">'+(r.role==='student'?'طالب':'ولي أمر')+'</span><p>الهاتف: '+escapeHtml(r.phone)+' — الرقم القومي: '+escapeHtml(r.nationalId)+'</p><p>الجزء '+escapeHtml(r.juz)+' — سورة '+escapeHtml(r.surah)+'</p><p>الملاحظات: '+escapeHtml(r.notes||'لا توجد')+'</p><small>التحقق: '+escapeHtml(r.verificationMethod)+' (بانتظار إعداد المزود) — '+new Date(r.createdAt).toLocaleString('ar-EG')+'</small></div>';}).join('');
+  } catch(e){box.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message)+'</div>';}
+}
+
+applyLanguage(); initRequestJuz(); loadPlatformSettings();
 
 // Restore session on page load
 if(restoreSession()) {

@@ -17,9 +17,6 @@ importers:
       '@napi-rs/canvas':
         specifier: 0.1.80
         version: 0.1.80
-      '@types/pg':
-        specifier: ^8.21.0
-        version: 8.21.0
       '@vercel/analytics':
         specifier: 1.6.1
         version: 1.6.1(next@16.3.0(@babel/core@7.29.7)(@types/node@24.10.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
@@ -81,6 +78,9 @@ importers:
       '@types/node':
         specifier: ^24
         version: 24.10.4
+      '@types/pg':
+        specifier: ^8.21.0
+        version: 8.21.0
       '@types/react':
         specifier: ^19
         version: 19.2.14
