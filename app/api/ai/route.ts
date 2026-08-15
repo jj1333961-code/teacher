@@ -2,12 +2,21 @@ import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
 
 export const maxDuration = 300
 
-// ===== اتصال OpenRouter من الخادم فقط =====
+// ===== اتصال مباشر بالمزودين من الخادم فقط: Gemini أساسي ثم OpenRouter احتياطي =====
+const GEMINI = {
+  endpoint: "https://generativelanguage.googleapis.com/v1beta/models",
+  get key() {
+    return (process.env.GEMINI_API_KEY || "").trim()
+  },
+  get model() {
+    return (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim()
+  },
+}
 const OPENROUTER = {
   label: "OpenRouter",
   endpoint: "https://openrouter.ai/api/v1/chat/completions",
   get key() {
-    return (process.env.OPENROUTER_API_KEY || "").trim()
+    return (process.env.OPENROURTER_API_KEY || process.env.OPENROUTER_API_KEY || "").trim()
   },
   get model() {
     return (process.env.OPENROUTER_MODEL || "openrouter/auto").trim()
@@ -15,6 +24,7 @@ const OPENROUTER = {
 }
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
 const isOpenRouterConfigured = () => Boolean(OPENROUTER.key)
+const isGeminiConfigured = () => Boolean(GEMINI.key)
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -293,7 +303,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 قواعد صارمة:
 - ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceSurahs.
 - كل سؤال يجب أن يكون متعلقاً مباشرة بحفظ القرآن أو نص الآية أو السورة.
-- لا تنشئ أسئلة ثقافة عامة أو دين عام أو معلومات خارج نصوص القرآن.
+- لا تنشئ أسئلة ثقافة عامة أو دين عا�� أو معلومات خارج نصوص القرآن.
 - التزم تماماً بعدد الأسئلة count المطلوب لكل plan، وبالنوع والمستوى وموضع السؤال position المحددين في كل plan.
   - position=start: اختر من الثلث الأول للسورة، position=middle: الثلث الأوسط، position=end: الثلث الأخير، position=random: نوّع بين جميع المواضع.
 - إذا كان type=mcq فعدد الخيارات يجب أن يساوي optionsCount لذلك plan، مع إجابة صحيحة واحدة فقط. نوّع عشوائياً بين: اختيار الآية التالية، اختيار تكملة الآية، واختيار اسم السورة التي ينتمي إليها المقطع.
