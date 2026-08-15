@@ -2,72 +2,19 @@ import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
 
 export const maxDuration = 300
 
-// ===== اتصال Gemini المباشر من الخادم فقط =====
-const GEMINI = {
-  label: "Gemini",
+// ===== اتصال OpenRouter من الخادم فقط =====
+const OPENROUTER = {
+  label: "OpenRouter",
+  endpoint: "https://openrouter.ai/api/v1/chat/completions",
   get key() {
-    return (
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      ""
-    ).trim()
+    return (process.env.OPENROUTER_API_KEY || "").trim()
   },
   get model() {
-    return (process.env.GEMINI_MODEL || "gemini-3-flash-preview").trim()
+    return (process.env.OPENROUTER_MODEL || "openrouter/auto").trim()
   },
 }
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
-const isGeminiConfigured = () => Boolean(GEMINI.key)
-let resolvedGeminiModel: string | null = null
-const geminiModelCooldowns = new Map<string, number>()
-
-function isGeminiModelCoolingDown(model: string) {
-  const until = geminiModelCooldowns.get(model) || 0
-  if (until <= Date.now()) {
-    geminiModelCooldowns.delete(model)
-    return false
-  }
-  return true
-}
-
-function coolDownGeminiModel(model: string, durationMs: number) {
-  geminiModelCooldowns.set(model, Date.now() + durationMs)
-  if (resolvedGeminiModel === model) resolvedGeminiModel = null
-}
-
-async function resolveGeminiModel(forceRefresh = false): Promise<string> {
-  if (resolvedGeminiModel && !forceRefresh && !isGeminiModelCoolingDown(resolvedGeminiModel)) return resolvedGeminiModel
-
-  const configured = GEMINI.model.replace(/^models\//, "")
-  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", {
-    headers: { "x-goog-api-key": GEMINI.key },
-    cache: "no-store",
-    signal: AbortSignal.timeout(15_000),
-  })
-  const data = await response.json().catch(() => null)
-  if (!response.ok) {
-    throw new Error(`Gemini models HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
-  }
-
-  const available = (Array.isArray(data?.models) ? data.models : [])
-    .filter((model: any) => Array.isArray(model?.supportedGenerationMethods) && model.supportedGenerationMethods.includes("generateContent"))
-    .map((model: any) => String(model?.name || "").replace(/^models\//, ""))
-    .filter(Boolean)
-
-  const preferred = [
-    configured,
-    "gemini-3-flash-preview",
-    "gemini-3-flash",
-    ...available.filter((name: string) => name.includes("flash") && !name.includes("image") && !name.includes("tts")),
-    ...available,
-  ]
-  resolvedGeminiModel = preferred.find(
-    (name, index) => preferred.indexOf(name) === index && available.includes(name) && !isGeminiModelCoolingDown(name),
-  ) || null
-  if (!resolvedGeminiModel) throw new Error("Gemini: لا يوجد نموذج يدعم generateContent لهذا المفتاح")
-  return resolvedGeminiModel
-}
+const isOpenRouterConfigured = () => Boolean(OPENROUTER.key)
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -117,77 +64,105 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-function isRetryableGeminiError(error: unknown) {
+function isRetryableOpenRouterError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "")
-  return /404|408|409|429|5\d\d|RESOURCE_EXHAUSTED|UNAVAILABLE|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|AbortError|aborted|رد فارغ|empty/i.test(message)
+  return /408|409|429|5\d\d|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|AbortError|aborted|رد فارغ|empty/i.test(message)
 }
 
 function classifyAiFailure(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error || "خطأ غير معروف")
-  if (/GEMINI_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
-    return { status: 503, code: "GEMINI_KEY_MISSING", retryable: false, message: "مفتاح Gemini المباشر غير متاح على الخادم. لا يستخدم هذا المسار AI Gateway.", raw }
+  if (/OPENROUTER_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
+    return { status: 503, code: "OPENROUTER_KEY_MISSING", retryable: false, message: "مفتاح OpenRouter غير متاح على الخادم. أضف OPENROUTER_API_KEY إلى متغيرات البيئة.", raw }
   }
-  if (/401|403|API key|API_KEY_INVALID|PERMISSION_DENIED/i.test(raw)) {
-    return { status: 401, code: "GEMINI_KEY_INVALID", retryable: false, message: "مفتاح Gemini غير صالح أو لا يملك صلاحية الاستخدام. تحقق من GEMINI_API_KEY.", raw }
+  if (/401|403|API key|unauthorized|forbidden/i.test(raw)) {
+    return { status: 401, code: "OPENROUTER_KEY_INVALID", retryable: false, message: "مفتاح OpenRouter غير صالح أو لا يملك صلاحية الاستخدام. تحقق من OPENROUTER_API_KEY.", raw }
   }
-  if (/429|RESOURCE_EXHAUSTED|exceeded your current quota|rate.?limit/i.test(raw)) {
-    return { status: 429, code: "GEMINI_QUOTA_EXCEEDED", retryable: true, message: "حصة Gemini المباشرة مستنفدة مؤقتاً. انتظر تجدد الحصة أو راجع حدود مشروع Google ثم أعد المحاولة.", raw }
+  if (/402|insufficient credits|payment required/i.test(raw)) {
+    return { status: 402, code: "OPENROUTER_CREDITS_REQUIRED", retryable: false, message: "رصيد OpenRouter غير كافٍ لتشغيل الطلب الحالي.", raw }
+  }
+  if (/AUDIO_PAYLOAD_TOO_LARGE|payload too large|request entity too large|413/i.test(raw)) {
+    return { status: 413, code: "AUDIO_PAYLOAD_TOO_LARGE", retryable: false, message: "التسجيل طويل جداً للتحليل. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.", raw }
+  }
+  if (/429|rate.?limit|quota/i.test(raw)) {
+    return { status: 429, code: "OPENROUTER_RATE_LIMITED", retryable: true, message: "بلغ OpenRouter حد الطلبات مؤقتاً. انتظر قليلاً ثم أعد المحاولة.", raw }
   }
   if (/TimeoutError|AbortError|timed out|aborted/i.test(raw)) {
-    return { status: 504, code: "GEMINI_TIMEOUT", retryable: true, message: "استغرق Gemini وقتاً أطول من المتوقع. أعد المحاولة، وسيحتفظ الموقع ببياناتك الحالية.", raw }
+    return { status: 504, code: "OPENROUTER_TIMEOUT", retryable: true, message: "استغرق OpenRouter وقتاً أطول من المتوقع. أعد المحاولة، وسيحتفظ الموقع ببياناتك الحالية.", raw }
   }
-  if (/404|not found|not supported/i.test(raw)) {
-    return { status: 502, code: "GEMINI_MODEL_UNAVAILABLE", retryable: true, message: "نموذج Gemini المحدد غير متاح حالياً؛ حاول مرة أخرى ليختار النظام نموذجاً متاحاً.", raw }
+  if (/404|no endpoints found|not found|not supported/i.test(raw)) {
+    return { status: 502, code: "OPENROUTER_MODEL_UNAVAILABLE", retryable: false, message: "تعذر على OpenRouter Auto اختيار نموذج يدعم هذا الطلب حالياً.", raw }
   }
-  return { status: 502, code: "GEMINI_PROVIDER_ERROR", retryable: isRetryableGeminiError(error), message: "تعذر الاتصال بخدمة Gemini المباشرة حالياً.", raw }
+  return { status: 502, code: "OPENROUTER_PROVIDER_ERROR", retryable: isRetryableOpenRouterError(error), message: "تعذر الاتصال بخدمة OpenRouter حالياً.", raw }
 }
 
-function geminiTimeout(system: string, inlineData?: { mimeType: string; data: string }) {
-  if (inlineData) return 90_000
+function openRouterTimeout(system: string, audio?: { mimeType: string; data: string }) {
+  if (audio) return 90_000
   if (/اختبار|JSON|تطوير|برمج/i.test(system)) return 120_000
   return 35_000
 }
 
-async function geminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }): Promise<string> {
-  if (!GEMINI.key) throw new Error("GEMINI_API_KEY غير موجود على الخادم")
-  const parts: any[] = [{ text: prompt }]
-  if (inlineData) parts.unshift({ inlineData })
+function readOpenRouterText(content: unknown): string {
+  if (typeof content === "string") return content.trim()
+  if (!Array.isArray(content)) return ""
+  return content.map(part => typeof part === "string" ? part : String(part?.text || "")).join("").trim()
+}
+
+async function openRouterText(prompt: string, system: string, temperature: number, audio?: { mimeType: string; data: string }): Promise<string> {
+  if (!OPENROUTER.key) throw new Error("OPENROUTER_API_KEY غير موجود على الخادم")
+  if (audio && audio.data.length > 4_050_000) throw new Error("AUDIO_PAYLOAD_TOO_LARGE: التسجيل طويل جداً للتحليل")
+  const normalizedMime = audio?.mimeType.toLowerCase().split(";")[0]
+  const audioFormat = normalizedMime === "audio/mpeg" || normalizedMime === "audio/mp3" ? "mp3"
+    : normalizedMime === "audio/ogg" ? "ogg"
+    : normalizedMime === "audio/mp4" || normalizedMime === "audio/m4a" ? "m4a"
+    : "wav"
+  const userContent = audio
+    ? [
+        { type: "text", text: prompt },
+        { type: "input_audio", input_audio: { data: audio.data, format: audioFormat } },
+      ]
+    : prompt
   const requestBody = JSON.stringify({
-    systemInstruction: { parts: [{ text: system }] },
-    contents: [{ role: "user", parts }],
-    generationConfig: { temperature },
+    model: OPENROUTER.model,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: userContent },
+    ],
+    temperature,
   })
-  let lastError: unknown = new Error("تعذر بدء اتصال Gemini المباشر")
+  let lastError: unknown = new Error("تعذر بدء اتصال OpenRouter")
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const model = await resolveGeminiModel(attempt > 0)
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+      const response = await fetch(OPENROUTER.endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI.key },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENROUTER.key}`,
+          "HTTP-Referer": process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://v0.app",
+          "X-OpenRouter-Title": "Teacher Quran Platform",
+        },
         body: requestBody,
         cache: "no-store",
-        signal: AbortSignal.timeout(geminiTimeout(system, inlineData)),
+        signal: AbortSignal.timeout(openRouterTimeout(system, audio)),
       })
       const data = await response.json().catch(() => null)
       if (!response.ok) {
-        const modelError = new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
-        lastError = modelError
-        if ([404, 408, 429, 500, 502, 503, 504].includes(response.status)) {
-          const cooldown = response.status === 404 ? 10 * 60_000 : response.status === 429 ? 90_000 : 5_000
-          coolDownGeminiModel(model, cooldown)
-          if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 750 * (2 ** attempt)))
+        const providerMessage = String(data?.error?.message || data?.message || response.statusText).slice(0, 300)
+        const providerError = new Error(`OpenRouter HTTP ${response.status}: ${providerMessage}`)
+        lastError = providerError
+        if ([408, 409, 429, 500, 502, 503, 504].includes(response.status) && attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 750 * (2 ** attempt)))
           continue
         }
-        throw modelError
+        throw providerError
       }
-      const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
-      if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
-      resolvedGeminiModel = model
-      return text.trim()
+      const text = readOpenRouterText(data?.choices?.[0]?.message?.content)
+      if (!text) throw new Error("OpenRouter: وصل رد فارغ")
+      return text
     } catch (error) {
       lastError = error
-      if (!isRetryableGeminiError(error) || attempt === 2) break
+      if (!isRetryableOpenRouterError(error) || attempt === 2) break
+      await new Promise(resolve => setTimeout(resolve, 750 * (2 ** attempt)))
     }
   }
   throw lastError
@@ -242,12 +217,12 @@ function extractJson(text: string): any {
 }
 
 async function runText(prompt: string, system: string, temperature: number) {
-  return geminiText(prompt, system, temperature)
+  return openRouterText(prompt, system, temperature)
 }
 
 async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
   const mimeType = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
-  return geminiText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType, data: audioBase64 })
+  return openRouterText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType, data: audioBase64 })
 }
 
 // ===== أنظمة التعليمات لكل وضع =====
@@ -322,7 +297,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد�� /api/ai.
   • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
-- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم Gemini مباشرةً وحصرياً عبر GEMINI_API_KEY، وتدعم الأوضاع: assistant, admin_assistant, generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant، بالإضافة إلى وضع النص الحر (prompt).
+- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم OpenRouter مباشرةً وحصرياً عبر OPENROUTER_API_KEY، وتدعم الأوضاع: assistant, admin_assistant, generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant، بالإضافة إلى وضع النص الحر (prompt).
 - "app/layout.tsx": تخطيط الجذر.
 - "app/page.tsx": صفحة Next.js احتياطية؛ الجذر يعاد توجيهه إلى public/index.html عبر next.config.mjs.
 - "app/globals.css": الأنماط العامة لـNext.js.
@@ -672,16 +647,16 @@ export async function POST(req: Request) {
   try {
     body = await req.json()
   } catch {
-    return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured: isGeminiConfigured() } }, 400)
+    return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured: isOpenRouterConfigured() } }, 400)
   }
 
   const diagnostics = {
     executedOn: "server",
-    keyConfigured: isGeminiConfigured(),
+    keyConfigured: isOpenRouterConfigured(),
     providerStatus: 200,
-    provider: "gemini",
-    providerLabel: GEMINI.label,
-    configuredModel: GEMINI.model.replace(/^models\//, ""),
+    provider: "openrouter",
+    providerLabel: OPENROUTER.label,
+    configuredModel: OPENROUTER.model,
   }
 
   try {
@@ -708,13 +683,13 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت Gemini، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفرها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت OpenRouter، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توف��ها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
     }
 
-    // 2) جلب نطاق الس��ر المحدد كاملاً ثم توليد الأسئلة عبر Gemini.
+    // 2) جلب نطاق الس��ر المحدد كاملاً ثم توليد الأسئلة عبر OpenRouter.
     if (mode === "generate_exam") {
       const startSurahNumber = Number(payload.surahNumber)
       const endSurahNumber = payload.endSurahNumber == null ? 114 : Number(payload.endSurahNumber)
@@ -824,7 +799,7 @@ export async function POST(req: Request) {
       const system = `أنت تستخرج بيانات طالب من إملاء عربي لمسؤول مدرسة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
 transcript,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
 subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ كلمات المرور فقط إذا نطقها المسؤول صراحة. transcript هو التفريغ الكامل المسموع.`
-      const text = await geminiText("استخرج بيانات الطالب من هذا التسجيل الصوتي.", system, 0.05, { mimeType, data: audioBase64 })
+      const text = await openRouterText("استخرج بيانات الطالب من هذا التسجيل الصوتي.", system, 0.05, { mimeType, data: audioBase64 })
       const parsed = extractJson(text) || {}
       const clean = (value: unknown, max = 300) => typeof value === "string" ? value.trim().slice(0, max) : ""
       const digits = (value: unknown, max: number) => clean(value, max * 2).replace(/[^0-9]/g, "").slice(0, max)
@@ -849,7 +824,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (!message) return json({ error: "اكتب رسالتك أولاً", diagnostics }, 400)
       const context = JSON.stringify(payload.context || {}).slice(0, 18_000)
       const reference = await getReferenceContext(message).catch(() => "")
-      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أنت Gemini، مساعد عربي دقيق واحترافي وطبيعي. أجب عن أي سؤال مسموح داخل الموقع أو خارجه، واستخدم بيانات الموقع عند صلتها فقط. افهم مقصد المستخدم قبل الرد، وميّز بوضوح بين الحقيقة والاقتراح، ولا تختلق بيانات أو آيات. اجعل الرد مبسطاً ومهذباً وعلى قدر السؤال، مع تنظيم الخطوات عند الحاجة فقط. رد على التحيات بصورة ودودة وطبيعية؛ فإذا قال المستخدم السلام عليكم فابدأ بـ: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ 🤔 أنا في خدمتك! 🫡. استخدم الرموز التعبيرية باعتدال لتوضيح الحالة في الحديث الودي، وتجنبها في الردود العلمية والحساسة. استخدم المرجعين للمسائل القرآنية والمتشابهات للتحقق دون حصر معرفتك فيهما.", 0.2)
+      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أنت OpenRouter، مساعد عربي دقيق واحترافي وطبيعي. أجب عن أي سؤال مسموح داخل الموقع أو خارجه، واستخدم بيانات الموقع عند صلتها فقط. افهم مقصد المستخدم قبل الرد، وميّز بوضوح بين الحقيقة والاقتراح، ولا تختلق بيانات أو آيات. اجعل الرد مبسطاً ومهذباً وعلى قدر السؤال، مع تنظيم الخطوات عند الحاجة فقط. رد على التحيات بصورة ودودة وطبيعية؛ فإذا قال المستخدم السلام عليكم فابدأ بـ: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ 🤔 أنا في خدمتك! 🫡. استخدم الرموز التعبيرية باعتدال لتوضيح الحالة في الحديث الودي، وتجنبها في الردود العلمية والحساسة. استخدم المرجعين للمسائل القرآنية والمتشابهات للتحقق دون حصر معرفتك فيهما.", 0.2)
       return json({ result: result.trim(), diagnostics })
     }
 
@@ -898,7 +873,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (mt.includes("mpeg") || mt.includes("mp3")) audioFormat = "mp3"
       else if (mt.includes("wav")) audioFormat = "wav"
 
-      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ضبطه، وإلا OpenRouter).
+      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ض��طه، وإلا OpenRouter).
       const transcript = await transcribeAudio(audioBase64, audioFormat)
 
       // المرحلة الثانية: مقارنة التفريغ بالنص القرآني المطلوب وحساب الدرجة.
@@ -937,7 +912,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
           ready: pf.ok,
           reason: pf.reason || "",
           checks: {
-            aiProviders: { gemini: !!GEMINI.key },
+            aiProviders: { openrouter: !!OPENROUTER.key },
             githubToken: !!GITHUB_TOKEN,
             githubOwner: !!GITHUB_OWNER,
             githubRepo: !!GITHUB_REPO,
@@ -995,7 +970,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
           return json({ result: { ...plan, ...applied, applied: true, autoApplied: true, note: "تم تطبيق التعديلات تلقائياً على المشروع من الخادم. إذا كان Vercel مربوطاً بالمستودع فسيبدأ النشر تلقائياً، أو يمكن استخدام VERCEL_DEPLOY_HOOK_URL." }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
         } catch (e:any) {
           const failure = classifyAiFailure(e)
-          const isProviderFailure = /Gemini|generativelanguage|RESOURCE_EXHAUSTED|exceeded your current quota/i.test(failure.raw)
+          const isProviderFailure = /OpenRouter|openrouter\.ai|rate.?limit|insufficient credits/i.test(failure.raw)
           return json({
             error: isProviderFailure ? failure.message : (e?.message || "تعذر التطبيق التلقائي"),
             result: { ...plan, applied: false, autoApplied: false },
@@ -1060,8 +1035,8 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
         retryable: failure.retryable,
         diagnostics: {
           executedOn: "server",
-          provider: "gemini-direct",
-          keyConfigured: isGeminiConfigured(),
+          provider: "openrouter-auto",
+          keyConfigured: isOpenRouterConfigured(),
           stage,
           reason: failure.raw.slice(0, 300),
         },
