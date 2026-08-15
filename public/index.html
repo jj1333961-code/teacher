@@ -446,6 +446,14 @@ tr:hover { background: var(--table-hover); }
  .exam-generation-overlay.hidden{display:none}
  .exam-generation-card{display:flex;flex-direction:column;align-items:center;gap:14px;width:min(92vw,420px);padding:28px;border:1px solid var(--border);border-radius:18px;background:var(--card-bg);color:var(--text);box-shadow:var(--shadow);text-align:center}
  .exam-generation-mark{display:grid;place-items:center;width:64px;height:64px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:examSpin .8s linear infinite;font-size:24px}
+ .exam-generation-progress{width:100%;height:10px;overflow:hidden;border-radius:999px;background:var(--border)}
+ .exam-generation-progress>span{display:block;height:100%;width:8%;border-radius:inherit;background:var(--primary);transition:width .45s ease}
+ .quran-image-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+ .quran-image-button{display:block;width:100%;padding:0;border:0;background:transparent;cursor:zoom-in}
+ .quran-image-label{display:block;margin-bottom:6px;color:var(--text-light);font-weight:700}
+ .quran-lightbox{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.9)}
+ .quran-lightbox.hidden{display:none}.quran-lightbox img{max-width:96vw;max-height:90vh;object-fit:contain;background:var(--card-bg)}
+ .quran-lightbox-close{position:absolute;top:16px;left:16px}
  @keyframes examSpin{to{transform:rotate(360deg)}}
  </style>
 </head>
@@ -453,8 +461,9 @@ tr:hover { background: var(--table-hover); }
 
   <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع">🌙</button>
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
-    <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong>جاري الحصول على الأسئلة</strong><span>يتم الآن تجهيز اختبارك داخل النطاق المحدد.</span></div>
+    <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
   </div>
+  <div id="quranImageLightbox" class="quran-lightbox hidden" role="dialog" aria-modal="true" aria-label="تكبير صورة السؤال" onclick="if(event.target===this)closeQuranImage()"><button class="btn btn-secondary quran-lightbox-close" onclick="closeQuranImage()">إغلاق</button><img id="quranImageLightboxImg" alt="صورة السؤال القرآني بحجم كبير"></div>
 
 <div class="container">
 
@@ -514,7 +523,7 @@ tr:hover { background: var(--table-hover); }
     </button>
     <button class="menu-btn" style="background:#6c757d" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button>
     <button class="menu-btn" style="background:#fd7e14" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button>
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ����لمرفوعة</button>
+    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ������لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini الإدارية</button>
@@ -524,7 +533,7 @@ tr:hover { background: var(--table-hover); }
 
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد Gemini الإداري</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light);margin-bottom:15px;">محادثة مقيدة ببيانات الطلاب وأولياء الأمور والاختبارات داخل الموقع.</p>
+  <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بيانات الموقع عندما تكون مرتبطة بسؤالك.</p>
   <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو ��لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
@@ -1140,7 +1149,7 @@ const SURAH_AYAH_COUNTS = {
   "ص": 88, "الزمر": 75, "غافر": 85, "فصلت": 54, "الشورى": 53, "الزخرف": 89, "الدخان": 59, "الجاثية": 37, "الأحقاف": 35,
   "محمد": 38, "الفتح": 29, "الحجرات": 18, "ق": 45, "الذاريات": 60, "الطور": 49, "النجم": 62, "القمر": 55, "الرحمن": 78,
   "الواقعة": 96, "الحديد": 29, "المجادلة": 22, "الحشر": 24, "الممتحنة": 13, "الصف": 14, "الجمعة": 11, "المنافقون": 11,
-  "التغابن": 18, "الطلاق": 12, "التحريم": 12, "الملك": 30, "القلم": 52, "الحاقة": 52, "المعارج": 44, "نوح": 28, "الجن": 28,
+  "التغابن": 18, "الطلاق": 12, "التحريم": 12, "الملك": 30, "القلم": 52, "الحاقة": 52, "الم��ارج": 44, "نوح": 28, "الجن": 28,
   "المزمل": 20, "المدثر": 56, "القيامة": 40, "الإنسان": 31, "المرسلا��": 50, "��لنبأ": 40, "النازعات": 46, "عبس": 42,
   "التكوير": 29, "الإنفطار": 19, "المطففين": 36, "الإنشقاق": 25, "البروج": 22, "الطارق": 17, "ا��أعلى": 19, "الغاشية": 26,
   "الفجر": 30, "البلد": 20, "الشمس": 15, "الليل": 21, "الضحى": 11, "الشرح": 8, "التين": 8, "العلق": 19, "القدر": 5,
@@ -1381,7 +1390,7 @@ function buildDailyLog(s) {
     const at = t.approvedAt || t.rejectedAt || t.at || '';
     let day = t.day || '';
     if(!day && at) { const m = String(at).match(/(\d{1,4}[\/-]\d{1,2}[\/-]\d{1,4})/); day = m ? m[1] : ''; }
-    if(!day) day = 'بدون تاريخ';
+    if(!day) day = 'بدون ��اريخ';
     const name = t.name || t.text || '';
     const key = (t.sourceMsgId || '') + '|' + day + '|' + status + '|' + name + '|' + at;
     if(seen[key]) return;
@@ -2274,7 +2283,7 @@ function renderRecordElementHTML(el, i, num) {
   html += '<span class="record-element-title">'+num+'. '+el.name+'</span>';
   html += '<div style="display:flex; gap:6px; flex-wrap:wrap;">';
   html += '<button class="btn btn-xs btn-info" onclick="duplicateRecordElement('+i+')" title="تضعيف (إنشاء نسخة أخرى)">📑 تضعيف</button>';
-  html += '<button class="btn btn-xs btn-danger" onclick="removeRecordElement('+i+')" title="حذف هذا العنصر">🗑️ حذف</button>';
+  html += '<button class="btn btn-xs btn-danger" onclick="removeRecordElement('+i+')" title="حذف ه��ا العنصر">🗑️ حذف</button>';
   html += '<button class="btn btn-xs btn-secondary" onclick="restoreRecordElement('+i+')" title="استرجاع بعد الحذف" disabled style="opacity:0.5;">↩️ استرجاع</button>';
   html += '</div>';
   html += '</div>';
@@ -2539,7 +2548,7 @@ function renderReadingItems() {
 
     html += '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">';
     html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(item.surah||'')+'\', \''+(item.from||'')+'\', \''+(item.to||item.from||'')+'\')">📖 عرض الآيات (صورة)</button>';
-    html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineRead_'+i+'\', \''+(item.surah||'')+'\', \''+(item.from||'')+'\', \''+(item.to||item.from||'')+'\')">👁️ معاينة داخل الصفحة</button>';
+    html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineRead_'+i+'\', \''+(item.surah||'')+'\', \''+(item.from||'')+'\', \''+(item.to||item.from||'')+'\')">👁️ معاينة داخل ��لصفحة</button>';
     html += '</div><div id="inlineRead_'+i+'" data-open="0" style="margin-top:10px;"></div>';
 
     html += '<div class="form-group" style="margin-top:8px;"><label>ملاحظة / نص القراءة (اختياري)</label><input type="text" value="'+(item.text||'')+'" onchange="updateReadingItem('+i+', \'text\', this.value)" placeholder="نص أو توجيه للطالب..."></div>';
@@ -2581,7 +2590,7 @@ function generateLocalFileQuestions(file,plans){const sentences=String(file.text
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
   const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الطالب';
-  if(/سلام|مرحبا|اهلا/.test(q))return 'مرحباً بك. أنا المساعد المحلي للمنصة، ويمكنني مساعدتك الآن في المتابعة، تنظيم الحفظ، تحليل النتائج المتاحة، وبناء خطة مراجعة عملية.';
+  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|مرحبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنني مساعدتك؟';
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
@@ -2622,13 +2631,19 @@ function syncExamSurahRange(){
   last.value=allowed.includes(previous)?previous:'';
 }
 
-function quranQuestionImageUrl(q){
-  const surahNumber=ALL_SURAHS_ORDERED.indexOf(String(q.surah||''))+1,from=Math.max(1,parseInt(q.from)||1),to=Math.max(from,parseInt(q.to)||from),type=['mcq','truefalse','complete','audio'].includes(q.type)?q.type:'mcq';
-  return surahNumber>0?'/api/quran-question-image?surah='+surahNumber+'&ayah='+from+'&to='+to+'&type='+type:'';
+function quranQuestionImageUrl(q,ayah,display){
+  const surahNumber=ALL_SURAHS_ORDERED.indexOf(String(q.surah||''))+1,from=Math.max(1,parseInt(ayah||q.from)||1),type=['mcq','truefalse','complete','audio'].includes(q.type)?q.type:'mcq';
+  return surahNumber>0?'/api/quran-question-image?surah='+surahNumber+'&ayah='+from+'&to='+from+'&type='+type+'&display='+(display||'anchor'):'';
 }
+function openQuranImage(src){const box=document.getElementById('quranImageLightbox'),img=document.getElementById('quranImageLightboxImg');if(!box||!img)return;img.src=src;box.classList.remove('hidden');document.body.style.overflow='hidden'}
+function closeQuranImage(){const box=document.getElementById('quranImageLightbox'),img=document.getElementById('quranImageLightboxImg');if(box)box.classList.add('hidden');if(img)img.removeAttribute('src');document.body.style.overflow=''}
+document.addEventListener('keydown',function(event){if(event.key==='Escape')closeQuranImage()});
 function quranQuestionMediaHtml(q,index){
-  const generated=q.source!=='file'&&!q.sourceFileId?quranQuestionImageUrl(q):'';const src=generated||q.questionImage;if(!src)return '';
-  return '<div class="quran-question-media"><div class="quran-question-loading" role="status">جاري تحميل صورة السؤال من المصحف...</div><img class="quran-question-image" src="'+escapeHtml(src)+'" alt="المقطع القرآني الخاص بالسؤال '+(index+1)+'" loading="eager" onload="this.previousElementSibling.style.display=\'none\'" onerror="showQuranQuestionImageError(this)"></div>';
+  let images=[];
+  if(q.source==='file'||q.sourceFileId){if(q.questionImage)images=[{src:q.questionImage,label:'صورة السؤال'}]}
+  else{const from=Math.max(1,parseInt(q.from)||1),to=Math.max(from,parseInt(q.to)||from);images=[{src:quranQuestionImageUrl(q,from,'anchor'),label:'من قوله تعالى'}];if(to!==from)images.push({src:quranQuestionImageUrl(q,to,'anchor'),label:'إلى قوله تعالى'})}
+  if(!images.length)return '';
+  return '<div class="quran-question-media quran-image-grid">'+images.map(function(item,part){return '<div><span class="quran-image-label">'+item.label+'</span><div class="quran-question-loading" role="status">جاري تحميل صورة الآية...</div><button type="button" class="quran-image-button" onclick="openQuranImage(\''+escapeHtml(item.src)+'\')" aria-label="تكبير '+item.label+'"><img class="quran-question-image" src="'+escapeHtml(item.src)+'" alt="'+item.label+' للسؤال '+(index+1)+'" loading="eager" onload="this.parentElement.previousElementSibling.style.display=\'none\'" onerror="showQuranQuestionImageError(this)"></button></div>'}).join('')+'</div>';
 }
 function showQuranQuestionImageError(image){
   const box=image&&image.parentElement;if(!box)return;const src=image.getAttribute('src')||'';
@@ -2719,13 +2734,21 @@ async function buildExamSourceCandidates(base){
   return picked;
 }
 
+let examGenerationTimer=null;
+function startExamGenerationProgress(){
+  const overlay=document.getElementById('examGenerationOverlay'),stage=document.getElementById('examGenerationStage'),bar=document.getElementById('examGenerationBar'),eta=document.getElementById('examGenerationEta');
+  let elapsed=0,total=90;overlay?.classList.remove('hidden');
+  const update=function(){elapsed++;const remaining=Math.max(0,total-elapsed),progress=Math.min(92,8+(elapsed/total)*84);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent='الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');if(stage)stage.textContent=elapsed<12?'جلب الآيات والمراجع...':elapsed<50?'ينتقي Gemini الأسئلة ويتحقق منها...':elapsed<75?'تجهيز صور البداية والنهاية...':'المراجعة النهائية للاختبار...'};
+  update();examGenerationTimer=setInterval(update,1000);
+}
+function finishExamGenerationProgress(){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage');if(bar)bar.style.width='100%';if(stage)stage.textContent='اكتمل تجهيز الاختبار';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},350)}
 async function generateExamQuestions(){
   const base=document.getElementById('examBaseSurah')?.value||currentRecordMainSurah||'';
   if(!base){showExamAlert('حدد السورة الأساسية للطالب أولاً.','danger');return}
   const plans=examPlanRows.filter(r=>(parseInt(r.count)||0)>0);
   if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على الأقل.','danger');return}
   const btns=document.querySelectorAll('#examBuilderSection button'); btns.forEach(b=>b.disabled=true);
-  const overlay=document.getElementById('examGenerationOverlay');overlay?.classList.remove('hidden');
+  startExamGenerationProgress();
   showExamAlert('جاري الحصول على الأسئلة من النطاق المحدد...','info');
   try{
     const normalizedPlans=plans.map(r=>({count:parseInt(r.count)||1,level:r.level,type:r.type,position:['start','middle','end','random'].includes(r.position)?r.position:'random',timeLimit:Math.max(5,Math.min(3600,parseInt(r.timeLimit)||60)),completeAyahs:parseInt(r.completeAyahs)||1,reciteAyahs:parseInt(r.reciteAyahs)||1,audioShareWithParent:r.audioShareWithParent!==false,optionsCount:Math.max(2,Math.min(6,parseInt(r.optionsCount)||4))}));
@@ -2769,7 +2792,7 @@ async function generateExamQuestions(){
     examQuestions=normalized;examEditorActiveIndex=0;
     renderExamQuestions(); showExamAlert('تم الحصول على '+examQuestions.length+' سؤالاً بنجاح. راجعها قبل الإرسال.','success');
   }catch(e){showExamAlert(e.message||'تعذر توليد الأسئلة بالذكاء الاصطناعي','danger')}
-  finally{overlay?.classList.add('hidden');btns.forEach(b=>b.disabled=false)}
+  finally{finishExamGenerationProgress();btns.forEach(b=>b.disabled=false)}
 }
 function addManualExamQuestion(){examQuestions.push({id:'manual_'+Date.now(),type:'mcq',level:'medium',surah:currentRecordMainSurah||'',prompt:'سؤال يدوي',stem:'',options:['','','',''],correct:'',from:1,to:1,timeLimit:60,completeAyahs:1,reciteAyahs:1,audioShareWithParent:true,points:1,rejected:false,weakened:false,source:'manual'});renderExamQuestions()}
 function clearExamQuestions(){examQuestions=[];renderExamQuestions()}
@@ -3584,7 +3607,7 @@ function renderDevPlan(plan){
   if(plan.summary) h += '<div style="margin-bottom:12px;"><strong>الملخص:</strong> '+esc(plan.summary)+'</div>';
 
   if(Array.isArray(plan.files) && plan.files.length){
-    h += '<div style="font-weight:bold; margin:14px 0 8px; color:var(--primary);">📁 الملفات التي ستتغيّر</div>';
+    h += '<div style="font-weight:bold; margin:14px 0 8px; color:var(--primary);">📁 المل��ات التي ستتغيّر</div>';
     plan.files.forEach(function(f){
       const badge = f.action === 'create'
         ? '<span style="background:#28a745;color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;">إنشاء</span>'
@@ -5329,7 +5352,7 @@ function generateWelcomeMessages(student) {
     {title: '��هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من يش��ء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر أن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
     {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية�� وسترى الفرق في حياتك.'},
-    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متيناً.'},
+    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متي��اً.'},
     {title: 'يوم مبارك يا '+student.name+'! ✨', body: 'حافظ على الاستمرارية في الحفظ، فالقرآن يُحفظ بالتكرار والمراجعة. ثق بالله، فهو معك في كل خطوة.'}
   ];
   const base = templates[dayOfWeek % templates.length];
@@ -5416,7 +5439,7 @@ function generateAIResponse(text, student) {
   }
   // الآيات والصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم أزرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>الآيات تُعرض بالرسم العثماني الم��شكَّل كصورة مطابقة تماماً للمصحف.';
+    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم أزرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>الآيات تُعرض بالرسم العثماني الم��شكَّل كصورة مطابقة تماماً ��لمصحف.';
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صوت','ميكروفون','تحقق')) {

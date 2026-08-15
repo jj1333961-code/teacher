@@ -1,4 +1,3 @@
-import { generateText } from "ai"
 import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
 
 export const maxDuration = 300
@@ -118,109 +117,76 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-const GATEWAY_GEMINI_MODELS = ["google/gemini-3.7-flash", "google/gemini-2.5-flash"]
-
-async function gatewayGeminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }) {
-  const content: any[] = [{ type: "text", text: prompt }]
-  if (inlineData) content.push({ type: "file", mediaType: inlineData.mimeType, data: inlineData.data })
-  let lastError: unknown = new Error("تعذر بدء اتصال AI Gateway")
-
-  for (const model of GATEWAY_GEMINI_MODELS) {
-    try {
-      const result = await generateText({
-        model,
-        system,
-        messages: [{ role: "user", content }],
-        temperature,
-        abortSignal: AbortSignal.timeout(25_000),
-      })
-      if (!result.text?.trim()) throw new Error("AI Gateway: وصل رد فارغ")
-      return result.text.trim()
-    } catch (error) {
-      lastError = error
-    }
-  }
-
-  const message = lastError instanceof Error ? lastError.message : String(lastError || "خطأ غير معروف")
-  throw new Error(`فشل Gemini المباشر والاتصال الاحتياطي: ${message.slice(0, 300)}`)
-}
-
 function isRetryableGeminiError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "")
-  return /401|403|404|408|409|429|5\d\d|API key|PERMISSION_DENIED|RESOURCE_EXHAUSTED|UNAVAILABLE|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|AbortError|aborted|رد فارغ|empty/i.test(message)
+  return /404|408|409|429|5\d\d|RESOURCE_EXHAUSTED|UNAVAILABLE|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|AbortError|aborted|رد فارغ|empty/i.test(message)
 }
 
 function classifyAiFailure(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error || "خطأ غير معروف")
-  const quotaExceeded = /429|RESOURCE_EXHAUSTED|exceeded your current quota|rate.?limit/i.test(raw)
-  const gatewayBillingRequired = /valid credit card|add-credit-card|billing/i.test(raw)
-  const timedOut = /TimeoutError|AbortError|timed out|aborted/i.test(raw)
+  if (/401|403|API key|API_KEY_INVALID|PERMISSION_DENIED/i.test(raw)) {
+    return { status: 401, code: "GEMINI_KEY_INVALID", retryable: false, message: "مفتاح Gemini غير صالح أو لا يملك صلاحية الاستخدام. تحقق من GEMINI_API_KEY.", raw }
+  }
+  if (/429|RESOURCE_EXHAUSTED|exceeded your current quota|rate.?limit/i.test(raw)) {
+    return { status: 429, code: "GEMINI_QUOTA_EXCEEDED", retryable: true, message: "حصة Gemini المباشرة مستنفدة مؤقتاً. انتظر تجدد الحصة أو راجع حدود مشروع Google ثم أعد المحاولة.", raw }
+  }
+  if (/TimeoutError|AbortError|timed out|aborted/i.test(raw)) {
+    return { status: 504, code: "GEMINI_TIMEOUT", retryable: true, message: "استغرق Gemini وقتاً أطول من المتوقع. أعد المحاولة، وسيحتفظ الموقع ببياناتك الحالية.", raw }
+  }
+  if (/404|not found|not supported/i.test(raw)) {
+    return { status: 502, code: "GEMINI_MODEL_UNAVAILABLE", retryable: true, message: "نموذج Gemini المحدد غير متاح حالياً؛ حاول مرة أخرى ليختار النظام نموذجاً متاحاً.", raw }
+  }
+  return { status: 502, code: "GEMINI_PROVIDER_ERROR", retryable: isRetryableGeminiError(error), message: "تعذر الاتصال بخدمة Gemini المباشرة حالياً.", raw }
+}
 
-  if (quotaExceeded) {
-    return {
-      status: 429,
-      code: "AI_QUOTA_EXCEEDED",
-      retryable: true,
-      message: gatewayBillingRequired
-        ? "حصة Gemini الحالية مستنفدة، والاتصال الاحتياطي غير مفعّل لهذا المشروع. انتظر تجدد الحصة ثم أعد المحاولة، أو فعّل فوترة AI Gateway."
-        : "حصة Gemini الحالية مستنفدة مؤقتاً. انتظر قليلاً ثم أعد المحاولة.",
-      raw,
-    }
-  }
-  if (gatewayBillingRequired) {
-    return { status: 503, code: "AI_GATEWAY_BILLING_REQUIRED", retryable: false, message: "الاتصال الاحتياطي بالذكاء الاصطناعي غير مفعّل لهذا المشروع لأنه يتطلب تفعيل فوترة AI Gateway.", raw }
-  }
-  if (timedOut) {
-    return { status: 503, code: "AI_TIMEOUT", retryable: true, message: "انتهت مهلة مزود الذكاء الاصطناعي. أعد المحاولة بطلب أقصر.", raw }
-  }
-  return { status: 502, code: "AI_PROVIDER_ERROR", retryable: isRetryableGeminiError(error), message: "تعذر الاتصال بمزود الذكاء الاصطناعي حالياً.", raw }
+function geminiTimeout(system: string, inlineData?: { mimeType: string; data: string }) {
+  if (inlineData) return 90_000
+  if (/اختبار|JSON|تطوير|برمج/i.test(system)) return 120_000
+  return 35_000
 }
 
 async function geminiText(prompt: string, system: string, temperature: number, inlineData?: { mimeType: string; data: string }): Promise<string> {
-  if (!GEMINI.key) return gatewayGeminiText(prompt, system, temperature, inlineData)
+  if (!GEMINI.key) throw new Error("GEMINI_API_KEY غير موجود على الخادم")
   const parts: any[] = [{ text: prompt }]
   if (inlineData) parts.unshift({ inlineData })
-  const requestBody = JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts }], generationConfig: { temperature } })
-  let lastError: unknown = new Error("تعذر بدء اتصال Gemini")
+  const requestBody = JSON.stringify({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: "user", parts }],
+    generationConfig: { temperature },
+  })
+  let lastError: unknown = new Error("تعذر بدء اتصال Gemini المباشر")
 
   for (let attempt = 0; attempt < 3; attempt++) {
-  try {
-  const model = await resolveGeminiModel(attempt > 0)
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI.key },
-  body: requestBody,
-  cache: "no-store",
-  signal: AbortSignal.timeout(inlineData ? 60_000 : 25_000),
-  })
-  const data = await response.json().catch(() => null)
-  if (!response.ok) {
-  const modelError = new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
-  lastError = modelError
-  if (response.status === 404 || response.status === 429) {
-  coolDownGeminiModel(model, response.status === 429 ? 60_000 : 10 * 60_000)
-  if (response.status === 429 && attempt < 2) await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)))
-  continue
+    try {
+      const model = await resolveGeminiModel(attempt > 0)
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI.key },
+        body: requestBody,
+        cache: "no-store",
+        signal: AbortSignal.timeout(geminiTimeout(system, inlineData)),
+      })
+      const data = await response.json().catch(() => null)
+      if (!response.ok) {
+        const modelError = new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
+        lastError = modelError
+        if ([404, 429, 500, 503].includes(response.status)) {
+          coolDownGeminiModel(model, response.status === 429 ? 90_000 : 10 * 60_000)
+          if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)))
+          continue
+        }
+        throw modelError
+      }
+      const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
+      if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
+      resolvedGeminiModel = model
+      return text.trim()
+    } catch (error) {
+      lastError = error
+      if (!isRetryableGeminiError(error) || attempt === 2) break
+    }
   }
-  throw modelError
-  }
-  const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part?.text || "").join("")
-  if (typeof text !== "string" || !text.trim()) throw new Error("Gemini: وصل رد فارغ")
-  return text.trim()
-  } catch (error) {
-  lastError = error
-  break
-  }
-  }
-  // عند فشل Gemini المباشر نهائياً ننتقل دائماً إلى Gateway؛ فهو مسار مستقل
-  // ويعالج أخطاء ��لمفتاح والحصة والشبكة والنموذج غير المتاح دون تعطيل المستخدم.
-  try {
-    return await gatewayGeminiText(prompt, system, temperature, inlineData)
-  } catch (gatewayError) {
-    const directMessage = lastError instanceof Error ? lastError.message : String(lastError || "خطأ غير معروف")
-    const gatewayMessage = gatewayError instanceof Error ? gatewayError.message : String(gatewayError || "خطأ غير معروف")
-    throw new Error(`Gemini المباشر: ${directMessage.slice(0, 220)} | Gateway: ${gatewayMessage.slice(0, 220)}`)
-  }
+  throw lastError
 }
 
 function json(data: unknown, status = 200) {
@@ -298,7 +264,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - level=easy: سؤال مباشر من النص.
 - level=medium: تمييز وربط أدق بين الآية والسورة أو موضعها.
 - level=hard: مواضع متشا��هة وتمييز دقيق دون غموض أو معلومات من خارج النص.
-- لا تكرر السؤال نفسه، ووزّع الاختيارات على سور ومواضع مختلفة قدر ما يسمح النطاق.
+- لا تكرر السؤال نفسه، ووزّع الاختيارات على سور ومواضع مختلفة قدر ما ي��مح النطاق.
 - points=1 دائماً.
 - timeLimit لا يخرج عن الوقت الذي حدده المسؤول في plan؛ إذا كان موجوداً فاستخدمه كما هو.
 - لا تضع إجابة صحيحة خارج الخيارات.
@@ -351,7 +317,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد�� /api/ai.
   • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
-- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم Gemini مباشرةً عبر GEMINI_API_KEY مع AI Gateway كمسار احتياطي، وتدعم الأوضاع: assistant, admin_assistant, generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant، بالإضافة إلى وضع النص الحر (prompt).
+- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم Gemini مباشرةً وحصرياً عبر GEMINI_API_KEY، وتدعم الأوضاع: assistant, admin_assistant, generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant، بالإضافة إلى وضع النص الحر (prompt).
 - "app/layout.tsx": تخطيط الجذر.
 - "app/page.tsx": صفحة Next.js احتياطية؛ الجذر يعاد توجيهه إلى public/index.html عبر next.config.mjs.
 - "app/globals.css": الأنماط العامة لـNext.js.
@@ -595,7 +561,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
   const system = `أنت مبرمج ومطوّر ويب محترف (Senior Software Engineer) خبير في HTML وCSS وJavaScript وTypeScript وNext.js وReact وواجهات API. أنت مسؤول عن تعديل مشروع ويب موجود بشكل مباشر. سيُطبّق ناتجك تلقائياً على مستودع GitHub بعد التحقق منه، لذا يجب أن يكون الكود كاملاً وصحيحاً وجاهزاً للتشغيل فوراً.
 
 منهجية العمل الإلزامية قبل الكتابة:
-1) اقرأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
+1) ا��رأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
 2) حدد بدقة أصغر جز�� يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
 3) اكتب التعديل بنفس أسلوب ��بنية المشروع (نفس التسمية، ن��س المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
 4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء بناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أ�� معرّف استُخدم معرّف فعلاً.
@@ -737,7 +703,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أجب عن أي سؤال مسموح، سواء ارتبط بالمنصة أم كان سؤالاً عاماً خارجها. أعط الأولوية لبيانات المنصة فقط عندما يرتبط السؤال بها. اجعل الجواب على قدر السؤال: جواب قصير للسؤال القصير، ولا تتوسع أو تضف أمثلة واقتراحات إلا بطلب صريح. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفرها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة. أعد الجواب مباشرة بلا تحية أو مقدمة ��و عنوان أو خاتمة.",
+        "أنت Gemini، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفرها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -871,7 +837,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (!message) return json({ error: "اكتب رسالتك أولاً", diagnostics }, 400)
       const context = JSON.stringify(payload.context || {}).slice(0, 18_000)
       const reference = await getReferenceContext(message).catch(() => "")
-      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أجب عن أي سؤال مسموح، داخل موضوع الموقع أو خارجه. أعط الأولوية لبيانات الموقع عند صلتها بالسؤال، واجعل طول الجواب على قدر السؤال دون توسع غير مطلوب. استخدم المرجعين للمساعدة في المسائل القرآنية والمتشابهات دون حصر معرفتك فيهما، ولا تختلق بيانات أو آيات. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للذكاء الاصطناعي.", 0.25)
+      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أنت Gemini، مساعد إداري عربي دقيق وطبيعي. أجب عن أي سؤال مسموح داخل الموقع أو خارجه، واستخدم بيانات الموقع عند صلتها فقط. اجعل الرد على قدر السؤال، مباشراً ومبسطاً، ولا تضف اقتراحات أو تفاصيل لم تُطلب. رد على التحيات والمجاملات بود وباختصار، ويمكنك استخدام رمز تعبيري مناسب باعتدال، وتجنبه في الردود العلمية والحساسة. استخدم المرجعين للمسائل القرآنية والمتشابهات دون حصر معرفتك فيهما، ولا تختلق بيانات أو آيات.", 0.25)
       return json({ result: result.trim(), diagnostics })
     }
 
@@ -913,7 +879,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (!audioBase64) {
         return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
       }
-      // OpenRouter يقبل الصوت بصيغة wav أو mp3 فقط (input_audio).
+      // OpenRouter يقبل الصو�� بصيغة wav أو mp3 فقط (input_audio).
       // المتصفح يحوّل التسجيل إلى wav قبل الإرسال؛ نستنتج الصيغة من mimeType.
       let audioFormat = "wav"
       const mt = (typeof mimeType === "string" ? mimeType : "").toLowerCase()
@@ -1017,7 +983,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
           return json({ result: { ...plan, ...applied, applied: true, autoApplied: true, note: "تم تطبيق التعديلات تلقائياً على المشروع من الخادم. إذا كان Vercel مربوطاً بالمستودع فسيبدأ النشر تلقائياً، أو يمكن استخدام VERCEL_DEPLOY_HOOK_URL." }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
         } catch (e:any) {
           const failure = classifyAiFailure(e)
-          const isProviderFailure = /Gemini|AI Gateway|generativelanguage|RESOURCE_EXHAUSTED|exceeded your current quota/i.test(failure.raw)
+          const isProviderFailure = /Gemini|generativelanguage|RESOURCE_EXHAUSTED|exceeded your current quota/i.test(failure.raw)
           return json({
             error: isProviderFailure ? failure.message : (e?.message || "تعذر التطبيق التلقائي"),
             result: { ...plan, applied: false, autoApplied: false },
