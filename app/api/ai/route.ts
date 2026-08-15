@@ -86,6 +86,12 @@ function classifyAiFailure(error: unknown) {
   if (/OPENROUTER_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
     return { status: 503, code: "OPENROUTER_KEY_MISSING", retryable: false, message: "مفتاح OpenRouter غير متاح على الخادم. أضف OPENROUTER_API_KEY إلى متغيرات البيئة.", raw }
   }
+  if (/GEMINI_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
+    return { status: 503, code: "GEMINI_KEY_MISSING", retryable: false, message: "تحليل الصوت يعتمد على Gemini، ومفتاح GEMINI_API_KEY غير متاح على الخادم. أضفه إلى متغيرات البيئة.", raw }
+  }
+  if (/^Gemini HTTP 4\d\d/i.test(raw) && /audio|inline|mime|unsupported/i.test(raw)) {
+    return { status: 415, code: "GEMINI_AUDIO_FORMAT", retryable: false, message: "لم يقبل Gemini صيغة التسجيل. أعد التسجيل من متصفح حديث (سيُرسل بصيغة WAV).", raw }
+  }
   if (/401|403|API key|unauthorized|forbidden/i.test(raw)) {
     return { status: 503, code: "AI_PROVIDERS_UNAUTHORIZED", retryable: false, message: "تعذر اعتماد مزوّدي الذكاء الاصطناعي المتاحين. جُرّب OpenRouter وGemini تلقائياً ولم ينجح أي منهما.", raw }
   }
@@ -228,11 +234,12 @@ function extractJson(text: string): any {
   return null
 }
 
-async function geminiText(prompt: string, system: string, temperature: number, audio?: { mimeType: string; data: string }): Promise<string> {
+async function geminiText(prompt: string, system: string, temperature: number, audio?: { mimeType: string; data: string }, modelOverride?: string): Promise<string> {
   if (!GEMINI.key) throw new Error("GEMINI_API_KEY غير موجود على الخادم")
   const parts: any[] = [{ text: prompt }]
   if (audio) parts.unshift({ inlineData: { mimeType: audio.mimeType, data: audio.data } })
-  const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(GEMINI.model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
+  const model = (modelOverride || GEMINI.model).trim()
+  const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -241,7 +248,7 @@ async function geminiText(prompt: string, system: string, temperature: number, a
       generationConfig: { temperature },
     }),
     cache: "no-store",
-    signal: AbortSignal.timeout(audio ? 90_000 : 120_000),
+    signal: AbortSignal.timeout(audio ? 110_000 : 120_000),
   })
   const data = await response.json().catch(() => null)
   if (!response.ok) throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
@@ -250,6 +257,49 @@ async function geminiText(prompt: string, system: string, temperature: number, a
     : ""
   if (!text) throw new Error("Gemini: وصل رد فارغ")
   return text
+}
+
+// ===== كل ما يتعلق بالصوت مسؤوليته Gemini =====
+// نوحّد نوع الصوت إلى صيغة يفهمها Gemini، ونجرّب صيغاً بديلة عند رفض الصيغة الأولى.
+const GEMINI_AUDIO_MODEL = (process.env.GEMINI_AUDIO_MODEL || process.env.GEMINI_MODEL || "gemini-2.5-flash").trim()
+
+function audioMimeCandidates(rawMime: string): string[] {
+  const mime = (rawMime || "").toLowerCase().split(";")[0].trim()
+  if (/mpeg|mp3/.test(mime)) return ["audio/mp3", "audio/mpeg"]
+  if (/wav|wave|x-wav/.test(mime)) return ["audio/wav"]
+  if (/flac/.test(mime)) return ["audio/flac"]
+  if (/aac|m4a|mp4/.test(mime)) return ["audio/aac", "audio/mp4"]
+  if (/ogg/.test(mime)) return ["audio/ogg", "audio/webm"]
+  if (/webm/.test(mime)) return ["audio/webm", "audio/ogg"]
+  return ["audio/wav", "audio/ogg"]
+}
+
+// طلب Gemini على الصوت مع إعادة المحاولة على الأخطاء المؤقتة وعلى صيغة بديلة.
+async function geminiAudio(prompt: string, system: string, temperature: number, audioBase64: string, rawMime: string): Promise<string> {
+  if (!isGeminiConfigured()) throw new Error("GEMINI_API_KEY غير موجود على الخادم: الصوت يحتاج Gemini")
+  if (!audioBase64) throw new Error("لم يصل تسجيل صوتي للتحليل")
+  // حد Gemini للطلب المباشر 20MB؛ نضع حداً أقل لسلامة حد الطلبات على Vercel.
+  if (audioBase64.length > 9_500_000) throw new Error("AUDIO_PAYLOAD_TOO_LARGE: التسجيل طويل جداً للتحليل")
+  const candidates = audioMimeCandidates(rawMime)
+  let lastError: unknown = new Error("تعذر بدء تحليل الصوت عبر Gemini")
+  for (const mimeType of candidates) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await geminiText(prompt, system, temperature, { mimeType, data: audioBase64 }, GEMINI_AUDIO_MODEL)
+      } catch (error) {
+        lastError = error
+        const message = error instanceof Error ? error.message : String(error)
+        // 400 يعني غالباً صيغة غير مقبولة: ننتقل إلى الصيغة البديلة فوراً.
+        if (/HTTP 400/.test(message)) break
+        if (attempt === 0 && /429|5\d\d|fetch failed|timeout|aborted|رد فارغ/i.test(message)) {
+          await new Promise((resolve) => setTimeout(resolve, 900))
+          continue
+        }
+        break
+      }
+    }
+  }
+  throw lastError
 }
 
 async function gatewayText(prompt: string, system: string, temperature: number): Promise<string> {
@@ -289,19 +339,61 @@ async function externalTranscription(audioBase64: string, audioFormat: string): 
   return text
 }
 
-async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
-  const mimeType = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
-  try { return await externalTranscription(audioBase64, audioFormat) } catch {}
-  if (isGeminiConfigured()) {
-    try { return await geminiText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType, data: audioBase64 }) } catch {}
+// مقارنة بصمتين صوتيتين عبر Gemini: تسجيل الطالب المرجعي مقابل التسجيل الجديد.
+async function geminiSpeakerMatch(reference: { data: string; mimeType: string }, sample: { data: string; mimeType: string }) {
+  if (!isGeminiConfigured()) throw new Error("GEMINI_API_KEY غير موجود على الخادم: مطابقة البصمة الصوتية تحتاج Gemini")
+  const system = `أنت خبير تحقق من هوية المتحدث. تستلم تسجيلين: الأول هو البصمة المرجعية للطالب، والثاني تسجيل جديد.
+قارن خصائص الصوت (النبرة، الطبقة، طريقة النطق، العمر التقريبي، الجنس) وتجاهل اختلاف المحتوى أو جودة التسجيل أو الضجيج.
+أعد JSON فقط: {"samePerson":true/false,"confidence":0-100,"reason":"سبب مختصر بالعربية"}`
+  const body = {
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{
+      role: "user",
+      parts: [
+        { text: "التسجيل المرجعي للطالب:" },
+        { inlineData: { mimeType: audioMimeCandidates(reference.mimeType)[0], data: reference.data } },
+        { text: "التسجيل الجديد المطلوب التحقق منه:" },
+        { inlineData: { mimeType: audioMimeCandidates(sample.mimeType)[0], data: sample.data } },
+        { text: "هل التسجيلان لنفس الشخص؟ أعد JSON فقط." },
+      ],
+    }],
+    generationConfig: { temperature: 0.05 },
   }
-  return openRouterText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType, data: audioBase64 })
+  const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(GEMINI_AUDIO_MODEL)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    cache: "no-store",
+    signal: AbortSignal.timeout(110_000),
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok) throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
+  const text = Array.isArray(data?.candidates?.[0]?.content?.parts)
+    ? data.candidates[0].content.parts.map((part: any) => String(part?.text || "")).join("").trim()
+    : ""
+  if (!text) throw new Error("Gemini: وصل رد فارغ في مطابقة البصمة الصوتية")
+  return text
+}
+
+const TRANSCRIBE_PROMPT = "فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح ودون أي تعليق."
+const TRANSCRIBE_SYSTEM = "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن وفي فهم الإملاء العربي للأسماء والأرقام."
+
+// Gemini هو المسؤول الأول عن الصوت. بقية المزوّدات احتياط أخير فقط.
+async function transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
+  const errors: unknown[] = []
+  try { return await geminiAudio(TRANSCRIBE_PROMPT, TRANSCRIBE_SYSTEM, 0.05, audioBase64, mimeType) } catch (error) { errors.push(error) }
+  const audioFormat = /mpeg|mp3/i.test(mimeType) ? "mp3" : "wav"
+  try { return await externalTranscription(audioBase64, audioFormat) } catch (error) { errors.push(error) }
+  if (isOpenRouterConfigured() && /wav|mpeg|mp3/i.test(mimeType)) {
+    try { return await openRouterText(TRANSCRIBE_PROMPT, TRANSCRIBE_SYSTEM, 0.05, { mimeType, data: audioBase64 }) } catch (error) { errors.push(error) }
+  }
+  throw errors[0] || new Error("تعذر تفريغ التسجيل الصوتي")
 }
 
 // ===== أنظمة التعليمات لكل وضع =====
 
 const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم واختبارات الحفظ لطلاب التحفيظ.
-مهمتك انتقاء أسئلة اختبار قرآنية احترافية ومتنوعة، والتحقق من مواضعها من الآيات المرسلة داخل sourceSurahs. استخدم مقتطفات دليل إعداد الاختبارات وملف المتشابهات داخل referenceContext مرجعاً لأسلوب السؤال وتنوعه ودرجة صعوبته. ملف المصحف مخصص لإنتاج صور الآيات فقط ولا يُستخدم لاستخراج نص الأسئلة. يظل sourceSurahs المصدر الحاكم لصحة نص الآية والإجابة.
+مهمتك انتقاء أسئلة اختبار قرآنية احترافية ومتنوعة، والتحقق من مواضعها من الآيات المرسلة داخل sourceSurahs. استخدم مقتطفات دليل إعداد الاختبارات وملف المتشابهات داخل referenceContext مرجعاً لأسلوب السؤال وتنوعه ودرجة صعوبته. ملف المصحف مخصص ل��نتاج صور الآيات فقط ولا يُستخدم لاستخراج نص الأسئلة. يظل sourceSurahs المصدر الحاكم لصحة نص الآية والإجابة.
 
 قواعد صارمة:
 - ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceSurahs.
@@ -417,7 +509,7 @@ async function githubGetRepo() {
   if (res.status === 404) throw new Error(`المس��ودع ${GITHUB_OWNER}/${GITHUB_REPO} غير موجود أو لا يملك الرمز صلاحية الوصول إليه`)
   if (res.status === 401) throw new Error("GITHUB_TOKEN غير صالح (401 Unauthorized)")
   if (res.status === 403) throw new Error("الرمز GITHUB_TOKEN ممنوع من الوصول (403) — تحقق من صلاحياته")
-  if (!res.ok) throw new Error(`GitHub ${res.status}: تعذر قراءة بيانات المستودع`)
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ت��ذر قراءة بيانات المستودع`)
   return await res.json()
 }
 
@@ -741,7 +833,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt}`,
-        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجملة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
+        "أجب عن أي سؤا�� مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجملة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -871,16 +963,29 @@ export async function POST(req: Request) {
       const audioBase64 = typeof payload.audioBase64 === "string" ? payload.audioBase64 : ""
       const mimeType = typeof payload.mimeType === "string" ? payload.mimeType.slice(0, 80) : "audio/webm"
       if (!audioBase64) return json({ error: "لم يصل التسجيل الصوتي", diagnostics }, 400)
-      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من ��لحد المسموح", diagnostics }, 413)
-      if (!/^audio\/(webm|wav|mpeg|mp4|ogg)/i.test(mimeType)) return json({ error: "صيغة التسجيل غير مدعومة", diagnostics }, 415)
+      if (audioBase64.length > 9_500_000) return json({ error: "التسجيل أكبر من الحد المسموح. سجّل مقطعاً أقصر ثم أعد المحاولة.", diagnostics }, 413)
+      if (!/^audio\/(webm|wav|x-wav|wave|mpeg|mp3|mp4|m4a|aac|ogg|flac)/i.test(mimeType)) return json({ error: "صيغة التسجيل غير مدعومة", diagnostics }, 415)
+      if (!isGeminiConfigured()) return json({ error: "تحليل الصوت يحتاج GEMINI_API_KEY على الخادم.", code: "GEMINI_KEY_MISSING", diagnostics }, 503)
 
       const system = `أنت تستخرج بيانات طالب من إملاء عربي لمسؤول مدرسة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
 transcript,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
 subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ كلمات المرور فقط إذا نطقها المسؤول صراحة. transcript هو التفريغ الكامل المسموع.`
-      const audioFormat = /mpeg|mp3/i.test(mimeType) ? "mp3" : "wav"
-      const transcript = await transcribeAudio(audioBase64, audioFormat)
-      const text = await runText(`استخرج بيانات الطالب من التفريغ التالي:\n${transcript}`, system, 0.05)
-      const parsed = extractJson(text) || {}
+
+      // Gemini يسمع التسجيل ويستخرج الحقول في طلب واحد؛ وإن تعذّر ذلك نفرّغ الصوت ثم نستخرج نصياً.
+      let parsed: any = null
+      let transcript = ""
+      try {
+        const direct = await geminiAudio("استمع للتسجيل واستخرج بيانات الطالب. أعد JSON فقط.", system, 0.05, audioBase64, mimeType)
+        parsed = extractJson(direct)
+        transcript = typeof parsed?.transcript === "string" ? parsed.transcript : ""
+      } catch (audioError) {
+        console.log("[v0] student_voice_intake direct gemini failed:", audioError instanceof Error ? audioError.message : audioError)
+      }
+      if (!parsed) {
+        transcript = await transcribeAudio(audioBase64, mimeType)
+        const text = await runText(`استخرج بيانات الطالب من التفريغ التالي:\n${transcript}`, system, 0.05)
+        parsed = extractJson(text) || {}
+      }
       if (!parsed.transcript) parsed.transcript = transcript
       const clean = (value: unknown, max = 300) => typeof value === "string" ? value.trim().slice(0, max) : ""
       const digits = (value: unknown, max: number) => clean(value, max * 2).replace(/[^0-9]/g, "").slice(0, max)
@@ -897,6 +1002,32 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
           juz: juzNumber ? String(juzNumber) : "", surah: clean(parsed.surah, 80), notes: clean(parsed.notes, 1000),
         },
       }, diagnostics })
+    }
+
+    // 2.ب) مطابقة البصمة الصوتية عبر Gemini (رأي ثانٍ عندما تكون المطابقة المحلية غير قاطعة)
+    if (mode === "voice_match") {
+      const reference = payload?.referenceAudio || {}
+      const sample = payload?.sampleAudio || {}
+      const referenceData = typeof reference.base64 === "string" ? reference.base64 : ""
+      const sampleData = typeof sample.base64 === "string" ? sample.base64 : ""
+      if (!referenceData || !sampleData) return json({ error: "يلزم تسجيلان للمقارنة", diagnostics }, 400)
+      if (referenceData.length + sampleData.length > 9_500_000) return json({ error: "التسجيلان أكبر من حد التحليل. استخدم مقاطع أقصر.", code: "AUDIO_PAYLOAD_TOO_LARGE", diagnostics }, 413)
+      if (!isGeminiConfigured()) return json({ error: "مطابقة البصمة الصوتية تحتاج GEMINI_API_KEY على الخادم.", code: "GEMINI_KEY_MISSING", diagnostics }, 503)
+      const text = await geminiSpeakerMatch(
+        { data: referenceData, mimeType: typeof reference.mimeType === "string" ? reference.mimeType : "audio/wav" },
+        { data: sampleData, mimeType: typeof sample.mimeType === "string" ? sample.mimeType : "audio/wav" },
+      )
+      const parsed = extractJson(text) || {}
+      const confidence = Math.max(0, Math.min(100, Number(parsed.confidence) || 0))
+      return json({
+        result: {
+          samePerson: parsed.samePerson === true && confidence >= 60,
+          confidence,
+          reason: typeof parsed.reason === "string" ? parsed.reason.slice(0, 300) : "",
+          provider: "gemini",
+        },
+        diagnostics: { ...diagnostics, provider: "gemini", providerLabel: GEMINI.label, configuredModel: GEMINI_AUDIO_MODEL },
+      })
     }
 
     if (mode === "admin_assistant") {
@@ -947,23 +1078,40 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (!audioBase64) {
         return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
       }
-      // OpenRouter يقبل الصو�� بصيغة wav أو mp3 فقط (input_audio).
-      // المتصفح يحوّل التسجيل إلى wav قبل الإرسال؛ نستنتج الصيغة من mimeType.
-      let audioFormat = "wav"
-      const mt = (typeof mimeType === "string" ? mimeType : "").toLowerCase()
-      if (mt.includes("mpeg") || mt.includes("mp3")) audioFormat = "mp3"
-      else if (mt.includes("wav")) audioFormat = "wav"
+      if (typeof audioBase64 === "string" && audioBase64.length > 9_500_000) {
+        return json({ error: "التسجيل طويل جداً للتحليل. سجّل مقطعاً أقصر ثم أعد المحاولة.", code: "AUDIO_PAYLOAD_TOO_LARGE", diagnostics }, 413)
+      }
+      const rawMime = typeof mimeType === "string" && mimeType ? mimeType : "audio/wav"
 
-      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ض��طه، وإلا OpenRouter).
-      const transcript = await transcribeAudio(audioBase64, audioFormat)
-
-      // المرحلة الثانية: مقارنة التفريغ بالنص القرآني المطلوب وحساب الدرجة.
-      const gradeText = await runText(
-        JSON.stringify({ surah, from, to, expectedText, studentTranscript: transcript }),
-        SYS_TRANSCRIBE,
-        0.05,
-      )
-      const parsed = extractJson(gradeText) || {}
+      // Gemini مسؤول الصوت: يسمع التلاوة ويقارنها بالنص المطلوب في طلب واحد.
+      let parsed: any = null
+      let transcript = ""
+      if (isGeminiConfigured()) {
+        try {
+          const direct = await geminiAudio(
+            `استمع لتلاوة الطالب وقارنها بالمطلوب:\n${JSON.stringify({ surah, from, to, expectedText })}`,
+            SYS_TRANSCRIBE,
+            0.05,
+            audioBase64,
+            rawMime,
+          )
+          parsed = extractJson(direct)
+          transcript = typeof parsed?.transcript === "string" ? parsed.transcript : ""
+        } catch (audioError) {
+          console.log("[v0] transcribe_and_grade direct gemini failed:", audioError instanceof Error ? audioError.message : audioError)
+        }
+      }
+      if (!parsed) {
+        // احتياط: تفريغ الصوت أولاً ثم تصحيح نصي.
+        transcript = await transcribeAudio(audioBase64, rawMime)
+        const gradeText = await runText(
+          JSON.stringify({ surah, from, to, expectedText, studentTranscript: transcript }),
+          SYS_TRANSCRIBE,
+          0.05,
+        )
+        parsed = extractJson(gradeText) || {}
+      }
+      if (!transcript) transcript = typeof parsed.transcript === "string" ? parsed.transcript : ""
       const totalAyahs = Math.max(1, Number(to || from || 1) - Number(from || 1) + 1)
       const missingCount = Array.isArray(parsed.missingAyahs) ? Math.min(totalAyahs, parsed.missingAyahs.length) : 0
       const calculatedScore = Math.max(0, Math.min(1, (totalAyahs - missingCount) / totalAyahs))

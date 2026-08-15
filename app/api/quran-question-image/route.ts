@@ -1,58 +1,97 @@
-import { createCanvas, DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas"
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs"
-import { getQuranPdfBytes, normalizeQuranText } from "@/lib/quran-reference"
+import { readFile } from "node:fs/promises"
+import path from "node:path"
+import { createCanvas, loadImage, GlobalFonts, type SKRSContext2D } from "@napi-rs/canvas"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
 
-Object.assign(globalThis, { DOMMatrix, ImageData, Path2D })
-
 const QUESTION_TYPES = new Set(["mcq", "truefalse", "complete", "audio"])
+
+// ===== الخطوط العربية (مضمّنة داخل المشروع حتى تعمل على Vercel) =====
+const FRAME_PATH = path.join(process.cwd(), "public", "images", "ayah-frame.png")
+const QURAN_FONT_PATH = path.join(process.cwd(), "public", "fonts", "AmiriQuran-Regular.ttf")
+const TITLE_FONT_PATH = path.join(process.cwd(), "public", "fonts", "Amiri-Bold.ttf")
+
+let fontsReady = false
+function ensureFonts() {
+  if (fontsReady) return
+  try {
+    GlobalFonts.registerFromPath(QURAN_FONT_PATH, "AmiriQuran")
+    GlobalFonts.registerFromPath(TITLE_FONT_PATH, "AmiriTitle")
+  } catch {
+    // إن فشل التسجيل نكمل بالخط الافتراضي بدلاً من إسقاط الصورة بالكامل.
+  }
+  fontsReady = true
+}
+
+// إطار الزخرفة يُقرأ مرة واحدة ويُحفظ في الذاكرة لتسريع بقية الطلبات.
+let framePromise: Promise<Awaited<ReturnType<typeof loadImage>>> | null = null
+function loadFrame() {
+  if (!framePromise) framePromise = readFile(FRAME_PATH).then((bytes) => loadImage(bytes))
+  return framePromise
+}
+
+const ARABIC_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"]
+function arabicNumber(value: number) {
+  return String(value)
+    .split("")
+    .map((digit) => ARABIC_DIGITS[Number(digit)] ?? digit)
+    .join("")
+}
 
 async function getAyahRange(surah: number, from: number, to: number) {
   const response = await fetch(`https://api.alquran.cloud/v1/surah/${surah}/quran-uthmani`, {
     cache: "force-cache",
-    signal: AbortSignal.timeout(8_000),
+    signal: AbortSignal.timeout(10_000),
   })
   const data = await response.json().catch(() => null)
   const ayahs = Array.isArray(data?.data?.ayahs) ? data.data.ayahs : []
   const selected = ayahs.filter((entry: any) => Number(entry?.numberInSurah) >= from && Number(entry?.numberInSurah) <= to)
   if (!response.ok || !selected.length) throw new Error("تعذر تحديد الآيات المطلوبة")
   return {
-    text: selected.map((entry: any) => String(entry.text || "")).join(" "),
-    page: Number(selected[0]?.page) || 1,
+    surahName: String(data?.data?.name || ""),
+    verses: selected.map((entry: any) => ({
+      number: Number(entry.numberInSurah),
+      // بعض السور تبدأ بالبسملة داخل نص الآية الأولى؛ نتركها كما هي بالرسم العثماني.
+      text: String(entry.text || "").replace(/\s+/g, " ").trim(),
+    })),
   }
 }
 
-async function getPageAyahs(page: number) {
-  const response = await fetch(`https://api.alquran.cloud/v1/page/${page}/quran-uthmani`, {
-    cache: "force-cache",
-    signal: AbortSignal.timeout(8_000),
-  })
-  const data = await response.json().catch(() => null)
-  return Array.isArray(data?.data?.ayahs) ? data.data.ayahs : []
+// نص الآيات مع علامات أرقام الآيات بالرسم العربي.
+function buildText(verses: { number: number; text: string }[]) {
+  return verses.map((verse) => `${verse.text} ﴿${arabicNumber(verse.number)}﴾`).join(" ")
 }
 
-function itemText(item: any) {
-  return typeof item?.str === "string" ? item.str : ""
+// في العرض المقنّع نُظهر بداية المقطع فقط ثم نقاط مكان الجزء المطلوب إجابته.
+function maskText(verses: { number: number; text: string }[]) {
+  const first = verses[0]
+  const words = first.text.split(" ").filter(Boolean)
+  const shown = Math.max(2, Math.min(words.length - 1, Math.ceil(words.length * 0.45)))
+  const visible = words.slice(0, shown).join(" ")
+  return `${visible} ......................`
 }
 
-function itemRectangle(item: any, viewport: any) {
-  const x = Number(item.transform?.[4] || 0)
-  const y = Number(item.transform?.[5] || 0)
-  const width = Math.max(Number(item.width || 0), 12)
-  const height = Math.max(Math.abs(Number(item.height || item.transform?.[3] || 0)), 12)
-  const [left, bottom, right, top] = viewport.convertToViewportRectangle([x, y, x + width, y + height])
-  return {
-    x: Math.min(left, right),
-    y: Math.min(bottom, top),
-    width: Math.abs(right - left),
-    height: Math.abs(top - bottom),
+type Line = { text: string; width: number }
+
+function wrapLines(context: SKRSContext2D, text: string, maxWidth: number): Line[] {
+  const words = text.split(" ").filter(Boolean)
+  const lines: Line[] = []
+  let current = ""
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word
+    if (context.measureText(candidate).width <= maxWidth || !current) {
+      current = candidate
+      continue
+    }
+    lines.push({ text: current, width: context.measureText(current).width })
+    current = word
   }
+  if (current) lines.push({ text: current, width: context.measureText(current).width })
+  return lines
 }
 
 export async function GET(request: Request) {
-  let document: any = null
   try {
     const url = new URL(request.url)
     const surah = Number(url.searchParams.get("surah"))
@@ -60,128 +99,67 @@ export async function GET(request: Request) {
     const to = Number(url.searchParams.get("to") || ayah)
     const requestedType = url.searchParams.get("type") || "complete"
     const type = QUESTION_TYPES.has(requestedType) ? requestedType : "complete"
-    const display = url.searchParams.get("display") === "anchor" ? "anchor" : "masked"
+    const display = url.searchParams.get("display") === "masked" ? "masked" : "anchor"
     if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1 || !Number.isInteger(to) || to < ayah) {
       return Response.json({ error: "مرجع الآية غير صالح" }, { status: 400 })
     }
 
-    const [targetData, pdfBytes] = await Promise.all([getAyahRange(surah, ayah, to), getQuranPdfBytes()])
-    const targetWords = normalizeQuranText(targetData.text).split(" ").filter(Boolean)
-    if (targetWords.length < 2) throw new Error("تعذر تجهيز نص الآية")
+    ensureFonts()
+    const [range, frame] = await Promise.all([getAyahRange(surah, ayah, to), loadFrame()])
+    // في أسئلة الإكمال والتلاوة نستخدم القناع لإخفاء الجزء المطلوب من الطالب.
+    const shouldMask = display === "masked" && (type === "complete" || type === "audio" || range.verses.length === 1)
+    const text = shouldMask ? maskText(range.verses) : buildText(range.verses)
 
-    document = await getDocument({ data: pdfBytes, useSystemFonts: true, isEvalSupported: false }).promise
-    let selected: { page: any; items: any[] } | null = null
-    const estimatedPage = Math.max(1, Math.min(document.numPages, Math.round(((targetData.page - 1) / 603) * (document.numPages - 1)) + 1))
-    const candidatePages = Array.from(new Set([estimatedPage, estimatedPage - 1, estimatedPage + 1, estimatedPage - 2, estimatedPage + 2]))
-      .filter((pageNumber) => pageNumber >= 1 && pageNumber <= document.numPages)
+    const canvas = createCanvas(frame.width, frame.height)
+    const context = canvas.getContext("2d")
+    context.drawImage(frame, 0, 0, frame.width, frame.height)
 
-    for (const pageNumber of candidatePages) {
-      const page = await document.getPage(pageNumber)
-      const content = await page.getTextContent()
-      const items = (content.items as any[]).filter((item) => itemText(item))
-      const normalizedItems = items.map((item) => normalizeQuranText(itemText(item)))
-      const pageText = normalizedItems.join(" ")
-      const signature = targetWords.slice(0, Math.min(5, targetWords.length)).join(" ")
-      if (!pageText.includes(signature)) continue
+    // المحيط الداخلي الفارغ من الإطار الزخرفي: نكتب الآية داخله فقط.
+    const areaX = Math.round(frame.width * 0.135)
+    const areaWidth = Math.round(frame.width * 0.73)
+    const areaY = Math.round(frame.height * 0.29)
+    const areaHeight = Math.round(frame.height * 0.55)
 
-      const wanted = new Set(targetWords.filter((word) => word.length > 2))
-      const targetNormalized = normalizeQuranText(targetData.text)
-      const matchedItems = items.filter((item) => {
-        const normalized = normalizeQuranText(itemText(item))
-        const words = normalized.split(" ").filter((word) => word.length > 2)
-        const score = words.filter((word) => wanted.has(word)).length
-        const overlap = score / Math.max(1, Math.min(words.length, wanted.size))
-        // لا يكفي تشابه كلمة أو كلمتين؛ فهذا كان يُدخل أسطراً من الآيات المجاورة.
-        return normalized.includes(targetNormalized) || targetNormalized.includes(normalized) || (score >= 3 && overlap >= 0.72)
-      })
-      if (matchedItems.length) {
-        selected = { page, items: matchedItems }
-        break
-      }
+    context.direction = "rtl"
+    context.textAlign = "center"
+    context.textBaseline = "middle"
+
+    // نقلّص حجم الخط تدريجياً حتى يستقر النص كاملاً داخل المحيط.
+    let fontSize = 74
+    let lines: Line[] = []
+    let lineHeight = 0
+    for (; fontSize >= 26; fontSize -= 2) {
+      context.font = `${fontSize}px AmiriQuran, "Amiri Quran", serif`
+      lineHeight = Math.round(fontSize * 1.75)
+      lines = wrapLines(context, text, areaWidth)
+      if (lines.length * lineHeight <= areaHeight) break
     }
+    if (lines.length * lineHeight > areaHeight) lines = lines.slice(0, Math.max(1, Math.floor(areaHeight / lineHeight)))
 
-    let pageAyahs: any[] = []
-    if (!selected) {
-      selected = { page: await document.getPage(estimatedPage), items: [] }
-      pageAyahs = await getPageAyahs(targetData.page)
+    // إحساس الطباعة على الورق: حرف داكن بلمسة حِبر وظل رقيق جداً.
+    const centerX = areaX + areaWidth / 2
+    const blockHeight = lines.length * lineHeight
+    let cursorY = areaY + (areaHeight - blockHeight) / 2 + lineHeight / 2
+
+    context.shadowColor = "rgba(32, 79, 69, 0.18)"
+    context.shadowBlur = 2
+    context.shadowOffsetY = 1
+    context.fillStyle = "#1d3b34"
+    context.globalAlpha = 0.94
+    for (const line of lines) {
+      context.fillText(line.text, centerX, cursorY)
+      cursorY += lineHeight
     }
+    context.globalAlpha = 1
+    context.shadowColor = "transparent"
+    context.shadowBlur = 0
+    context.shadowOffsetY = 0
 
-    const viewport = selected.page.getViewport({ scale: 3 })
-    const pageCanvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height))
-    const context = pageCanvas.getContext("2d")
-    await selected.page.render({ canvasContext: context as any, viewport, canvas: pageCanvas as any }).promise
-
-    let cropX = Math.round(pageCanvas.width * 0.06)
-    let cropY = Math.round(pageCanvas.height * 0.2)
-    let cropWidth = Math.round(pageCanvas.width * 0.88)
-    let cropHeight = Math.round(pageCanvas.height * 0.28)
-    const rectangles = selected.items.map((item) => itemRectangle(item, viewport))
-
-    if (rectangles.length) {
-      const left = Math.min(...rectangles.map((rect) => rect.x))
-      const top = Math.min(...rectangles.map((rect) => rect.y))
-      const right = Math.max(...rectangles.map((rect) => rect.x + rect.width))
-      const bottom = Math.max(...rectangles.map((rect) => rect.y + rect.height))
-      // قصّ محكم حول الآية المطلوبة؛ لا نترك مساحة تكفي لظهور آية مجاورة.
-      const paddingX = 28
-      const paddingY = 28
-      cropX = Math.max(0, Math.floor(left - paddingX))
-      cropY = Math.max(0, Math.floor(top - paddingY))
-      cropWidth = Math.min(pageCanvas.width - cropX, Math.ceil(right - left + paddingX * 2))
-      cropHeight = Math.min(pageCanvas.height - cropY, Math.ceil(bottom - top + paddingY * 2))
-      if (to === ayah) {
-        // بعض ملفات المصحف تعيد سطر الصفحة كاملاً كعنصر نصي واحد؛ نحد القص بعدد
-        // الأسطر المتوقع للآية حتى لا يظهر أول سطر من الآية التالية.
-        const expectedLines = Math.max(1, Math.ceil(normalizeQuranText(targetData.text).length / 52))
-        cropHeight = Math.min(cropHeight, expectedLines * 190 + paddingY)
-      }
-
-      // ظل بلون خلفية المصحف فوق أي نص يقع خارج حدود الآية داخل القصاصة.
-      context.fillStyle = "#f8f5ec"
-      const safeTop = Math.max(cropY, Math.floor(top - 10))
-      const safeBottom = Math.min(cropY + cropHeight, Math.ceil(bottom + 10))
-      if (safeTop > cropY) context.fillRect(cropX, cropY, cropWidth, safeTop - cropY)
-      if (safeBottom < cropY + cropHeight) context.fillRect(cropX, safeBottom, cropWidth, cropY + cropHeight - safeBottom)
-    } else if (pageAyahs.length) {
-      const lengths = pageAyahs.map((entry) => Math.max(1, normalizeQuranText(String(entry?.text || "")).length))
-      const targetIndex = Math.max(0, pageAyahs.findIndex((entry) => Number(entry?.numberInSurah) === ayah && Number(entry?.surah?.number) === surah))
-      const total = Math.max(1, lengths.reduce((sum, length) => sum + length, 0))
-      const before = lengths.slice(0, targetIndex).reduce((sum, length) => sum + length, 0) / total
-      const share = Math.max(0.07, (lengths[targetIndex] || targetData.text.length) / total)
-      const textTop = pageCanvas.height * (pageAyahs.length <= 12 ? 0.38 : 0.15)
-      const textHeight = pageCanvas.height * (pageAyahs.length <= 12 ? 0.54 : 0.7)
-      cropY = Math.max(0, Math.round(textTop + before * textHeight - 70))
-      cropHeight = Math.min(pageCanvas.height - cropY, Math.max(150, Math.round(textHeight * share + 140)))
-    }
-
-    // في الصورة المقنّعة نخفي نطاق الإجابة. أما صورة anchor فتُستخدم فقط
-    // لعرض آية البداية أو النهاية منفردة في سؤال التلاوة/الإكمال.
-    if (display === "masked") {
-      context.fillStyle = "#f8f5ec"
-      context.strokeStyle = "#204f45"
-      context.lineWidth = 3
-      if (rectangles.length) {
-        for (const rect of rectangles) {
-          context.fillRect(rect.x - 10, rect.y - 10, rect.width + 20, rect.height + 20)
-          context.strokeRect(rect.x - 10, rect.y - 10, rect.width + 20, rect.height + 20)
-        }
-      } else {
-        const maskX = cropX + 18
-        const maskY = cropY + Math.max(36, Math.round(cropHeight * 0.2))
-        const maskWidth = Math.max(1, cropWidth - 36)
-        const maskHeight = Math.max(84, Math.round(cropHeight * 0.6))
-        context.fillRect(maskX, maskY, maskWidth, Math.min(maskHeight, pageCanvas.height - maskY))
-        context.strokeRect(maskX, maskY, maskWidth, Math.min(maskHeight, pageCanvas.height - maskY))
-      }
-    }
-
-    cropWidth = Math.max(1, Math.min(cropWidth, pageCanvas.width - cropX))
-    cropHeight = Math.max(1, Math.min(cropHeight, pageCanvas.height - cropY))
-    const output = createCanvas(cropWidth, cropHeight)
-    const outputContext = output.getContext("2d")
-    outputContext.fillStyle = "#f8f5ec"
-    outputContext.fillRect(0, 0, cropWidth, cropHeight)
-    outputContext.drawImage(pageCanvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
+    // تصغير الناتج قليلاً لتقليل حجم الصورة مع بقاء النص واضحاً على الجوال.
+    const outputWidth = Math.min(canvas.width, 1200)
+    const outputHeight = Math.round((canvas.height * outputWidth) / canvas.width)
+    const output = createCanvas(outputWidth, outputHeight)
+    output.getContext("2d").drawImage(canvas, 0, 0, outputWidth, outputHeight)
 
     const png = output.toBuffer("image/png")
     return new Response(new Uint8Array(png), {
@@ -194,7 +172,5 @@ export async function GET(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "تعذر تجهيز صورة السؤال"
     return Response.json({ error: message.slice(0, 240) }, { status: 422 })
-  } finally {
-    await document?.destroy().catch(() => undefined)
   }
 }

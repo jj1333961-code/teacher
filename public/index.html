@@ -871,7 +871,7 @@ tr:hover { background: var(--table-hover); }
 <div id="subjectsPage" class="page hidden">
   <div class="page-header"><h2>📚 المواد والمعلمين</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div class="form-row" style="margin-bottom:20px;">
-    <div class="form-group"><label>اسم المادة الجديدة</label><input type="text" id="newSubName"></div>
+    <div class="form-group"><label>اسم ا��مادة الجديدة</label><input type="text" id="newSubName"></div>
     <div class="form-group"><label>اسم المدرس</label><input type="text" id="newSubTeacher"></div>
     <div class="form-group"><label>رقم هاتف المدرس</label><input type="text" id="newSubPhone" maxlength="11" placeholder="11 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
@@ -1632,10 +1632,10 @@ async function toggleStudentIntakeRecord(){
     studentIntakeRecorder.ondataavailable=function(e){if(e.data.size)studentIntakeChunks.push(e.data)};
     studentIntakeRecorder.onstop=async function(){
       const blob=new Blob(studentIntakeChunks,{type:studentIntakeRecorder.mimeType||'audio/webm'});preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='جاري تجهيز الصوت وفهم البيانات...';result.innerHTML='';
-      try{const wav=await blobToWav(blob);if(!wav)throw new Error('تعذر تحويل التسجيل إلى صيغة صوت مدعومة. استخدم متصفحاً حديثاً ثم أعد التسجيل.');if(wav.size>3000000)throw new Error('التسجيل طويل جداً للتحليل. اجعله أقل من دقيقة ونصف ثم أعد المحاولة.');const audioBase64=await audioBlobToBase64(wav),data=await callStudentAI('student_voice_intake',{role:'admin',audioBase64:audioBase64,mimeType:'audio/wav'},0.05),filled=applyStudentVoiceFields(data.fields||{});result.innerHTML='<div class="alert alert-success">تم ملء '+filled.length+' خانة. راجع جميع البيانات قبل الحفظ.<br><small>النص المسموع: '+escapeHtml(data.transcript||'لم يُرجع تفريغاً')+'</small></div>';status.textContent='اكتمل التحليل';}catch(e){result.innerHTML='<div class="alert alert-danger">تعذر تحليل التسجيل: '+escapeHtml(e.message||'خطأ غير معروف')+'<br><button class="btn btn-sm btn-primary" onclick="toggleStudentIntakeRecord()">إعادة التسجيل</button></div>';status.textContent='فشل التحليل';}
+      try{const prepared=await prepareAudioForAI(blob),data=await callStudentAI('student_voice_intake',{role:'admin',audioBase64:prepared.base64,mimeType:prepared.mimeType},0.05),filled=applyStudentVoiceFields(data.fields||{});result.innerHTML='<div class="alert alert-success">تم ملء '+filled.length+' خانة. راجع جميع البيانات قبل الحفظ.<br><small>النص المسموع: '+escapeHtml(data.transcript||'لم يُرجع تفريغاً')+'</small></div>';status.textContent='اكتمل التحليل';}catch(e){result.innerHTML='<div class="alert alert-danger">تعذر تحليل التسجيل: '+escapeHtml(e.message||'خطأ غير معروف')+'<br><button class="btn btn-sm btn-primary" onclick="toggleStudentIntakeRecord()">إعادة التسجيل</button></div>';status.textContent='فشل التحليل';}
       btn.disabled=false;btn.textContent='إعادة التسجيل';studentIntakeRecorder=null;
     };
-    studentIntakeRecorder.start();registerAudioRecorder('student-intake',studentIntakeRecorder,stream,{statusId:'studentIntakeStatus',pauseBtnId:'studentIntakePauseBtn',timerId:'studentIntakeTimer',maxMs:120000});btn.textContent='إنهاء وتحليل';status.textContent='جاري التسجيل...';
+    studentIntakeRecorder.start();registerAudioRecorder('student-intake',studentIntakeRecorder,stream,{statusId:'studentIntakeStatus',pauseBtnId:'studentIntakePauseBtn',timerId:'studentIntakeTimer',maxMs:75000});btn.textContent='إنهاء وتحليل';status.textContent='جاري التسجيل...';
   }catch(e){status.textContent='لا يمكن الوصول إلى الميكروفون'}
 }
 
@@ -1956,7 +1956,7 @@ async function saveStudent() {
   const alertBox = document.getElementById('addStudentAlert');
   const fail = function(msg) {
     alertBox.innerHTML = '<div class="alert alert-danger">❌ ' + msg + '</div>';
-    showToast('🚫 تم رفض تسجيل الطالب — ' + msg, 'error');
+    showToast('🚫 تم رفض تسجيل ��لطالب — ' + msg, 'error');
   };
 
   const name = document.getElementById('stName').value.trim();
@@ -2717,7 +2717,7 @@ function renderExamPlanRows(){
       '<div class="form-group"><label>عدد الأسئلة</label><input type="number" min="1" max="50" value="'+(r.count||1)+'" onchange="examPlanRows['+i+'].count=Math.max(1,Math.min(50,parseInt(this.value)||1))"></div>'+
       '<div class="form-group"><label>المستوى</label><select onchange="examPlanRows['+i+'].level=this.value">'+
       '<option value="easy" '+(r.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(r.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(r.level==='hard'?'selected':'')+'>صعب</option></select></div>'+
-      '<div class="form-group"><label>نوع السؤال</label><select onchange="examPlanRows['+i+'].type=this.value;renderExamPlanRows()">'+
+      '<div class="form-group"><label>ن��ع السؤال</label><select onchange="examPlanRows['+i+'].type=this.value;renderExamPlanRows()">'+
       '<option value="mcq" '+(r.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(r.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(r.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(r.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+
       '<div class="form-group"><label>موضع السؤال</label><select onchange="examPlanRows['+i+'].position=this.value"><option value="random" '+((r.position||'random')==='random'?'selected':'')+'>عشوائي ومتنوع</option><option value="start" '+(r.position==='start'?'selected':'')+'>أول السورة</option><option value="middle" '+(r.position==='middle'?'selected':'')+'>وسط السورة</option><option value="end" '+(r.position==='end'?'selected':'')+'>آخر السورة</option></select></div>'+
       '<div class="form-group"><label>وقت السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" title="الساعات" type="number" min="0" max="23" value="'+Math.floor((r.timeLimit||60)/3600)+'" onchange="setExamPlanTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" title="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((r.timeLimit||60)%3600)/60)+'" onchange="setExamPlanTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" title="الثواني" type="number" min="0" max="59" value="'+((r.timeLimit||60)%60)+'" onchange="setExamPlanTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+
@@ -2966,7 +2966,12 @@ async function recordStudentExamAudio(i){
     recorder.onstop=async()=>{
       stream.getTracks().forEach(t=>t.stop());if(asr)asr.stop();await new Promise(r=>setTimeout(r,400));
       const blob=new Blob(chunks,{type:'audio/webm'});const dataUrl=await blobToDataURL(blob);const transcript=asr?(asr.text||''):'';preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='🤖 جاري التحقق من البصمة والمحتوى...';
-      const live=await computeVoicePrint(blob), ref=currentUser.voicePrintVec||null;const match=(live&&ref)?voiceMatchPercent(live,ref):null;
+      const live=await computeVoicePrint(blob), ref=currentUser.voicePrintVec||null;let match=(live&&ref)?voiceMatchPercent(live,ref):null;
+      if(match!==null && match<VOICE_MATCH_THRESHOLD){
+        // رأي ثانٍ من Gemini قبل الرفض النهائي.
+        const second=await geminiVoiceMatch(blob,currentUser.voicePrint||null);
+        if(second&&second.samePerson&&second.confidence>=70){match=Math.max(match,VOICE_MATCH_THRESHOLD);status.textContent='✅ أكّد Gemini هوية الطالب';}
+      }
       if(match!==null && match<VOICE_MATCH_THRESHOLD){status.textContent='❌ البصمة غير مطابقة — لم يُحفظ التسجيل';aiBox.innerHTML='<div class="alert alert-danger">🚫 هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل بصوت الطالب نفسه.</div>';showToast('❌ التسجيل غير مطابق للبصمة ولم يتم حفظه','error');studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;btn.dataset.recording='false';btn.classList.remove('recording');return;}
       // تحليل الصوت على الخادم (تفريغ حقيقي + تصحيح) مع احتياطي المتصفح
       let aiResult=await serverRecitationAnalysis(blob,{surah:q.surah,from:q.from,to:q.to});
@@ -3039,7 +3044,7 @@ function saveSession(isFinal) {
     return;
   }
 
-  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام الحالية والانتقال لليوم التالي.
+  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام ال��الية والانتقال لليوم التالي.
   const session = {date,elements:JSON.parse(JSON.stringify(activeElements)),homework:JSON.parse(JSON.stringify(homeworkItems)),reading:JSON.parse(JSON.stringify(readingItems)),totalScore,notes,isDraft:false,finalizedAt:nowText,status:'نهائ��',completedTaskSnapshot:previousTasks};
   students[idx].sessions = students[idx].sessions.filter(s => !s.isDraft && s.date !== date);
   students[idx].sessions.push(session);
@@ -4417,20 +4422,14 @@ function startArabicASR() {
 // يعمل في جميع المتصفحات ولا يعتمد على التعرف على الكلام في المتصفح.
 async function serverRecitationAnalysis(blob, task) {
   try {
-    // OpenRouter لا يقبل webm — نحوّل التسجيل إلى WAV أولاً، ونرجع إلى الأصل عند فشل التحويل.
-    let sendBlob = blob;
-    const wav = await blobToWav(blob);
-    if (!wav) throw new Error('تعذر تحويل التسجيل إلى WAV مدعوم.');
-    sendBlob = wav;
-    if(sendBlob.size > 3000000) throw new Error('التسجيل طويل جداً للتحليل. سجّل مقطعاً أقصر ثم أعد المحاولة.');
-    const dataUrl = await blobToDataURL(sendBlob);
-    const audioBase64 = (dataUrl.split(',')[1]) || '';
-    if(!audioBase64) throw new Error('تعذر قراءة بيانات التسجيل.');
+    // Gemini يتولى تحليل الصوت على الخادم، ونرسل له WAV مضغوطاً بحجم آمن.
+    const prepared = await prepareAudioForAI(blob);
+    const audioBase64 = prepared.base64;
     let expectedText = '';
     if(task && task.surah) expectedText = await fetchAyatText(task.surah, task.from, task.to);
     const res = await callStudentAI('transcribe_and_grade', {
       audioBase64,
-      mimeType: (sendBlob.type || 'audio/wav'),
+      mimeType: prepared.mimeType,
       surah: task && task.surah ? task.surah : '',
       from: task ? task.from : 1,
       to: task ? (task.to || task.from) : 1,
@@ -4455,7 +4454,7 @@ async function analyzeRecitationContent(blob, task, transcript) {
   let aiResult=await serverRecitationAnalysis(blob, task);
   const serverError=aiResult&&aiResult.analysisError?aiResult.analysisError:'';
   if(serverError)aiResult=null;
-  // 2) احتياطي: تفريغ المتصفح + تصحيح نصي عند تعذّر الخادم
+  // 2) احتياطي: تفريغ المتصفح + ��صحيح نصي عند تعذّر الخادم
   if(!aiResult && expectedText && transcript){
     try{aiResult=await callStudentAI('grade_recitation',{surah:task.surah,from:task.from,to:task.to,expectedText,studentTranscript:transcript},0.05)}catch(e){}
   }
@@ -4489,7 +4488,11 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
     return false;
   }
 
-  // 1) مطابقة البصمة الصوتية
+  // 1) مطابقة البصمة الصوتية — مع رأي ثانٍ من Gemini قبل الرفض.
+  if(matchPct !== null && matchPct < VOICE_MATCH_THRESHOLD) {
+    const second = await geminiVoiceMatch(blob, currentUser.voicePrint || null);
+    if(second && second.samePerson && second.confidence >= 70) matchPct = Math.max(matchPct, VOICE_MATCH_THRESHOLD);
+  }
   if(matchPct !== null && matchPct < VOICE_MATCH_THRESHOLD) {
     showToast('❌ فشل التحقق من البصمة الصوتية (' + matchPct + '%) — لم يتم حفظ أو إرسال التسجيل', 'error');
     if(statusEl) statusEl.textContent = 'غير مطابق — أعد التسجيل ❌';
@@ -4670,14 +4673,14 @@ function blobToDataURL(blob) {
 // OpenRouter يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصي��ة webm.
 // نفكّ الترميز عبر Web Audio ثم نعيد ترميزه PCM 16-bit أحادي القناة بمعدل 12kHz.
 // يحافظ المعدل على وضوح الكلام ويُبقي تسجيل الدقيقة والنصف دون حد طلبات Vercel بعد Base64.
-async function blobToWav(blob) {
+async function blobToWav(blob, rate) {
   try {
   const buf = await blob.arrayBuffer();
   const AC = window.AudioContext || window.webkitAudioContext;
   const ctx = new AC();
   const decoded = await ctx.decodeAudioData(buf.slice(0));
   await ctx.close();
-  const targetRate = 12000;
+  const targetRate = Math.max(8000, Math.min(16000, parseInt(rate) || 12000));
     const srcData = decoded.getChannelData(0); // نأخذ القناة الأو��ى (أحادي)
     const ratio = decoded.sampleRate / targetRate;
     const outLen = Math.floor(srcData.length / ratio);
@@ -4702,6 +4705,36 @@ async function blobToWav(blob) {
     }
     return new Blob([view], { type: 'audio/wav' });
   } catch (e) { return null; }
+}
+// ====== تجهيز الصوت لإرساله إلى Gemini على الخادم ======
+// حد طلبات الخادم قريب من 4.5 ميجابايت، وBase64 يضيف نحو 34%. لذلك نضغط
+// التسجيل إلى WAV أحادي بمعدل أقل تدريجياً حتى يصبح الحمل آمناً، ثم نرسله.
+const AI_AUDIO_MAX_BYTES = 1900000;
+async function prepareAudioForAI(blob, maxBytes) {
+  const limit = parseInt(maxBytes) || AI_AUDIO_MAX_BYTES;
+  if(!blob) throw new Error('لا يوجد تسجيل صوتي.');
+  let wav = await blobToWav(blob, 12000);
+  if(!wav) throw new Error('تعذر تحويل التسجيل إلى صيغة صوت مدعومة. استخدم متصفحاً حديثاً ثم أعد التسجيل.');
+  if(wav.size > limit){ const smaller = await blobToWav(blob, 8000); if(smaller) wav = smaller; }
+  if(wav.size > limit) throw new Error('التسجيل طويل جداً للتحليل. اجعله أقل من دقيقة ثم أعد المحاولة.');
+  const base64 = await audioBlobToBase64(wav);
+  if(!base64) throw new Error('تعذر قراءة بيانات التسجيل.');
+  return { base64: base64, mimeType: 'audio/wav', bytes: wav.size };
+}
+// رأي Gemini في مطابقة البصمة الصوتية: يُستخدم عندما ترفض المطابقة المحلية التسجيل،
+// حتى لا يُظلم الطالب بسبب جودة تسجيل أو ضجيج. يعيد null عند تعذر التحليل.
+async function geminiVoiceMatch(sampleBlob, referenceDataUrl) {
+  try{
+    if(!sampleBlob || !referenceDataUrl) return null;
+    const refBlob = dataURLToBlob(referenceDataUrl);
+    if(!refBlob) return null;
+    const ref = await prepareAudioForAI(refBlob, 900000);
+    const sample = await prepareAudioForAI(sampleBlob, 900000);
+    return await callStudentAI('voice_match', {
+      referenceAudio:{base64:ref.base64,mimeType:ref.mimeType},
+      sampleAudio:{base64:sample.base64,mimeType:sample.mimeType}
+    }, 0.05);
+  }catch(e){ return null; }
 }
 function dataURLToBlob(dataUrl) {
   try {
