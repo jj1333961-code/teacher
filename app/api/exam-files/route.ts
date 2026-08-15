@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises"
+import path from "node:path"
 import { del, get, list, put } from "@vercel/blob"
 import mammoth from "mammoth"
 
@@ -17,6 +19,38 @@ type ExamFileMeta = {
   size: number
   uploadedAt: string
   text: string
+  pinned?: boolean
+}
+
+const PINNED_FILES = [
+  { id: "pinned-exam-guide", name: "دليل إعداد أسئلة الاختبارات", filename: "exam-question-guide.pdf" },
+  { id: "pinned-mutashabihat", name: "متشابهات القرآن الكريم", filename: "mutashabihat.pdf" },
+] as const
+
+let pinnedFilesCache: Promise<ExamFileMeta[]> | null = null
+
+function getPinnedFiles() {
+  if (!pinnedFilesCache) {
+    pinnedFilesCache = Promise.all(PINNED_FILES.map(async (definition) => {
+      const buffer = await readFile(path.join(process.cwd(), "references", definition.filename))
+      const text = await extractText(buffer, "pdf")
+      return {
+        id: definition.id,
+        name: definition.name,
+        pathname: `references/${definition.filename}`,
+        metadataPathname: "",
+        type: "pdf",
+        size: buffer.byteLength,
+        uploadedAt: "2026-08-15T00:00:00.000Z",
+        text,
+        pinned: true,
+      }
+    })).catch((error) => {
+      pinnedFilesCache = null
+      throw error
+    })
+  }
+  return pinnedFilesCache
 }
 
 function response(data: unknown, status = 200) {
@@ -92,14 +126,22 @@ async function listAllMetadataPathnames() {
 
 export async function GET() {
   try {
-    ensureBlobConfigured()
-    const pathnames = await listAllMetadataPathnames()
-    const files = (await Promise.all(pathnames.map(readMetadata)))
-      .filter((file): file is ExamFileMeta => Boolean(file))
-      .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))
-    return response({ files })
+    const pinnedFiles = await getPinnedFiles()
+    if (!(process.env.BLOB_READ_WRITE_TOKEN || "").trim()) {
+      return response({ files: pinnedFiles, storageAvailable: false, warning: "ملفات المرجع المثبتة متاحة، لكن رفع ملفات إضافية غير متاح مؤقتاً" })
+    }
+
+    try {
+      const pathnames = await listAllMetadataPathnames()
+      const uploadedFiles = (await Promise.all(pathnames.map(readMetadata)))
+        .filter((file): file is ExamFileMeta => Boolean(file))
+        .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))
+      return response({ files: [...pinnedFiles, ...uploadedFiles], storageAvailable: true })
+    } catch (blobError) {
+      return response({ files: pinnedFiles, storageAvailable: false, warning: safeError(blobError, "تعذر تحميل الملفات المرفوعة مؤقتاً؛ المراجع المثبتة ما زالت متاحة") })
+    }
   } catch (error) {
-    return response({ error: safeError(error, "تعذر تحميل الملفات") }, 503)
+    return response({ error: safeError(error, "تعذر تحميل المراجع المثبتة") }, 500)
   }
 }
 
@@ -138,6 +180,7 @@ export async function DELETE(request: Request) {
   try {
     ensureBlobConfigured()
     const { pathname, metadataPathname } = await request.json()
+    if (typeof pathname === "string" && pathname.startsWith("references/")) return response({ error: "المرجع المثبت للقراءة فقط ولا يمكن حذفه" }, 403)
     if (typeof pathname !== "string" || typeof metadataPathname !== "string" || !pathname.startsWith("exam-files/content/") || !metadataPathname.startsWith("exam-files/meta/")) return response({ error: "بيانات الحذف غير صالحة" }, 400)
     await del([pathname, metadataPathname])
     return response({ success: true })

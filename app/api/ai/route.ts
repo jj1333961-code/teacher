@@ -743,14 +743,17 @@ export async function POST(req: Request) {
           verses: quran.data.ayahs.map((ayah: any) => ({ number: Number(ayah.numberInSurah), text: String(ayah.text || "") })),
         }
       }))
-      const referenceContext = await getReferenceContext(
-        sourceSurahs.map((source) => source.surah).join(" "),
-        sourceSurahs.flatMap((source) => source.verses.slice(0, 2).map((verse: { text: string }) => verse.text)),
-      ).catch(() => "")
+      const useReferenceFiles = payload.useReferenceFiles !== false
+      const referenceContext = useReferenceFiles
+        ? await getReferenceContext(
+            sourceSurahs.map((source) => source.surah).join(" "),
+            sourceSurahs.flatMap((source) => source.verses.slice(0, 2).map((verse: { text: string }) => verse.text)),
+          ).catch(() => "")
+        : ""
       const pastScope = ["near", "far", "both"].includes(payload.pastScope) ? payload.pastScope : "both"
       const nearSurahs = Array.isArray(payload.nearSurahs) ? payload.nearSurahs.map(String).slice(0, 114) : []
       const farSurahs = Array.isArray(payload.farSurahs) ? payload.farSurahs.map(String).slice(0, 114) : []
-      const safePayload = { plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext }
+      const safePayload = { plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext, useReferenceFiles }
       const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both وزّع الأسئلة بالتساوي قدر الإمكان بين nearSurahs وfarSurahs. استفد من referenceContext لصياغة أسئلة متشابهات ومواضع أكثر احترافية. نوّع صيغ الاختيار بين الآية التالية والتكملة واسم السورة، وصيغ الصح والخطأ بين صحة التكملة وصحة نسبة الآية للسورة. لا تستخدم السورة نفسها مرتين قبل المرور على بقية السور. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem؛ سيعرض النظام صورتي البداية والنهاية منفصلتين. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
