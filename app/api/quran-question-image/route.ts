@@ -119,12 +119,20 @@ export async function GET(request: Request) {
       const top = Math.min(...rectangles.map((rect) => rect.y))
       const right = Math.max(...rectangles.map((rect) => rect.x + rect.width))
       const bottom = Math.max(...rectangles.map((rect) => rect.y + rect.height))
-      const paddingX = 36
-      const paddingY = 100
+      // قصّ محكم حول الآية المطلوبة؛ لا نترك مساحة تكفي لظهور آية مجاورة.
+      const paddingX = 28
+      const paddingY = 28
       cropX = Math.max(0, Math.floor(left - paddingX))
       cropY = Math.max(0, Math.floor(top - paddingY))
       cropWidth = Math.min(pageCanvas.width - cropX, Math.ceil(right - left + paddingX * 2))
       cropHeight = Math.min(pageCanvas.height - cropY, Math.ceil(bottom - top + paddingY * 2))
+
+      // ظل بلون خلفية المصحف فوق أي نص يقع خارج حدود الآية داخل القصاصة.
+      context.fillStyle = "#f8f5ec"
+      const safeTop = Math.max(cropY, Math.floor(top - 10))
+      const safeBottom = Math.min(cropY + cropHeight, Math.ceil(bottom + 10))
+      if (safeTop > cropY) context.fillRect(cropX, cropY, cropWidth, safeTop - cropY)
+      if (safeBottom < cropY + cropHeight) context.fillRect(cropX, safeBottom, cropWidth, cropY + cropHeight - safeBottom)
     } else if (pageAyahs.length) {
       const lengths = pageAyahs.map((entry) => Math.max(1, normalizeQuranText(String(entry?.text || "")).length))
       const targetIndex = Math.max(0, pageAyahs.findIndex((entry) => Number(entry?.numberInSurah) === ayah && Number(entry?.surah?.number) === surah))
