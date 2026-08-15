@@ -744,12 +744,22 @@ export async function POST(req: Request) {
         }
       }))
       const useReferenceFiles = payload.useReferenceFiles !== false
-      const referenceContext = useReferenceFiles
+      const uploadedReference = payload.uploadedReference && typeof payload.uploadedReference === "object"
+        ? {
+            name: String(payload.uploadedReference.name || "ملف مرفوع").slice(0, 180),
+            text: String(payload.uploadedReference.text || "").replace(/\u0000/g, "").slice(0, 18_000),
+          }
+        : null
+      const builtInReference = useReferenceFiles
         ? await getReferenceContext(
             sourceSurahs.map((source) => source.surah).join(" "),
             sourceSurahs.flatMap((source) => source.verses.slice(0, 2).map((verse: { text: string }) => verse.text)),
           ).catch(() => "")
         : ""
+      const referenceContext = [
+        builtInReference,
+        uploadedReference?.text ? `محتوى الملف المستقل المحدد (${uploadedReference.name}):\n${uploadedReference.text}` : "",
+      ].filter(Boolean).join("\n\n").slice(0, 30_000)
       const pastScope = ["near", "far", "both"].includes(payload.pastScope) ? payload.pastScope : "both"
       const nearSurahs = Array.isArray(payload.nearSurahs) ? payload.nearSurahs.map(String).slice(0, 114) : []
       const farSurahs = Array.isArray(payload.farSurahs) ? payload.farSurahs.map(String).slice(0, 114) : []
@@ -771,8 +781,8 @@ export async function POST(req: Request) {
         const defaultPrompts: Record<string, string> = {
           mcq: "اختر الإجابة الصحيحة اعتماداً على المقطع المصور من المصحف",
           truefalse: "حدد صحة العبارة اعتماداً على المقطع المصور من المصحف",
-          complete: "أكمل المقطع المخفي في صورة المصحف",
-          audio: "سجّل تلاوة المقطع المعروض من المصحف",
+          complete: "أكمل من قوله تعالى إلى قوله تعالى",
+          audio: "سجّل التلاوة من قوله تعالى إلى قوله تعالى",
         }
         let prompt = String(question?.prompt || defaultPrompts[type])
           .replace(/(?:الإجابة|الجواب)\s*(?:الصحيحة)?\s*[:：].*$/giu, "")
@@ -898,7 +908,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (mt.includes("mpeg") || mt.includes("mp3")) audioFormat = "mp3"
       else if (mt.includes("wav")) audioFormat = "wav"
 
-      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ضبطه، وإلا OpenRouter).
+      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ض��طه، وإلا OpenRouter).
       const transcript = await transcribeAudio(audioBase64, audioFormat)
 
       // المرحلة الثانية: مقارنة التفريغ بالنص القرآني المطلوب وحساب الدرجة.

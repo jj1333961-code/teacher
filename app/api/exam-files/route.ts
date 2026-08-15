@@ -20,10 +20,11 @@ type ExamFileMeta = {
   uploadedAt: string
   text: string
   pinned?: boolean
+  extractionWarning?: string
 }
 
 const PINNED_FILES = [
-  { id: "pinned-exam-guide", name: "دليل إعداد أسئلة الاختبارات", filename: "exam-question-guide.pdf" },
+  { id: "pinned-daleel", name: "الدليل المعتمد لإنشاء الأسئلة", filename: "daleel.pdf" },
   { id: "pinned-mutashabihat", name: "متشابهات القرآن الكريم", filename: "mutashabihat.pdf" },
 ] as const
 
@@ -161,12 +162,18 @@ export async function POST(request: Request) {
     const pathname = `exam-files/content/${id}-${safeName}`
     const metadataPathname = `exam-files/meta/${id}.json`
     const buffer = Buffer.from(await file.arrayBuffer())
-    const text = await extractText(buffer, extension)
-    if (text.length < 80) return response({ error: "لم نستطع استخراج نص كافٍ من الملف" }, 422)
+    let text = ""
+    let extractionWarning = ""
+    try {
+      text = await extractText(buffer, extension)
+      if (text.length < 80) extractionWarning = "لم نستطع استخراج نص كافٍ؛ سيولد الذكاء الاصطناعي الأسئلة تلقائياً دون الاعتماد على محتوى الملف"
+    } catch {
+      extractionWarning = "تعذر استخراج نص الملف؛ سيولد الذكاء الاصطناعي الأسئلة تلقائياً دون تعطيل الاختبار"
+    }
 
     const uploaded = await put(pathname, buffer, { access: "private", contentType: file.type || "application/octet-stream", addRandomSuffix: false })
     uploadedPathname = uploaded.pathname
-    const metadata: ExamFileMeta = { id, name: file.name.slice(0, 180), pathname: uploaded.pathname, metadataPathname, type: extension, size: file.size, uploadedAt: new Date().toISOString(), text }
+    const metadata: ExamFileMeta = { id, name: file.name.slice(0, 180), pathname: uploaded.pathname, metadataPathname, type: extension, size: file.size, uploadedAt: new Date().toISOString(), text, ...(extractionWarning ? { extractionWarning } : {}) }
     await put(metadataPathname, JSON.stringify(metadata), { access: "private", contentType: "application/json", addRandomSuffix: false })
     uploadedPathname = ""
     return response({ file: metadata }, 201)

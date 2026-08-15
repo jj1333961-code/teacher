@@ -1,13 +1,11 @@
-import { createCanvas, DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas"
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs"
-import { getQuranPdfBytes, normalizeQuranText } from "@/lib/quran-reference"
+import { createCanvas } from "@napi-rs/canvas"
 
 export const runtime = "nodejs"
-export const maxDuration = 60
-
-Object.assign(globalThis, { DOMMatrix, ImageData, Path2D })
+export const maxDuration = 30
 
 const QUESTION_TYPES = new Set(["mcq", "truefalse", "complete", "audio"])
+const BACKGROUND = "#f8f5ec"
+const INK = "#173f37"
 
 async function getAyahRange(surah: number, from: number, to: number) {
   const response = await fetch(`https://api.alquran.cloud/v1/surah/${surah}/quran-uthmani`, {
@@ -18,41 +16,25 @@ async function getAyahRange(surah: number, from: number, to: number) {
   const ayahs = Array.isArray(data?.data?.ayahs) ? data.data.ayahs : []
   const selected = ayahs.filter((entry: any) => Number(entry?.numberInSurah) >= from && Number(entry?.numberInSurah) <= to)
   if (!response.ok || !selected.length) throw new Error("تعذر تحديد الآيات المطلوبة")
-  return {
-    text: selected.map((entry: any) => String(entry.text || "")).join(" "),
-    page: Number(selected[0]?.page) || 1,
+  return selected.map((entry: any) => String(entry.text || "").trim()).filter(Boolean).join(" ")
+}
+
+function wrapArabicText(context: any, text: string, maxWidth: number) {
+  const words = text.split(/\s+/).filter(Boolean)
+  const lines: string[] = []
+  let current = ""
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word
+    if (current && context.measureText(candidate).width > maxWidth) {
+      lines.push(current)
+      current = word
+    } else current = candidate
   }
-}
-
-async function getPageAyahs(page: number) {
-  const response = await fetch(`https://api.alquran.cloud/v1/page/${page}/quran-uthmani`, {
-    cache: "force-cache",
-    signal: AbortSignal.timeout(8_000),
-  })
-  const data = await response.json().catch(() => null)
-  return Array.isArray(data?.data?.ayahs) ? data.data.ayahs : []
-}
-
-function itemText(item: any) {
-  return typeof item?.str === "string" ? item.str : ""
-}
-
-function itemRectangle(item: any, viewport: any) {
-  const x = Number(item.transform?.[4] || 0)
-  const y = Number(item.transform?.[5] || 0)
-  const width = Math.max(Number(item.width || 0), 12)
-  const height = Math.max(Math.abs(Number(item.height || item.transform?.[3] || 0)), 12)
-  const [left, bottom, right, top] = viewport.convertToViewportRectangle([x, y, x + width, y + height])
-  return {
-    x: Math.min(left, right),
-    y: Math.min(bottom, top),
-    width: Math.abs(right - left),
-    height: Math.abs(top - bottom),
-  }
+  if (current) lines.push(current)
+  return lines
 }
 
 export async function GET(request: Request) {
-  let document: any = null
   try {
     const url = new URL(request.url)
     const surah = Number(url.searchParams.get("surah"))
@@ -60,141 +42,55 @@ export async function GET(request: Request) {
     const to = Number(url.searchParams.get("to") || ayah)
     const requestedType = url.searchParams.get("type") || "complete"
     const type = QUESTION_TYPES.has(requestedType) ? requestedType : "complete"
-    const display = url.searchParams.get("display") === "anchor" ? "anchor" : "masked"
+    const display = url.searchParams.get("display") === "masked" ? "masked" : "anchor"
     if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1 || !Number.isInteger(to) || to < ayah) {
       return Response.json({ error: "مرجع الآية غير صالح" }, { status: 400 })
     }
 
-    const [targetData, pdfBytes] = await Promise.all([getAyahRange(surah, ayah, to), getQuranPdfBytes()])
-    const targetWords = normalizeQuranText(targetData.text).split(" ").filter(Boolean)
-    if (targetWords.length < 2) throw new Error("تعذر تجهيز نص الآية")
+    const text = await getAyahRange(surah, ayah, to)
+    const measureCanvas = createCanvas(1200, 300)
+    const measureContext = measureCanvas.getContext("2d")
+    measureContext.font = "58px serif"
+    const lines = wrapArabicText(measureContext, text, 1040)
+    const width = 1200
+    const height = Math.max(250, 105 + lines.length * 92)
+    const canvas = createCanvas(width, height)
+    const context = canvas.getContext("2d")
 
-    document = await getDocument({ data: pdfBytes, useSystemFonts: true, isEvalSupported: false }).promise
-    let selected: { page: any; items: any[] } | null = null
-    const estimatedPage = Math.max(1, Math.min(document.numPages, Math.round(((targetData.page - 1) / 603) * (document.numPages - 1)) + 1))
-    const candidatePages = Array.from(new Set([estimatedPage, estimatedPage - 1, estimatedPage + 1, estimatedPage - 2, estimatedPage + 2]))
-      .filter((pageNumber) => pageNumber >= 1 && pageNumber <= document.numPages)
+    context.fillStyle = BACKGROUND
+    context.fillRect(0, 0, width, height)
+    context.strokeStyle = "#b8aa83"
+    context.lineWidth = 3
+    context.strokeRect(18, 18, width - 36, height - 36)
+    context.strokeStyle = "#d8cda9"
+    context.lineWidth = 1
+    context.strokeRect(30, 30, width - 60, height - 60)
 
-    for (const pageNumber of candidatePages) {
-      const page = await document.getPage(pageNumber)
-      const content = await page.getTextContent()
-      const items = (content.items as any[]).filter((item) => itemText(item))
-      const normalizedItems = items.map((item) => normalizeQuranText(itemText(item)))
-      const pageText = normalizedItems.join(" ")
-      const signature = targetWords.slice(0, Math.min(5, targetWords.length)).join(" ")
-      if (!pageText.includes(signature)) continue
-
-      const wanted = new Set(targetWords.filter((word) => word.length > 2))
-      const targetNormalized = normalizeQuranText(targetData.text)
-      const matchedItems = items.filter((item) => {
-        const normalized = normalizeQuranText(itemText(item))
-        const words = normalized.split(" ").filter((word) => word.length > 2)
-        const score = words.filter((word) => wanted.has(word)).length
-        const overlap = score / Math.max(1, Math.min(words.length, wanted.size))
-        // لا يكفي تشابه كلمة أو كلمتين؛ فهذا كان يُدخل أسطراً من الآيات المجاورة.
-        return normalized.includes(targetNormalized) || targetNormalized.includes(normalized) || (score >= 3 && overlap >= 0.72)
-      })
-      if (matchedItems.length) {
-        selected = { page, items: matchedItems }
-        break
-      }
-    }
-
-    let pageAyahs: any[] = []
-    if (!selected) {
-      selected = { page: await document.getPage(estimatedPage), items: [] }
-      pageAyahs = await getPageAyahs(targetData.page)
-    }
-
-    const viewport = selected.page.getViewport({ scale: 3 })
-    const pageCanvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height))
-    const context = pageCanvas.getContext("2d")
-    await selected.page.render({ canvasContext: context as any, viewport, canvas: pageCanvas as any }).promise
-
-    let cropX = Math.round(pageCanvas.width * 0.06)
-    let cropY = Math.round(pageCanvas.height * 0.2)
-    let cropWidth = Math.round(pageCanvas.width * 0.88)
-    let cropHeight = Math.round(pageCanvas.height * 0.28)
-    const rectangles = selected.items.map((item) => itemRectangle(item, viewport))
-
-    if (rectangles.length) {
-      const left = Math.min(...rectangles.map((rect) => rect.x))
-      const top = Math.min(...rectangles.map((rect) => rect.y))
-      const right = Math.max(...rectangles.map((rect) => rect.x + rect.width))
-      const bottom = Math.max(...rectangles.map((rect) => rect.y + rect.height))
-      // قصّ محكم حول الآية المطلوبة؛ لا نترك مساحة تكفي لظهور آية مجاورة.
-      const paddingX = 28
-      const paddingY = 28
-      cropX = Math.max(0, Math.floor(left - paddingX))
-      cropY = Math.max(0, Math.floor(top - paddingY))
-      cropWidth = Math.min(pageCanvas.width - cropX, Math.ceil(right - left + paddingX * 2))
-      cropHeight = Math.min(pageCanvas.height - cropY, Math.ceil(bottom - top + paddingY * 2))
-      if (to === ayah) {
-        // بعض ملفات المصحف تعيد سطر الصفحة كاملاً كعنصر نصي واحد؛ نحد القص بعدد
-        // الأسطر المتوقع للآية حتى لا يظهر أول سطر من الآية التالية.
-        const expectedLines = Math.max(1, Math.ceil(normalizeQuranText(targetData.text).length / 52))
-        cropHeight = Math.min(cropHeight, expectedLines * 190 + paddingY)
-      }
-
-      // ظل بلون خلفية المصحف فوق أي نص يقع خارج حدود الآية داخل القصاصة.
-      context.fillStyle = "#f8f5ec"
-      const safeTop = Math.max(cropY, Math.floor(top - 10))
-      const safeBottom = Math.min(cropY + cropHeight, Math.ceil(bottom + 10))
-      if (safeTop > cropY) context.fillRect(cropX, cropY, cropWidth, safeTop - cropY)
-      if (safeBottom < cropY + cropHeight) context.fillRect(cropX, safeBottom, cropWidth, cropY + cropHeight - safeBottom)
-    } else if (pageAyahs.length) {
-      const lengths = pageAyahs.map((entry) => Math.max(1, normalizeQuranText(String(entry?.text || "")).length))
-      const targetIndex = Math.max(0, pageAyahs.findIndex((entry) => Number(entry?.numberInSurah) === ayah && Number(entry?.surah?.number) === surah))
-      const total = Math.max(1, lengths.reduce((sum, length) => sum + length, 0))
-      const before = lengths.slice(0, targetIndex).reduce((sum, length) => sum + length, 0) / total
-      const share = Math.max(0.07, (lengths[targetIndex] || targetData.text.length) / total)
-      const textTop = pageCanvas.height * (pageAyahs.length <= 12 ? 0.38 : 0.15)
-      const textHeight = pageCanvas.height * (pageAyahs.length <= 12 ? 0.54 : 0.7)
-      cropY = Math.max(0, Math.round(textTop + before * textHeight - 70))
-      cropHeight = Math.min(pageCanvas.height - cropY, Math.max(150, Math.round(textHeight * share + 140)))
-    }
-
-    // في الصورة المقنّعة نخفي نطاق الإجابة. أما صورة anchor فتُستخدم فقط
-    // لعرض آية البداية أو النهاية منفردة في سؤال التلاوة/الإكمال.
     if (display === "masked") {
-      context.fillStyle = "#f8f5ec"
-      context.strokeStyle = "#204f45"
-      context.lineWidth = 3
-      if (rectangles.length) {
-        for (const rect of rectangles) {
-          context.fillRect(rect.x - 10, rect.y - 10, rect.width + 20, rect.height + 20)
-          context.strokeRect(rect.x - 10, rect.y - 10, rect.width + 20, rect.height + 20)
-        }
-      } else {
-        const maskX = cropX + 18
-        const maskY = cropY + Math.max(36, Math.round(cropHeight * 0.2))
-        const maskWidth = Math.max(1, cropWidth - 36)
-        const maskHeight = Math.max(84, Math.round(cropHeight * 0.6))
-        context.fillRect(maskX, maskY, maskWidth, Math.min(maskHeight, pageCanvas.height - maskY))
-        context.strokeRect(maskX, maskY, maskWidth, Math.min(maskHeight, pageCanvas.height - maskY))
-      }
+      context.fillStyle = "#eee8d8"
+      context.fillRect(64, 64, width - 128, height - 128)
+      context.strokeStyle = INK
+      context.setLineDash([14, 10])
+      context.strokeRect(64, 64, width - 128, height - 128)
+    } else {
+      context.fillStyle = INK
+      context.textAlign = "center"
+      context.direction = "rtl"
+      context.font = "58px serif"
+      lines.forEach((line, index) => context.fillText(line, width / 2, 102 + index * 92, width - 140))
     }
 
-    cropWidth = Math.max(1, Math.min(cropWidth, pageCanvas.width - cropX))
-    cropHeight = Math.max(1, Math.min(cropHeight, pageCanvas.height - cropY))
-    const output = createCanvas(cropWidth, cropHeight)
-    const outputContext = output.getContext("2d")
-    outputContext.fillStyle = "#f8f5ec"
-    outputContext.fillRect(0, 0, cropWidth, cropHeight)
-    outputContext.drawImage(pageCanvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
-
-    const png = output.toBuffer("image/png")
+    const png = canvas.toBuffer("image/png")
     return new Response(new Uint8Array(png), {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "private, max-age=86400, stale-while-revalidate=604800",
         "X-Content-Type-Options": "nosniff",
+        "Content-Disposition": `inline; filename="quran-${surah}-${ayah}-${to}-${type}.png"`,
       },
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : "تعذر تجهيز صورة السؤال"
     return Response.json({ error: message.slice(0, 240) }, { status: 422 })
-  } finally {
-    await document?.destroy().catch(() => undefined)
   }
 }
