@@ -1,16 +1,10 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Noto_Sans_Arabic } from 'next/font/google'
 import './globals.css'
 
-const notoSansArabic = Noto_Sans_Arabic({
-  subsets: ['arabic'],
-  variable: '--font-noto-arabic',
-})
-
 export const metadata: Metadata = {
-  title: 'منصة أهل القرآن | الإدارة',
-  description: 'بوابة إدارة الطلاب والمعلمين وطلبات الالتحاق بمنصة أهل القرآن',
+  title: 'منصة المعلّم الذكية',
+  description: 'منصة تعليمية عربية للاختبارات المؤقتة ومساعد تطوير بالذكاء الاصطناعي',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -45,8 +39,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ar" dir="rtl" className="bg-background" suppressHydrationWarning>
-      <body className={`${notoSansArabic.className} ${notoSansArabic.variable} antialiased`}>
+    <html lang="ar" dir="rtl" className="bg-background">
+      <body className="antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

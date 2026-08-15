@@ -60,6 +60,7 @@ export async function GET(request: Request) {
     const to = Number(url.searchParams.get("to") || ayah)
     const requestedType = url.searchParams.get("type") || "complete"
     const type = QUESTION_TYPES.has(requestedType) ? requestedType : "complete"
+    const display = url.searchParams.get("display") === "anchor" ? "anchor" : "masked"
     if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1 || !Number.isInteger(to) || to < ayah) {
       return Response.json({ error: "مرجع الآية غير صالح" }, { status: 400 })
     }
@@ -97,7 +98,7 @@ export async function GET(request: Request) {
       pageAyahs = await getPageAyahs(targetData.page)
     }
 
-    const viewport = selected.page.getViewport({ scale: 2 })
+    const viewport = selected.page.getViewport({ scale: 3 })
     const pageCanvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height))
     const context = pageCanvas.getContext("2d")
     await selected.page.render({ canvasContext: context as any, viewport, canvas: pageCanvas as any }).promise
@@ -131,23 +132,25 @@ export async function GET(request: Request) {
       cropHeight = Math.min(pageCanvas.height - cropY, Math.max(150, Math.round(textHeight * share + 140)))
     }
 
-    // لا تُرسل صورة تحتوي نطاق الإجابة لأي نوع سؤال. عند فشل استخراج
-    // مستطيلات النص نستخدم قناعاً تقديرياً يغطي قلب المقطع بدلاً من كشف الحل.
-    context.fillStyle = "#f8f5ec"
-    context.strokeStyle = "#204f45"
-    context.lineWidth = 2
-    if (rectangles.length) {
-      for (const rect of rectangles) {
-        context.fillRect(rect.x - 7, rect.y - 7, rect.width + 14, rect.height + 14)
-        context.strokeRect(rect.x - 7, rect.y - 7, rect.width + 14, rect.height + 14)
+    // في الصورة المقنّعة نخفي نطاق الإجابة. أما صورة anchor فتُستخدم فقط
+    // لعرض آية البداية أو النهاية منفردة في سؤال التلاوة/الإكمال.
+    if (display === "masked") {
+      context.fillStyle = "#f8f5ec"
+      context.strokeStyle = "#204f45"
+      context.lineWidth = 3
+      if (rectangles.length) {
+        for (const rect of rectangles) {
+          context.fillRect(rect.x - 10, rect.y - 10, rect.width + 20, rect.height + 20)
+          context.strokeRect(rect.x - 10, rect.y - 10, rect.width + 20, rect.height + 20)
+        }
+      } else {
+        const maskX = cropX + 18
+        const maskY = cropY + Math.max(36, Math.round(cropHeight * 0.2))
+        const maskWidth = Math.max(1, cropWidth - 36)
+        const maskHeight = Math.max(84, Math.round(cropHeight * 0.6))
+        context.fillRect(maskX, maskY, maskWidth, Math.min(maskHeight, pageCanvas.height - maskY))
+        context.strokeRect(maskX, maskY, maskWidth, Math.min(maskHeight, pageCanvas.height - maskY))
       }
-    } else {
-      const maskX = cropX + 12
-      const maskY = cropY + Math.max(24, Math.round(cropHeight * 0.2))
-      const maskWidth = Math.max(1, cropWidth - 24)
-      const maskHeight = Math.max(56, Math.round(cropHeight * 0.6))
-      context.fillRect(maskX, maskY, maskWidth, Math.min(maskHeight, pageCanvas.height - maskY))
-      context.strokeRect(maskX, maskY, maskWidth, Math.min(maskHeight, pageCanvas.height - maskY))
     }
 
     cropWidth = Math.max(1, Math.min(cropWidth, pageCanvas.width - cropX))
