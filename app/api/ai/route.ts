@@ -124,6 +124,9 @@ function isRetryableGeminiError(error: unknown) {
 
 function classifyAiFailure(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error || "خطأ غير معروف")
+  if (/GEMINI_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
+    return { status: 503, code: "GEMINI_KEY_MISSING", retryable: false, message: "مفتاح Gemini المباشر غير متاح على الخادم. لا يستخدم هذا المسار AI Gateway.", raw }
+  }
   if (/401|403|API key|API_KEY_INVALID|PERMISSION_DENIED/i.test(raw)) {
     return { status: 401, code: "GEMINI_KEY_INVALID", retryable: false, message: "مفتاح Gemini غير صالح أو لا يملك صلاحية الاستخدام. تحقق من GEMINI_API_KEY.", raw }
   }
@@ -170,9 +173,10 @@ async function geminiText(prompt: string, system: string, temperature: number, i
       if (!response.ok) {
         const modelError = new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || data?.message || response.statusText).slice(0, 300)}`)
         lastError = modelError
-        if ([404, 429, 500, 503].includes(response.status)) {
-          coolDownGeminiModel(model, response.status === 429 ? 90_000 : 10 * 60_000)
-          if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)))
+        if ([404, 408, 429, 500, 502, 503, 504].includes(response.status)) {
+          const cooldown = response.status === 404 ? 10 * 60_000 : response.status === 429 ? 90_000 : 5_000
+          coolDownGeminiModel(model, cooldown)
+          if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 750 * (2 ** attempt)))
           continue
         }
         throw modelError
@@ -249,7 +253,7 @@ async function transcribeAudio(audioBase64: string, audioFormat: string): Promis
 // ===== أنظمة التعليمات لكل وضع =====
 
 const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم واختبارات الحفظ لطلاب التحفيظ.
-مهمتك انتقاء أسئلة اختبار قرآنية احترافية ومتنوعة، والتحقق من مواضعها من الآيات المرسلة داخل sourceSurahs. استخدم مقتطفات دليل إعداد الاختبارات داخل referenceContext مرجعاً لأسلوب السؤال وتنوعه ودرجة صعوبته، واستخدم مقتطفات المصحف والمتشابهات للمساعدة في الاختيار. يظل sourceSurahs المصدر الحاكم لصحة نص الآية والإجابة.
+مهمتك انتقاء أسئلة اختبار قرآنية احترافية ومتنوعة، والتحقق من مواضعها من الآيات المرسلة داخل sourceSurahs. استخدم مقتطفات دليل إعداد الاختبارات وملف المتشابهات داخل referenceContext مرجعاً لأسلوب السؤال وتنوعه ودرجة صعوبته. ملف المصحف مخصص لإنتاج صور الآيات فقط ولا يُستخدم لاستخراج نص الأسئلة. يظل sourceSurahs المصدر الحاكم لصحة نص الآية والإجابة.
 
 قواعد صارمة:
 - ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceSurahs.
@@ -257,10 +261,11 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - لا تنشئ أسئلة ثقافة عامة أو دين عام أو معلومات خارج نصوص القرآن.
 - التزم تماماً بعدد الأسئلة count المطلوب لكل plan، وبالنوع والمستوى وموضع السؤال position المحددين في كل plan.
   - position=start: اختر من الثلث الأول للسورة، position=middle: الثلث الأوسط، position=end: الثلث الأخير، position=random: نوّع بين جميع المواضع.
-- إذا كان type=mcq فعدد الخيارات يجب أن يساوي optionsCount لذلك plan، مع إجابة صحيحة واحدة فقط.
-- إذا كان type=truefalse فاجعل options=["صح","خطأ"] فقط، وبدّل بين العبارات الصحيحة والخاطئة بذكاء. مثال: "الآية ... من سورة الناس، صح أم خطأ؟"
-- إذا كان type=complete فاختر بداية آية حقيقية، ثم اجعل الطالب يكمل عدداً يساوي completeAyahs بالضبط. يجب أن يكون from/to صحيحين وفي السورة نفسها.
-- إذا كان type=audio فحدد مقطعاً حقيقياً من السورة، ويجب أن يساوي عدد الآيات من from إلى to قيمة reciteAyahs بالضبط.
+- إذا كان type=mcq فعدد الخيارات يجب أن يساوي optionsCount لذلك plan، مع إجابة صحيحة واحدة فقط. نوّع عشوائياً بين: اختيار الآية التالية، اختيار تكملة الآية، واختيار اسم السورة التي ينتمي إليها المقطع.
+- إذا كان type=truefalse فاجعل options=["صح","خطأ"] فقط، وبدّل بين: صحة تكملة الآية، وصحة نسبة الآية إلى سورة محددة. وازن بين الإجابات الصحيحة والخاطئة.
+- إذا كان type=complete فاختر حد بداية وحد نهاية حقيقيين لصيغة «أكمل من قوله تعالى … إلى قوله تعالى …»، واجعل from/to صحيحين وفي السورة نفسها، وعدد الآيات المطلوب يساوي completeAyahs قدر الإمكان.
+- إذا كان type=audio فحدد حد بداية وحد نهاية حقيقيين لصيغة «اقرأ من قوله تعالى … إلى قوله تعالى …»، ويجب أن يساوي عدد الآيات من from إلى to قيمة reciteAyahs بالضبط.
+- صور حد البداية وحد النهاية ستُعرض منفصلة وقابلة للتكبير، لذلك لا تنسخ نصهما داخل prompt ولا تكشف الجزء المطلوب إجابته.
 - level=easy: سؤال مباشر من النص.
 - level=medium: تمييز وربط أدق بين الآية والسورة أو موضعها.
 - level=hard: مواضع متشا��هة وتمييز دقيق دون غموض أو معلومات من خارج النص.
@@ -276,7 +281,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 شكل كل عنصر:
 {"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"نص السؤال","stem":"الآية أو النص القرآني المرجعي عند الحاجة","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
 
-تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن الآيات المستخدمة موجودة فعلاً في sourceVerses.`
+تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن الآيات الم��تخدمة موجودة فعلاً في sourceVerses.`
 
 const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
 كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
@@ -359,7 +364,7 @@ async function githubGetRepo() {
   if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
   const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}`
   const res = await fetch(url, { headers: githubHeaders(), cache: "no-store" })
-  if (res.status === 404) throw new Error(`المستودع ${GITHUB_OWNER}/${GITHUB_REPO} غير موجود أو لا يملك الرمز صلاحية الوصول إليه`)
+  if (res.status === 404) throw new Error(`المس��ودع ${GITHUB_OWNER}/${GITHUB_REPO} غير موجود أو لا يملك الرمز صلاحية الوصول إليه`)
   if (res.status === 401) throw new Error("GITHUB_TOKEN غير صالح (401 Unauthorized)")
   if (res.status === 403) throw new Error("الرمز GITHUB_TOKEN ممنوع من الوصول (403) — تحقق من صلاحياته")
   if (!res.ok) throw new Error(`GitHub ${res.status}: تعذر قراءة بيانات المستودع`)
@@ -788,6 +793,7 @@ export async function POST(req: Request) {
           ...question,
           type,
           surah: source.surah,
+          surahNumber: source.surahNumber,
           from,
           to,
           prompt,
@@ -1038,45 +1044,23 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
 
     return json({ error: "وضع غير معروف", diagnostics }, 400)
   } catch (err: any) {
-    const raw = err?.message ? String(err.message) : "خطأ غير معروف"
-    let friendly = `فشل الاتصال بنموذج ${GEMINI.label}`
-    let status = 502
-    if (raw.includes("مفتاح API غير مهيأ")) {
-      friendly = "مفتاح Gemini غير متاح في بيئة الخادم"
-      status = 503
-    } else if (raw.includes("429")) {
-      friendly = `تم تجاوز حد طلبات نموذج ${GEMINI.label}، حاول لاحقاً`
-      status = 429
-    } else if (raw.includes("401") || raw.includes("403") || raw.toLowerCase().includes("api key")) {
-      friendly = `تعذر توثيق نموذج ${GEMINI.label}؛ تحقق من صلاحية المفتاح وواجهة Generative Language API`
-      status = 502
-    } else if (raw.includes("لا يوجد نموذج يدعم")) {
-      friendly = "لا يتوفر نموذج Gemini نصي متوافق مع هذا المفتاح"
-      status = 503
-    } else if (raw.includes("404")) {
-      friendly = "تعذر الوصول إلى نموذج Gemini المتاح؛ أعد المحاولة"
-    } else if (
-      err?.name === "TimeoutError" ||
-      err?.name === "AbortError" ||
-      raw.includes("TimeoutError") ||
-      raw.toLowerCase().includes("timed out") ||
-      raw.toLowerCase().includes("aborted")
-    ) {
-      friendly = `انتهت مهلة نموذج ${GEMINI.label} قبل اكتمال الرد. حاول مرة أخرى بطلب أقصر.`
-      status = 503
-    } else if (raw.toLowerCase().includes("empty") || raw.includes("رد فارغ")) {
-      friendly = `أعاد نموذج ${GEMINI.label} رداً فارغاً`
-    }
+    const failure = classifyAiFailure(err)
+    const mode = typeof body?.mode === "string" ? body.mode : "prompt"
+    const stage = mode === "dev_assistant" ? "analysis" : mode === "generate_exam" ? "exam-generation" : "response"
     return json(
       {
-        error: friendly,
+        error: failure.message,
+        code: failure.code,
+        retryable: failure.retryable,
         diagnostics: {
           executedOn: "server",
+          provider: "gemini-direct",
           keyConfigured: isGeminiConfigured(),
-          reason: raw.slice(0, 300),
+          stage,
+          reason: failure.raw.slice(0, 300),
         },
       },
-      status,
+      failure.status,
     )
   }
 }

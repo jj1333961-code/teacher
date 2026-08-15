@@ -8,7 +8,7 @@ const MUTASHABIHAT_PATH = "references/mutashabihat.pdf"
 const EXAM_GUIDE_PATH = "references/exam-question-guide.pdf"
 const MAX_REFERENCE_CHARS = 240_000
 
-type ReferenceCache = { quran: string; mutashabihat: string; examGuide: string; loadedAt: number }
+type ReferenceCache = { mutashabihat: string; examGuide: string; loadedAt: number }
 let cache: ReferenceCache | null = null
 let pending: Promise<ReferenceCache> | null = null
 
@@ -52,17 +52,15 @@ export async function loadQuranReferences() {
   if (cache && Date.now() - cache.loadedAt < 6 * 60 * 60 * 1000) return cache
   if (!pending) {
     pending = Promise.all([
-      readReference(QURAN_PATH),
       readReference(MUTASHABIHAT_PATH),
       readReference(EXAM_GUIDE_PATH),
     ])
-      .then(async ([quranData, mutashabihatData, examGuideData]) => {
-        const [quran, mutashabihat, examGuide] = await Promise.all([
-          extractPdf(quranData),
+      .then(async ([mutashabihatData, examGuideData]) => {
+        const [mutashabihat, examGuide] = await Promise.all([
           extractPdf(mutashabihatData),
           extractPdf(examGuideData),
         ])
-        cache = { quran, mutashabihat, examGuide, loadedAt: Date.now() }
+        cache = { mutashabihat, examGuide, loadedAt: Date.now() }
         return cache
       })
       .finally(() => { pending = null })
@@ -87,14 +85,18 @@ function relevantWindows(source: string, terms: string[], windowSize = 900, limi
 export async function getReferenceContext(query: string, extraTerms: string[] = []) {
   const references = await loadQuranReferences()
   const terms = [query, ...extraTerms]
-  const quranMatches = relevantWindows(references.quran, terms, 1100, 4)
+  const randomWindow = (source: string, size: number) => {
+    if (!source) return ""
+    const start = Math.floor(Math.random() * Math.max(1, source.length - size))
+    return source.slice(start, start + size)
+  }
   const mutashabihatMatches = relevantWindows(references.mutashabihat, terms, 1100, 4)
   const guideMatches = relevantWindows(references.examGuide, terms, 1200, 5)
-  const guideContext = guideMatches.length ? guideMatches : references.examGuide ? [references.examGuide.slice(0, 6_000)] : []
+  const mutashabihatContext = [...mutashabihatMatches, randomWindow(references.mutashabihat, 1800)].filter(Boolean)
+  const guideContext = [...guideMatches, randomWindow(references.examGuide, 2200)].filter(Boolean)
   return [
-    quranMatches.length ? `مقتطفات المصحف المرفق:\n${quranMatches.join("\n---\n")}` : "",
-    mutashabihatMatches.length ? `مقتطفات ملف المتشابهات المرفق:\n${mutashabihatMatches.join("\n---\n")}` : "",
-    guideContext.length ? `مقتطفات دليل إعداد أسئلة الاختبارات المرفق:\n${guideContext.join("\n---\n")}` : "",
+    mutashabihatContext.length ? `مقتطفات عشوائية ذات صلة من ملف المتشابهات المرفق:\n${mutashabihatContext.join("\n---\n")}` : "",
+    guideContext.length ? `مقتطفات عشوائية ذات صلة من دليل إعداد أسئلة الاختبارات المرفق:\n${guideContext.join("\n---\n")}` : "",
   ].filter(Boolean).join("\n\n").slice(0, 18_000)
 }
 

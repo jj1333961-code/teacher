@@ -1138,7 +1138,7 @@ const quranData = {
   27: ["الذاريات", "الطور", "النجم", "القمر", "ال��حمن", "الواقعة", "الحديد"],
   28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
   29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات"],
-  30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس"]
+  30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص��", "المسد", "الإخلاص", "الفلق", "الناس"]
 };
 
 const SURAH_AYAH_COUNTS = {
@@ -1351,7 +1351,7 @@ function updateBackButton() {
 }
 
 // ====== DRAFT SYSTEM - Auto finalize after 24 hours ======
-// أرشفة مهام اليوم في السجلات عند انتهاء اليوم (��ولي الأمر والطالب والمسؤول)
+// أرشفة مهام اليوم في السجلات عند انتهاء ��ليوم (��ولي الأمر والطالب والمسؤول)
 function archiveDailyTasks() {
   try {
     let students = getData('students');
@@ -2632,7 +2632,7 @@ function syncExamSurahRange(){
 }
 
 function quranQuestionImageUrl(q,ayah,display){
-  const surahNumber=ALL_SURAHS_ORDERED.indexOf(String(q.surah||''))+1,from=Math.max(1,parseInt(ayah||q.from)||1),type=['mcq','truefalse','complete','audio'].includes(q.type)?q.type:'mcq';
+  const mappedNumber=ALL_SURAHS_ORDERED.indexOf(String(q.surah||''))+1,surahNumber=Math.max(0,parseInt(q.surahNumber)||mappedNumber),from=Math.max(1,parseInt(ayah||q.from)||1),type=['mcq','truefalse','complete','audio'].includes(q.type)?q.type:'mcq';
   return surahNumber>0?'/api/quran-question-image?surah='+surahNumber+'&ayah='+from+'&to='+from+'&type='+type+'&display='+(display||'anchor'):'';
 }
 function openQuranImage(src){const box=document.getElementById('quranImageLightbox'),img=document.getElementById('quranImageLightboxImg');if(!box||!img)return;img.src=src;box.classList.remove('hidden');document.body.style.overflow='hidden'}
@@ -2735,20 +2735,22 @@ async function buildExamSourceCandidates(base){
 }
 
 let examGenerationTimer=null;
-function startExamGenerationProgress(){
+function startExamGenerationProgress(questionCount){
   const overlay=document.getElementById('examGenerationOverlay'),stage=document.getElementById('examGenerationStage'),bar=document.getElementById('examGenerationBar'),eta=document.getElementById('examGenerationEta');
-  let elapsed=0,total=90;overlay?.classList.remove('hidden');
-  const update=function(){elapsed++;const remaining=Math.max(0,total-elapsed),progress=Math.min(92,8+(elapsed/total)*84);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent='الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0');if(stage)stage.textContent=elapsed<12?'جلب الآيات والمراجع...':elapsed<50?'ينتقي Gemini الأسئلة ويتحقق منها...':elapsed<75?'تجهيز صور البداية والنهاية...':'المراجعة النهائية للاختبار...'};
+  let elapsed=0,total=Math.max(45,Math.min(180,35+(Math.max(1,questionCount||1)*7)));overlay?.classList.remove('hidden');
+  clearInterval(examGenerationTimer);
+  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينتقي Gemini الأسئلة ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ومنع كشف الإجابات...';elapsed++};
   update();examGenerationTimer=setInterval(update,1000);
 }
-function finishExamGenerationProgress(){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage');if(bar)bar.style.width='100%';if(stage)stage.textContent='اكتمل تجهيز الاختبار';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},350)}
+function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'اكتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
 async function generateExamQuestions(){
   const base=document.getElementById('examBaseSurah')?.value||currentRecordMainSurah||'';
   if(!base){showExamAlert('حدد السورة الأساسية للطالب أولاً.','danger');return}
   const plans=examPlanRows.filter(r=>(parseInt(r.count)||0)>0);
   if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على الأقل.','danger');return}
   const btns=document.querySelectorAll('#examBuilderSection button'); btns.forEach(b=>b.disabled=true);
-  startExamGenerationProgress();
+  const requestedTotal=plans.reduce((n,r)=>n+(parseInt(r.count)||0),0);let generationSucceeded=false;
+  startExamGenerationProgress(requestedTotal);
   showExamAlert('جاري الحصول على الأسئلة من النطاق المحدد...','info');
   try{
     const normalizedPlans=plans.map(r=>({count:parseInt(r.count)||1,level:r.level,type:r.type,position:['start','middle','end','random'].includes(r.position)?r.position:'random',timeLimit:Math.max(5,Math.min(3600,parseInt(r.timeLimit)||60)),completeAyahs:parseInt(r.completeAyahs)||1,reciteAyahs:parseInt(r.reciteAyahs)||1,audioShareWithParent:r.audioShareWithParent!==false,optionsCount:Math.max(2,Math.min(6,parseInt(r.optionsCount)||4))}));
@@ -2770,7 +2772,6 @@ async function generateExamQuestions(){
     }
     list=list.map(cleanExamQuestion).filter(q=>q.prompt&&q.correct!==undefined);
     if(!list.length) throw new Error('لم ينشئ الذكاء الاصطناعي أسئلة.');
-    const requestedTotal=plans.reduce((n,r)=>n+(parseInt(r.count)||0),0);
     if(list.length<requestedTotal) throw new Error('أعاد الذكاء الاصطناعي عدداً أقل من العدد المطلوب ('+list.length+' من '+requestedTotal+').');
     let cursor=0;
     const normalized=[];
@@ -2781,7 +2782,7 @@ async function generateExamQuestions(){
         normalized.push({
           id:'ai_'+Date.now()+'_'+normalized.length,type:plan.type,level:plan.level,surah:q.surah||base,
           prompt:q.prompt||'',stem:q.stem||'',options:Array.isArray(q.options)?q.options:[],correct:q.correct||'',
-          from:parseInt(q.from)||1,to:parseInt(q.to)||parseInt(q.from)||1,
+          from:parseInt(q.from)||1,to:parseInt(q.to)||parseInt(q.from)||1,surahNumber:parseInt(q.surahNumber)||0,
           timeLimit:Math.max(5,Math.min(3600,parseInt(plan.timeLimit)||60)),
           completeAyahs:parseInt(plan.completeAyahs)||1,reciteAyahs:parseInt(plan.reciteAyahs)||1,
           audioShareWithParent:plan.audioShareWithParent!==false,points:typeof q.points==='number'?q.points:1,
@@ -2789,10 +2790,10 @@ async function generateExamQuestions(){
         });
       }
     });
-    examQuestions=normalized;examEditorActiveIndex=0;
+    examQuestions=normalized;examEditorActiveIndex=0;generationSucceeded=true;
     renderExamQuestions(); showExamAlert('تم الحصول على '+examQuestions.length+' سؤالاً بنجاح. راجعها قبل الإرسال.','success');
-  }catch(e){showExamAlert(e.message||'تعذر توليد الأسئلة بالذكاء الاصطناعي','danger')}
-  finally{finishExamGenerationProgress();btns.forEach(b=>b.disabled=false)}
+  }catch(e){showExamAlert((e.message||'تعذر توليد الأسئلة بالذكاء الاصطناعي')+' يمكنك إعادة المحاولة من دون فقد إعدادات الخطة.','danger')}
+  finally{finishExamGenerationProgress(generationSucceeded);btns.forEach(b=>b.disabled=false)}
 }
 function addManualExamQuestion(){examQuestions.push({id:'manual_'+Date.now(),type:'mcq',level:'medium',surah:currentRecordMainSurah||'',prompt:'سؤال يدوي',stem:'',options:['','','',''],correct:'',from:1,to:1,timeLimit:60,completeAyahs:1,reciteAyahs:1,audioShareWithParent:true,points:1,rejected:false,weakened:false,source:'manual'});renderExamQuestions()}
 function clearExamQuestions(){examQuestions=[];renderExamQuestions()}
@@ -3135,7 +3136,7 @@ function openHistory(id) {
           html += '</div></div>';
         });
         html += '<div style="text-align:center; margin-top:15px; padding-top:15px; border-top:2px dashed var(--border);">';
-        html += '<span class="score-badge">المجموع: '+sess.totalScore+' درجة</span>';
+        html += '<span class="score-badge">المج��وع: '+sess.totalScore+' درجة</span>';
         if(sess.finalizedAt) html += '<p style="margin-top:8px; color:var(--success); font-size:0.9rem;">✅ تم الإغلاق النهائي ��تاريخ: '+sess.finalizedAt+'</p>';
         if(sess.notes) html += '<p style="margin-top:10px; color:var(--text-light);"><strong>ملاحظات:</strong> '+sess.notes+'</p>';
         html += '</div>';
@@ -3417,7 +3418,7 @@ async function refreshGithubSync(){
 }
 
 async function deleteGithubFile(){
-  if(currentType !== 'admin'){ showToast('❌ هذه الميزة متاحة للمسؤول فقط', 'error'); return; }
+  if(currentType !== 'admin'){ showToast('❌ ��ذه الميزة متاحة للمسؤول فقط', 'error'); return; }
   const pathEl = document.getElementById('githubDeletePath');
   const confirmEl = document.getElementById('githubDeleteConfirm');
   const resBox = document.getElementById('githubDeleteResult');
@@ -3433,7 +3434,7 @@ async function deleteGithubFile(){
   if(r.commitUrl) html += '<div><a href="'+escapeHtmlAi(r.commitUrl)+'" target="_blank" rel="noopener">عرض الـCommit</a></div>';
   if(resBox) resBox.innerHTML = html;
   if(pathEl) pathEl.value = ''; if(confirmEl) confirmEl.checked = false;
-  recordDevAudit({ status:'applied', request:'حذف ملف: '+path, summary:'حذف ملف من المستودع بتأكيد صريح.', files:[{ path, commitUrl:r.commitUrl||null }], flagged:['حذف ملف'] });
+  recordDevAudit({ status:'applied', request:'حذف ملف: '+path, summary:'حذف م��ف من المستودع بتأكيد صريح.', files:[{ path, commitUrl:r.commitUrl||null }], flagged:['حذف ملف'] });
   refreshGithubSync();
   } else {
   if(resBox) resBox.innerHTML = '<span style="color:#dc3545;">❌ لم يتم الحذف</span>';
@@ -3783,7 +3784,7 @@ function openMessageFileById(msgId, readonly) {
   const m = msgs.find(x => x.id === msgId);
   if(!m || !m.fileData) { alert('الملف غير متاح'); return; }
   if(readonly && !m.shareWithParent) { alert('لم يسمح المسؤول بالاطلاع على هذا الملف بعد'); return; }
-  openFileModal(m.fileData, m.fileName || 'file', 'ملف مرسل من ' + m.sender + (typeof m.voiceMatch === 'number' ? ' — 🤖 مطابقة البصمة الصوتية: ' + m.voiceMatch + '% ' + (m.voiceMatch >= VOICE_MATCH_THRESHOLD ? '✅ مطابق' : '⚠️ ��ير مطابق') : ''), m.fileType === 'homework' ? 'image/jpeg' : (m.fileType === 'reading' || m.fileType === 'voice') ? 'audio/webm' : '', readonly);
+  openFileModal(m.fileData, m.fileName || 'file', 'ملف مرسل من ' + m.sender + (typeof m.voiceMatch === 'number' ? ' — 🤖 مطابقة البصم�� الصوتية: ' + m.voiceMatch + '% ' + (m.voiceMatch >= VOICE_MATCH_THRESHOLD ? '✅ مطابق' : '⚠️ ��ير مطابق') : ''), m.fileType === 'homework' ? 'image/jpeg' : (m.fileType === 'reading' || m.fileType === 'voice') ? 'audio/webm' : '', readonly);
 }
 
 function approveMessage(idx, approved) {
@@ -4517,7 +4518,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   }
 
   if(aiBox) aiBox.innerHTML = '<div class="alert alert-success"><strong>✅ تقرير الذكاء الاصطن��عي:</strong><br>' +
-    (matchPct !== null ? 'مطابقة البصمة الصوتية: <strong>' + matchPct + '%</strong><br>' : '') +
+    (matchPct !== null ? 'مطابقة البصمة الصو��ية: <strong>' + matchPct + '%</strong><br>' : '') +
     'مطابقة التلاوة مع ' + targetTxt + ': <strong>' + rec.pct + '%</strong>' + (rec.txtPct !== null && rec.txtPct !== undefined ? ' (تطابق النص ' + rec.txtPct + '%)' : '') + ' | مدة التسجيل: ' + rec.dur + ' ثانية<br>تم إرسال التسجيل للمسؤول.</div>';
 
   let messages = getData('messages');
@@ -5268,7 +5269,7 @@ function renderUserFiles(role) {
     html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">🕐 ' + f.uploadedAt + '</p>';
     html += '<div style="display:flex; gap:8px;">';
     html += '<a href="' + f.data + '" download="' + f.name + '" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تحميل</a>';
-    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁️ عرض</button>';
+    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁️ عر��</button>';
     html += '</div></div>';
   });
   html += '</div>';
@@ -5398,7 +5399,7 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلام','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح لك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهامي</em> — لعرض الواجبات والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة لك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح لك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهامي</em> — لعرض الواجبات والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ��ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
@@ -5458,7 +5459,7 @@ function generateAIResponse(text, student) {
     const quotes = [
       '🌟 «وَلَقَدْ يَسَّرْنَا الْقُ��ْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ فقط.',
       '💚 قال ﷺ: «خيركم من تعلم القرآن وعلمه». أنت اليوم في أفضل طريق.',
-      '🚀 كل صفحة تحفظها اليوم هي در��ة ترتفع بها غداً. لا تستهن بالقليل.'
+      '🚀 كل صفحة تحفظها اليوم هي در��ة ترتف�� بها غداً. لا تستهن بالقليل.'
     ];
     return quotes[Math.floor(Math.random()*quotes.length)];
   }
@@ -5475,7 +5476,7 @@ function generateAIResponse(text, student) {
     return 'الحمد لله رب العالمين 🌿<br><br>القرآن كتاب الله المعجز، نزل هداية للناس. ومن الأدعية النافعة للحفظ: «اللهم اجعل القرآن ربيع قلبي ونور صدري وجلاء حزني وذهاب همّي».';
   }
   // افتراضي ذكي
-  let r = '🤖 أهلاً '+name+'، لم أفهم سؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
+  let r = '🤖 أهلاً '+name+'، لم ��فهم سؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
   r += '• <strong>مستواي</strong> — تحليل آخر تقييم<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآيات</strong> — كيف تعرض آيات التسميع كصورة<br>• <strong>تحفيز</strong> — كلمة تشدّ همتك';
   if(pending.length > 0) r += '<br><br>📌 تذكير: لديك '+pending.length+' مهمة لم تُعتمد بعد.';
   return r;
