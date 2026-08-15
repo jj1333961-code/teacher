@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, text, integer, timestamp, jsonb, boolean, serial } from 'drizzle-orm/pg-core'
 
 export const quizzes = pgTable('quizzes', {
   id: text('id').primaryKey(),
@@ -27,6 +27,19 @@ export const devRequests = pgTable('dev_requests', {
   status: text('status').default('queued').notNull(),
   result: text('result'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const registrationRequests = pgTable('registration_requests', {
+  id: serial('id').primaryKey(),
+  userId: text('userId').notNull(),
+  verificationMethod: text('verificationMethod').notNull(),
+  fullName: text('fullName').notNull(),
+  phone: text('phone').notNull(),
+  subject: text('subject').notNull(),
+  experience: text('experience').notNull(),
+  region: text('region').notNull(),
+  status: text('status').default('pending').notNull(),
+  createdAt: timestamp('createdAt').defaultNow().notNull(),
 })
 
 export type QuizQuestion = { id: string; text: string; options: string[]; answer?: string; hours: number; minutes: number; seconds: number }
