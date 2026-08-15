@@ -220,9 +220,69 @@ async function runText(prompt: string, system: string, temperature: number) {
   return openRouterText(prompt, system, temperature)
 }
 
-async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
-  const mimeType = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
-  return openRouterText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType, data: audioBase64 })
+const MAX_AUDIO_BYTES = 2_400_000
+const SUPPORTED_AUDIO_MIME = new Set(["audio/wav", "audio/mpeg", "audio/mp3", "audio/webm", "audio/ogg", "audio/mp4", "audio/m4a"])
+
+class AudioStageError extends Error {
+  constructor(
+    message: string,
+    readonly stage: "validation" | "transcription" | "extraction",
+    readonly code: string,
+    readonly status: number,
+    readonly retryable = false,
+  ) {
+    super(message)
+  }
+}
+
+function validateAudioPayload(audioBase64: unknown, mimeType: unknown) {
+  const data = typeof audioBase64 === "string" ? audioBase64.trim() : ""
+  const normalizedMime = typeof mimeType === "string" ? mimeType.toLowerCase().split(";")[0].trim() : ""
+  if (!data) throw new AudioStageError("لم يصل التسجيل الصوتي. أعد التسجيل ثم حاول مرة أخرى.", "validation", "AUDIO_MISSING", 400)
+  if (!SUPPORTED_AUDIO_MIME.has(normalizedMime)) throw new AudioStageError("صيغة التسجيل غير مدعومة. استخدم متصفحاً حديثاً ثم أعد التسجيل.", "validation", "AUDIO_FORMAT_UNSUPPORTED", 415)
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(data) || data.length % 4 === 1) throw new AudioStageError("بيانات التسجيل تالفة أو غير مكتملة. أعد التسجيل.", "validation", "AUDIO_INVALID_BASE64", 400)
+  const padding = data.endsWith("==") ? 2 : data.endsWith("=") ? 1 : 0
+  const bytes = Math.floor(data.length * 3 / 4) - padding
+  if (bytes < 1_000) throw new AudioStageError("التسجيل فارغ أو قصير جداً. تحدث بوضوح لمدة ثانيتين على الأقل.", "validation", "AUDIO_TOO_SHORT", 400)
+  if (bytes > MAX_AUDIO_BYTES) throw new AudioStageError("التسجيل طويل جداً للتحليل. اجعله أقل من دقيقة ثم أعد المحاولة.", "validation", "AUDIO_PAYLOAD_TOO_LARGE", 413)
+  return { data, mimeType: normalizedMime, bytes }
+}
+
+async function transcribeAudio(audioBase64: string, mimeType: string): Promise<string> {
+  const speechKey = (process.env.SPEECH_TO_TEXT_API_KEY || "").trim()
+  const speechUrl = (process.env.SPEECH_TO_TEXT_URL || "").trim()
+  const speechModel = (process.env.SPEECH_TO_TEXT_MODEL || "whisper-1").trim()
+
+  if (speechKey && speechUrl) {
+    try {
+      const binary = Buffer.from(audioBase64, "base64")
+      const extension = mimeType.includes("mpeg") || mimeType.includes("mp3") ? "mp3" : mimeType.includes("webm") ? "webm" : mimeType.includes("ogg") ? "ogg" : mimeType.includes("mp4") || mimeType.includes("m4a") ? "m4a" : "wav"
+      const form = new FormData()
+      form.append("file", new Blob([binary], { type: mimeType }), `student-audio.${extension}`)
+      form.append("model", speechModel)
+      form.append("language", "ar")
+      form.append("response_format", "json")
+      const response = await fetch(speechUrl, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${speechKey}` },
+        body: form,
+        cache: "no-store",
+        signal: AbortSignal.timeout(60_000),
+      })
+      const responseText = await response.text()
+      let result: any = null
+      try { result = JSON.parse(responseText) } catch {}
+      if (!response.ok) throw new Error(`Speech-to-Text HTTP ${response.status}: ${String(result?.error?.message || responseText || response.statusText).slice(0, 200)}`)
+      const transcript = String(result?.text || result?.transcript || "").trim()
+      if (!transcript) throw new Error("Speech-to-Text أعاد تفريغاً فارغاً")
+      return transcript
+    } catch (error) {
+      if (!isOpenRouterConfigured()) throw error
+    }
+  }
+
+  const fallbackMime = mimeType === "audio/mp3" ? "audio/mpeg" : mimeType
+  return openRouterText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType: fallbackMime, data: audioBase64 })
 }
 
 // ===== أنظمة التعليمات لكل وضع =====
@@ -254,7 +314,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - أعد مصفوفة JSON فقط، دون Markdown أو شرح.
 
 شكل كل عنصر:
-{"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"نص السؤال","stem":"الآية أو النص القرآني المرجعي عند الحاجة","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
+{"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السور��","prompt":"نص السؤال","stem":"الآية أو النص القرآني المرجعي عند الحاجة","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
 
 تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن الآيات الم��تخدمة موجودة فعلاً في sourceVerses.`
 
@@ -790,23 +850,42 @@ export async function POST(req: Request) {
 
     if (mode === "student_voice_intake") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
-      const audioBase64 = typeof payload.audioBase64 === "string" ? payload.audioBase64 : ""
-      const mimeType = typeof payload.mimeType === "string" ? payload.mimeType.slice(0, 80) : "audio/webm"
-      if (!audioBase64) return json({ error: "لم يصل التسجيل الصوتي", diagnostics }, 400)
-      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من ��لحد المسموح", diagnostics }, 413)
-      if (!/^audio\/(webm|wav|mpeg|mp4|ogg)/i.test(mimeType)) return json({ error: "صيغة التسجيل غير مدعومة", diagnostics }, 415)
+      let audio: ReturnType<typeof validateAudioPayload>
+      try {
+        audio = validateAudioPayload(payload.audioBase64, payload.mimeType)
+      } catch (error) {
+        if (error instanceof AudioStageError) return json({ error: error.message, code: error.code, retryable: error.retryable, diagnostics: { ...diagnostics, stage: error.stage } }, error.status)
+        throw error
+      }
 
-      const system = `أنت تستخرج بيانات طالب من إملاء عربي لمسؤول مدرسة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
-transcript,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
-subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ كلمات المرور فقط إذا نطقها المسؤول صراحة. transcript هو التفريغ الكامل المسموع.`
-      const text = await openRouterText("استخرج بيانات الطالب من هذا التسجيل الصوتي.", system, 0.05, { mimeType, data: audioBase64 })
-      const parsed = extractJson(text) || {}
+      let transcript = ""
+      try {
+        transcript = (await transcribeAudio(audio.data, audio.mimeType)).trim()
+        if (transcript.length < 2) throw new Error("لم يتم التعرف على كلام واضح في التسجيل")
+      } catch (error) {
+        const failure = classifyAiFailure(error)
+        return json({ error: "تعذر تحويل الصوت إلى نص. تأكد من وضوح التسجيل ثم أعد المحاولة.", code: "TRANSCRIPTION_FAILED", retryable: failure.retryable, diagnostics: { ...diagnostics, stage: "transcription", audioBytes: audio.bytes } }, failure.status === 401 || failure.status === 402 ? failure.status : 502)
+      }
+
+      const system = `أنت تستخرج بيانات طالب من نص إملاء عربي لمسؤول مدرسة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
+name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
+subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ كلمات المرور فقط إذا نطقها المسؤول صراحة.`
+      let parsed: any
+      try {
+        const text = await runText(`النص المفرغ:\n${transcript.slice(0, 6000)}\n\nاستخرج الحقول المذكورة فقط.`, system, 0.05)
+        parsed = extractJson(text)
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("أعاد النموذج بيانات غير منظمة")
+      } catch (error) {
+        const failure = classifyAiFailure(error)
+        return json({ error: "تم تفريغ الصوت، لكن تعذر استخراج حقول الطالب. أعد المحاولة باستخدام التسجيل نفسه.", code: "EXTRACTION_FAILED", retryable: true, result: { transcript }, diagnostics: { ...diagnostics, stage: "extraction", audioBytes: audio.bytes } }, failure.status === 401 || failure.status === 402 ? failure.status : 502)
+      }
+
       const clean = (value: unknown, max = 300) => typeof value === "string" ? value.trim().slice(0, max) : ""
       const digits = (value: unknown, max: number) => clean(value, max * 2).replace(/[^0-9]/g, "").slice(0, max)
       const birth = /^\d{4}-\d{2}-\d{2}$/.test(clean(parsed.birth, 10)) ? clean(parsed.birth, 10) : ""
       const juzNumber = Math.min(30, Math.max(0, Number.parseInt(digits(parsed.juz, 2), 10) || 0))
       return json({ result: {
-        transcript: clean(parsed.transcript, 4000),
+        transcript: transcript.slice(0, 4000),
         fields: {
           name: clean(parsed.name, 120), username: clean(parsed.username, 80),
           national: digits(parsed.national, 14), phone: digits(parsed.phone, 11), birth,
@@ -815,7 +894,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
           subjects: Array.isArray(parsed.subjects) ? parsed.subjects.map((x: unknown) => clean(x, 80)).filter(Boolean).slice(0, 12) : [],
           juz: juzNumber ? String(juzNumber) : "", surah: clean(parsed.surah, 80), notes: clean(parsed.notes, 1000),
         },
-      }, diagnostics })
+      }, diagnostics: { ...diagnostics, stage: "complete", audioBytes: audio.bytes } })
     }
 
     if (mode === "admin_assistant") {
@@ -863,18 +942,16 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
     // 5) تفريغ صوت حقيقي + تصحيح (تحليل الصوت على الخادم)
     if (mode === "transcribe_and_grade") {
       const { audioBase64, mimeType, surah, from, to, expectedText } = payload
-      if (!audioBase64) {
-        return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
+      let audio: ReturnType<typeof validateAudioPayload>
+      try {
+        audio = validateAudioPayload(audioBase64, mimeType)
+      } catch (error) {
+        if (error instanceof AudioStageError) return json({ error: error.message, code: error.code, retryable: error.retryable, diagnostics: { ...diagnostics, stage: error.stage } }, error.status)
+        throw error
       }
-      // OpenRouter يقبل الصو�� بصيغة wav أو mp3 فقط (input_audio).
-      // المتصفح يحوّل التسجيل إلى wav قبل الإرسال؛ نستنتج الصيغة من mimeType.
-      let audioFormat = "wav"
-      const mt = (typeof mimeType === "string" ? mimeType : "").toLowerCase()
-      if (mt.includes("mpeg") || mt.includes("mp3")) audioFormat = "mp3"
-      else if (mt.includes("wav")) audioFormat = "wav"
 
-      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ض��طه، وإلا OpenRouter).
-      const transcript = await transcribeAudio(audioBase64, audioFormat)
+      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ضبطه، وإلا OpenRouter).
+      const transcript = await transcribeAudio(audio.data, audio.mimeType)
 
       // المرحلة الثانية: مقارنة التفريغ بالنص القرآني المطلوب وحساب الدرجة.
       const gradeText = await runText(
