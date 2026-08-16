@@ -378,7 +378,7 @@ const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة الق
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
-const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على تفريغ صوتي عربي.
+const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على ��فريغ صوتي عربي.
 مهمتك:
 1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
 2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
@@ -418,8 +418,8 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 
 const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم نا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
 مهمتك: فهم اللب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعيلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
-احترم دائماً: عدم حذف الملفات، عدم إعادة بناء المشروع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
-أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (بدون أي نص خارجه):
+احترم دائماً: عدم حذف الملفات، عدم إعادة بناء الم��روع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
+أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (بدون ��ي نص خارجه):
 {
  "understanding": "إعادة صياغة موجزة لفهمك للطلب",
  "feasible": true/false,
@@ -660,7 +660,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 - لا تضع أي سرّ أو API key أو Token في public أو في أي JavaScript يصل إل المتصفح؛ الأسرار تبقى على الخادم فقط.
 - content يجب أن يكون المحتوى الكامل والنهائي للملف بعد التعديل، وليس diff، ودون اقتطاع أو حذف أجزاء لم تكن مقصودة بالتعديل.
 - لا تُرجع ملفاً لم يتغير فعلاً.
-- لا تُرجع أي مسار غير موجود في الملفات المعطاة إلا إذا كانت الخطة تقول create وكان إنشاء الملف ضرورياً.
+- لا تُرجع أي مسار غير موجود في الملفات المعطاة إلا إذا كانت الخطة تقول create وكان ��نشاء الملف ضرورياً.
 - لا تنشئ أو تعل ملفات الأسرار مثل .env.
 - إذا كان الطلب غير آمن أو غير واضح أو يخالف القيود، أعد patches=[] واشرح السبب في summary.
 
@@ -858,7 +858,7 @@ export async function POST(req: Request) {
           : String(question?.correct || "")
         const defaultPrompts: Record<string, string> = {
           mcq: "اختر الإجابة الصحيحة اعتماداً على المقطع المصور من المصحف",
-          truefalse: "حدد صحة العبارة اعتماداً على المقطع المصور من المصحف",
+          truefalse: "حدد صحة ��لعبارة اعتماداً على المقطع المصور من المصحف",
           complete: "أكمل المقطع المخفي في صورة المصحف",
           audio: "سجّل تلاوة المقطع المعروض من المصحف",
         }
@@ -917,8 +917,13 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       const parsed = extractJson(direct)
       if (!parsed || typeof parsed !== "object") throw new Error("Gemini: تعذر فهم بيانات الطالب من التسجيل")
       const clean = (value: unknown, max = 300) => typeof value === "string" ? value.trim().slice(0, max) : ""
-      const digits = (value: unknown, max: number) => clean(value, max * 2).replace(/[^0-9]/g, "").slice(0, max)
-      const birth = /^\d{4}-\d{2}-\d{2}$/.test(clean(parsed.birth, 10)) ? clean(parsed.birth, 10) : ""
+      const latinDigits = (value: unknown) => clean(value, 500)
+        .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+        .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+      const digits = (value: unknown, max: number) => latinDigits(value).replace(/[^0-9]/g, "").slice(0, max)
+      const birthCandidate = latinDigits(parsed.birth).slice(0, 10)
+      const birthDate = /^\d{4}-\d{2}-\d{2}$/.test(birthCandidate) ? new Date(`${birthCandidate}T00:00:00Z`) : null
+      const birth = birthDate && !Number.isNaN(birthDate.getTime()) && birthDate.toISOString().slice(0, 10) === birthCandidate ? birthCandidate : ""
       const juzNumber = Math.min(30, Math.max(0, Number.parseInt(digits(parsed.juz, 2), 10) || 0))
       return json({ result: {
         transcript: clean(parsed.transcript, 4000),

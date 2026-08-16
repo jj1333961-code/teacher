@@ -1,8 +1,6 @@
-import { Pool } from 'pg'
+import { pool } from '@/lib/db'
 
 export const runtime = 'nodejs'
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const SNAPSHOT_ID = 'teacher-platform-v1'
 
 function response(data: unknown, status = 200) {
