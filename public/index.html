@@ -829,7 +829,7 @@ tr:hover { background: var(--table-hover); }
   <div id="recordElementsContainer"></div>
   <div class="page" style="margin:15px 0;border:2px dashed var(--info);">
     <h4 style="color:var(--info)">🖼️ تعديل اللوح/الصورة يدوياً</h4>
-    <p style="color:var(--text-light)">الاختيار التلقائي للسورة والآيات يظل كما هو، ويمكن للمسؤول تعديل اللوح والصورة يدوياً دون تعطيل الاختيار التلقائي.</p>
+    <p style="color:var(--text-light)">الاختيار التلقا��ي للسورة والآيات يظل كما هو، ويمكن للمسؤول تعديل اللوح والصورة يدوياً دون تعطيل الاختيار التلقائي.</p>
     <div class="form-row">
       <div class="form-group"><label>نص اللوح/التعديل اليدوي</label><textarea id="manualBoardText" rows="3" placeholder="اكتب التعديل المطلوب..."></textarea></div>
       <div class="form-group"><label>رابط صورة اللوح (اختياري)</label><input id="manualBoardImage" type="url" placeholder="https://..."></div>
@@ -2299,7 +2299,7 @@ async function saveStudent() {
 
   const printVec = null;
   let voiceData = voiceDataUrl;
-  // البصمة اختيارية، لكن عند تسجيلها يكون Gemini وحده مصدر إنشائها ومقارنتها.
+  // ا��بصمة اختيارية، لكن عند تسجيلها يكون Gemini وحده مصدر إنشائها ومقارنتها.
   let voiceProfile = voiceProfileGemini;
   if(voiceBlob) {
     try {
@@ -2625,7 +2625,7 @@ function renderRecordElementHTML(el, i, num) {
       });
       html += '</select>';
     }
-    html += '<input type="text" placeholder="أو اكتب اسم اسور يدوياً..." value="'+(el.surah && !afterSurahs.includes(el.surah) ? el.surah : '')+'" onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="width:100%;">';
+    html += '<input type="text" placeholder="أو اكت�� اسم اسور يدوياً..." value="'+(el.surah && !afterSurahs.includes(el.surah) ? el.surah : '')+'" onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="width:100%;">';
     if(mainSurahIndex === -1) {
       html += '<small style="color:var(--text-light)">لم يتم تحديد السورة الأساسية للطالب</small>';
     } else {
@@ -3049,7 +3049,7 @@ function renderExamPlanRows(){
   c.innerHTML=h;
 }
 function examLevelLabel(l){return l==='easy'?'سهل':l==='hard'?'صعب':'متوسط'}
-function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(//g,'ه').replace(/ى/g,'ي').trim()}
+function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').trim()}
 
 async function buildExamSourceCandidates(base){
   const baseIdx=ALL_SURAHS_ORDERED.indexOf(base);
@@ -5661,7 +5661,7 @@ function deleteFile(id) {
 function generateAIReport(student) {
   const sessions = student.sessions || [];
   const finalizedSessions = sessions.filter(sess => !sess.isDraft);
-  if(finalizedSessions.length === 0) return 'لم يتم تسجيل أي تسميع نهائي بعد. بداية جيدة تنتظرك! 💪';
+  if(finalizedSessions.length === 0) return 'لم يتم تسجيل أي تسمي�� نهائي بعد. بداية جيدة تنتظرك! 💪';
   const last3 = finalizedSessions.slice(-3);
   const avgScore = last3.reduce((sum, s) => sum + s.totalScore, 0) / last3.length;
   let report = '';
@@ -5764,7 +5764,7 @@ function generateAIResponse(text, student) {
       const state = t.approved ? 'معتمد' : t.rejected ? 'مرفوض — أعد الإرسال' : t.submitted ? 'قيد المراجعة' : 'لم يُرسل بعد';
       r += '• '+icon+': '+(t.name || t.text || (t.surah ? 'سورة '+t.surah : ''))+(t.surah ? ' ('+t.surah+' من '+(t.from||'-')+' إلى '+(t.to||'-')+')' : '')+' — <em>'+state+'</em><br>';
     });
-    r += '<br>💡 المهام التي عليها علامة 👁️ يمكنك عرض آياتها كصورة واضحة مع إمكانية التكبير.';
+    r += '<br>💡 المهام التي عليها علامة 👁️ يمكنك عرض آياتها كصورة وا��حة مع إمكانية التكبير.';
     return r;
   }
   // الآيات والصور
