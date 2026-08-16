@@ -1,4 +1,6 @@
-import { createCanvas, DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas"
+import { readFile } from "node:fs/promises"
+import path from "node:path"
+import { createCanvas, loadImage, DOMMatrix, ImageData, Path2D, type Image } from "@napi-rs/canvas"
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs"
 import { getQuranPdfBytes, normalizeQuranText } from "@/lib/quran-reference"
 
@@ -8,6 +10,49 @@ export const maxDuration = 60
 Object.assign(globalThis, { DOMMatrix, ImageData, Path2D })
 
 const QUESTION_TYPES = new Set(["mcq", "truefalse", "complete", "audio"])
+
+// الإطار الزخرفي الذي تُطبع داخله الآية. يُحمّل مرة واحدة ويُخزّن في الذاكرة.
+const FRAME_PATH = path.join(process.cwd(), "public", "images", "ayah-frame.png")
+// المساحة الداخلية الفارغة من الإطار (نسب من عرضه وارتفاعه) حيث تُطبع الآية في المنتصف.
+const FRAME_AREA = { left: 0.115, top: 0.245, right: 0.885, bottom: 0.855 }
+let framePromise: Promise<Image> | null = null
+
+function loadFrame() {
+  if (!framePromise) {
+    framePromise = readFile(FRAME_PATH).then((bytes) => loadImage(bytes))
+    framePromise.catch(() => {
+      framePromise = null
+    })
+  }
+  return framePromise
+}
+
+// يضع قصاصة الآية داخل الإطار الزخرفي في المنتصف، بمزج "multiply" حتى تبدو
+// وكأن الآية مطبوعة على الورق المزخرف دون مستطيل أبيض حولها.
+async function printOnFrame(ayah: any) {
+  const frame = await loadFrame()
+  const canvas = createCanvas(frame.width, frame.height)
+  const context = canvas.getContext("2d")
+  context.fillStyle = "#faf6ec"
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  context.drawImage(frame as any, 0, 0, canvas.width, canvas.height)
+
+  const areaX = Math.round(canvas.width * FRAME_AREA.left)
+  const areaY = Math.round(canvas.height * FRAME_AREA.top)
+  const areaWidth = Math.round(canvas.width * (FRAME_AREA.right - FRAME_AREA.left))
+  const areaHeight = Math.round(canvas.height * (FRAME_AREA.bottom - FRAME_AREA.top))
+  const scale = Math.min(areaWidth / ayah.width, areaHeight / ayah.height)
+  const drawWidth = Math.max(1, Math.round(ayah.width * scale))
+  const drawHeight = Math.max(1, Math.round(ayah.height * scale))
+  const drawX = areaX + Math.round((areaWidth - drawWidth) / 2)
+  const drawY = areaY + Math.round((areaHeight - drawHeight) / 2)
+
+  context.save()
+  context.globalCompositeOperation = "multiply"
+  context.drawImage(ayah as any, drawX, drawY, drawWidth, drawHeight)
+  context.restore()
+  return canvas
+}
 
 async function getAyahRange(surah: number, from: number, to: number) {
   const response = await fetch(`https://api.alquran.cloud/v1/surah/${surah}/quran-uthmani`, {
@@ -179,11 +224,25 @@ export async function GET(request: Request) {
     cropHeight = Math.max(1, Math.min(cropHeight, pageCanvas.height - cropY))
     const output = createCanvas(cropWidth, cropHeight)
     const outputContext = output.getContext("2d")
-    outputContext.fillStyle = "#f8f5ec"
+    outputContext.fillStyle = "#ffffff"
     outputContext.fillRect(0, 0, cropWidth, cropHeight)
     outputContext.drawImage(pageCanvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
 
-    const png = output.toBuffer("image/png")
+    // تبييض خلفية المصحف الكريمية حتى لا يظهر مستطيل حول الآية عند طبعها على الإطار.
+    const pixels = outputContext.getImageData(0, 0, cropWidth, cropHeight)
+    const channels = pixels.data
+    for (let index = 0; index < channels.length; index += 4) {
+      const luminance = channels[index] * 0.299 + channels[index + 1] * 0.587 + channels[index + 2] * 0.114
+      if (luminance >= 218) {
+        channels[index] = 255
+        channels[index + 1] = 255
+        channels[index + 2] = 255
+      }
+    }
+    outputContext.putImageData(pixels, 0, 0)
+
+    const framed = await printOnFrame(output).catch(() => output)
+    const png = framed.toBuffer("image/png")
     return new Response(new Uint8Array(png), {
       headers: {
         "Content-Type": "image/png",

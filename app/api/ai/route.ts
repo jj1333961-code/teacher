@@ -289,14 +289,53 @@ async function externalTranscription(audioBase64: string, audioFormat: string): 
   return text
 }
 
-async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
-  const mimeType = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
-  try { return await externalTranscription(audioBase64, audioFormat) } catch {}
-  if (isGeminiConfigured()) {
-    try { return await geminiText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType, data: audioBase64 }) } catch {}
-  }
-  return openRouterText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType, data: audioBase64 })
+// ===== جميناي هو المزوّد المسؤول عن كل ما يتعلق بالصوت =====
+// التفريغ الصوتي، البصمة الصوتية، مطابقة المتحدث، وملء البيانات من الإملاء الصوتي
+// تُنفَّذ كلها على Gemini أولاً وبإعادة محاولة، ولا نلجأ لغيره إلا عند تعذّره تماماً.
+function audioMimeType(audioFormat: string) {
+  return audioFormat === "mp3" ? "audio/mpeg" : audioFormat === "ogg" ? "audio/ogg" : audioFormat === "m4a" ? "audio/mp4" : "audio/wav"
 }
+
+async function geminiAudio(prompt: string, system: string, temperature: number, audio: { mimeType: string; data: string }): Promise<string> {
+  if (!isGeminiConfigured()) throw new Error("GEMINI_API_KEY غير موجود على الخادم: جميناي هو المسؤول عن معالجة الصوت")
+  let lastError: unknown = new Error("تعذر بدء اتصال جميناي الصوتي")
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await geminiText(prompt, system, temperature, audio)
+    } catch (error) {
+      lastError = error
+      const message = error instanceof Error ? error.message : String(error || "")
+      if (!/408|429|5\d\d|fetch failed|Timeout|Abort|aborted|رد فارغ|network|ECONN|ETIMEDOUT/i.test(message) || attempt === 2) break
+      await new Promise(resolve => setTimeout(resolve, 800 * (2 ** attempt)))
+    }
+  }
+  throw lastError
+}
+
+const SYS_AUDIO_TRANSCRIBE = "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن الكريم بالرسم العثماني."
+
+async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
+  const mimeType = audioMimeType(audioFormat)
+  const prompt = "فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح."
+  try { return await geminiAudio(prompt, SYS_AUDIO_TRANSCRIBE, 0.05, { mimeType, data: audioBase64 }) } catch (geminiError) {
+    try { return await externalTranscription(audioBase64, audioFormat) } catch {}
+    if (isOpenRouterConfigured()) {
+      try { return await openRouterText(prompt, SYS_AUDIO_TRANSCRIBE, 0.05, { mimeType, data: audioBase64 }) } catch {}
+    }
+    throw geminiError
+  }
+}
+
+const SYS_VOICE_PRINT = `أنت محرك بصمة صوتية. تستمع إلى تسجيل عربي وتصف خصائص صوت المتحدث وصفاً رقمياً ثابتاً يمكن مقارنته لاحقاً.
+لا تعتمد على الكلمات المنطوقة، بل على خصائص الصوت نفسه.
+أعد JSON فقط بلا markdown:
+{"speaker":{"gender":"male|female|unknown","ageRange":"child|teen|adult|senior|unknown","pitch":"very-low|low|medium|high|very-high","pitchHz":number,"timbre":"وصف موجز","speed":"slow|medium|fast","nasality":"low|medium|high","breathiness":"low|medium|high","accent":"وصف موجز","distinctiveTraits":["سمات مميزة موجزة"]},"quality":"good|noisy|too-short","usable":true/false,"reason":"سبب موجز بالعربية"}`
+
+const SYS_VOICE_MATCH = `أنت محرك تحقق من هوية المتحدث بالبصمة الصوتية. لديك تسجيل صوتي حديث، ووصف بصمة صوتية مرجعية محفوظة لنفس الشخص المتوقع (referenceProfile)، وقد يصلك تسجيل مرجعي أيضاً.
+حلّل خصائص الصوت في التسجيل الحديث ثم قارنها بالمرجع: الطبقة، اللون الصوتي، الجرس، الأنفية، السرعة، اللكنة.
+تجاهل اختلاف الكلمات أو النص المقروء تماماً؛ المقارنة على الصوت فقط. راعِ اختلاف الميكروفون والضجيج.
+أعد JSON فقط بلا markdown:
+{"sameSpeaker":true/false,"matchPercent":number,"confidence":"low|medium|high","quality":"good|noisy|too-short","reason":"سبب موجز بالعربية","profile":{"gender":"male|female|unknown","pitch":"very-low|low|medium|high|very-high","pitchHz":number,"timbre":"وصف موجز","speed":"slow|medium|fast"}}`
 
 // ===== أنظمة التعليمات لكل وضع =====
 
@@ -350,7 +389,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
 2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
 3) تجاهل أخطاء التعرف الآلي والتشكيل والأخطاء الإملائية البسيطة، ولا تعتبرها نقصاً في الآيات.
-4) حدد الآيات الناقصة فعلياً فقط.
+4) حدد الآ��ات الناقصة فعلياً فقط.
 قواعد الدرجة:
 - احسب score أساساً من نسبة الآيات المكتملة: (عدد الآيات الكلية - الآيات الناقصة) / عدد الآيات الكلية.
 - score=1 عند اكتمال المقطع، و0 عند فقد كل المقطع أو اختلافه جذرياً.
@@ -417,7 +456,7 @@ async function githubGetRepo() {
   if (res.status === 404) throw new Error(`المس��ودع ${GITHUB_OWNER}/${GITHUB_REPO} غير موجود أو لا يملك الرمز صلاحية الوصول إليه`)
   if (res.status === 401) throw new Error("GITHUB_TOKEN غير صالح (401 Unauthorized)")
   if (res.status === 403) throw new Error("الرمز GITHUB_TOKEN ممنوع من الوصول (403) — تحقق من صلاحياته")
-  if (!res.ok) throw new Error(`GitHub ${res.status}: تعذر قراءة بيانات المستودع`)
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ت��ذر قراءة بيانات المستودع`)
   return await res.json()
 }
 
@@ -877,10 +916,20 @@ export async function POST(req: Request) {
       const system = `أنت تستخرج بيانات طالب من إملاء عربي لمسؤول مدرسة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
 transcript,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
 subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ كلمات المرور فقط إذا نطقها المسؤول صراحة. transcript هو التفريغ الكامل المسموع.`
-      const audioFormat = /mpeg|mp3/i.test(mimeType) ? "mp3" : "wav"
-      const transcript = await transcribeAudio(audioBase64, audioFormat)
-      const text = await runText(`استخرج بيانات الطالب من التفريغ التالي:\n${transcript}`, system, 0.05)
-      const parsed = extractJson(text) || {}
+      const audioFormat = /mpeg|mp3/i.test(mimeType) ? "mp3" : /ogg/i.test(mimeType) ? "ogg" : /mp4|m4a/i.test(mimeType) ? "m4a" : "wav"
+      // جميناي يستمع للتسجيل ويملأ الحقول في خطوة واحدة (أدق من التفريغ ثم الاستخراج).
+      let parsed: any = null
+      let transcript = ""
+      try {
+        const direct = await geminiAudio("استمع إلى هذا الإملاء العربي واستخرج بيانات الطالب منه. أعد JSON فقط.", system, 0.05, { mimeType: audioMimeType(audioFormat), data: audioBase64 })
+        parsed = extractJson(direct)
+        transcript = typeof parsed?.transcript === "string" ? parsed.transcript : ""
+      } catch {}
+      if (!parsed || typeof parsed !== "object") {
+        transcript = await transcribeAudio(audioBase64, audioFormat)
+        const text = await runText(`استخرج بيانات الطالب من التفريغ التالي:\n${transcript}`, system, 0.05)
+        parsed = extractJson(text) || {}
+      }
       if (!parsed.transcript) parsed.transcript = transcript
       const clean = (value: unknown, max = 300) => typeof value === "string" ? value.trim().slice(0, max) : ""
       const digits = (value: unknown, max: number) => clean(value, max * 2).replace(/[^0-9]/g, "").slice(0, max)
@@ -896,6 +945,51 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
           subjects: Array.isArray(parsed.subjects) ? parsed.subjects.map((x: unknown) => clean(x, 80)).filter(Boolean).slice(0, 12) : [],
           juz: juzNumber ? String(juzNumber) : "", surah: clean(parsed.surah, 80), notes: clean(parsed.notes, 1000),
         },
+      }, diagnostics })
+    }
+
+    // البصمة الصوتية: إنشاؤها بجميناي عند التسجيل الأول للطالب.
+    if (mode === "voice_print" || mode === "voice_match") {
+      const audioBase64 = typeof payload.audioBase64 === "string" ? payload.audioBase64 : ""
+      const mimeType = typeof payload.mimeType === "string" ? payload.mimeType.slice(0, 80) : "audio/wav"
+      if (!audioBase64) return json({ error: "لم يصل التسجيل الصوتي", diagnostics }, 400)
+      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
+      if (!/^audio\/(webm|wav|mpeg|mp4|ogg)/i.test(mimeType)) return json({ error: "صيغة التسجيل غير مدعومة", diagnostics }, 415)
+      const audio = { mimeType, data: audioBase64 }
+
+      if (mode === "voice_print") {
+        const text = await geminiAudio("حلّل خصائص صوت المتحدث في هذا التسجيل وأنشئ بصمة صوتية وصفية. أعد JSON فقط.", SYS_VOICE_PRINT, 0.05, audio)
+        const parsed = extractJson(text) || {}
+        const speaker = parsed.speaker && typeof parsed.speaker === "object" ? parsed.speaker : {}
+        return json({ result: {
+          engine: "gemini",
+          model: GEMINI.model,
+          createdAt: new Date().toISOString(),
+          speaker,
+          quality: typeof parsed.quality === "string" ? parsed.quality : "good",
+          usable: parsed.usable !== false,
+          reason: typeof parsed.reason === "string" ? parsed.reason.slice(0, 300) : "",
+        }, diagnostics })
+      }
+
+      const referenceProfile = payload.referenceProfile && typeof payload.referenceProfile === "object" ? payload.referenceProfile : null
+      if (!referenceProfile) return json({ error: "لا توجد بصمة صوتية مرجعية محفوظة لهذا الحساب", diagnostics }, 400)
+      const text = await geminiAudio(
+        `البصمة المرجعية المحفوظة:\n${JSON.stringify(referenceProfile).slice(0, 4000)}\n\nقارن صوت هذا التسجيل بالبصمة المرجعية. أعد JSON فقط.`,
+        SYS_VOICE_MATCH,
+        0.05,
+        audio,
+      )
+      const parsed = extractJson(text) || {}
+      const matchPercent = Math.max(0, Math.min(100, Math.round(Number(parsed.matchPercent) || 0)))
+      return json({ result: {
+        engine: "gemini",
+        sameSpeaker: parsed.sameSpeaker === true || (parsed.sameSpeaker !== false && matchPercent >= 70),
+        matchPercent,
+        confidence: typeof parsed.confidence === "string" ? parsed.confidence : "medium",
+        quality: typeof parsed.quality === "string" ? parsed.quality : "good",
+        reason: typeof parsed.reason === "string" ? parsed.reason.slice(0, 300) : "",
+        profile: parsed.profile && typeof parsed.profile === "object" ? parsed.profile : {},
       }, diagnostics })
     }
 
@@ -954,16 +1048,29 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (mt.includes("mpeg") || mt.includes("mp3")) audioFormat = "mp3"
       else if (mt.includes("wav")) audioFormat = "wav"
 
-      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ض��طه، وإلا OpenRouter).
-      const transcript = await transcribeAudio(audioBase64, audioFormat)
+      // جميناي مسؤول عن الصوت: يستمع للتلاوة ويفرّغها ويقارنها بالمقطع المطلوب في خطوة واحدة.
+      let parsed: any = null
+      let transcript = ""
+      try {
+        const direct = await geminiAudio(
+          `المقطع المطلوب:\n${JSON.stringify({ surah, from, to, expectedText }).slice(0, 12_000)}\n\nاستمع إلى تلاوة الطالب، فرّغها ثم صححها مقابل المقطع المطلوب. أعد JSON فقط.`,
+          SYS_TRANSCRIBE,
+          0.05,
+          { mimeType: audioMimeType(audioFormat), data: audioBase64 },
+        )
+        parsed = extractJson(direct)
+        transcript = typeof parsed?.transcript === "string" ? parsed.transcript.trim() : ""
+      } catch {}
 
-      // المرحلة الثانية: مقارنة التفريغ بالنص القرآني المطلوب وحساب الدرجة.
-      const gradeText = await runText(
-        JSON.stringify({ surah, from, to, expectedText, studentTranscript: transcript }),
-        SYS_TRANSCRIBE,
-        0.05,
-      )
-      const parsed = extractJson(gradeText) || {}
+      if (!parsed || typeof parsed !== "object") {
+        transcript = await transcribeAudio(audioBase64, audioFormat)
+        const gradeText = await runText(
+          JSON.stringify({ surah, from, to, expectedText, studentTranscript: transcript }),
+          SYS_TRANSCRIBE,
+          0.05,
+        )
+        parsed = extractJson(gradeText) || {}
+      }
       const totalAyahs = Math.max(1, Number(to || from || 1) - Number(from || 1) + 1)
       const missingCount = Array.isArray(parsed.missingAyahs) ? Math.min(totalAyahs, parsed.missingAyahs.length) : 0
       const calculatedScore = Math.max(0, Math.min(1, (totalAyahs - missingCount) / totalAyahs))
@@ -971,7 +1078,8 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       const score = missingCount > 0 ? Math.min(modelScore, calculatedScore) : modelScore
       return json({
         result: {
-          transcript,
+          transcript: transcript || String(parsed.transcript || ""),
+          audioEngine: "gemini",
           accepted: parsed.isRecitation !== false && score >= 0.5,
           score,
           matchedPercent: typeof parsed.matchedPercent === "number" ? Math.max(0, Math.min(100, parsed.matchedPercent)) : Math.round(score * 100),
