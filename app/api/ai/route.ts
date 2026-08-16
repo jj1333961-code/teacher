@@ -87,7 +87,10 @@ function classifyAiFailure(error: unknown) {
     return { status: 503, code: "OPENROUTER_KEY_MISSING", retryable: false, message: "مفتاح OpenRouter غير متاح على الخادم. أضف OPENROUTER_API_KEY إلى متغيرات البيئة.", raw }
   }
   if (/401|403|API key|unauthorized|forbidden/i.test(raw)) {
-    return { status: 503, code: "AI_PROVIDERS_UNAUTHORIZED", retryable: false, message: "تعذر اعتماد مزوّدي الذكاء الاصطناعي المتاحين. جُرّب OpenRouter وGemini تلقائياً ولم ينجح أي منهما.", raw }
+    return { status: 503, code: "AI_PROVIDERS_UNAUTHORIZED", retryable: false, message: "تعذر اعتماد خدمة Gemini على الخادم.", raw }
+  }
+  if (/Gemini HTTP 404|model.*(?:not found|no longer available)/i.test(raw)) {
+    return { status: 502, code: "GEMINI_MODEL_UNAVAILABLE", retryable: false, message: "نموذج Gemini الصوتي غير متاح حالياً.", raw }
   }
   if (/402|insufficient credits|payment required|credit card|free credits/i.test(raw)) {
     return { status: 402, code: "AI_CREDITS_REQUIRED", retryable: false, message: "جُرّبت مزوّدات الذكاء الاصطناعي المتاحة، لكن المزوّد الأخير يحتاج رصيداً أو تفعيل فوترة.", raw }
@@ -232,7 +235,9 @@ async function geminiText(prompt: string, system: string, temperature: number, a
   if (!GEMINI.key) throw new Error("GEMINI_API_KEY غير موجود على الخادم")
   const parts: any[] = [{ text: prompt }]
   if (audio) parts.unshift({ inlineData: { mimeType: audio.mimeType, data: audio.data } })
-  const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(GEMINI.model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
+  // نموذج 2.5 لم يعد متاحاً للحسابات الجديدة؛ نستخدم نموذج Gemini الحديث للصوت.
+  const model = audio ? "gemini-3.6-flash" : GEMINI.model
+  const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -311,7 +316,7 @@ const SYS_AUDIO_TRANSCRIBE = "أنت محرك تفريغ صوتي عربي دق�
 
 async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
   const mimeType = audioMimeType(audioFormat)
-  const prompt = "فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح."
+  const prompt = "فرّغ هذ التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح."
   return geminiAudio(prompt, SYS_AUDIO_TRANSCRIBE, 0.05, { mimeType, data: audioBase64 })
 }
 
@@ -357,19 +362,19 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - أعد مصفوفة JSON فقط، دون Markdown أو شرح.
 
 شكل كل عنصر:
-{"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السور��","prompt":"نص السؤال","stem":"الآية أو النص القرآني المرجعي عند الحاجة","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
+{"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السور","prompt":"نص السؤال","stem":"الآية أو النص القرآني المرجعي عند الحاجة","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
 
-تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن الآيات الم��تخدمة موجودة فعلاً في sourceVerses.`
+تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن الآيات المتخدمة موجودة فعلاً في sourceVerses.`
 
 const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
 كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
 احسب matchedPercent (0-100) لمدى مطابقة المعنى والألفاظ للنص المرجعي.
-score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إذا ن��صت آية واحدة أو خطأ جوه����ي بسيط، 0 إذا كان مختلفاً أو ناقصاً كثيراً.
+score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إذا نصت آية واحدة أو خطأ جوهي بسيط، 0 إذا كان مختلفاً أو ناقصاً كثيراً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":[]}`
 
 const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة القرآن اعتماداً على تفريغ نصي (transcript) قد يكون غير دقيق بسبب التعرف الآلي.
-قارن ما تلاه الطالب بالنص المتوقع expectedText للمقطع المطلوب (surah ����ن from إلى to).
-كن متساهلاً: يكفي وجود القليل من الآيات أو الكلمات الصحيحة المطابقة للمق��ع المطلوب لقبول أن الطالب يتلو نفس المقطع. تجاوز أخطاء التعرف الآلي و��لتشكيل.
+قارن ما تلاه الطالب بالنص المتوقع expectedText للمقطع المطلوب (surah ن from إلى to).
+كن متساهلاً: يكفي وجود القليل من الآيات أو الكلمات الصحيحة المطابقة للمقع المطلوب لقبول أن الطالب يتلو نفس المقطع. تجاوز أخطاء التعرف الآلي ولتشكيل.
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
@@ -378,7 +383,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
 2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
 3) تجاهل أخطاء التعرف الآلي والتشكيل والأخطاء الإملائية البسيطة، ولا تعتبرها نقصاً في الآيات.
-4) حدد الآ��ات الناقصة فعلياً فقط.
+4) حدد الآات الناقصة فعلياً فقط.
 قواعد الدرجة:
 - احسب score أساساً من نسبة الآيات المكتملة: (عدد الآيات الكلية - الآيات الناقصة) / عدد الآيات الكلية.
 - score=1 عند اكتمال المقطع، و0 عند فقد كل المقطع أو اختلافه جذرياً.
@@ -387,17 +392,17 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 {"transcript":"النص المفرغ","accepted":true/false,"score":number,"matchedPercent":number,"isRecitation":true/false,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
 // ===== مساعد تطوير الموقع (للمسؤول فقط) =====
-// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج ��سياق للتحليل.
+// وصف مختصر وحقيقي لبنية المشروع يُرسل للنموذج سياق للتحليل.
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
-الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيق�� تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
+الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيق تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
 - "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي على:
-  • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') وا��رجوع عبر goBack().
+  • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') وارجوع عبر goBack().
   • لوحة المسؤول (adminDashboard) وبها menu-grid فيها أزرار menu-btn.
-  • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولي��، إعدادات المسؤول (adminSettings).
+  • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولي، إعدادات المسؤول (adminSettings).
   • تخزين البيانات محلياً عبر getData(key)/setData(key,value) على localStorage (مفاتيح مثل students, admins, messages, files).
   • حالة الجلسة: currentUser, currentType ('admin'|'student'|'parent'), currentAdminId.
-  • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد�� /api/ai.
+  • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد /api/ai.
   • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
 - "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم OpenRouter مباشرةً وحصرياً عبر OPENROUTER_API_KEY، وتدعم الأوضاع: assistant, admin_assistant, generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant، بالإضافة إلى وضع النص الحر (prompt).
@@ -406,13 +411,13 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 - "app/globals.css": الأنماط العامة لـNext.js.
 - "next.config.mjs": rewrite للجذر إلى public/index.html.
 - "package.json": تبعيات وسكربتات المشروع.
-- "components/ui/button.tsx" ��"lib/utils.ts": مكونات/أدوات مساعدة موجودة في المشروع.
+- "components/ui/button.tsx" "lib/utils.ts": مكونات/أدوات مساعدة موجودة في المشروع.
 
 المسارات الموجودة في النسخة الحالية: public/index.html, app/api/ai/route.ts, app/page.tsx, app/layout.tsx, app/globals.css, next.config.mjs, package.json, components/ui/button.tsx, lib/utils.ts, .env.example, DEPLOY.md.
-قيود مهمة يجب احترامها في أي خطة: لا حذف الملفات، لا إعادة بناء المشروع، لا وضع مفتاح API في المتصفح، الحف��ظ على التصميم العربي RTL الحا��ي، وتعديل الموجود فقط أو إضافة م�� يلزم.`
+قيود مهمة يجب احترامها في أي خطة: لا حذف الملفات، لا إعادة بناء المشروع، لا وضع مفتاح API في المتصفح، الحفظ على التصميم العربي RTL الحاي، وتعديل الموجود فقط أو إضافة م يلزم.`
 
-const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم ��نا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
-مهمتك: فهم ال��لب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تع��يلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
+const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم نا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
+مهمتك: فهم اللب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعيلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
 احترم دائماً: عدم حذف الملفات، عدم إعادة بناء المشروع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
 أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (بدون أي نص خارجه):
 {
@@ -424,7 +429,7 @@ const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد 
  "risks": ["مخاطرة أو أثر جانبي محتمل"],
  "clarifications": ["سؤال توضيحي إن كان الطلب غامضاً"]
 }
-قواعد إضافية مهمة: لا تقترح حذف أو إعادة تسمية أي ملف. لا تضع أسراراً أو مفاتيح API في public أو كود المتصفح. يمكنك اختيار أي ملف موجود ف�� قائمة المستودع ال��ي نرسلها لك، ويمكن إنشاء ملف جديد فقط عند الحاجة الواضحة. إذا احتاج الطلب خدمة خارجية غير مضبوطة، اذكر ذلك في risks أو clarifications. لا تضع أسراراً أو مفاتيح API في ملفات public أو كود المتصفح. إن كان الطلب مخالفاً للقيود (مثل حذف المشروع أو إعادة بنائه) اجعل feasible=false واشرح السبب في summary.`
+قواعد إضافية مهمة: لا تقترح حذف أو إعادة تسمية أي ملف. لا تضع أسراراً أو مفاتيح API في public أو كود المتصفح. يمكنك اختيار أي ملف موجود ف قائمة المستودع الي نرسلها لك، ويمكن إنشاء ملف جديد فقط عند الحاجة الواضحة. إذا احتاج الطلب خدمة خارجية غير مضبوطة، اذكر ذلك في risks أو clarifications. لا تضع أسراراً أو مفاتيح API في ملفات public أو كود المتصفح. إن كان الطلب مخالفاً للقيود (مثل حذف المشروع أو إعادة بنائه) اجعل feasible=false واشرح السبب في summary.`
 
 
 function githubHeaders() {
@@ -442,14 +447,14 @@ async function githubGetRepo() {
   if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
   const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}`
   const res = await fetch(url, { headers: githubHeaders(), cache: "no-store" })
-  if (res.status === 404) throw new Error(`المس��ودع ${GITHUB_OWNER}/${GITHUB_REPO} غير موجود أو لا يملك الرمز صلاحية الوصول إليه`)
+  if (res.status === 404) throw new Error(`المسودع ${GITHUB_OWNER}/${GITHUB_REPO} غير موجود أو لا يملك الرمز صلاحية الوصول إليه`)
   if (res.status === 401) throw new Error("GITHUB_TOKEN غير صالح (401 Unauthorized)")
   if (res.status === 403) throw new Error("الرمز GITHUB_TOKEN ممنوع من الوصول (403) — تحقق من صلاحياته")
-  if (!res.ok) throw new Error(`GitHub ${res.status}: ت��ذر قراءة بيانات المستودع`)
+  if (!res.ok) throw new Error(`GitHub ${res.status}: تذر قراءة بيانات المستودع`)
   return await res.json()
 }
 
-// يحل الفرع الفعلي: يستخدم GITHUB_BRANCH إن ضُبط، وإلا الفرع الافتراضي ا��حقيقي للمستودع.
+// يحل الفرع الفعلي: يستخدم GITHUB_BRANCH إن ضُبط، وإلا الفرع الافتراضي احقيقي للمستودع.
 async function resolveBranch(): Promise<string> {
   if (resolvedBranch) return resolvedBranch
   if (GITHUB_BRANCH_ENV) {
@@ -513,7 +518,7 @@ const PROTECTED_PATHS = new Set([
   "pnpm-lock.yaml", "tsconfig.json",
 ])
 
-// حذف ملف وا��د من المستودع عبر Contents API (ينشئ commit ويحافظ على كامل تاريخ الإصدارات — لا force push).
+// حذف ملف واد من المستودع عبر Contents API (ينشئ commit ويحافظ على كامل تاريخ الإصدارات — لا force push).
 async function githubDeleteFile(path: string, message: string) {
   if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
   if (!safeProjectPath(path)) throw new Error(`المسار ${path} غير مسموح`)
@@ -546,7 +551,7 @@ async function getGithubSyncStatus() {
   } catch (e: any) {
     const msg = String(e?.message || "")
     if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|getaddrinfo/i.test(msg)) {
-      return { connected: false, reason: "تعذر الاتصال بخوادم GitHub (مشكلة في ا��ش��كة)." }
+      return { connected: false, reason: "تعذر الاتصال بخوادم GitHub (مشكلة في اشكة)." }
     }
     return { connected: false, reason: msg }
   }
@@ -580,14 +585,14 @@ async function getGithubSyncStatus() {
     repo: fullName,
     branch,
     lastCommit,
-    // روابط عامة (ليست أسراراً) لعرض سجل ال��عديلات على GitHub الخاص بالمسؤول.
+    // روابط عامة (ليست أسراراً) لعرض سجل العديلات على GitHub الخاص بالمسؤول.
     historyUrl: `https://github.com/${fullName}/commits/${branch}`,
     repoUrl: `https://github.com/${fullName}`,
   }
 }
 
 // فحص مسبق تفصيلي قبل أي تطبيق تلقائي. يعيد ok=false مع سبب محدد جداً (أي متغير ناقص/أي صلاحية).
-// لا ي��شف أبداً قيمة أي رمز مميز، فقط اسم ��لمتغير الناقص أو نوع المشكلة.
+// لا يشف أبداً قيمة أي رمز مميز، فقط اسم لمتغير الناقص أو نوع المشكلة.
 async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; details?: any }> {
   const missing: string[] = []
   if (!GITHUB_TOKEN) missing.push("GITHUB_TOKEN")
@@ -622,7 +627,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
       reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
-  // التحقق من أن الفرع المُحدد/الافتراضي قا��ل ��لحل.
+  // التحقق من أن الفرع المُحدد/الافتراضي قال لحل.
   let branch = ""
   try {
     branch = await resolveBranch()
@@ -641,22 +646,22 @@ function safeProjectPath(path: string) {
 
 async function buildDevPatches(request: string, plan: any, files: Array<{path:string,content:string}>) {
   const source = files.map(f => `\n===== FILE: ${f.path} =====\n${f.content}\n===== END FILE =====`).join("\n")
-  const system = `أنت مبرمج ومطوّر ويب محترف (Senior Software Engineer) خبير في HTML وCSS وJavaScript وTypeScript وNext.js وReact وواجهات API. أنت مسؤول عن تعديل مشروع ويب موجود بشكل مباشر. سيُ��بّق ناتجك تلقائياً على مستودع GitHub بعد التحقق منه، لذا يجب أن يكون الكود كاملاً وصحيحاً وجاهزاً للتشغيل فوراً.
+  const system = `أنت مبرمج ومطوّر ويب محترف (Senior Software Engineer) خبير في HTML وCSS وJavaScript وTypeScript وNext.js وReact وواجهات API. أنت مسؤول عن تعديل مشروع ويب موجود بشكل مباشر. سيُبّق ناتجك تلقائياً على مستودع GitHub بعد التحقق منه، لذا يجب أن يكون الكود كاملاً وصحيحاً وجاهزاً للتشغيل فوراً.
 
 منهجية العمل الإلزامية قبل الكتابة:
-1) ا��رأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
-2) حدد بدقة أصغر جز�� يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
-3) اكتب التعديل بنفس أسلوب ��بنية المشروع (نفس التسمية، ن��س المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
-4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء ��ناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أ�� معرّف استُخدم معرّف فعلاً.
+1) ارأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
+2) حدد بدقة أصغر جز يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
+3) اكتب التعديل بنفس أسلوب بنية المشروع (نفس التسمية، نس المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
+4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء ناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أ معرّف استُخدم معرّف فعلاً.
 
-قواعد ص��رمة:
+قواعد صرمة:
 - لا تحذف ملفات ولا تعيد بناء المشروع من الصفر.
 - عدّل أقل عدد ممكن من الملفات، وحافظ على كل الوظائف والتصميم الحالي وسلوك الصفحات القائمة.
-- لا تضع أي سرّ أو API key أو Token في public أو في أي JavaScript يصل إل�� المتصفح؛ الأسرار تبقى على الخادم فقط.
+- لا تضع أي سرّ أو API key أو Token في public أو في أي JavaScript يصل إل المتصفح؛ الأسرار تبقى على الخادم فقط.
 - content يجب أن يكون المحتوى الكامل والنهائي للملف بعد التعديل، وليس diff، ودون اقتطاع أو حذف أجزاء لم تكن مقصودة بالتعديل.
 - لا تُرجع ملفاً لم يتغير فعلاً.
 - لا تُرجع أي مسار غير موجود في الملفات المعطاة إلا إذا كانت الخطة تقول create وكان إنشاء الملف ضرورياً.
-- لا تنشئ أو تعدل ملفات الأسرار مثل .env.
+- لا تنشئ أو تعل ملفات الأسرار مثل .env.
 - إذا كان الطلب غير آمن أو غير واضح أو يخالف القيود، أعد patches=[] واشرح السبب في summary.
 
 أعد JSON فقط بالشكل التالي (بدون أي نص خارجه):
@@ -693,8 +698,8 @@ async function autoApplyDevRequest(request: string, plan: any) {
   }
   const patchResult = await buildDevPatches(request, plan, current)
   const patches = Array.isArray(patchResult?.patches) ? patchResult.patches : []
-  if (!patches.length) throw new Error("لم ينتج الذكاء الاصطناعي ��عديلات قابلة للتطبيق")
-  if (patches.length > 12) throw new Error("عدد التعديلات المقترحة يتجاوز ال��د الآمن")
+  if (!patches.length) throw new Error("لم ينتج الذكاء الاصطناعي عديلات قابلة للتطبيق")
+  if (patches.length > 12) throw new Error("عدد التعديلات المقترحة يتجاوز الد الآمن")
   const currentMap = new Map(current.map(x => [x.path, x]))
   // نتحقق من جميع الملفات قبل أول كتابة، حتى لا يبدأ التطبيق برد ناقص أو مسار غير مصرح به.
   const validatedPatches = patches.map((patch: any) => {
@@ -753,23 +758,25 @@ export async function POST(req: Request) {
     return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured: isOpenRouterConfigured() } }, 400)
   }
 
+  const audioModes = new Set(["voice_print", "voice_match", "student_voice_intake", "grade_recitation"])
+  const isAudioMode = typeof body?.mode === "string" && audioModes.has(body.mode)
   const diagnostics = {
-    executedOn: "server",
-    keyConfigured: isOpenRouterConfigured(),
-    providerStatus: 200,
-    provider: "openrouter",
-    providerLabel: OPENROUTER.label,
-    configuredModel: OPENROUTER.model,
+  executedOn: "server",
+  keyConfigured: isAudioMode ? isGeminiConfigured() : (isOpenRouterConfigured() || isGeminiConfigured()),
+  providerStatus: 200,
+  provider: isAudioMode ? "google-gemini" : "automatic",
+  providerLabel: isAudioMode ? GEMINI.label : "Automatic AI provider",
+  configuredModel: isAudioMode ? "gemini-3.6-flash" : (isOpenRouterConfigured() ? OPENROUTER.model : GEMINI.model),
   }
 
   try {
-    // 1) وضع ��لنص الحر (صندوق اختبار الذ��اء الاصطناعي)
+    // 1) وضع لنص الحر (صندوق اختبار الذاء الاصطناعي)
     if (typeof body.prompt === "string" && body.prompt.trim() && !body.mode) {
       const prompt = body.prompt.trim().slice(0, 6000)
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt}`,
-        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجم��ة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
+        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجمة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -779,20 +786,20 @@ export async function POST(req: Request) {
     const payload = body.payload || {}
     const temperature = typeof body.temperature === "number" ? body.temperature : 0.15
 
-    // 1.ب) المساعد الذكي لل��الب/ولي الأمر (نص حر مع سياق بيانات الطالب)
+    // 1.ب) المساعد الذكي للالب/ولي الأمر (ص حر مع سياق بيانات الطالب)
     if (mode === "assistant") {
       const prompt = typeof body.prompt === "string" ? body.prompt.trim() : ""
       if (!prompt) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت OpenRouter، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توف��ها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت OpenRouter، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
     }
 
-    // 2) جلب نطاق الس��ر المحدد كاملاً ثم توليد الأسئلة عبر OpenRouter.
+    // 2) جلب نطاق السر المحدد كاملاً ثم توليد الأسئلة عبر OpenRouter.
     if (mode === "generate_exam") {
       const startSurahNumber = Number(payload.surahNumber)
       const endSurahNumber = payload.endSurahNumber == null ? 114 : Number(payload.endSurahNumber)
@@ -856,7 +863,7 @@ export async function POST(req: Request) {
           audio: "سجّل تلاوة المقطع المعروض من المصحف",
         }
         let prompt = String(question?.prompt || defaultPrompts[type])
-          .replace(/(?:الإجابة|الجواب)\s*(?:الصحيحة)?\s*[:：].*$/giu, "")
+          .replace(/(?:الإجابة|الجواب)\s*(?:الصحية)?\s*[:：].*$/giu, "")
           .replace(/\s+/g, " ")
           .trim()
         const verseTexts = source.verses.slice(from - 1, to).map((verse: { text: string }) => normalizeQuranText(verse.text)).filter(Boolean)
@@ -941,7 +948,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
         const speaker = parsed.speaker && typeof parsed.speaker === "object" ? parsed.speaker : {}
         return json({ result: {
           engine: "gemini",
-          model: GEMINI.model,
+          model: "gemini-3.6-flash",
           createdAt: new Date().toISOString(),
           speaker,
           quality: typeof parsed.quality === "string" ? parsed.quality : "good",
@@ -1054,7 +1061,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       })
     }
 
-    // 6.أ) فحص جاهزية مساعد التطوير (للمس��ول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كش�� أي سرّ.
+    // 6.أ) فحص جاهزية مساعد التطوير (للمسول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كش أي سرّ.
     if (mode === "dev_preflight") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const pf = await preflightAutoApply()
@@ -1081,7 +1088,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       })
     }
 
-    // 6) م��اعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
+    // 6) ماعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
     if (mode === "dev_assistant") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
       const request = typeof payload.request === "string" ? payload.request.trim() : ""
@@ -1092,7 +1099,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
         "app/globals.css", "next.config.mjs", "package.json", "components/ui/button.tsx",
         "lib/utils.ts", ".env.example", "DEPLOY.md",
       ] }
-      const userPrompt = `بنية المشروع الحالية:\n${PROJECT_MANIFEST}\n\nقائمة الملفات الفعلية في المس��ودع:\n${tree.files.join("\n")}\n\nطلب المسؤول:\n${request}\n\nحلّل الطلب وأعد خطة التعديل بصيغة JSON فقط كما هو محدد. اختر الملفات الفعلية من قائمة المستودع كلما أمكن.`
+      const userPrompt = `بنية المشروع الحالية:\n${PROJECT_MANIFEST}\n\nقائمة الملفات الفعلية في المسودع:\n${tree.files.join("\n")}\n\nطلب المسؤول:\n${request}\n\nحلّل الطلب وأعد خطة التعديل بصيغة JSON فقط كما هو محدد. اختر الملفات الفعلية من قائمة المستودع كلما أمكن.`
       const text = await runText(userPrompt, SYS_DEV_ASSISTANT, 0.2)
       const parsed = extractJson(text)
       if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.files)) {
@@ -1155,7 +1162,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (!path) return json({ error: "يرجى تحديد مسار الملف المراد حذفه", diagnostics }, 400)
       // الحذف عملية يدوية صريحة بتأكيد المسؤول، لا تتطلب تفعيل الدفع التلقائي — يكفي اتصال المستودع وصلاحية الكتابة.
       const st = await getGithubSyncStatus()
-      if (!st.connected) return json({ error: st.reason || "��لمزامنة مع GitHub غير متصلة", diagnostics }, 400)
+      if (!st.connected) return json({ error: st.reason || "لمزامنة مع GitHub غير متصلة", diagnostics }, 400)
       if (!st.canWrite) return json({ error: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على ${st.repo}`, diagnostics }, 400)
       try {
         const message = `chore: delete ${path} (admin request via sync panel)`
@@ -1186,8 +1193,8 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
         retryable: failure.retryable,
         diagnostics: {
           executedOn: "server",
-          provider: "openrouter-auto",
-          keyConfigured: isOpenRouterConfigured(),
+          provider: ["voice_print", "voice_match", "student_voice_intake", "grade_recitation"].includes(mode) ? "google-gemini" : "automatic",
+          keyConfigured: ["voice_print", "voice_match", "student_voice_intake", "grade_recitation"].includes(mode) ? isGeminiConfigured() : (isOpenRouterConfigured() || isGeminiConfigured()),
           stage,
           reason: failure.raw.slice(0, 300),
         },

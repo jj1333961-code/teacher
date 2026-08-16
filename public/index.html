@@ -503,7 +503,7 @@ tr:hover { background: var(--table-hover); }
     <div class="card" onclick="showPage('adminLogin')"><div class="icon">👨‍💼</div><h3>المسؤول</h3><p>التحكم الكامل في النظام والطلاب</p></div>
     <div class="card" onclick="showPage('studentLogin')"><div class="icon">👨‍🎓</div><h3>الطالب</h3><p>متابعة المواد والواجبات والحفظ</p></div>
     <div class="card" onclick="showPage('parentLogin')"><div class="icon">👨‍👩‍👧</div><h3>ولي الأمر</h3><p>متابعة ابنك/ابنتك والتقارير</p></div>
-    <div class="card" onclick="startSignup()"><div class="icon">🆕</div><h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب ل��مسؤول</p></div>
+    <div class="card" onclick="startSignup()"><div class="icon">🆕</div><h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب م إرسال طلب لمسؤول</p></div>
   </div>
 </div>
 
@@ -576,7 +576,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div id="activeDraftsSection"></div>
   <div class="menu-grid">
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ������لمرفوعة</button>
+    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة OpenRouter الإدارية</button>
@@ -586,8 +586,8 @@ tr:hover { background: var(--table-hover); }
 
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد OpenRouter الإداري</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من ب��انات الموقع عندما تكون مرتبطة بسؤالك.</p>
-  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو ��لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">OpenRouter</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
+  <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بانات الموقع عندما تكون مرتبطة بسؤالك.</p>
+  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">OpenRouter</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
@@ -595,13 +595,13 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغ��ّرت وروابط الـcommit. مفتاحا OpenRouter وGitHub يبقيان على الخادم فقط.
+    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا OpenRouter وGitHub يبقيان على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
   <div class="form-group">
     <label>طلب التطوير</label>
-    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تريد إضافته أو تعديله ف�� الموقع..."></textarea>
+    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تريد إضافته أو تعديله ف الموقع..."></textarea>
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
@@ -619,7 +619,7 @@ tr:hover { background: var(--table-hover); }
         <button class="btn" style="background:#dc3545;color:#fff;" onclick="clearDevAudit()">🗑️ مسح السجل</button>
       </div>
     </div>
-    <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:12px;">يُسجَّل هنا كل طلب ينفّذه مساعد التطوير: الوقت، المسؤول، نص الطلب، الحالة (نج��ح/فشل/محظور)، الملفات التي تغيّرت وروابط الـcommit. يُحفَظ السجل محلياً في هذا المتصفح.</p>
+    <p style="color:var(--text-light); font-size:0.85rem; margin-bottom:12px;">يُسجَّل هنا كل طلب ينفّذه مساعد التطوير: الوقت، المسؤول، نص الطلب، الحالة (نجح/فشل/محظور)، الملفات التي تغيّرت وروابط الـcommit. يُحفَظ السجل محلياً في هذا المتصفح.</p>
     <div id="devAuditLog"></div>
   </div>
 </div>
@@ -631,7 +631,7 @@ tr:hover { background: var(--table-hover); }
   <div id="githubSyncAlert"></div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
     <button class="btn btn-primary" id="githubSyncRefreshBtn" onclick="refreshGithubSync()">🔄 تحقق من حالة المزامنة</button>
-    <a class="btn btn-secondary" id="githubHistoryLink" href="#" target="_blank" rel="noopener" style="display:none;">📜 فتح سجل التعديلات عل�� GitHub</a>
+    <a class="btn btn-secondary" id="githubHistoryLink" href="#" target="_blank" rel="noopener" style="display:none;">📜 فتح سجل التعديلات عل GitHub</a>
   </div>
   <div id="githubSyncStatus" style="margin-bottom:20px;"></div>
 
@@ -639,7 +639,7 @@ tr:hover { background: var(--table-hover); }
   <div id="githubDeleteBox" style="display:none; background:rgba(220,53,69,0.08); border:1px solid #dc3545; border-radius:10px; padding:14px 16px;">
     <h3 style="margin:0 0 8px; color:#dc3545;">🗑️ حذف ملف من المستودع</h3>
     <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">يُنشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأساسية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
-    <div class="form-group"><label>مس��ر الملف المراد حذفه</label><input id="githubDeletePath" placeholder="مثال: public/old-file.js" /></div>
+    <div class="form-group"><label>مسر الملف المراد حذفه</label><input id="githubDeletePath" placeholder="مثال: public/old-file.js" /></div>
     <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أنني أريد حذف هذا الملف نهائياً من المستودع</label>
     <button class="btn" style="background:#dc3545; color:#fff;" onclick="deleteGithubFile()">حذف الملف</button>
     <div id="githubDeleteResult" style="margin-top:12px;"></div>
@@ -676,7 +676,7 @@ tr:hover { background: var(--table-hover); }
   <div id="adminsTable"></div>
 </div>
 
-<!-- إعداد��ت المسؤول -->
+<!-- إعدادت المسؤول -->
 <div id="adminSettings" class="page hidden" style="max-width:600px;">
   <div class="page-header"><h2>⚙️ إعدادات المسؤول</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="adminSettingsAlert"></div>
@@ -763,7 +763,7 @@ tr:hover { background: var(--table-hover); }
         <span id="voiceRecordStatus">اضغط للتسجيل (20 ثانية)</span>
         <audio id="voicePreview" controls style="display:none; height:40px;"></audio>
       </div>
-      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، و��مكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتح��ق من هوية الطالب.</small>
+      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، ومكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتحق من هوية الطالب.</small>
     </div>
   </div>
   <div class="form-group"><label>ملاحظات إضافية</label><textarea id="stNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea></div>
@@ -784,7 +784,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>رقم الهاتف (11 رقم)</label><input type="text" id="editPhone" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>تاري���� الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>
+    <div class="form-group"><label>تاري الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>
     <div class="form-group"><label>السن</label><input type="number" id="editAge" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="form-row">
@@ -853,7 +853,7 @@ tr:hover { background: var(--table-hover); }
       <button class="btn btn-info" onclick="addExamPlanRow()">➕ مستوى/نوع جديد</button>
       <button class="btn btn-primary" onclick="generateExamQuestions()">🤖 توليد الأسئلة تلقائياً</button>
       <button class="btn btn-success" onclick="addManualExamQuestion()">✍️ إضافة سؤال يدوي</button>
-      <button class="btn btn-secondary" onclick="clearExamQuestions()">🗑️ مسح ا��اختبار</button>
+      <button class="btn btn-secondary" onclick="clearExamQuestions()">🗑️ مسح ااختبار</button>
     </div>
     <div id="examQuestionsEditor"></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:15px">
@@ -934,7 +934,7 @@ tr:hover { background: var(--table-hover); }
 <div id="subjectsPage" class="page hidden">
   <div class="page-header"><h2>📚 المواد والمعلمين</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div class="form-row" style="margin-bottom:20px;">
-    <div class="form-group"><label>اسم ا����مادة الجديدة</label><input type="text" id="newSubName"></div>
+    <div class="form-group"><label>اسم امادة الجديدة</label><input type="text" id="newSubName"></div>
     <div class="form-group"><label>اسم المدرس</label><input type="text" id="newSubTeacher"></div>
     <div class="form-group"><label>رقم هاتف المدرس</label><input type="text" id="newSubPhone" maxlength="11" placeholder="11 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
@@ -957,7 +957,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header">
     <h2>👨‍🎓 صفحة الطالب</h2>
     <div>
-      <button class="btn btn-outline admin-badge" onclick="showPage('studentInbox')">📬 الرسا��ل <span id="studentMsgBadge" class="msg-count hidden">0</span></button>
+      <button class="btn btn-outline admin-badge" onclick="showPage('studentInbox')">📬 الرسال <span id="studentMsgBadge" class="msg-count hidden">0</span></button>
       <button class="btn btn-outline" onclick="showPage('studentAIChat')">🤖 مساعد AI</button>
       <button class="btn btn-outline" onclick="showPage('studentRecordsPage')">📦 صندوق التسجيلات</button>
       <button class="btn btn-outline" onclick="showPage('studentExamPage')">🧪 الاختبارات</button>
@@ -981,7 +981,7 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="studentRecordsPage" class="page hidden">
-  <div class="page-header"><h2>📦 صن��وق التسجيلات</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📦 صنوق التسجيلات</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="studentRecordsContent"></div>
 </div>
 
@@ -996,14 +996,14 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>📬 صندوق الرسائل</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div class="page" style="margin-top:0;">
     <h4 style="color:var(--primary); margin-bottom:10px;">✉️ مراسلة المسؤول (نص أو رسالة صوتية)</h4>
-    <div class="form-group"><textarea id="studentMsgText" rows="3" placeholder="ا��تب رسالتك للمسؤول..."></textarea></div>
+    <div class="form-group"><textarea id="studentMsgText" rows="3" placeholder="اتب رسالتك للمسؤول..."></textarea></div>
     <div id="voiceBox_student"></div>
     <button class="btn btn-primary" onclick="sendUserMessageToAdmin('student')">📤 إرسال</button>
   </div>
   <div id="studentInboxList"></div>
 </div>
 
-<!-- دردشة AI للطا��ب -->
+<!-- دردشة AI للطاب -->
 <div id="studentAIChat" class="page hidden">
   <div class="page-header"><h2>🤖 مساعدك الذكي في القرآن</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div class="ai-chat">
@@ -1021,7 +1021,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>⚙️ تغيير الرقم السري</h2></div>
   <div id="studentSettingsAlert"></div>
   <div class="form-group"><label>الرقم السري الحالي</label><input type="password" id="currentStudentPass" placeholder="أدخل الرقم السري الحالي"></div>
-  <div class="form-group"><label>الرقم الس��ي الجديد</label><input type="password" id="newStudentPass" placeholder="أدخل الرقم السري ��لجديد"></div>
+  <div class="form-group"><label>الرقم السي الجديد</label><input type="password" id="newStudentPass" placeholder="أدخل الرقم السري لجديد"></div>
   <button class="btn btn-success" onclick="saveStudentPass()">💾 حفظ</button>
   <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
 </div>
@@ -1056,7 +1056,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ملفات المسؤول لولي الأمر -->
 <div id="parentFilesPage" class="page hidden">
-  <div class="page-header"><h2>📁 الملفات المرسلة ��ي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📁 الملفات المرسلة ي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="parentFilesContent"></div>
 </div>
 
@@ -1079,13 +1079,13 @@ tr:hover { background: var(--table-hover); }
     <div id="parentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
 <span class="badge badge-primary">OpenRouter</span>
-      <input type="text" id="parentChatInput" placeholder="اسألني ��ن مستوى ابنك، أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendParentChat()">
+      <input type="text" id="parentChatInput" placeholder="اسألني ن مستوى ابنك، أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendParentChat()">
       <button class="btn btn-primary" onclick="sendParentChat()">إرسال</button>
     </div>
   </div>
 </div>
 
-<!-- صفحة سجلات الطال�� لولي الأمر -->
+<!-- صفحة سجلات الطال لولي الأمر -->
 <div id="parentRecordsPage" class="page hidden">
   <div class="page-header">
     <h2>📋 سجلات التسميعات النهائية</h2>
@@ -1157,7 +1157,7 @@ function getAIModelLabel(){return 'OpenRouter';}
 function showToast(msg, type){
   if(!type){
     var t = String(msg);
-    type = (/(❌|���|فشل|��طأ|لا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
+    type = (/(❌||فشل|طأ|لا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
   }
   var box = document.getElementById('toastBox');
   if(!box){ box = document.createElement('div'); box.id='toastBox'; document.body.appendChild(box); }
@@ -1184,7 +1184,7 @@ const quranData = {
   9: ["الأعراف", "الأنفال"],
   10: ["الأنفال", "التوبة"],
   11: ["التوبة", "يونس", "هود"],
-  12: ["هود", "يوسف"],
+  12: ["هود", "يسف"],
   13: ["يوسف", "الرعد", "إبراهيم"],
   14: ["الحجر", "النحل"],
   15: ["الإسراء", "الكهف"],
@@ -1197,33 +1197,33 @@ const quranData = {
   22: ["الأحزاب", "سبأ", "فاطر", "يس"],
   23: ["يس", "الصافات", "ص", "الزمر"],
   24: ["الزمر", "غافر", "فصلت"],
-  25: ["فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقا��"],
+  25: ["فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقا"],
   26: ["الأحقاف", "محمد", "الفتح", "الحجرات", "ق", "الذاريات"],
-  27: ["الذاريات", "الطور", "النجم", "القمر", "ال��حمن", "الواقعة", "الحديد"],
-  28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "ال��معة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
-  29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المز��ل", "المدثر", "القيامة", "الإنسان", "المرسلات"],
-  30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "��لضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص��", "المسد", "الإخلاص", "الفلق", "الناس"]
+  27: ["الذاريات", "الطور", "النجم", "القمر", "الحمن", "الواقعة", "الحديد"],
+  28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "المعة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
+  29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزل", "المدثر", "القيامة", "الإنسان", "المرسلات"],
+  30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "لضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص", "المسد", "الإخلاص", "الفلق", "الناس"]
 };
 
 const SURAH_AYAH_COUNTS = {
   "الفاتحة": 7, "البقرة": 286, "آل عمران": 200, "النساء": 176, "المائدة": 120, "الأنعام": 165, "الأعراف": 206, "الأنفال": 75, "التوبة": 129,
-  "يونس": 109, "هود": 123, "يوسف": 111, "الرعد": 43, "إبراهيم": 52, "الحجر": 99, "النحل": 128, "الإسراء": 111, "ال��هف": 110, "مريم": 98,
+  "يونس": 109, "هود": 123, "يوسف": 111, "الرعد": 43, "إبراهيم": 52, "الحجر": 99, "النحل": 128, "الإسراء": 111, "الهف": 110, "مريم": 98,
   "طه": 135, "الأنبياء": 112, "الحج": 78, "المؤمنون": 118, "النور": 64, "الفرقان": 77, "الشعراء": 227, "النمل": 93, "القصص": 88,
   "العنكبوت": 69, "الروم": 60, "لقمان": 34, "السجدة": 30, "الأحزاب": 73, "سبأ": 54, "فاطر": 45, "يس": 83, "الصافات": 182,
   "ص": 88, "الزمر": 75, "غافر": 85, "فصلت": 54, "الشورى": 53, "الزخرف": 89, "الدخان": 59, "الجاثية": 37, "الأحقاف": 35,
   "محمد": 38, "الفتح": 29, "الحجرات": 18, "ق": 45, "الذاريات": 60, "الطور": 49, "النجم": 62, "القمر": 55, "الرحمن": 78,
   "الواقعة": 96, "الحديد": 29, "المجادلة": 22, "الحشر": 24, "الممتحنة": 13, "الصف": 14, "الجمعة": 11, "المنافقون": 11,
-  "التغابن": 18, "الطلاق": 12, "التحريم": 12, "الملك": 30, "القلم": 52, "الحاقة": 52, "الم��ارج": 44, "نوح": 28, "الجن": 28,
-  "المزمل": 20, "المدثر": 56, "القيامة": 40, "الإنسان": 31, "المرسلا��": 50, "��لنبأ": 40, "النازعات": 46, "عبس": 42,
-  "التكوير": 29, "الإنفطار": 19, "المطففين": 36, "الإنشقاق": 25, "البروج": 22, "الطارق": 17, "ا��أعلى": 19, "الغاشية": 26,
+  "التغابن": 18, "الطلاق": 12, "التحريم": 12, "الملك": 30, "القلم": 52, "الحاقة": 52, "المارج": 44, "نوح": 28, "الجن": 28,
+  "المزمل": 20, "المدثر": 56, "القيامة": 40, "الإنسان": 31, "المرسلا": 50, "لنبأ": 40, "النازعات": 46, "عبس": 42,
+  "التكوير": 29, "الإنفطار": 19, "المطففين": 36, "الإنشقاق": 25, "البروج": 22, "الطارق": 17, "اأعلى": 19, "الغاشية": 26,
   "الفجر": 30, "البلد": 20, "الشمس": 15, "الليل": 21, "الضحى": 11, "الشرح": 8, "التين": 8, "العلق": 19, "القدر": 5,
   "البينة": 8, "الزلزلة": 8, "العاديات": 11, "القارعة": 11, "التكاثر": 8, "العصر": 3, "الهمزة": 9, "الفيل": 5, "قريش": 4,
   "الماعون": 7, "الكوثر": 3, "الكافرون": 6, "النصر": 3, "المسد": 5, "الإخلاص": 4, "الفلق": 5, "الناس": 6
 };
 
 const ALL_SURAHS_ORDERED = [
-  "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "��لأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
-  "الإس��اء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "��لعنكبوت", "الروم", "لقمان", "السجدة",
+  "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "لأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
+  "الإساء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "لعنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
   "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الإنفطار",
@@ -1259,7 +1259,7 @@ if(localStorage.getItem('theme') === 'dark') {
 const LANG_DICT = {
   '🔒 دخول النظام': '🔒 System Login',
   'أدخل اسم المستخدم والرقم السري — سيتم نقلك تلقائياً لصفحتك (مسؤول / طالب / ولي أمر).': 'Enter your username and password — you will be routed automatically to your page (admin / student / parent).',
-  'اسم المستخدم': 'Username',
+  'ام المستخدم': 'Username',
   'الرقم السري': 'Password',
   '🔓 دخول': '🔓 Login',
   'ليس لديك حساب؟ أرسل طلب انضمام للمسؤول.': "Don't have an account? Send a join request to the admin.",
@@ -1365,7 +1365,7 @@ function getData(key, def) { const d = localStorage.getItem(key); return d ? JSO
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
   const status=document.getElementById('cloudSaveStatus');
-  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})}); if(!res.ok)throw new Error(); if(status)status.textContent='محفو�� في Neon'; }
+  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})}); if(!res.ok)throw new Error(); if(status)status.textContent='محفو في Neon'; }
   catch(e){ if(status)status.textContent='تعذر الحفظ في Neon'; }
 }
 function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
@@ -1520,7 +1520,7 @@ function updateBackButton() {
 }
 
 // ====== DRAFT SYSTEM - Auto finalize after 24 hours ======
-// أرشفة مهام اليوم في السجلات عند انتهاء ��ليوم (��ولي الأمر والطالب والمسؤول)
+// أرشفة مهام اليوم في السجلات عند انتهاء ليوم (ولي الأمر والطالب والمسؤول)
 function archiveDailyTasks() {
   try {
     let students = getData('students');
@@ -1559,7 +1559,7 @@ function buildDailyLog(s) {
     const at = t.approvedAt || t.rejectedAt || t.at || '';
     let day = t.day || '';
     if(!day && at) { const m = String(at).match(/(\d{1,4}[\/-]\d{1,2}[\/-]\d{1,4})/); day = m ? m[1] : ''; }
-    if(!day) day = 'بدون ��اريخ';
+    if(!day) day = 'بدون اريخ';
     const name = t.name || t.text || '';
     const key = (t.sourceMsgId || '') + '|' + day + '|' + status + '|' + name + '|' + at;
     if(seen[key]) return;
@@ -1579,7 +1579,7 @@ function renderTaskArchiveHtml(s) {
   const grouped = {};
   arch.forEach(function(t){ if(!grouped[t.day]) grouped[t.day] = []; grouped[t.day].push(t); });
   let html = '<div class="page" style="margin-top:20px; border-right:5px solid var(--info);">';
-  html += '<h4 style="color:var(--info); margin-bottom:15px;">📋 سج�� المهام اليومية (كل يوم على حدة)</h4>';
+  html += '<h4 style="color:var(--info); margin-bottom:15px;">📋 سج المهام اليومية (كل يوم على حدة)</h4>';
   Object.keys(grouped).sort().reverse().forEach(function(day){
     const list = grouped[day];
     const okCount = list.filter(function(x){ return x.status === 'approved'; }).length;
@@ -1599,7 +1599,7 @@ function renderTaskArchiveHtml(s) {
   return html;
 }
 
-// صندوق ال��سجيلات للطالب: كل التسميعات + المهام مرتبة بالأيام
+// صندوق السجيلات للطالب: كل التسميعات + المهام مرتبة بالأيام
 function renderStudentRecordsBox() {
   const s = currentUser;
   const box = document.getElementById('studentRecordsContent');
@@ -1862,7 +1862,7 @@ function updateEditSurahSelect() {
   if(!juz || !quranData[juz]) {
     select.innerHTML = '<option value="">اختر الجزء أولاً...</option>'; return;
   }
-  let html = '<option value="">اخ��ر السورة...</option>';
+  let html = '<option value="">اخر السورة...</option>';
   quranData[juz].forEach(s => { html += '<option value="'+s+'" '+(currentVal===s?'selected':'')+'>'+s+'</option>'; });
   select.innerHTML = html;
 }
@@ -2047,11 +2047,11 @@ function adminLogin() {
     showPage('adminDashboard');
     document.getElementById('adminLoginAlert').innerHTML = '';
   } else {
-    document.getElementById('adminLoginAlert').innerHTML = '<div class="alert alert-danger">❌ رقم ال��وبايل أو الرقم السري غير صحيح</div>';
+    document.getElementById('adminLoginAlert').innerHTML = '<div class="alert alert-danger">❌ رقم الوبايل أو الرقم السري غير صحيح</div>';
   }
 }
 
-// ====== شاشة القفل الموحدة: توجيه ��لقائي للصفحة المناسبة ======
+// ====== شاشة القفل الموحدة: توجيه لقائي للصفحة المناسبة ======
 function unifiedLogin() {
   const u = (document.getElementById('unifiedUser').value || '').trim();
   const p = (document.getElementById('unifiedPass').value || '').trim();
@@ -2109,7 +2109,7 @@ function unifiedLogin() {
   showToast('❌ بيانات الدخول غير صحيحة', 'error');
 }
 
-// نسخ الرقم ال��ري لولي الأمر إلى الطالب (تطابق الرقم السري)
+// نسخ الرقم الري لولي الأمر إلى الطالب (تطابق الرقم السري)
 function syncStudentPass(prefix) {
   const cb = document.getElementById(prefix === 'st' ? 'stSamePass' : 'editSamePass');
   const sp = document.getElementById(prefix === 'st' ? 'stStudentPass' : 'editStudentPass');
@@ -2153,7 +2153,7 @@ function saveAdminSettings() {
   }
   if(newPass) { admins[idx].password = newPass; changed = true; }
   if(!changed) {
-    document.getElementById('adminSettingsAlert').innerHTML = '<div class="alert alert-warning">⚠️ لم يتم ��دخال بيانات جديدة</div>';
+    document.getElementById('adminSettingsAlert').innerHTML = '<div class="alert alert-warning">⚠️ لم يتم دخال بيانات جديدة</div>';
     return;
   }
   setData('admins', admins);
@@ -2264,7 +2264,7 @@ async function saveStudent() {
   const alertBox = document.getElementById('addStudentAlert');
   const fail = function(msg) {
     alertBox.innerHTML = '<div class="alert alert-danger">❌ ' + msg + '</div>';
-    showToast('🚫 تم رفض تسجيل ��لطالب — ' + msg, 'error');
+    showToast('🚫 تم رفض تسجيل لطالب — ' + msg, 'error');
   };
 
   const name = document.getElementById('stName').value.trim();
@@ -2404,7 +2404,7 @@ function updateStudent() {
   const parentPass = document.getElementById('editParentPass').value.trim();
   if(national.length !== 14) return alert('الرقم القومي يجب أن يكون 14 رقم');
   if(phone && phone.length !== 11) return alert('رقم الهاتف يجب أن يكون 11 رقم');
-  // ✅ مسموح ت��ابق الرقم السري للطالب مع ولي الأمر
+  // ✅ مسموح تابق الرقم السري للطالب مع ولي الأمر
 
   students[idx].name = document.getElementById('editName').value.trim();
   students[idx].username = document.getElementById('editUsername').value.trim();
@@ -2459,7 +2459,7 @@ function renderStudents() {
     html += '<div class="student-field"><span class="field-label">اسم المستخدم:</span> <span class="field-value">'+s.username+'</span></div>';
     html += '<div class="student-field"><span class="field-label">الرقم القومي:</span> <span class="field-value">'+s.national+'</span></div>';
     html += '<div class="student-field"><span class="field-label">السن:</span> <span class="field-value">'+(s.age || '-')+' سنة</span></div>';
-    html += '<div class="student-field"><span class="field-label">رقم ال��اتف:</span> <span class="field-value">'+(s.phone || '-')+'</span></div>';
+    html += '<div class="student-field"><span class="field-label">رقم الاتف:</span> <span class="field-value">'+(s.phone || '-')+'</span></div>';
     html += '<div class="student-field"><span class="field-label">ولي الأمر:</span> <span class="field-value">'+s.parent+'</span></div>';
     html += '<div class="student-field"><span class="field-label">المواد:</span> <span class="badge badge-primary">'+subNames+'</span></div>';
     html += '<div class="student-field"><span class="field-label">تاريخ التسجيل:</span> <span class="field-value">'+s.createdAt+'</span></div>';
@@ -2476,7 +2476,7 @@ function renderStudents() {
 }
 
 function deleteStudent(id) {
-  if(!confirm('هل أنت متأكد من حذف هذا الطالب وجمي�� سجلاته؟')) return;
+  if(!confirm('هل أنت متأكد من حذف هذا الطالب وجمي سجلاته؟')) return;
   let students = getData('students');
   students = students.filter(s => s.id !== id);
   setData('students', students); renderStudents();
@@ -2571,7 +2571,7 @@ function addExtraElement() {
     deleted: false
   });
   renderExtraElements();
-  showToast('➕ تم�� إضافة عنصر تسميع إضافي', 'success');
+  showToast('➕ تم إضافة عنصر تسميع إضافي', 'success');
 }
 
 function renderRecordElementHTML(el, i, num) {
@@ -2582,9 +2582,9 @@ function renderRecordElementHTML(el, i, num) {
     html += '<div class="record-element" style="opacity:0.6; border-style:dashed;">';
     html += '<div class="record-element-header">';
     html += '<span class="record-element-title" style="text-decoration:line-through;">'+num+'. '+el.name+'</span>';
-    html += '<button class="btn btn-xs btn-success" onclick="restoreRecordElement('+i+')" title="استرجاع العنصر">↩�� استرجاع</button>';
+    html += '<button class="btn btn-xs btn-success" onclick="restoreRecordElement('+i+')" title="استرجاع العنصر">↩ استرجاع</button>';
     html += '</div>';
-    html += '<div style="color:var(--text-light); font-size:0.9rem;">تم حذ�� هذا العنصر — لن يُحفظ ضمن التسميع.</div>';
+    html += '<div style="color:var(--text-light); font-size:0.9rem;">تم حذ هذا العنصر — لن يُحفظ ضمن التسميع.</div>';
     html += '</div>';
     return html;
   }
@@ -2594,7 +2594,7 @@ function renderRecordElementHTML(el, i, num) {
   html += '<span class="record-element-title">'+num+'. '+el.name+'</span>';
   html += '<div style="display:flex; gap:6px; flex-wrap:wrap;">';
   html += '<button class="btn btn-xs btn-info" onclick="duplicateRecordElement('+i+')" title="تضعيف (إنشاء نسخة أخرى)">📑 تضعيف</button>';
-  html += '<button class="btn btn-xs btn-danger" onclick="removeRecordElement('+i+')" title="حذف ه��ا العنصر">🗑️ حذف</button>';
+  html += '<button class="btn btn-xs btn-danger" onclick="removeRecordElement('+i+')" title="حذف ها العنصر">🗑️ حذف</button>';
   html += '<button class="btn btn-xs btn-secondary" onclick="restoreRecordElement('+i+')" title="استرجاع بعد الحذف" disabled style="opacity:0.5;">↩️ استرجاع</button>';
   html += '</div>';
   html += '</div>';
@@ -2622,7 +2622,7 @@ function renderRecordElementHTML(el, i, num) {
       });
       html += '</select>';
     }
-    html += '<input type="text" placeholder="أو اكتب اسم ا��سور�� يدوياً..." value="'+(el.surah && !afterSurahs.includes(el.surah) ? el.surah : '')+'" onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="width:100%;">';
+    html += '<input type="text" placeholder="أو اكتب اسم اسور يدوياً..." value="'+(el.surah && !afterSurahs.includes(el.surah) ? el.surah : '')+'" onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="width:100%;">';
     if(mainSurahIndex === -1) {
       html += '<small style="color:var(--text-light)">لم يتم تحديد السورة الأساسية للطالب</small>';
     } else {
@@ -2689,10 +2689,10 @@ function renderRecordElementHTML(el, i, num) {
   html += '<div class="record-option"><input type="checkbox" id="voice_'+i+'" '+(el.isVoice?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'isVoice' + "'" + ', this.checked)"><label for="voice_'+i+'">🎙️ تسجيل صوتي</label></div>';
   html += '<div class="record-option"><input type="checkbox" id="showay_'+i+'" '+(el.showAyat?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'showAyat' + "'" + ', this.checked)"><label for="showay_'+i+'">👁️ إظهار الآيات للطالب</label></div>';
   html += '</div>';
-  const _sur = el.name === 'اللوح' || el.name === 'ا��سورة' ? (el.surah || mainSurah) : el.surah;
+  const _sur = el.name === 'اللوح' || el.name === 'اسورة' ? (el.surah || mainSurah) : el.surah;
   html += '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">';
-  html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">📖 ع��ض الآيات (صورة)</button>';
-  html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineAyat_'+i+'\', \''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">👁️ معاين�� داخل الصفحة</button>';
+  html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">📖 عض الآيات (صورة)</button>';
+  html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineAyat_'+i+'\', \''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">👁️ معاين داخل الصفحة</button>';
   html += '</div><div id="inlineAyat_'+i+'" data-open="0" style="margin-top:10px;"></div>';
 
   // Rating
@@ -2777,7 +2777,7 @@ function updateHomeworkItem(idx, field, value) {
 }
 function renderHomeworkItems() {
   const container = document.getElementById('homeworkItems');
-  if(homeworkItems.length === 0) { container.innerHTML = '<p style="color:var(--text-light)">لا ي��جد واجبات مضافة. اضغط + لإضافة واجب</p>'; return; }
+  if(homeworkItems.length === 0) { container.innerHTML = '<p style="color:var(--text-light)">لا يجد واجبات مضافة. اضغط + لإضافة واجب</p>'; return; }
   let html = '';
   homeworkItems.forEach((item, i) => {
     html += '<div style="background:#fff; padding:12px; border-radius:8px; margin-bottom:8px; border:1px solid var(--border);">';
@@ -2859,7 +2859,7 @@ function renderReadingItems() {
 
     html += '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">';
     html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(item.surah||'')+'\', \''+(item.from||'')+'\', \''+(item.to||item.from||'')+'\')">📖 عرض الآيات (صورة)</button>';
-    html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineRead_'+i+'\', \''+(item.surah||'')+'\', \''+(item.from||'')+'\', \''+(item.to||item.from||'')+'\')">👁️ معاينة داخل ��لصفحة</button>';
+    html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineRead_'+i+'\', \''+(item.surah||'')+'\', \''+(item.from||'')+'\', \''+(item.to||item.from||'')+'\')">👁️ معاينة داخل لصفحة</button>';
     html += '</div><div id="inlineRead_'+i+'" data-open="0" style="margin-top:10px;"></div>';
 
     html += '<div class="form-group" style="margin-top:8px;"><label>ملاحظة / نص القراءة (اختياري)</label><input type="text" value="'+(item.text||'')+'" onchange="updateReadingItem('+i+', \'text\', this.value)" placeholder="نص أو توجيه للطالب..."></div>';
@@ -2915,7 +2915,7 @@ function localSmartChatReply(message,role){
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكره|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أو سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
-  if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم و��عد أسبوع.';
+  if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت الهدف والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
 }
 async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';box.innerHTML+='<div class="ai-msg user">'+escapeHtml(message)+'</div><div id="adminAiTyping" class="ai-msg bot">جاري التحليل...</div>';box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await readApiJson(res,'تعذر رد OpenRouter');document.getElementById('adminAiTyping').outerHTML='<div class="ai-msg bot">'+escapeHtml(data.result).replace(/\n/g,'<br>')+'</div>'}catch(e){document.getElementById('adminAiTyping').textContent=localSmartChatReply(message,'admin')}box.scrollTop=box.scrollHeight}
@@ -3015,7 +3015,7 @@ function setExamPlanTime(i,part,value){
 function deleteExamPlanRow(index){
   if(!examPlanRows[index]||!confirm('هل تريد حذف خانة السؤال المحددة فقط؟'))return;
   examPlanRows.splice(index,1);renderExamPlanRows();
-  showExamAlert('تم حذف خانة السؤال فقط، ��لم تُحذف بقية الخطة أو أسئلة الاختبار.','info');
+  showExamAlert('تم حذف خانة السؤال فقط، لم تُحذف بقية الخطة أو أسئلة الاختبار.','info');
 }
 function renderExamPlanRows(){
   const c=document.getElementById('examPlanRows'); if(!c)return;
@@ -3027,13 +3027,13 @@ function renderExamPlanRows(){
       '<div class="form-group"><label>عدد الأسئلة</label><input type="number" min="1" max="50" value="'+(r.count||1)+'" onchange="examPlanRows['+i+'].count=Math.max(1,Math.min(50,parseInt(this.value)||1))"></div>'+
       '<div class="form-group"><label>المستوى</label><select onchange="examPlanRows['+i+'].level=this.value">'+
       '<option value="easy" '+(r.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(r.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(r.level==='hard'?'selected':'')+'>صعب</option></select></div>'+
-      '<div class="form-group"><label>ن��ع السؤال</label><select onchange="examPlanRows['+i+'].type=this.value;renderExamPlanRows()">'+
+      '<div class="form-group"><label>نع السؤال</label><select onchange="examPlanRows['+i+'].type=this.value;renderExamPlanRows()">'+
       '<option value="mcq" '+(r.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(r.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(r.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(r.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+
       '<div class="form-group"><label>موضع السؤال</label><select onchange="examPlanRows['+i+'].position=this.value"><option value="random" '+((r.position||'random')==='random'?'selected':'')+'>عشوائي ومتنوع</option><option value="start" '+(r.position==='start'?'selected':'')+'>أول السورة</option><option value="middle" '+(r.position==='middle'?'selected':'')+'>وسط السورة</option><option value="end" '+(r.position==='end'?'selected':'')+'>آخر السورة</option></select></div>'+
       '<div class="form-group"><label>وقت السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" title="الساعات" type="number" min="0" max="23" value="'+Math.floor((r.timeLimit||60)/3600)+'" onchange="setExamPlanTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" title="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((r.timeLimit||60)%3600)/60)+'" onchange="setExamPlanTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" title="الثواني" type="number" min="0" max="59" value="'+((r.timeLimit||60)%60)+'" onchange="setExamPlanTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+
       (r.type==='mcq'?'<div class="form-group"><label>عدد الاختيارات</label><input type="number" min="2" max="6" value="'+(r.optionsCount||4)+'" onchange="examPlanRows['+i+'].optionsCount=Math.max(2,Math.min(6,parseInt(this.value)||4))"></div>':'')+
       (r.type==='complete'?'<div class="form-group"><label>عدد الآيات المراد إكمالها</label><input type="number" min="1" max="20" value="'+(r.completeAyahs||1)+'" onchange="examPlanRows['+i+'].completeAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">يحدد عدد الآيات التي سيكملها الطالب بعد بداية السؤال</small></div>':'')+
-      (r.type==='audio'?'<div class="form-group"><label>عدد الآ��ات المطلوب تسجيلها</label><input type="number" min="1" max="20" value="'+(r.reciteAyahs||1)+'" onchange="examPlanRows['+i+'].reciteAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">عدد الآيات التي سيقرأها الطالب</small></div>':'')+
+      (r.type==='audio'?'<div class="form-group"><label>عدد الآات المطلوب تسجيلها</label><input type="number" min="1" max="20" value="'+(r.reciteAyahs||1)+'" onchange="examPlanRows['+i+'].reciteAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">عدد الآيات التي سيقرأها الطالب</small></div>':'')+
       (r.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="examPlanRows['+i+'].audioShareWithParent=this.value===\'true\'"><option value="true" '+(r.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(r.audioShareWithParent===false?'selected':'')+'>إخفاء عن ولي الأمر</option></select></div>':'')+
       '<div class="form-group" style="display:flex;align-items:flex-end"><button class="btn btn-xs btn-danger" onclick="deleteExamPlanRow('+i+')">حذف الخانة</button></div>'+
       '</div></div>';
@@ -3041,7 +3041,7 @@ function renderExamPlanRows(){
   c.innerHTML=h;
 }
 function examLevelLabel(l){return l==='easy'?'سهل':l==='hard'?'صعب':'متوسط'}
-function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(/��/g,'ه').replace(/ى/g,'ي').trim()}
+function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(//g,'ه').replace(/ى/g,'ي').trim()}
 
 async function buildExamSourceCandidates(base){
   const baseIdx=ALL_SURAHS_ORDERED.indexOf(base);
@@ -3064,7 +3064,7 @@ function startExamGenerationProgress(questionCount){
   const overlay=document.getElementById('examGenerationOverlay'),stage=document.getElementById('examGenerationStage'),bar=document.getElementById('examGenerationBar'),eta=document.getElementById('examGenerationEta');
   let elapsed=0,total=Math.max(45,Math.min(180,35+(Math.max(1,questionCount||1)*7)));overlay?.classList.remove('hidden');
   clearInterval(examGenerationTimer);
-  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينتقي الذكاء الاصطناعي أسئلة المتشابهات ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية و��نع كشف الإجابات...';elapsed++};
+  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينتقي الذكاء الاصطناعي أسئلة المتشابهات ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
   update();examGenerationTimer=setInterval(update,1000);
 }
 function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'اكتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
@@ -3088,7 +3088,7 @@ async function generateExamQuestions(){
     if(sourceMode==='file')raw=generateLocalFileQuestions(file,expandedPlans);
     else{try{const ai=await callStudentAI('generate_exam',{surahNumber:startIndex+1,endSurahNumber:endIndex+1,plan:expandedPlans,pastScope:range.scope,nearSurahs:range.near,farSurahs:range.far,useReferenceFiles:true,previousQuestionFingerprints:existingFingerprints},0.22);raw=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[])}catch(aiError){raw=await generateLocalQuranQuestions(range.start,range.end,expandedPlans);showExamAlert('استخدم النظام المولد القرآني الاحتياطي بعد تعذر مزودي الذكاء الاصطناعي.','warning')}}
     const unique=[];for(const q of raw.map(cleanExamQuestion).filter(q=>q.prompt&&q.correct!==undefined)){const fingerprint=examQuestionFingerprint(q);if(existingSet.has(fingerprint))continue;existingSet.add(fingerprint);unique.push(q);if(unique.length===requestedTotal)break}
-    if(!unique.length)throw new Error('لم تُنتج الدفعة أسئلة جديدة غير مكررة. غيّر النطاق أو الخطة ثم أعد المحاولة.');
+    if(!unique.length)throw new Error('لم تُنتج ادفعة أسئلة جديدة غير مكررة. غيّر النطاق أو الخطة ثم أعد المحاولة.');
     const stamp=Date.now(),added=unique.map((q,index)=>{const plan=expandedPlans[index]||normalizedPlans[0];return {id:'exam_'+stamp+'_'+index,type:plan.type,level:plan.level,surah:q.surah||base,prompt:q.prompt||'',stem:q.stem||'',options:Array.isArray(q.options)?q.options:[],correct:q.correct||'',from:parseInt(q.from)||1,to:parseInt(q.to)||parseInt(q.from)||1,surahNumber:parseInt(q.surahNumber)||0,timeLimit:plan.timeLimit,completeAyahs:plan.completeAyahs,reciteAyahs:plan.reciteAyahs,audioShareWithParent:plan.audioShareWithParent!==false,points:typeof q.points==='number'?q.points:1,rejected:false,weakened:false,source:q.source||(sourceMode==='file'?'file':'ai-verified'),sourceFileId:q.sourceFileId||'',sourceFileName:q.sourceFileName||'',questionImage:q.questionImage||'',optionsCount:plan.optionsCount||4,pastScope:range.scope}});
     const previousCount=examQuestions.length;examQuestions=examQuestions.concat(added);examEditorActiveIndex=previousCount;generationSucceeded=true;renderExamQuestions();showExamAlert('تمت إضافة '+added.length+' سؤالاً جديداً، والإجمالي الآن '+examQuestions.length+' سؤالاً. لم تُحذف الأسئلة السابقة.','success');
   }catch(e){showExamAlert((e.message||'تعذر توليد الأسئلة')+' لم يتم حذف أي سؤال سابق.','danger')}
@@ -3114,7 +3114,7 @@ function renderExamQuestions(){
     '<div class="exam-question-header"><strong>السؤال '+(i+1)+' من '+examQuestions.length+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">رفض السؤال</button>')+'</div>'+
     quranQuestionMediaHtml(q,i)+
     '<div class="form-row"><div class="form-group"><label>النوع</label><select onchange="updateExamQuestion('+i+',\'type\',this.value);renderExamQuestions()"><option value="mcq" '+(q.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(q.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(q.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(q.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+ 
-    '<div class="form-group"><label>��لمستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+ 
+    '<div class="form-group"><label>لمستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+ 
     '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
     (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
     (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+'</div>'+
@@ -3260,7 +3260,7 @@ async function submitStudentExam(auto){
   }
   const hasAudio=ex.questions.some(q=>q.type==='audio');ex.status=hasAudio?'pending_audio_review':'graded';ex.submittedAt=Date.now();ex.answers=answers;ex.score=score;ex.maxScore=ex.questions.reduce((n,q)=>n+(Number(q.points)||1),0);ex.totalDurationSeconds=Math.round((Date.now()-(ex.createdAt||Date.now()))/1000);ex.autoSubmitted=!!auto;ex.reviewedAt=hasAudio?null:Date.now();
   let students=getData('students');const idx=students.findIndex(x=>x.id===s.id);if(idx<0)return;students[idx].activeExam=null;students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].completedTasks=students[idx].completedTasks||[];students[idx].completedTasks.push({type:'exam',name:'اختبار '+ex.date,date:ex.date,completedAt:new Date().toLocaleString('ar-EG'),score,maxScore:ex.maxScore});setData('students',students);currentUser=students[idx];
-  let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصو��ي ��� النتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
+  let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوي  النتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة التسجيل الصوتي':'نتيجة اختبار '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبار وإرساله للمسؤول وولي الأمر','success');
 }
@@ -3283,7 +3283,7 @@ async function recordStudentExamAudio(i){
       let usedTranscript=transcript;
       if(aiResult){ usedTranscript=aiResult.transcript||transcript; }
       else {
-        try{const expected=await fetchAyatText(q.surah,q.from,q.to);aiResult=await callStudentAI('grade_recitation',{surah:q.surah,from:q.from,to:q.to,expectedText:expected,studentTranscript:transcript,studentVoiceMatch:match},0.05)}catch(e){aiResult={accepted:false,score:0,matchedPercent:0,reason:'تعذر الاتصال بالذكاء الاصطنا��ي لتصحيح محتوى التلاوة'};}
+        try{const expected=await fetchAyatText(q.surah,q.from,q.to);aiResult=await callStudentAI('grade_recitation',{surah:q.surah,from:q.from,to:q.to,expectedText:expected,studentTranscript:transcript,studentVoiceMatch:match},0.05)}catch(e){aiResult={accepted:false,score:0,matchedPercent:0,reason:'تعذر الاتصال بالذكاء الاصطناي لتصحيح محتوى التلاوة'};}
       }
       studentExamAudioAnswers[i]={dataUrl,transcript:usedTranscript,voiceMatch:match,aiResult};studentExamAnswers[i]=usedTranscript;
       const pct=aiResult.matchedPercent??0;status.textContent='تم استلام التسجيل بنجاح — النتيجة التفصيلية بانتظار مراجعة المسؤول';
@@ -3299,7 +3299,7 @@ function notifyExamExpired(student,ex){if(ex.expiryNotified)return;ex.expiryNoti
 function examWhatsAppLink(phone,text){const p=String(phone||'').replace(/\D/g,'').replace(/^0/,'20');return p?'https://wa.me/'+p+'?text='+encodeURIComponent(text):''}
 function checkExamDeadlines(){let students=getData('students',[]),changed=false;students.forEach(s=>{const ex=s.activeExam;if(ex&&ex.status==='pending'&&ex.deadlineAt&&Date.now()>=ex.deadlineAt&&!ex.expiryNotified){notifyExamExpired(s,ex);changed=true}});if(changed)setData('students',students)}
 setInterval(checkExamDeadlines,30000);setTimeout(checkExamDeadlines,1500);
-function reviewAudioExam(studentId,examId,accepted){let students=getData('students'),s=students.find(x=>x.id===studentId);if(!s)return;let ex=(s.examResults||[]).find(x=>x.id===examId);if(!ex)return;ex.answers.forEach((a,i)=>{if(ex.questions[i]?.type==='audio'){a.score=accepted?1:0;a.correct=accepted;a.aiResult=Object.assign({},a.aiResult,{accepted,score:accepted?1:0,reason:accepted?'اعتمد المسؤول التسجيل مطابقاً':'قرر الم��ؤول أن التسجيل غير مطابق'})}});ex.score=ex.answers.reduce((n,a)=>n+(Number(a.score)||0),0);ex.status='graded';ex.reviewedAt=Date.now();setData('students',students);renderMessages();showToast('تم اعتماد مراجعة التسجيل الصوتي','success')}
+function reviewAudioExam(studentId,examId,accepted){let students=getData('students'),s=students.find(x=>x.id===studentId);if(!s)return;let ex=(s.examResults||[]).find(x=>x.id===examId);if(!ex)return;ex.answers.forEach((a,i)=>{if(ex.questions[i]?.type==='audio'){a.score=accepted?1:0;a.correct=accepted;a.aiResult=Object.assign({},a.aiResult,{accepted,score:accepted?1:0,reason:accepted?'اعتمد المسؤول اتسجيل مطابقاً':'قرر المؤول أن التسجيل غير مطابق'})}});ex.score=ex.answers.reduce((n,a)=>n+(Number(a.score)||0),0);ex.status='graded';ex.reviewedAt=Date.now();setData('students',students);renderMessages();showToast('تم اعتماد مراجعة التسجيل الصوتي','success')}
 
 function renderParentExamResults(s){
   let arr=s.examResults||[];if(!arr.length)return '';
@@ -3349,8 +3349,8 @@ function saveSession(isFinal) {
     return;
   }
 
-  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام ال��الية والانتقال لليوم التالي.
-  const session = {date,elements:JSON.parse(JSON.stringify(activeElements)),homework:JSON.parse(JSON.stringify(homeworkItems)),reading:JSON.parse(JSON.stringify(readingItems)),totalScore,notes,isDraft:false,finalizedAt:nowText,status:'نهائ��',completedTaskSnapshot:previousTasks};
+  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام الالية والانتقال لليوم التالي.
+  const session = {date,elements:JSON.parse(JSON.stringify(activeElements)),homework:JSON.parse(JSON.stringify(homeworkItems)),reading:JSON.parse(JSON.stringify(readingItems)),totalScore,notes,isDraft:false,finalizedAt:nowText,status:'نهائ',completedTaskSnapshot:previousTasks};
   students[idx].sessions = students[idx].sessions.filter(s => !s.isDraft && s.date !== date);
   students[idx].sessions.push(session);
   if(!students[idx].completedTasks) students[idx].completedTasks=[];
@@ -3370,7 +3370,7 @@ function saveSession(isFinal) {
   messages.push({type:'system',sender:'النظام',senderId:0,receiverType:'student',receiverId:id,text:report,reply:'',time:nowText,approved:true,read:false});
   messages.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:students[idx].parent,text:report,reply:'',time:nowText,approved:true,read:false,reportDate:date,reportSession:JSON.parse(JSON.stringify(session))});
   setData('messages',messages);
-  showToast('✅ تم الحفظ النهائي — أُغلقت مهام '+date+' وانتقل النظام إل�� '+nextDateStr, 'success');
+  showToast('✅ تم الحفظ النهائي — أُغلقت مهام '+date+' وانتقل النظام إل '+nextDateStr, 'success');
   resetRecordForm();
   document.getElementById('recordDate').value=nextDateStr;
 }
@@ -3407,7 +3407,7 @@ function openHistory(id) {
   const sessions = s.sessions || [];
   const finalizedSessions = sessions.filter(sess => !sess.isDraft);
 
-  let html = '<h3 style="color:var(--primary); margin-bottom:15px;">📋 سجل ا��تسميعات النهائية — '+s.name+'</h3>';
+  let html = '<h3 style="color:var(--primary); margin-bottom:15px;">📋 سجل اتسميعات النهائية — '+s.name+'</h3>';
   if(finalizedSessions.length === 0) {
     html += '<div class="alert alert-info">لا يوجد تسميعات نهائية مسجلة بعد. التسميعات المسودة تظل قابلة للتعديل لمدة 24 ساعة قبل نقلها هنا.</div>';
   } else {
@@ -3435,8 +3435,8 @@ function openHistory(id) {
           html += '</div></div>';
         });
         html += '<div style="text-align:center; margin-top:15px; padding-top:15px; border-top:2px dashed var(--border);">';
-        html += '<span class="score-badge">المج��وع: '+sess.totalScore+' درجة</span>';
-        if(sess.finalizedAt) html += '<p style="margin-top:8px; color:var(--success); font-size:0.9rem;">✅ تم الإغلاق النهائي ��تاريخ: '+sess.finalizedAt+'</p>';
+        html += '<span class="score-badge">المجوع: '+sess.totalScore+' درجة</span>';
+        if(sess.finalizedAt) html += '<p style="margin-top:8px; color:var(--success); font-size:0.9rem;">✅ تم الإغلاق النهائي تاريخ: '+sess.finalizedAt+'</p>';
         if(sess.notes) html += '<p style="margin-top:10px; color:var(--text-light);"><strong>ملاحظات:</strong> '+sess.notes+'</p>';
         html += '</div>';
       });
@@ -3456,7 +3456,7 @@ function getRatingClass(val) {
 }
 function getRatingLabel(val) {
   if(val === '4') return 'ممتاز';
-  if(val === '3') return 'جيد ��داً';
+  if(val === '3') return 'جيد داً';
   if(val === '1') return 'جيد';
   if(val === '0') return 'يعاد';
   return '-';
@@ -3468,7 +3468,7 @@ function openFullChart() {
   const students = getData('students');
   const s = students.find(x => x.id === fullChartStudentId);
   if(!s || !s.sessions || s.sessions.length === 0) {
-    alert('لا توجد بي��نات كافية للمخطط'); return;
+    alert('لا توجد بينات كافية للمخطط'); return;
   }
   const finalizedSessions = s.sessions.filter(sess => !sess.isDraft);
   if(finalizedSessions.length === 0) {
@@ -3661,7 +3661,7 @@ function escapeHtmlAi(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ===== مزامنة GitHub (��لمسؤول فقط) =====
+// ===== مزامنة GitHub (لمسؤول فقط) =====
 function openGithubSync(){
   if(currentType !== 'admin'){ showToast('❌ هذه الميزة متاحة للمسؤول فقط', 'error'); return; }
   const a = document.getElementById('githubSyncAlert'); if(a) a.innerHTML = '';
@@ -3679,7 +3679,7 @@ async function refreshGithubSync(){
   const link = document.getElementById('githubHistoryLink');
   const del = document.getElementById('githubDeleteBox');
   if(btn){ btn.disabled = true; btn.textContent = '⏳ جارٍ التحقق...'; }
-  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من ال��ت��ال بمستودعك...</p>';
+  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من التال بمستودعك...</p>';
   try {
     const st = await callStudentAI('github_status', { role:'admin', adminId: currentAdminId || null }, 0.1);
     if(!st || st.connected !== true){
@@ -3702,7 +3702,7 @@ async function refreshGithubSync(){
       html += '<div style="margin-top:6px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.15);">آخر Commit:</div>';
       html += '<div>🔖 <code>'+escapeHtmlAi(lc.sha)+'</code> — '+escapeHtmlAi((lc.message||'').split('\n')[0])+'</div>';
       html += '<div style="color:var(--text-light); font-size:0.85rem;">👤 '+escapeHtmlAi(lc.author||'')+(lc.date ? ' — '+escapeHtmlAi(new Date(lc.date).toLocaleString('ar-EG')) : '')+'</div>';
-      if(lc.url) html += '<div><a href="'+escapeHtmlAi(lc.url)+'" target="_blank" rel="noopener">��رض هذا الـCommit على GitHub</a></div>';
+      if(lc.url) html += '<div><a href="'+escapeHtmlAi(lc.url)+'" target="_blank" rel="noopener">رض هذا الـCommit على GitHub</a></div>';
     }
     html += '</div></div>';
     if(box) box.innerHTML = html;
@@ -3717,13 +3717,13 @@ async function refreshGithubSync(){
 }
 
 async function deleteGithubFile(){
-  if(currentType !== 'admin'){ showToast('❌ ��ذه الميزة متاحة للمسؤول فقط', 'error'); return; }
+  if(currentType !== 'admin'){ showToast('❌ ذه الميزة متاحة للمسؤول فقط', 'error'); return; }
   const pathEl = document.getElementById('githubDeletePath');
   const confirmEl = document.getElementById('githubDeleteConfirm');
   const resBox = document.getElementById('githubDeleteResult');
   const path = (pathEl ? pathEl.value.trim() : '');
   if(!path){ showToast('❌ اكتب مسار الملف أولاً', 'error'); return; }
-  if(!confirmEl || !confirmEl.checked){ showToast('❌ يجب تأكيد الحذف أولا��', 'error'); return; }
+  if(!confirmEl || !confirmEl.checked){ showToast('❌ يجب تأكيد الحذف أولا', 'error'); return; }
   if(!confirm('هل أنت متأكد من حذف الملف: '+path+' ؟ سيتم إنشاء Commit في مستودعك.')) return;
   if(resBox) resBox.innerHTML = '<span style="color:var(--text-light)">جارٍ الحذف...</span>';
   try {
@@ -3733,7 +3733,7 @@ async function deleteGithubFile(){
   if(r.commitUrl) html += '<div><a href="'+escapeHtmlAi(r.commitUrl)+'" target="_blank" rel="noopener">عرض الـCommit</a></div>';
   if(resBox) resBox.innerHTML = html;
   if(pathEl) pathEl.value = ''; if(confirmEl) confirmEl.checked = false;
-  recordDevAudit({ status:'applied', request:'حذف ملف: '+path, summary:'حذف م��ف من المستودع بتأكيد صريح.', files:[{ path, commitUrl:r.commitUrl||null }], flagged:['حذف ملف'] });
+  recordDevAudit({ status:'applied', request:'حذف ملف: '+path, summary:'حذف مف من المستودع بتأكيد صريح.', files:[{ path, commitUrl:r.commitUrl||null }], flagged:['حذف ملف'] });
   refreshGithubSync();
   } else {
   if(resBox) resBox.innerHTML = '<span style="color:#dc3545;">❌ لم يتم الحذف</span>';
@@ -3761,16 +3761,16 @@ function openDevAssistant(){
 }
 
 // ===== سجل التدقيق لمساعد التطوير (Audit Log) =====
-// عبارات تدل على عمليات خطيرة تتطلب تأكيداً صريحاً قبل التنفي�� ال��لقائي.
+// عبارات تدل على عمليات خطيرة تتطلب تأكيداً صريحاً قبل التنفي اللقائي.
 const DEV_DANGER_PATTERNS = [
-  {re:/حذف\s*(قاعدة|��لقاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
+  {re:/حذف\s*(قاعدة|لقاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
   {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*الملفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
   {re:/حذف\s*(المستخدمين|كل\s*المستخدمين|جميع\s*المستخدمين)|delete\s+users/i, label:'حذف المستخدمين'},
   {re:/حذف\s*(الطلاب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},
-  {re:/(المصادقة|تسجيل\s*ا��دخول|نظام\s*الدخول|كلمة\s*المرور\s*الرئيسية|authentication|login\s*system)/i, label:'تغيير نظام المصادقة'},
+  {re:/(المصادقة|تسجيل\s*ادخول|نظام\s*الدخول|كلمة\s*المرور\s*الرئيسية|authentication|login\s*system)/i, label:'تغيير نظام المصادقة'},
   {re:/(تغيير|تعديل|حذف)\s*(الصلاحيات|الأذونات|permissions)/i, label:'تغيير الصلاحيات'},
-  {re:/(تغيير|تعديل|حذف)\s*(مفاتيح|متغيرات)\s*الب��ئة|env(ironment)?\s*var|\.env/i, label:'تغيير مفاتيح البيئة'},
-  {re:/(تغيير|تعط��ل|إزالة)\s*(إعدادات\s*)?الأمان|security/i, label:'تغيير إعدادات الأم��ن'},
+  {re:/(تغيير|تعديل|حذف)\s*(مفاتيح|متغيرات)\s*البئة|env(ironment)?\s*var|\.env/i, label:'تغيير مفاتيح البيئة'},
+  {re:/(تغيير|تعطل|إزالة)\s*(إعدادات\s*)?الأمان|security/i, label:'تغيير إعدادات الأمن'},
 ];
 function detectDevDanger(request){
   const hits = [];
@@ -3907,7 +3907,7 @@ function renderDevPlan(plan){
   if(plan.summary) h += '<div style="margin-bottom:12px;"><strong>الملخص:</strong> '+esc(plan.summary)+'</div>';
 
   if(Array.isArray(plan.files) && plan.files.length){
-    h += '<div style="font-weight:bold; margin:14px 0 8px; color:var(--primary);">📁 المل��ات التي ستتغيّر</div>';
+    h += '<div style="font-weight:bold; margin:14px 0 8px; color:var(--primary);">📁 الملات التي ستتغيّر</div>';
     plan.files.forEach(function(f){
       const badge = f.action === 'create'
         ? '<span style="background:#28a745;color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;">إنشاء</span>'
@@ -4004,7 +4004,7 @@ function sendComposeMessage() {
   const person = document.getElementById('composePerson').value;
   const text = document.getElementById('composeText').value.trim();
   const voice = voiceMsgStore['compose'] || '';
-  if(!person || (!text && !voice)) return showToast('��� اختر المستلم واكتب رسالة أو سجّل رسالة صوتية', 'error');
+  if(!person || (!text && !voice)) return showToast(' اختر المستلم واكتب رسالة أو سجّل رسالة صوتية', 'error');
   let messages = getData('messages');
   const parts = person.split('_');
   const type = parts[0];
@@ -4045,7 +4045,7 @@ function renderMessages() {
     const hasFile = m.fileData ? '<div style="margin:8px 0;"><button onclick="openMessageFile('+realIdx+')" class="btn btn-sm btn-primary">👁️ عرض الملف: '+(m.fileName || 'ملف')+'</button></div>' : '';
     let shareBtn = '';
     if(m.fileData) {
-      shareBtn = '<div style="margin:8px 0;"><button class="btn btn-sm '+(m.shareWithParent ? 'btn-success' : 'btn-secondary')+'" onclick="toggleShareWithParent('+realIdx+')">'+(m.shareWithParent ? '👨‍👩‍👧 ولي الأ��ر يمكنه الاطلاع (اضغط للمنع)' : '🔒 السماح لولي الأمر بالاطلاع على الملف')+'</button></div>';
+      shareBtn = '<div style="margin:8px 0;"><button class="btn btn-sm '+(m.shareWithParent ? 'btn-success' : 'btn-secondary')+'" onclick="toggleShareWithParent('+realIdx+')">'+(m.shareWithParent ? '👨‍👩‍👧 ولي الأر يمكنه الاطلاع (اضغط للمنع)' : '🔒 السماح لولي الأمر بالاطلاع على الملف')+'</button></div>';
     }
     let approvalBtns = '';
     if((m.type === 'student' || m.type === 'parent') && !m.approved && !m.rejected) {
@@ -4075,7 +4075,7 @@ function toggleShareWithParent(idx) {
   msgs[idx].shareWithParent = !msgs[idx].shareWithParent;
   setData('messages', msgs);
   renderMessages();
-  alert(msgs[idx].shareWithParent ? '✅ أصبح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعديل).' : '🚫 تم منع ولي الأ��ر من الاطلاع على هذا الملف.');
+  alert(msgs[idx].shareWithParent ? '✅ أصبح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعديل).' : '🚫 تم منع ولي الأر من الاطلاع على هذا الملف.');
 }
 
 function openMessageFileById(msgId, readonly) {
@@ -4083,7 +4083,7 @@ function openMessageFileById(msgId, readonly) {
   const m = msgs.find(x => x.id === msgId);
   if(!m || !m.fileData) { alert('الملف غير متاح'); return; }
   if(readonly && !m.shareWithParent) { alert('لم يسمح المسؤول بالاطلاع على هذا الملف بعد'); return; }
-  openFileModal(m.fileData, m.fileName || 'file', 'ملف مرسل من ' + m.sender + (typeof m.voiceMatch === 'number' ? ' — 🤖 مطابقة البصم�� الصوتية: ' + m.voiceMatch + '% ' + (m.voiceMatch >= VOICE_MATCH_THRESHOLD ? '✅ مطابق' : '⚠️ ��ير مطابق') : ''), m.fileType === 'homework' ? 'image/jpeg' : (m.fileType === 'reading' || m.fileType === 'voice') ? 'audio/webm' : '', readonly);
+  openFileModal(m.fileData, m.fileName || 'file', 'ملف مرسل من ' + m.sender + (typeof m.voiceMatch === 'number' ? ' — 🤖 مطابقة البصم الصوتية: ' + m.voiceMatch + '% ' + (m.voiceMatch >= VOICE_MATCH_THRESHOLD ? '✅ مطابق' : '⚠️ ير مطابق') : ''), m.fileType === 'homework' ? 'image/jpeg' : (m.fileType === 'reading' || m.fileType === 'voice') ? 'audio/webm' : '', readonly);
 }
 
 function approveMessage(idx, approved) {
@@ -4147,9 +4147,9 @@ function approveMessage(idx, approved) {
 
         // Send approval message to student
         msgs.push({
-          type:'admin', sender:'المسؤو��', senderId:0,
+          type:'admin', sender:'المسؤو', senderId:0,
           receiverType: 'student', receiverId: studentId,
-          text: '✅ تمت مو��فقة المسؤول على ملفك وتم تسجيل المهمة في السجلات بنجاح! أحسنت.',
+          text: '✅ تمت موفقة المسؤول على ملفك وتم تسجيل المهمة في السجلات بنجاح! أحسنت.',
           reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false
         });
 
@@ -4185,7 +4185,7 @@ function approveMessage(idx, approved) {
         msgs.push({
           type:'admin', sender:'المسؤول', senderId:0,
           receiverType: 'student', receiverId: studentId,
-          text: '❌ تم رفض ملفك من المسؤول. يرجى المحاو��ة مرة أخرى وإرسال ملف جديد.',
+          text: '❌ تم رفض ملفك من المسؤول. يرجى المحاوة مرة أخرى وإرسال ملف جديد.',
           reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false
         });
 
@@ -4226,7 +4226,7 @@ function replyMessage(idx) {
   msgs[idx].reply = replyText || '🎙️ رد صوتي';
   msgs[idx].replyVoice = voice;
   clearVoiceMsg('reply' + idx);
-  showToast('✅ تم إرسال الر��', 'success');
+  showToast('✅ تم إرسال الر', 'success');
   setData('messages', msgs);
   renderMessages();
 }
@@ -4343,7 +4343,7 @@ function saveStudentPass() {
     students[idx].studentPass = newPass;
     setData('students', students);
     currentUser = students[idx];
-    document.getElementById('studentSettingsAlert').innerHTML = '<div class="alert alert-success">✅ تم تغيير ا��رقم السري بنجاح</div>';
+    document.getElementById('studentSettingsAlert').innerHTML = '<div class="alert alert-success">✅ تم تغيير ارقم السري بنجاح</div>';
   }
 }
 
@@ -4382,7 +4382,7 @@ function renderStudentDashboard() {
   // Render active draft if exists
   const draft = s.sessions ? s.sessions.find(sess => sess.isDraft) : null;
   if(draft && isQuran) {
-    let draftHtml = '<div class="page draft-card" style="margin-top:20px;"><h4 style="color:var(--warning); margin-bottom:15px;">�� تسميع اليوم (مسودة - قيد التعديل)</h4>';
+    let draftHtml = '<div class="page draft-card" style="margin-top:20px;"><h4 style="color:var(--warning); margin-bottom:15px;"> تسميع اليوم (مسودة - قيد التعديل)</h4>';
     draftHtml += '<p><strong>التاريخ:</strong> '+draft.date+'</p>';
     draft.elements.forEach((el, ei) => {
       draftHtml += '<div style="padding:10px; background:var(--input-bg); border-radius:8px; margin-bottom:8px; border-right:3px solid '+(el.color || 'var(--primary)')+';">';
@@ -4471,7 +4471,7 @@ function checkExpiredTasks(studentId) {
 function studentAyatBlock(task, key) {
   if(!task.showAyat || !task.surah || !task.from) return '';
   let h = '<div style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap;">';
-  h += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+task.surah+'\', \''+task.from+'\', \''+(task.to||task.from)+'\')">📖 ع��ض الآيات بحجم كبير</button>';
+  h += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+task.surah+'\', \''+task.from+'\', \''+(task.to||task.from)+'\')">📖 عض الآيات بحجم كبير</button>';
   h += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'stAyat_'+key+'\', \''+task.surah+'\', \''+task.from+'\', \''+(task.to||task.from)+'\')">👁️ إظهار/إخفاء الآيات</button>';
   h += '</div><div id="stAyat_'+key+'" data-open="0"></div>';
   return h;
@@ -4524,7 +4524,7 @@ function renderStudentTasks() {
 
     } else if(task.type === 'reading') {
       html += '<div class="task-card" style="border-right-color:var(--warning);"><h5>📖 قراءة: '+(task.text || (task.surah ? 'سورة '+task.surah : ''))+'</h5>';
-      if(task.surah) html += '<p>��لسورة: '+task.surah+' | من آية '+(task.from || '-')+' إلى آية '+(task.to || '-')+'</p>';
+      if(task.surah) html += '<p>لسورة: '+task.surah+' | من آية '+(task.from || '-')+' إلى آية '+(task.to || '-')+'</p>';
       if(task.audio) html += '<div style="margin:8px 0;">🎙️ تسجيل من المسؤول: <audio controls src="'+task.audio+'" style="height:40px; vertical-align:middle;"></audio></div>';
       html += studentAyatBlock(task, 'rd'+originalIdx);
       html += status;
@@ -4546,12 +4546,12 @@ function renderStudentTasks() {
       html += status;
 
       if(isRejected) {
-        html += '<div class="task-rejected-alert">⚠️ تم رفض التس��يل السابق. يرجى إرسال تسجيل جديد.</div>';
+        html += '<div class="task-rejected-alert">⚠️ تم رفض التسيل السابق. يرجى إرسال تسجيل جديد.</div>';
         html += studentVoiceRecorderHTML(originalIdx);
       } else if(!isSubmitted) {
         html += studentVoiceRecorderHTML(originalIdx);
       } else {
-        html += '<div class="task-pending-box">📤 تم إرسال التسجيل للمسؤول - انت��ر الموافقة</div>';
+        html += '<div class="task-pending-box">📤 تم إرسال التسجيل للمسؤول - انتر الموافقة</div>';
       }
       html += '</div>';
     }
@@ -4598,7 +4598,7 @@ function uploadTaskFile(taskIdx, input, type) {
     }
 
     // Show success and re-render
-    alert('✅ تم إرسال الملف للم��ؤول بنجاح! انتظر الموافقة.');
+    alert('✅ تم إرسال الملف للمؤول بنجاح! انتظر الموافقة.');
     renderStudentTasks();
   };
   reader.readAsDataURL(file);
@@ -4657,7 +4657,7 @@ async function fetchAyatText(surah, from, to) {
 function expectedSecondsFromText(text) {
   const clean = normalizeAr(text).replace(/\s/g, '');
   if(!clean) return 0;
-  return Math.max(4, Math.round(clean.length / 11)); // ~11 ��رف/ثانية ترتيل��ً
+  return Math.max(4, Math.round(clean.length / 11)); // ~11 رف/ثانية ترتيلً
 }
 
 function expectedAyahSeconds(task) {
@@ -4791,7 +4791,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   if(matchPct !== null && matchPct < VOICE_MATCH_THRESHOLD) {
     showToast('❌ فشل التحقق من البصمة الصوتية (' + matchPct + '%) — لم يتم حفظ أو إرسال التسجيل', 'error');
     if(statusEl) statusEl.textContent = 'غير مطابق — أعد التسجيل ❌';
-    if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 التحقق الأمني:</strong><br>البصمة الصوتية غير مطابقة لصوت الطال�� (' + matchPct + '%).<br>لم يتم حفظ التسجيل أو إرساله للمسؤول أو ولي الأمر.</div>';
+    if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 التحقق الأمني:</strong><br>البصمة الصوتية غير مطابقة لصوت الطال (' + matchPct + '%).<br>لم يتم حفظ التسجيل أو إرساله للمسؤول أو ولي الأمر.</div>';
     return false;
   }
 
@@ -4802,7 +4802,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
     // لا يُحفظ التسجيل المرفوض ولا يُرسل للمسؤول إذا لم يطابق المقرر.
     showToast('❌ التلاوة لا تطابق ' + targetTxt + ' — لم يتم حفظ التسجيل', 'error');
     if(statusEl) statusEl.textContent = 'مرفوض — أعد الرفع ❌';
-    if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 ��قرير الذكاء الاصطناعي — المحتوى غير مطابق:</strong><br>' +
+    if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 قرير الذكاء الاصطناعي — المحتوى غير مطابق:</strong><br>' +
       'المطلوب: <strong>' + targetTxt + '</strong><br>' +
       'نسبة مطابقة المحتوى: <strong>' + rec.pct + '%</strong> (الحد الأدنى ' + RECITATION_MIN_PCT + '%)' + (rec.txtPct !== null && rec.txtPct !== undefined ? ' | مطابقة النص المنطوق: ' + rec.txtPct + '%' : '') + '<br>' +
       (rec.reason ? 'السبب: ' + rec.reason + '<br>' : '') +
@@ -4810,8 +4810,8 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
     return false;
   }
 
-  if(aiBox) aiBox.innerHTML = '<div class="alert alert-success"><strong>✅ تقرير الذكاء الاصطن��عي:</strong><br>' +
-    (matchPct !== null ? 'مطابقة البصمة الصو��ية: <strong>' + matchPct + '%</strong><br>' : '') +
+  if(aiBox) aiBox.innerHTML = '<div class="alert alert-success"><strong>✅ تقرير الذكاء الاصطنعي:</strong><br>' +
+    (matchPct !== null ? 'مطابقة البصمة الصوية: <strong>' + matchPct + '%</strong><br>' : '') +
     'مطابقة التلاوة مع ' + targetTxt + ': <strong>' + rec.pct + '%</strong>' + (rec.txtPct !== null && rec.txtPct !== undefined ? ' (تطابق النص ' + rec.txtPct + '%)' : '') + ' | مدة التسجيل: ' + rec.dur + ' ثانية<br>تم إرسال التسجيل للمسؤول.</div>';
 
   let messages = getData('messages');
@@ -4886,7 +4886,7 @@ async function recordStudentVoice(taskIdx) {
     registerAudioRecorder('student-task-'+taskIdx,recorder,stream,{statusId:'stVoiceStatus_'+taskIdx,buttonId:'stVoiceBtn_'+taskIdx});
     btn.dataset.recording = 'true';
     btn.classList.add('recording');
-    status.textContent = '��اري التسجيل... (اضغط مرة أخرى للإيقاف)';
+    status.textContent = 'اري التسجيل... (اضغط مرة أخرى للإيقاف)';
     btn.onclick = function() { if(recorder.state !== 'inactive') recorder.stop(); };
   } catch(err) { alert('لا يمكن الوصول للميكروفون.'); }
 }
@@ -4918,7 +4918,7 @@ function _fft(re, im) {
 }
 
 async function computeVoicePrint(blob) {
-  // بص��ة محلية متعددة السمات: طيف صوتي + مركز الطيف + عبور الصفر + إحصاءات زمنية.
+  // بصة محلية متعددة السمات: طيف صوتي + مركز الطيف + عبور الصفر + إحصاءات زمنية.
   // لا نرفع البصمة الخام إلى OpenRouter؛ تبقى المقارنة على جهاز المستخدم.
   try{
     const buf=await blob.arrayBuffer(),AC=window.AudioContext||window.webkitAudioContext,ctx=new AC(),audio=await ctx.decodeAudioData(buf.slice(0)),ch=audio.getChannelData(0);
@@ -4989,7 +4989,7 @@ function blobToDataURL(blob) {
   return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(blob); });
 }
 // ====== تحويل الصوت المسجّل (webm/ogg) إلى WAV ======
-// OpenRouter يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصي��ة webm.
+// OpenRouter يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصية webm.
 // نفكّ الترميز عبر Web Audio ثم نعيد ترميزه PCM 16-bit أحادي القناة بمعدل 12kHz.
 // يحافظ المعدل على وضوح الكلام ويُبقي تسجيل الدقيقة والنصف دون حد طلبات Vercel بعد Base64.
 async function blobToWav(blob) {
@@ -5000,7 +5000,7 @@ async function blobToWav(blob) {
   const decoded = await ctx.decodeAudioData(buf.slice(0));
   await ctx.close();
   const targetRate = 12000;
-    const srcData = decoded.getChannelData(0); // نأخذ القناة الأو��ى (أحادي)
+    const srcData = decoded.getChannelData(0); // نأخذ القناة الأوى (أحادي)
     const ratio = decoded.sampleRate / targetRate;
     const outLen = Math.floor(srcData.length / ratio);
     const out = new Float32Array(outLen);
@@ -5036,7 +5036,7 @@ function dataURLToBlob(dataUrl) {
   } catch (e) { return null; }
 }
 
-// ====== QURAN AYAH IMAGES (صور الآيات ��ا��رسم العثماني المُشكَّل) ======
+// ====== QURAN AYAH IMAGES (صور الآيات ارسم العثماني المُشكَّل) ======
 function surahNumber(name) {
   const i = ALL_SURAHS_ORDERED.indexOf((name || '').trim());
   return i === -1 ? 0 : i + 1;
@@ -5074,7 +5074,7 @@ function openAyatViewer(surah, from, to) {
     modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); z-index:99999; display:flex; align-items:center; justify-content:center; padding:12px;';
     modal.innerHTML = '<div style="background:var(--card,#fff); border-radius:14px; width:100%; max-width:900px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;">' +
       '<div style="display:flex; gap:8px; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid #ddd; flex-wrap:wrap;">' +
-      '<strong id="ayatViewerTitle" style="color:#667eea;">📖 ع��ض الآيات</strong>' +
+      '<strong id="ayatViewerTitle" style="color:#667eea;">📖 عض الآيات</strong>' +
       '<div style="display:flex; gap:6px;">' +
       '<button class="btn btn-xs btn-info" onclick="zoomAyat(25)">➕ تكبير</button>' +
       '<button class="btn btn-xs btn-info" onclick="zoomAyat(100)">🔍 تكبير قوي</button>' +
@@ -5120,7 +5120,7 @@ function renderStudentChart() {
     document.getElementById('studentChartSection').innerHTML = '<div class="page" style="margin-top:20px;"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط التقييم</h4><div class="alert alert-info">لا توجد تقييمات نهائية مسجلة بعد. سيتم ظهور المخطط بعد إغلاق أول تسميع.</div></div>'; return;
   }
   const canvasId = 'chart_' + s.id;
-  document.getElementById('studentChartSection').innerHTML = '<div class="chart-container"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط تقييم حفظ القرآن الكريم</h4><canvas id="'+canvasId+'" width="1100" height="550" style="max-width:100%; height:auto;"></canvas><div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:#6f42c1"></div><span>المجموع</span></div></div><div style="margin-top:15px;"><button class="btn btn-info" onclick="showStudentFullChart()">📊 عرض المخطط الكامل في صفحة منفص��ة</button></div></div>';
+  document.getElementById('studentChartSection').innerHTML = '<div class="chart-container"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط تقييم حفظ القرآن الكريم</h4><canvas id="'+canvasId+'" width="1100" height="550" style="max-width:100%; height:auto;"></canvas><div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:#6f42c1"></div><span>المجموع</span></div></div><div style="margin-top:15px;"><button class="btn btn-info" onclick="showStudentFullChart()">📊 عرض المخطط الكامل في صفحة منفصة</button></div></div>';
   setTimeout(() => drawTotalOnlyChart(canvasId, finalizedSessions), 100);
 }
 
@@ -5213,7 +5213,7 @@ function renderParentDashboard() {
   children.forEach(s => {
     const isQuran = s.subjects && s.subjects.some(sub => sub.name.includes('قرآن'));
     html += '<div style="flex:1; min-width:350px;"><div class="page" style="margin-top:0; border-right:5px solid var(--primary);">';
-    html += '<h4 style="color:var(--primary); margin-bottom:15px;">👨���🎓 '+s.name+'</h4>';
+    html += '<h4 style="color:var(--primary); margin-bottom:15px;">👨🎓 '+s.name+'</h4>';
     html += '<p><strong>السن:</strong> '+(s.age || '-')+' سنة</p>';
     html += '<p><strong>المادة:</strong> <span class="badge badge-primary">'+(s.subjects ? s.subjects.map(sub=>sub.name).join('، ') : '-')+'</span></p>';
     html += '<p><strong>المدرسون:</strong> '+(s.subjects ? s.subjects.map(sub => sub.teacher+(sub.phone ? ' (📞 '+sub.phone+')' : '')).join('<br>') : '-')+'</p>';
@@ -5264,7 +5264,7 @@ function renderParentDashboard() {
     if(s.tasks && s.tasks.length > 0) {
       html += '<div style="margin-top:15px;"><h5 style="color:var(--primary); margin-bottom:10px;">📝 المهام الحالية</h5>';
       s.tasks.forEach(task => {
-        const status = task.approved ? '✅ تمت الموافقة' : (task.rejected ? '❌ تم الرفض' : '⏳ قيد ���لانتظار');
+        const status = task.approved ? '✅ تمت الموافقة' : (task.rejected ? '❌ تم الرفض' : '⏳ قيد لانتظار');
         html += '<p><strong>'+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '📖 قراءة' : '🎙️ تسجيل صوتي')+':</strong> '+(task.name || task.text || '')+' — '+status+'</p>';
       });
       html += '</div>';
@@ -5309,10 +5309,10 @@ function updateParentMsgBadge() {
 
 async function sendParentChat() {
   const input=document.getElementById('parentChatInput');const text=input.value.trim();if(!text)return;input.value='';
-  const chatDiv=document.getElementById('parentChatMessages');chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="parentAiTyping" class="ai-msg bot">��� جاري تحليل البيانات...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
+  const chatDiv=document.getElementById('parentChatMessages');chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="parentAiTyping" class="ai-msg bot"> جاري تحليل البيانات...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
   const child=currentUser&&currentUser[0]?currentUser[0]:{}; const last=(child.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
-    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال ولي الأمر: '+text+'\nب��انات الابن/الابنة: '+JSON.stringify({name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)})})});
+    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال ولي الأمر: '+text+'\nبانات الابن/الابنة: '+JSON.stringify({name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)})})});
     const data=await readApiJson(res,'تعذر رد OpenRouter');const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');const typing=document.getElementById('parentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
   }catch(e){const typing=document.getElementById('parentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'parent'))+'<br><small>رد محلي محدود بسبب تعذر OpenRouter.</small>'}
   chatDiv.scrollTop=chatDiv.scrollHeight;
@@ -5505,7 +5505,7 @@ function renderFiles() {
   const categoryLabels = {student:'👨‍🎓 الطالب', parent:'👨‍👩‍👧 ولي الأمر', general:'عام', quran:'قرآن', lessons:'دروس', exams:'اختبارات', reports:'تقارير'};
 
   if(files.length === 0) {
-    document.getElementById('filesList').innerHTML = '<div class="alert alert-info">لا توجد ��لفات مرفوعة ��عد</div>';
+    document.getElementById('filesList').innerHTML = '<div class="alert alert-info">لا توجد لفات مرفوعة عد</div>';
     return;
   }
 
@@ -5513,7 +5513,7 @@ function renderFiles() {
   html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px;">';
   files.slice().reverse().forEach(f => {
     const sizeMB = (f.size / (1024*1024)).toFixed(2);
-    const icon = f.type && f.type.startsWith('image/') ? '🖼️' : f.type && f.type.startsWith('audio/') ? '🎵' : f.type && f.type.startsWith('video/') ? '🎬' : f.type && f.type.includes('pdf') ? '����' : '📎';
+    const icon = f.type && f.type.startsWith('image/') ? '🖼️' : f.type && f.type.startsWith('audio/') ? '🎵' : f.type && f.type.startsWith('video/') ? '🎬' : f.type && f.type.includes('pdf') ? '' : '📎';
     html += '<div style="background:var(--table-header); border-radius:12px; padding:15px; border:2px solid var(--border); transition:0.2s;" onmouseover="this.style.borderColor=&quot;var(--primary)&quot;" onmouseout="this.style.borderColor=&quot;var(--border)&quot;">';
     html += '<div style="font-size:2.5rem; text-align:center; margin-bottom:10px;">'+icon+'</div>';
     html += '<h5 style="color:var(--primary); margin-bottom:5px; word-break:break-word;">'+f.desc+'</h5>';
@@ -5587,7 +5587,7 @@ function renderUserFiles(role) {
     html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">🕐 ' + f.uploadedAt + '</p>';
     html += '<div style="display:flex; gap:8px;">';
     html += '<a href="' + f.data + '" download="' + f.name + '" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تحميل</a>';
-    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁️ عر��</button>';
+    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁️ عر</button>';
     html += '</div></div>';
   });
   html += '</div>';
@@ -5655,7 +5655,7 @@ function generateAIReport(student) {
   const avgScore = last3.reduce((sum, s) => sum + s.totalScore, 0) / last3.length;
   let report = '';
   if(avgScore >= 14) report = 'ممتاز يا '+student.name+'! 🌟 مستواك رائع جداً. أنت تحفظ بثبات وتميز. استمر في المراجعة وستكون من حفاظ كتاب الله.';
-  else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرار��ة.';
+  else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرارة.';
   else if(avgScore >= 6) report = 'جيد يا '+student.name+'! 📚 مستواك في تقدم مستمر. أنصحك بزيادة وقت المراجعة اليومي.';
   else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على التكرار والمراجعة اليومية وسترى التحسن قريباً.';
   report += '<br><br>📊 متوسط آخر 3 تسميعات: <strong>'+avgScore.toFixed(1)+' / 16</strong><br>📈 عدد التسميعات المسجلة: '+finalizedSessions.length;
@@ -5668,10 +5668,10 @@ function generateWelcomeMessages(student) {
   const last = finalizedSessions.length > 0 ? finalizedSessions[finalizedSessions.length - 1] : null;
   const dayOfWeek = new Date().getDay();
   const templates = [
-    {title: '��هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من يش��ء.'},
+    {title: 'هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من يشء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر أن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
-    {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية�� وسترى الفرق في حياتك.'},
-    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متي��اً.'},
+    {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية وسترى الفرق في حياتك.'},
+    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
     {title: 'يوم مبارك يا '+student.name+'! ✨', body: 'حافظ على الاستمرارية في الحفظ، فالقرآن يُحفظ بالتكرار والمراجعة. ثق بالله، فهو معك في كل خطوة.'}
   ];
   const base = templates[dayOfWeek % templates.length];
@@ -5692,13 +5692,13 @@ function generateParentWelcome(student) {
   const templates = [
     {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطوات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
     {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
-    {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' ��لى الاستمرار، وذكّ��ه بأ�� الله يُضاعف الأجر لمن يت��ب في سبيله.'}
+    {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر لمن يتب في سبيله.'}
   ];
   const base = templates[Math.floor(Math.random() * templates.length)];
   if(last) {
     base.body += '<br><br>📊 آخر تسميع نهائي لـ '+student.name+' كان بتاريخ '+last.date+' بمجموع <strong>'+last.totalScore+' درجة</strong>. ';
     if(last.totalScore >= 14) base.body += 'أداء ممتاز! ابنك يُظهر تفوقاً واضحاً. استمر في تشجيعه. 🌟';
-    else if(last.totalScore >= 10) base.body += 'مستوى جي�� جداً. مع دعمك المستمر سيصل للتميز. 👍';
+    else if(last.totalScore >= 10) base.body += 'مستوى جي جداً. مع دعمك المستمر سيصل للتميز. 👍';
     else base.body += 'يحتاج لبعض الدعم والمراجعة. جالسه يومياً وشاركه الحفظ. 💪';
   }
   return base;
@@ -5717,7 +5717,7 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلام','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح لك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مها��ي</em> — لعرض الواجبات والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ��ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح لك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاي</em> — لعرض الواجبات والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
@@ -5725,7 +5725,7 @@ function generateAIResponse(text, student) {
   }
   // المستوى / التقييم
   if(has('مستوى','مستواي','تقييم','درجات','درجة','نتيجة','نتيجتي')) {
-    if(!last) return 'مرحباً '+name+'! 🌟<br><br>لم يُسجَّل أي تسميع نهائي بعد. ابدأ اليوم، وسيظهر تقييمك هنا فور اعتماد�� من المسؤول.';
+    if(!last) return 'مرحباً '+name+'! 🌟<br><br>لم يُسجَّل أي تسميع نهائي بعد. ابدأ اليوم، وسيظهر تقييمك هنا فور اعتماد من المسؤول.';
     let r = '📊 <strong>آخر تسميع نهائي بتاريخ '+last.date+':</strong><br>';
     last.elements.forEach(e => {
       const rate = e.rating === '4' ? 'ممتاز' : e.rating === '3' ? 'جيد جداً' : e.rating === '1' ? 'جيد' : e.rating === '0' ? 'يعاد' : 'بدون تقييم';
@@ -5735,19 +5735,19 @@ function generateAIResponse(text, student) {
     return r;
   }
   // التقدم عبر الجلسات
-  if(has('تقد��','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
-    if(finalizedSessions.length < 2) return '��� أحتاج تسميعين نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
+  if(has('تقد','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
+    if(finalizedSessions.length < 2) return ' أحتاج تسميعين نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
     let r = '📈 <strong>تحليل تقدمك:</strong><br>• عدد التسميعات النهائية: '+scores.length+'<br>• المتوسط العام: '+avg+' من 16<br>• أعلى درجة: '+Math.max.apply(null,scores)+'<br>• أقل درجة: '+Math.min.apply(null,scores)+'<br>';
-    r += '• آخ�� تغيّر: '+(diff>0?('ارتفاع بمقدار '+diff+' درجة 🎉'):(diff<0?('انخفاض بمقدار '+Math.abs(diff)+' درجة — لا بأس، عوّضها بمراجعة إضافية 💪'):'ثبات في المستوى ��'));
+    r += '• آخ تغيّر: '+(diff>0?('ارتفاع بمقدار '+diff+' درجة 🎉'):(diff<0?('انخفاض بمقدار '+Math.abs(diff)+' درجة — لا بأس، عوّضها بمراجعة إضافية 💪'):'ثبات في المستوى '));
     return r;
   }
   // المهام / الواجب
-  if(has('واجب','مهام','مهمة','مطلوب','تسجيل صوتي','��راءة')) {
+  if(has('واجب','مهام','مهمة','مطلوب','تسجيل صوتي','راءة')) {
     if(pending.length === 0) return '🎉 لا توجد مهام معلّقة الآن يا '+name+'. استغل الوقت في مراجعة ما حفظته سابقاً.';
-    let r = '��� <strong>مهامك الحالية ('+pending.length+'):</strong><br>';
+    let r = ' <strong>مهامك الحالية ('+pending.length+'):</strong><br>';
     pending.forEach(t => {
       const icon = t.type === 'homework' ? '📝 واجب' : t.type === 'voice' ? '🎙️ تسجيل صوتي' : '📖 قراءة';
       const state = t.approved ? 'معتمد' : t.rejected ? 'مرفوض — أعد الإرسال' : t.submitted ? 'قيد المراجعة' : 'لم يُرسل بعد';
@@ -5758,10 +5758,10 @@ function generateAIResponse(text, student) {
   }
   // الآيات والصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم ��زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>الآيات تُعرض بالر��م العثماني الم��شكَّل كصورة مطابقة تماماً ��لمصحف.';
+    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>الآيات تُعرض بارم العثماني المشكَّل كصورة مطابقة تماماً لمصحف.';
   }
   // البصمة الصوتية
-  if(has('بصمة','صوتي','صوت','ميكروفون','تحق��')) {
+  if(has('بصمة','صوتي','صوت','ميكروفون','تحق')) {
     return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوتك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واضح.';
   }
   // خطة الحفظ
@@ -5773,11 +5773,11 @@ function generateAIResponse(text, student) {
     return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتقل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
   }
   // تحفيز
-  if(has('تحفيز','همة','ملل','تعبان','زهقان','احب��ت','أحبطت')) {
+  if(has('تحفيز','همة','ملل','تعبان','زهقان','احبت','أحبطت')) {
     const quotes = [
-      '🌟 «وَلَقَدْ يَسَّرْنَا الْقُ��ْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ فقط.',
+      '🌟 «وَلَقَدْ يَسَّرْنَا الْقُْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ فقط.',
       '💚 قال ﷺ: «خيركم من تعلم القرآن وعلمه». أنت اليوم في أفضل طريق.',
-      '🚀 كل صفحة تحفظها اليوم هي در��ة ترتف�� بها غداً. لا تستهن بالقليل.'
+      '🚀 كل صفحة تحفظها اليوم هي درة ترتف بها غداً. لا تستهن بالقليل.'
     ];
     return quotes[Math.floor(Math.random()*quotes.length)];
   }
@@ -5785,16 +5785,16 @@ function generateAIResponse(text, student) {
   if(has('حفظ','قرآن','قران','سورة','جزء','وين وصلت','أين وصلت')) {
     return '📖 <strong>بيانات حفظك:</strong><br>• الجزء: '+(student.juz || 'غير محدد')+'<br>• السورة الحالية: '+(student.surah || 'غير محددة')+'<br>• عدد التسميعات النهائية: '+finalizedSessions.length+'<br><br>حافظ على المراجعة اليومية لتثبيت ما حفظت.';
   }
-  // التواصل مع المسؤو��
+  // التواصل مع المسؤو
   if(has('مسؤول','معلم','شيخ','ابلاغ','إبلاغ','رساله','رسالة','تواصل','شكوى')) {
     return '📨 يمكنك مراسلة المسؤول مباشرة من <strong>صندوق الرسائل</strong> في صفحتك، وسيصلك الرد هناك مع إشعار. إن كان الأمر عاجلاً اذكر كلمة "عاجل" في بداية رسالتك.';
   }
   // ديني عام
   if(has('دين','اسلام','إسلام','الله','نبي','رسول','دعاء','صلاة')) {
-    return 'الحمد لله رب العالمين 🌿<br><br>القرآن كتاب الله المعجز، ��زل هداية للناس. ومن الأدعية النافعة للحفظ: «اللهم اجعل القرآن ربيع قلبي ونور صدري وجلاء حزني وذهاب همّي».';
+    return 'الحمد لله رب العالمين 🌿<br><br>القرآن كتاب الله المعجز، زل هداية للناس. ومن الأدعية النافعة للحفظ: «اللهم اجعل القرآن ربيع قلبي ونور صدري وجلاء حزني وذهاب همّي».';
   }
   // افتراضي ذكي
-  let r = '🤖 أهلاً '+name+'، لم ��فهم سؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
+  let r = '🤖 أهلاً '+name+'، لم فهم سؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
   r += '• <strong>مستواي</strong> — تحليل آخر تقييم<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآيات</strong> — كيف تعرض آيات التسميع كصورة<br>• <strong>تحفيز</strong> — كلمة تشدّ همتك';
   if(pending.length > 0) r += '<br><br>📌 تذكير: لديك '+pending.length+' مهمة لم تُعتمد بعد.';
   return r;
@@ -5843,7 +5843,7 @@ if(restoreSession()) {
 
 
 <script>
-/* 🔔 صلاحيات الإشع��رات والميكروفون عند أول تفاعل */
+/* 🔔 صلاحيات الإشعرات والميكروفون عند أول تفاعل */
 (function(){
   var asked = false;
   function askPerms(){
