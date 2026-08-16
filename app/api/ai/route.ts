@@ -340,8 +340,8 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceSurahs.
 - كل سؤال يجب أن يكون متعلقاً مباشرة بحفظ القرآن أو نص الآية أو السورة.
 - لا تنشئ أسئلة ثقافة عامة أو دين عام أو معلومات خارج نصوص القرآن.
-- التزم تماماً بعدد الأسئلة count المطلوب لكل plan، وبالنوع والمستوى وموضع السؤال position المحددين في كل plan.
-  - position=start: اختر من الثلث الأول للسورة، position=middle: الثلث الأوسط، position=end: الثلث الأخير، position=random: نوّع بين جميع المواضع.
+- التزم تماماً بعدد الأسئلة count المطلوب لكل plan وبالنوع المحدد، لكن المستوى والموضع إلزاميان دائماً: level=hard وposition=middle.
+- اختر حصراً من الثلث الأوسط لكل سورة: من الآية floor(عدد الآيات/3)+1 إلى الآية ceil(2*عدد الآيات/3). استبعد الثلث الأول والثلث الأخير تماماً، ولا تبدأ بالسورة ولا تختم بها.
 - إذا كان type=mcq فعدد الخيارات يجب أن يساوي optionsCount لذلك plan، مع إجابة صحيحة واحدة فقط. نوّع عشوائياً بين: اختيار الآية التالية، اختيار تكملة الآية، واختيار اسم السورة التي ينتمي إليها المقطع.
 - إذا كان type=truefalse فاجعل options=["صح","خطأ"] فقط، وبدّل بين: صحة تكملة الآية، وصحة نسبة الآية إلى سورة محددة. وازن بين الإجابات الصحيحة والخاطئة.
 - إذا كان type=complete فاختر حد بداية وحد نهاية حقيقيين لصيغة «أكمل من قوله تعالى … إلى قوله تعالى …»، واجعل from/to صحيحين وفي السورة نفسها، وعدد الآيات المطلوب يساوي completeAyahs قدر الإمكان.
@@ -351,7 +351,8 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - level=medium: تمييز وربط أدق بين الآية والسورة أو موضعها.
 - level=hard: اجعل السؤال شديد الصعوبة من المتشابهات اللفظية الموثقة: فروق الواو والفاء، الزيادة والنقص، اختلاف الضمائر والمفرد والجمع، اختلاف بداية الآية أو خاتمتها، والتمييز بين آيتين متقاربتين. يجب أن يبقى له جواب واحد قطعي.
 - في الاختياري اجعل المشتتات من ألفاظ أو سور أو تكملات قرآنية شديدة التقارب، ولا تستخدم مشتتاً واضح البطلان أو بعيداً عن الصحيح.
-- أعط الماضي القريب أولوية مقدارها نحو 70% عند pastScope=both، مع إبقاء 30% للماضي البعيد، ودوّر المواضع بين أول السورة ووسطها وآخرها.
+- أعط الماضي القريب أولوية مقدارها نحو 70% عند pastScope=both، مع إبقاء 30% للماضي البعيد، لكن اختر جميع المواضع من الثلث الأوسط حصراً.
+- يجب أن يحتاج كل سؤال إلى تفكير ومقارنة فعلية بين متشابهين على الأقل، وأن تبنى المشتتات على فروق دقيقة مثل الواو والفاء والضمير والمفرد والجمع والزيادة والنقص؛ ارفض السؤال المباشر أو المشتت الواضح.
 - لا تكرر أي بصمة واردة في previousQuestionFingerprints، ولا تكرر السؤال نفسه داخل الدفعة، ووزّع الاختيارات على سور ومواضع مختلفة قدر ما يسمح النطاق.
 - points=1 دائماً.
 - timeLimit لا يخرج عن الوقت الذي حدده المسؤول في plan؛ إذا كان موجوداً فاستخدمه كما هو.
@@ -418,7 +419,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 
 const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم نا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
 مهمتك: فهم اللب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعيلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
-احترم دائماً: عدم حذف الملفات، عدم إعادة بناء الم��روع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
+احترم دائماً: عدم حذف الملفات، عدم إعادة بناء ا��م��روع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
 أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (بدون ��ي نص خارجه):
 {
  "understanding": "إعادة صياغة موجزة لفهمك للطلب",
@@ -776,7 +777,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt}`,
-        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجمة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
+        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجمة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خات��ة أو ذكر للنموذج أو للمرجع.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -808,7 +809,8 @@ export async function POST(req: Request) {
 
       const plan = (Array.isArray(payload.plan) ? payload.plan : []).map((item: any) => ({
         ...item,
-        position: ["start", "middle", "end", "random"].includes(item?.position) ? item.position : "random",
+        level: "hard",
+        position: "middle",
       }))
       const requestedCount = Math.max(1, plan.reduce((sum: number, item: any) => sum + Math.max(0, Number(item?.count) || 0), 0))
       const allNumbers = Array.from({ length: endSurahNumber - startSurahNumber + 1 }, (_, index) => startSurahNumber + index)
@@ -849,8 +851,15 @@ export async function POST(req: Request) {
       const sourcesByName = new Map(sourceSurahs.map((source) => [source.surah, source]))
       const safeQuestions = questions.slice(0, requestedCount).map((question: any) => {
         const source = sourcesByName.get(String(question?.surah || "")) || sourceSurahs[0]
-        const from = Math.max(1, Math.min(source.verses.length, Number(question?.from) || 1))
-        const to = Math.max(from, Math.min(source.verses.length, Number(question?.to) || from))
+        const middleStart = Math.floor(source.verses.length / 3) + 1
+        const middleEnd = Math.max(middleStart, Math.ceil((source.verses.length * 2) / 3))
+        const requestedFrom = Number(question?.from) || 0
+        const requestedTo = Number(question?.to) || requestedFrom
+        if (requestedFrom < middleStart || requestedFrom > middleEnd || requestedTo < requestedFrom || requestedTo > middleEnd) {
+          throw new Error(`أعاد الذكاء الاصطناعي سؤالاً خارج الثلث الأوسط من سورة ${source.surah}`)
+        }
+        const from = requestedFrom
+        const to = requestedTo
         const type = ["mcq", "truefalse", "complete", "audio"].includes(question?.type) ? question.type : "mcq"
         const complete = type === "complete"
         const correct = complete
@@ -886,6 +895,8 @@ export async function POST(req: Request) {
         return {
           ...question,
           type,
+          level: "hard",
+          position: "middle",
           surah: source.surah,
           surahNumber: source.surahNumber,
           from,
@@ -953,7 +964,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
         const speaker = parsed.speaker && typeof parsed.speaker === "object" ? parsed.speaker : {}
         return json({ result: {
           engine: "gemini",
-          model: "gemini-3.6-flash",
+          model: GEMINI.model,
           createdAt: new Date().toISOString(),
           speaker,
           quality: typeof parsed.quality === "string" ? parsed.quality : "good",
@@ -963,7 +974,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       }
 
       const referenceProfile = payload.referenceProfile && typeof payload.referenceProfile === "object" ? payload.referenceProfile : null
-      if (!referenceProfile) return json({ error: "لا توجد بصمة صوتية مرجعية محفوظة لهذا الحساب", diagnostics }, 400)
+      if (!referenceProfile) return json({ error: "لا توجد بصمة صوتية مرجعية محفوظة لهذ�� الحساب", diagnostics }, 400)
       const text = await geminiAudio(
         `البصمة المرجعية المحفوظة:\n${JSON.stringify(referenceProfile).slice(0, 4000)}\n\nقارن صوت هذا التسجيل بالبصمة المرجعية. أعد JSON فقط.`,
         SYS_VOICE_MATCH,
@@ -1081,7 +1092,7 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
             githubRepo: !!GITHUB_REPO,
             autoApplyEnabled: AUTO_DEV_ENABLED,
           },
-          // أسماء عامة (ليست أسراراً) لتأكيد المسؤول أن القيم مضبوطة بشكل صحيح.
+          // أسماء عامة (ليست أسراراً) لتأكيد المسؤول أن القيم مضبوطة بش��ل صحيح.
           resolved: {
             owner: GITHUB_OWNER || null,
             repo: GITHUB_REPO || null,
