@@ -79,18 +79,18 @@ body { background: var(--bg); min-height:100vh; color: var(--text); transition:0
 .container { max-width:1400px; margin:0 auto; padding:20px; padding-bottom:100px; }
   .hidden { display:none !important; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-.theme-toggle {
+ .display-controls {
   position:fixed; top:20px; left:20px; z-index:1000;
-  background: var(--card-bg); border:2px solid var(--primary); color: var(--primary);
-  width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:1.3rem;
-  display:flex; align-items:center; justify-content:center; box-shadow: var(--shadow);
-}
-.lang-toggle {
-  position:fixed; top:20px; left:80px; z-index:1000;
-  background: var(--card-bg); border:2px solid var(--primary); color: var(--primary);
-  width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:0.95rem; font-weight:700;
-  display:flex; align-items:center; justify-content:center; box-shadow: var(--shadow);
-}
+  display:flex; align-items:center; gap:10px;
+  }
+ .theme-toggle,.lang-toggle {
+  position:static; flex:0 0 50px;
+  background:var(--card-bg); border:2px solid var(--primary); color:var(--primary);
+  width:50px; height:50px; min-width:50px; min-height:50px; padding:0; border-radius:50%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow);
+  }
+ .theme-toggle { font-size:1.3rem; }
+ .lang-toggle { font-size:0.95rem; font-weight:700; }
 .home-page { text-align:center; padding-top:60px; }
 .home-page h1 { color:#fff; font-size:2.5rem; margin-bottom:10px; text-shadow:0 2px 10px rgba(0,0,0,0.3); }
 .home-page p { color:rgba(255,255,255,0.9); font-size:1.2rem; margin-bottom:40px; }
@@ -378,7 +378,10 @@ tr:hover { background: var(--table-hover); }
   .cards { flex-direction:column; align-items:center; }
   .card { width:90%; }
   .stats { flex-direction:column; }
-  .theme-toggle { top:10px; left:10px; width:40px; height:40px; font-size:1rem; }
+  .display-controls { top:10px; left:10px; gap:8px; }
+ .theme-toggle,.lang-toggle { flex-basis:40px; width:40px; height:40px; min-width:40px; min-height:40px; }
+ .theme-toggle { font-size:1rem; }
+ .lang-toggle { font-size:0.8rem; }
   .form-row { flex-direction:column; }
   .form-row .form-group { min-width:100%; }
   .record-options { flex-direction: column; }
@@ -467,8 +470,10 @@ tr:hover { background: var(--table-hover); }
 </head>
 <body>
 
-  <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع">🌙</button>
-  <button class="lang-toggle" id="langToggleBtn" onclick="toggleLang()" title="تغيير اللغة / Change language">EN</button>
+  <div class="display-controls" aria-label="إعدادات العرض">
+    <button class="theme-toggle" type="button" onclick="toggleTheme()" title="تبديل الوضع" aria-label="تبديل الوضع">🌙</button>
+    <button class="lang-toggle" type="button" id="langToggleBtn" onclick="toggleLang()" title="تغيير اللغة / Change language" aria-label="تغيير اللغة / Change language">EN</button>
+  </div>
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
     <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
   </div>
@@ -498,7 +503,7 @@ tr:hover { background: var(--table-hover); }
     <div class="card" onclick="showPage('adminLogin')"><div class="icon">👨‍💼</div><h3>المسؤول</h3><p>التحكم الكامل في النظام والطلاب</p></div>
     <div class="card" onclick="showPage('studentLogin')"><div class="icon">👨‍🎓</div><h3>الطالب</h3><p>متابعة المواد والواجبات والحفظ</p></div>
     <div class="card" onclick="showPage('parentLogin')"><div class="icon">👨‍👩‍👧</div><h3>ولي الأمر</h3><p>متابعة ابنك/ابنتك والتقارير</p></div>
-    <div class="card" onclick="startSignup()"><div class="icon">🆕</div><h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول</p></div>
+    <div class="card" onclick="startSignup()"><div class="icon">🆕</div><h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب ل��مسؤول</p></div>
   </div>
 </div>
 
@@ -581,7 +586,7 @@ tr:hover { background: var(--table-hover); }
 
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد OpenRouter الإداري</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بيانات الموقع عندما تكون مرتبطة بسؤالك.</p>
+  <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من ب��انات الموقع عندما تكون مرتبطة بسؤالك.</p>
   <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو ��لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">OpenRouter</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
@@ -1074,7 +1079,7 @@ tr:hover { background: var(--table-hover); }
     <div id="parentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
 <span class="badge badge-primary">OpenRouter</span>
-      <input type="text" id="parentChatInput" placeholder="اسألني عن مستوى ابنك، أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendParentChat()">
+      <input type="text" id="parentChatInput" placeholder="اسألني ��ن مستوى ابنك، أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendParentChat()">
       <button class="btn btn-primary" onclick="sendParentChat()">إرسال</button>
     </div>
   </div>
@@ -1202,7 +1207,7 @@ const quranData = {
 
 const SURAH_AYAH_COUNTS = {
   "الفاتحة": 7, "البقرة": 286, "آل عمران": 200, "النساء": 176, "المائدة": 120, "الأنعام": 165, "الأعراف": 206, "الأنفال": 75, "التوبة": 129,
-  "يونس": 109, "هود": 123, "يوسف": 111, "الرعد": 43, "إبراهيم": 52, "الحجر": 99, "النحل": 128, "الإسراء": 111, "الكهف": 110, "مريم": 98,
+  "يونس": 109, "هود": 123, "يوسف": 111, "الرعد": 43, "إبراهيم": 52, "الحجر": 99, "النحل": 128, "الإسراء": 111, "ال��هف": 110, "مريم": 98,
   "طه": 135, "الأنبياء": 112, "الحج": 78, "المؤمنون": 118, "النور": 64, "الفرقان": 77, "الشعراء": 227, "النمل": 93, "القصص": 88,
   "العنكبوت": 69, "الروم": 60, "لقمان": 34, "السجدة": 30, "الأحزاب": 73, "سبأ": 54, "فاطر": 45, "يس": 83, "الصافات": 182,
   "ص": 88, "الزمر": 75, "غافر": 85, "فصلت": 54, "الشورى": 53, "الزخرف": 89, "الدخان": 59, "الجاثية": 37, "الأحقاف": 35,
@@ -1217,7 +1222,7 @@ const SURAH_AYAH_COUNTS = {
 };
 
 const ALL_SURAHS_ORDERED = [
-  "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
+  "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "��لأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
   "الإس��اء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "��لعنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
@@ -1857,7 +1862,7 @@ function updateEditSurahSelect() {
   if(!juz || !quranData[juz]) {
     select.innerHTML = '<option value="">اختر الجزء أولاً...</option>'; return;
   }
-  let html = '<option value="">اختر السورة...</option>';
+  let html = '<option value="">اخ��ر السورة...</option>';
   quranData[juz].forEach(s => { html += '<option value="'+s+'" '+(currentVal===s?'selected':'')+'>'+s+'</option>'; });
   select.innerHTML = html;
 }
@@ -1942,12 +1947,17 @@ async function toggleVoiceRecord() {
       preview.style.display = 'block';
       stream.getTracks().forEach(t => t.stop());
       status.textContent = '🤖 جميناي يحلل البصمة الصوتية...';
-      voiceProfileGemini = await geminiVoiceProfile(voiceBlob);
-      voiceFingerprint = await computeVoicePrint(voiceBlob);
-      voiceDataUrl = await blobToDataURL(voiceBlob);
-      if(voiceProfileGemini) { status.textContent = 'تم إنشاء البصمة الصوتية بجميناي ✅'; showToast('🤖 أنشأ جميناي البصمة الصوتية بنجاح', 'success'); }
-      else if(voiceFingerprint) { status.textContent = 'تم إنشاء البصمة الصوتية ✅'; showToast('🤖 تم تحليل البصمة الصوتية بنجاح', 'success'); }
-      else { status.textContent = 'تعذّر تحليل الصوت ❌'; showToast('❌ تعذّر تحليل التسجيل — أعد التسجيل', 'error'); }
+  try {
+  voiceProfileGemini = await geminiVoiceProfile(voiceBlob);
+  voiceFingerprint = null;
+  voiceDataUrl = await blobToDataURL(voiceBlob);
+  status.textContent = 'تم إنشاء البصمة الصوتية بواسطة Gemini';
+  showToast('أنشأ Gemini البصمة الصوتية بنجاح', 'success');
+  } catch(e) {
+  voiceProfileGemini = null; voiceFingerprint = null; voiceDataUrl = null;
+  status.textContent = 'تعذّر تحليل الصوت بواسطة Gemini';
+  showToast((e&&e.message)||'تعذّر اتصال Gemini — أعد التسجيل', 'error');
+  }
     };
     mediaRecorder.start();
     registerAudioRecorder('student-fingerprint',mediaRecorder,stream,{statusId:'voiceRecordStatus',buttonId:'voiceRecordBtn',maxMs:20000});
@@ -2284,21 +2294,20 @@ async function saveStudent() {
   const selectedSubData = selectedSubjects.map(id => subjects.find(s => s.id === id)).filter(Boolean);
   const isQuran = selectedSubData.some(s => s.name.includes('قرآن'));
 
-  let printVec = voiceFingerprint;
+  const printVec = null;
   let voiceData = voiceDataUrl;
-  // ✅ البصمة الصوتية اختيارية تماماً — يمكن حفظ الطالب ب��ونها
+  // البصمة اختيارية، لكن عند تسجيلها يكون Gemini وحده مصدر إنشائها ومقارنتها.
   let voiceProfile = voiceProfileGemini;
   if(voiceBlob) {
-    if(!voiceProfile) { voiceProfile = await geminiVoiceProfile(voiceBlob); }
-    if(!printVec) { printVec = await computeVoicePrint(voiceBlob); }
-    if(!voiceData) { voiceData = await blobToDataURL(voiceBlob); }
-    // منع تسجيل طالبين بنفس البصمة الصوتية
-    for(const st of students) {
-      if(!printVec) break;
-      if(!st.voicePrintVec) continue;
-      const pct = voiceMatchPercent(printVec, st.voicePrintVec);
-      if(pct >= VOICE_DUPLICATE_THRESHOLD) return fail('هذه البصمة الصوتية مسجلة مسبقاً للطالب: ' + st.name + ' (تطابق ' + pct + '%)');
-    }
+    try {
+      if(!voiceProfile) voiceProfile = await geminiVoiceProfile(voiceBlob);
+      if(!voiceData) voiceData = await blobToDataURL(voiceBlob);
+      for(const st of students) {
+        if(!st.voiceProfile) continue;
+        const match = await verifyVoiceIdentity(voiceBlob,st);
+        if(match.sameSpeaker && match.pct >= VOICE_DUPLICATE_THRESHOLD) return fail('هذه البصمة الصوتية مسجلة مسبقاً للطالب: ' + st.name + ' (تطابق Gemini ' + match.pct + '%)');
+      }
+    } catch(e) { return fail((e&&e.message)||'تعذر إنشاء البصمة بواسطة Gemini'); }
   }
 
   const newStudent = {
@@ -2316,7 +2325,7 @@ async function saveStudent() {
   setData('students', students);
   voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null;
   alertBox.innerHTML = '<div class="alert alert-success">✅ تم حفظ الطالب بنجاح!</div>';
-  showToast('✅ تم حفظ الطالب "' + name + '" بنجاح' + (printVec ? ' مع بصمته الصوتية 🎙️' : ' (بدون بصمة صوتية)'), 'success');
+  showToast('تم حفظ الطالب "' + name + '" بنجاح' + (voiceProfile ? ' مع بصمة Gemini الصوتية' : ' (بدون بصمة صوتية)'), 'success');
   ['stName','stUsername','stNational','stPhone','stBirth','stAge','stStudentPass','stParent','stParentPass','stNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('stJuz').value = '';
   document.getElementById('stSurah').innerHTML = '<option value="">اختر الجزء أولاً...</option>';
@@ -2373,9 +2382,11 @@ async function toggleEditVoiceRecord(){
     editVoiceRecorder.onstop=async()=>{
       editVoiceBlob=new Blob(editVoiceChunks,{type:'audio/webm'}); stream.getTracks().forEach(t=>t.stop());
       preview.src=URL.createObjectURL(editVoiceBlob);preview.style.display='block';status.textContent='🤖 جاري تحليل البصمة الجديدة...';
-      editVoiceProfileGemini=await geminiVoiceProfile(editVoiceBlob);
-      editVoiceFingerprint=await computeVoicePrint(editVoiceBlob);editVoiceDataUrl=await blobToDataURL(editVoiceBlob);
-      status.textContent=(editVoiceProfileGemini||editVoiceFingerprint)?('تم إنشاء بصمة جديدة'+(editVoiceProfileGemini?' بجميناي':'')+' — اضغط حفظ التعديلات'):'تعذر تحليل الصوت، أعد التسجيل';
+      try{
+        editVoiceProfileGemini=await geminiVoiceProfile(editVoiceBlob);
+        editVoiceFingerprint=null;editVoiceDataUrl=await blobToDataURL(editVoiceBlob);
+        status.textContent='تم إنشاء بصمة جديدة بواسطة Gemini — اضغط حفظ التعديلات';
+      }catch(e){editVoiceProfileGemini=null;editVoiceFingerprint=null;editVoiceDataUrl=null;status.textContent=(e&&e.message)||'تعذر تحليل الصوت بواسطة Gemini';}
       btn.classList.remove('recording');
     };
     editVoiceRecorder.start();registerAudioRecorder('edit-fingerprint',editVoiceRecorder,stream,{statusId:'editVoiceStatus',buttonId:'editVoiceBtn',maxMs:20000});btn.classList.add('recording');status.textContent='جاري التسجيل... (20 ثانية فعلية)';
@@ -2418,16 +2429,9 @@ function updateStudent() {
     students[idx].surah = document.getElementById('editSurah').value;
   }
 
-  if(editVoiceFingerprint) {
-    for(const st of students){
-      if(st.id===id || !st.voicePrintVec) continue;
-      const pct=voiceMatchPercent(editVoiceFingerprint,st.voicePrintVec);
-      if(pct>=VOICE_DUPLICATE_THRESHOLD) return alert('هذه البصمة قريبة جداً من بصمة الطالب '+st.name+' ('+pct+'%). أعد التسجيل.');
-    }
-    students[idx].voicePrintVec=editVoiceFingerprint; students[idx].voicePrint=editVoiceDataUrl||students[idx].voicePrint||null;
-    if(editVoiceProfileGemini) students[idx].voiceProfile=editVoiceProfileGemini;
-  } else if(editVoiceProfileGemini) {
+  if(editVoiceProfileGemini) {
     students[idx].voiceProfile=editVoiceProfileGemini;
+    students[idx].voicePrintVec=null;
     students[idx].voicePrint=editVoiceDataUrl||students[idx].voicePrint||null;
   }
 
@@ -2688,7 +2692,7 @@ function renderRecordElementHTML(el, i, num) {
   const _sur = el.name === 'اللوح' || el.name === 'ا��سورة' ? (el.surah || mainSurah) : el.surah;
   html += '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">';
   html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">📖 ع��ض الآيات (صورة)</button>';
-  html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineAyat_'+i+'\', \''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">👁️ معاينة داخل الصفحة</button>';
+  html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineAyat_'+i+'\', \''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">👁️ معاين�� داخل الصفحة</button>';
   html += '</div><div id="inlineAyat_'+i+'" data-open="0" style="margin-top:10px;"></div>';
 
   // Rating
@@ -4653,7 +4657,7 @@ async function fetchAyatText(surah, from, to) {
 function expectedSecondsFromText(text) {
   const clean = normalizeAr(text).replace(/\s/g, '');
   if(!clean) return 0;
-  return Math.max(4, Math.round(clean.length / 11)); // ~11 حرف/ثانية ترتيل��ً
+  return Math.max(4, Math.round(clean.length / 11)); // ~11 ��رف/ثانية ترتيل��ً
 }
 
 function expectedAyahSeconds(task) {
@@ -4719,24 +4723,17 @@ function startArabicASR() {
   } catch(e) { return null; }
 }
 
-// إرسال الصوت للخادم لتفريغه (Speech-to-Text) وتصحيح التلاوة بذكاء اصطناعي حقيقي.
-// يعمل في جميع المتصفحات ولا يعتمد على التعرف على الكلام في المتصفح.
+// إرسال الصوت إلى Gemini على الخادم للتفريغ وتصحيح التلاوة.
 async function serverRecitationAnalysis(blob, task) {
   try {
-    // OpenRouter لا يقبل webm — نحوّل التسجيل إلى WAV أولاً، ونرجع إلى الأصل عند فشل التحويل.
-    let sendBlob = blob;
-    const wav = await blobToWav(blob);
-    if (!wav) throw new Error('تعذر تحويل التسجيل إلى WAV مدعوم.');
-    sendBlob = wav;
-    if(sendBlob.size > 3000000) throw new Error('التسجيل طويل جداً للتحليل. سجّل مقطعاً أقصر ثم أعد المحاولة.');
-    const dataUrl = await blobToDataURL(sendBlob);
-    const audioBase64 = (dataUrl.split(',')[1]) || '';
-    if(!audioBase64) throw new Error('تعذر قراءة بيانات التسجيل.');
+    const audio=await voiceAudioPayload(blob);
+    const audioBase64=audio.audioBase64;
+    const mimeType=audio.mimeType;
     let expectedText = '';
     if(task && task.surah) expectedText = await fetchAyatText(task.surah, task.from, task.to);
     const res = await callStudentAI('transcribe_and_grade', {
       audioBase64,
-      mimeType: (sendBlob.type || 'audio/wav'),
+      mimeType,
       surah: task && task.surah ? task.surah : '',
       from: task ? task.from : 1,
       to: task ? (task.to || task.from) : 1,
@@ -4757,19 +4754,14 @@ async function analyzeRecitationContent(blob, task, transcript) {
     for(let i=0;i+win<data.length;i+=win){let e=0;for(let j=0;j<win;j++)e+=data[i+j]*data[i+j];e=Math.sqrt(e/win);frames++;if(e>.012)voiced++}
     voicedRatio=frames?voiced/frames:0;await ctx.close();
   }catch(e){/* نكمل حتى لو تعذّر التحليل المحلي، لأن الخادم هو المصدر الأساسي */}
-  // 1) المصدر الأساسي: تحليل الصوت على الخادم (تفريغ حقيقي + تصحيح)
+  // Gemini على الخادم هو المصدر الوحيد لتفريغ الصوت وتصحيحه.
   let aiResult=await serverRecitationAnalysis(blob, task);
   const serverError=aiResult&&aiResult.analysisError?aiResult.analysisError:'';
-  if(serverError)aiResult=null;
-  // 2) احتياطي: تفريغ المتصفح + ��صحيح نصي عند تعذّر الخادم
-  if(!aiResult && expectedText && transcript){
-    try{aiResult=await callStudentAI('grade_recitation',{surah:task.surah,from:task.from,to:task.to,expectedText,studentTranscript:transcript},0.05)}catch(e){}
+  if(serverError||!aiResult){
+    return {pct:0,dur:Math.round(dur),txtPct:null,expectedSec:expectedSecondsFromText(expectedText)||expectedAyahSeconds(task),reason:serverError||'تعذّر تحليل التسجيل بواسطة Gemini. أعد المحاولة وتأكد من الاتصال بالإنترنت.'};
   }
-  if(!aiResult && expectedText && !transcript){
-    return {pct:0,dur:Math.round(dur),txtPct:null,expectedSec:expectedSecondsFromText(expectedText)||expectedAyahSeconds(task),reason:serverError||'تعذّر تحليل الصوت على الخادم ولم يتوفر تفريغ في المتصفح. أعد المحاولة والتأكد من الاتصال بالإنترنت.'};
-  }
-  const usedTranscript=(aiResult&&aiResult.transcript)?aiResult.transcript:transcript;
-  const txtPct=aiResult&&typeof aiResult.matchedPercent==='number'?aiResult.matchedPercent:(usedTranscript&&expectedText?transcriptMatchPercent(usedTranscript,expectedText):null);
+  const usedTranscript=aiResult.transcript||'';
+  const txtPct=typeof aiResult.matchedPercent==='number'?aiResult.matchedPercent:null;
   const expectedSec=expectedSecondsFromText(expectedText)||expectedAyahSeconds(task);
   const durationScore=expectedSec?Math.max(0,Math.min(1,1-Math.abs(Math.log(Math.max(.05,dur/expectedSec)))/2)):1;
   let pct=aiResult&&typeof aiResult.matchedPercent==='number'?aiResult.matchedPercent:Math.round((durationScore*.6+voicedRatio*.4)*100);
@@ -4969,35 +4961,28 @@ function voiceMatchPercent(a, b) { return Math.round(Math.max(0, Math.min(1, (vo
 const VOICE_MATCH_THRESHOLD = 78;      // نسبة قبول مطابقة صوت الطالب
 const VOICE_DUPLICATE_THRESHOLD = 93;  // نسبة اعتبار البصمة مكررة لطالب آخر
 
-// ====== جميناي هو المسؤول عن البصمة الصوتية والتحقق من هوية المتحدث ======
-// المتجه المحلي (computeVoicePrint) يبقى احتياطياً فقط عند تعذّر الوصول لجميناي.
+// ====== جميناي هو المسؤول الوحيد عن البصمة الصوتية والتحقق من هوية المتحدث ======
 async function voiceAudioPayload(blob){
-  const wav=await blobToWav(blob);
-  if(!wav) throw new Error('تعذر تحويل التسجيل إلى صيغة صوت مدعومة');
-  if(wav.size>3000000) throw new Error('التسجيل طويل جداً للتحليل الصوتي');
-  return {audioBase64:await audioBlobToBase64(wav),mimeType:'audio/wav'};
+  const supported=/^audio\/(webm|wav|x-wav|mpeg|mp3|mp4|x-m4a|m4a|ogg|opus)(;|$)/i.test(blob.type||'');
+  let audioBlob=blob;
+  if(!supported){audioBlob=await blobToWav(blob);}
+  if(!audioBlob) throw new Error('تعذر تجهيز التسجيل بصيغة يدعمها Gemini');
+  if(audioBlob.size>6000000) throw new Error('التسجيل طويل جداً للتحليل الصوتي');
+  return {audioBase64:await audioBlobToBase64(audioBlob),mimeType:audioBlob.type.split(';')[0]||'audio/wav'};
 }
-// إنشاء البصمة الصوتية بجميناي عند تسجيل الطالب أو تحديث بصمته.
 async function geminiVoiceProfile(blob){
-  try{
-    const audio=await voiceAudioPayload(blob);
-    const data=await callStudentAI('voice_print',audio,0.05);
-    return (data&&data.speaker)?data:null;
-  }catch(e){return null}
+  const audio=await voiceAudioPayload(blob);
+  const data=await callStudentAI('voice_print',audio,0.05);
+  if(!data||!data.speaker||data.usable===false)throw new Error((data&&data.reason)||'لم يتمكن Gemini من إنشاء بصمة صالحة');
+  return data;
 }
-// مطابقة تسجيل حديث ببصمة جميناي المحفوظة، مع احتياطي المتجه المحلي.
 async function verifyVoiceIdentity(blob,student){
   const profile=(student&&student.voiceProfile)?student.voiceProfile:null;
-  if(profile){
-    try{
-      const audio=await voiceAudioPayload(blob);
-      const data=await callStudentAI('voice_match',Object.assign({referenceProfile:profile},audio),0.05);
-      if(data&&typeof data.matchPercent==='number')return {pct:data.matchPercent,engine:'gemini',reason:data.reason||'',sameSpeaker:data.sameSpeaker!==false};
-    }catch(e){}
-  }
-  const live=await computeVoicePrint(blob),ref=(student&&student.voicePrintVec)||null;
-  if(!live||!ref)return null;
-  return {pct:voiceMatchPercent(live,ref),engine:'local',reason:'',sameSpeaker:null};
+  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية محفوظة لهذا الطالب');
+  const audio=await voiceAudioPayload(blob);
+  const data=await callStudentAI('voice_match',Object.assign({referenceProfile:profile},audio),0.05);
+  if(!data||typeof data.matchPercent!=='number')throw new Error('لم يُرجع Gemini نتيجة مطابقة صالحة');
+  return {pct:data.matchPercent,engine:'gemini',reason:data.reason||'',sameSpeaker:data.sameSpeaker===true};
 }
 
 function blobToDataURL(blob) {
@@ -5670,7 +5655,7 @@ function generateAIReport(student) {
   const avgScore = last3.reduce((sum, s) => sum + s.totalScore, 0) / last3.length;
   let report = '';
   if(avgScore >= 14) report = 'ممتاز يا '+student.name+'! 🌟 مستواك رائع جداً. أنت تحفظ بثبات وتميز. استمر في المراجعة وستكون من حفاظ كتاب الله.';
-  else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرارية.';
+  else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرار��ة.';
   else if(avgScore >= 6) report = 'جيد يا '+student.name+'! 📚 مستواك في تقدم مستمر. أنصحك بزيادة وقت المراجعة اليومي.';
   else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على التكرار والمراجعة اليومية وسترى التحسن قريباً.';
   report += '<br><br>📊 متوسط آخر 3 تسميعات: <strong>'+avgScore.toFixed(1)+' / 16</strong><br>📈 عدد التسميعات المسجلة: '+finalizedSessions.length;
@@ -5756,7 +5741,7 @@ function generateAIResponse(text, student) {
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
     let r = '📈 <strong>تحليل تقدمك:</strong><br>• عدد التسميعات النهائية: '+scores.length+'<br>• المتوسط العام: '+avg+' من 16<br>• أعلى درجة: '+Math.max.apply(null,scores)+'<br>• أقل درجة: '+Math.min.apply(null,scores)+'<br>';
-    r += '• آخر تغيّر: '+(diff>0?('ارتفاع بمقدار '+diff+' درجة 🎉'):(diff<0?('انخفاض بمقدار '+Math.abs(diff)+' درجة — لا بأس، عوّضها بمراجعة إضافية 💪'):'ثبات في المستوى ��'));
+    r += '• آخ�� تغيّر: '+(diff>0?('ارتفاع بمقدار '+diff+' درجة 🎉'):(diff<0?('انخفاض بمقدار '+Math.abs(diff)+' درجة — لا بأس، عوّضها بمراجعة إضافية 💪'):'ثبات في المستوى ��'));
     return r;
   }
   // المهام / الواجب
