@@ -83,31 +83,37 @@ function isRetryableOpenRouterError(error: unknown) {
 
 function classifyAiFailure(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error || "خطأ غير معروف")
-  if (/OPENROUTER_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
-    return { status: 503, code: "OPENROUTER_KEY_MISSING", retryable: false, message: "مفتاح OpenRouter غير متاح على الخادم. أضف OPENROUTER_API_KEY إلى متغيرات البيئة.", raw }
-  }
-  if (/401|403|API key|unauthorized|forbidden/i.test(raw)) {
-    return { status: 503, code: "AI_PROVIDERS_UNAUTHORIZED", retryable: false, message: "تعذر اعتماد خدمة Gemini على الخادم.", raw }
-  }
-  if (/Gemini HTTP 404|model.*(?:not found|no longer available)/i.test(raw)) {
-    return { status: 502, code: "GEMINI_MODEL_UNAVAILABLE", retryable: false, message: "نموذج Gemini الصوتي غير متاح حالياً.", raw }
-  }
-  if (/402|insufficient credits|payment required|credit card|free credits/i.test(raw)) {
-    return { status: 402, code: "AI_CREDITS_REQUIRED", retryable: false, message: "جُرّبت مزوّدات الذكاء الاصطناعي المتاحة، لكن المزوّد الأخير يحتاج رصيداً أو تفعيل فوترة.", raw }
+  if (/AUDIO_PROVIDERS_FAILED/i.test(raw)) {
+    return { status: 503, code: "AUDIO_PROVIDERS_FAILED", retryable: true, message: "تعذر تحليل التسجيل مؤقتاً بعد تجربة مزوّدي الصوت المتاحين. أعد المحاولة بعد قليل.", raw }
   }
   if (/AUDIO_PAYLOAD_TOO_LARGE|payload too large|request entity too large|413/i.test(raw)) {
     return { status: 413, code: "AUDIO_PAYLOAD_TOO_LARGE", retryable: false, message: "التسجيل طويل جداً للتحليل. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.", raw }
   }
+  if (/Gemini HTTP 404|model.*(?:not found|no longer available)/i.test(raw)) {
+    return { status: 502, code: "GEMINI_MODEL_UNAVAILABLE", retryable: true, message: "نموذج Gemini المحدد غير متاح، وسيُستخدم مزوّد الصوت البديل عند إعادة المحاولة.", raw }
+  }
+  if (/GEMINI_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
+    return { status: 503, code: "GEMINI_KEY_MISSING", retryable: false, message: "مفتاح Gemini غير متاح على الخادم.", raw }
+  }
+  if (/OPENROUTER_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
+    return { status: 503, code: "OPENROUTER_KEY_MISSING", retryable: false, message: "مفتاح OpenRouter غير متاح على الخادم.", raw }
+  }
+  if (/401|403|API key|unauthorized|forbidden/i.test(raw)) {
+    return { status: 503, code: "AI_PROVIDER_UNAUTHORIZED", retryable: false, message: "رفض مزوّد الذكاء الاصطناعي بيانات الاعتماد على الخادم.", raw }
+  }
+  if (/402|insufficient credits|payment required|credit card|free credits/i.test(raw)) {
+    return { status: 402, code: "AI_CREDITS_REQUIRED", retryable: false, message: "مزوّد الذكاء الاصطناعي يحتاج رصيداً أو تفعيل فوترة.", raw }
+  }
   if (/429|rate.?limit|quota/i.test(raw)) {
-    return { status: 429, code: "OPENROUTER_RATE_LIMITED", retryable: true, message: "بلغ OpenRouter حد الطلبات مؤقتاً. انتظر قليلاً ثم أعد المحاولة.", raw }
+    return { status: 429, code: "AI_RATE_LIMITED", retryable: true, message: "بلغ مزوّد الذكاء الاصطناعي حد الطلبات مؤقتاً. انتظر قليلاً ثم أعد المحاولة.", raw }
   }
   if (/TimeoutError|AbortError|timed out|aborted/i.test(raw)) {
-    return { status: 504, code: "OPENROUTER_TIMEOUT", retryable: true, message: "استغرق OpenRouter وقتاً أطول من المتوقع. أعد المحاولة، وسيحتفظ الموقع ببياناتك الحالية.", raw }
+    return { status: 504, code: "AI_TIMEOUT", retryable: true, message: "استغرق تحليل التسجيل وقتاً أطول من المتوقع. أعد المحاولة، وسيحتفظ الموقع ببياناتك الحالية.", raw }
   }
   if (/404|no endpoints found|not found|not supported/i.test(raw)) {
-    return { status: 502, code: "OPENROUTER_MODEL_UNAVAILABLE", retryable: false, message: "تعذر على OpenRouter Auto اختيار نموذج يدعم هذا الطلب حالياً.", raw }
+    return { status: 502, code: "AI_MODEL_UNAVAILABLE", retryable: true, message: "النموذج المحدد لا يدعم هذا الطلب حالياً.", raw }
   }
-  return { status: 502, code: "OPENROUTER_PROVIDER_ERROR", retryable: isRetryableOpenRouterError(error), message: "تعذر الاتصال بخدمة OpenRouter حالياً.", raw }
+  return { status: 502, code: "AI_PROVIDER_ERROR", retryable: isRetryableOpenRouterError(error), message: "تعذر الاتصال بخدمة الذكاء الاصطناعي حالياً.", raw }
 }
 
 function openRouterTimeout(system: string, audio?: { mimeType: string; data: string }) {
@@ -235,8 +241,7 @@ async function geminiText(prompt: string, system: string, temperature: number, a
   if (!GEMINI.key) throw new Error("GEMINI_API_KEY غير موجود على الخادم")
   const parts: any[] = [{ text: prompt }]
   if (audio) parts.unshift({ inlineData: { mimeType: audio.mimeType, data: audio.data } })
-  // نموذج 2.5 لم يعد متاحاً للحسابات الجديدة؛ نستخدم نموذج Gemini الحديث للصوت.
-  const model = audio ? "gemini-3.6-flash" : GEMINI.model
+  const model = GEMINI.model
   const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -276,8 +281,8 @@ async function runText(prompt: string, system: string, temperature: number) {
   throw errors.at(-1) || new Error("لا يوجد مزوّد ذكاء اصطناعي صالح على الخادم")
 }
 
-// ===== جميناي هو المزوّد الوحيد المسؤول عن كل ما يتعلق بالصوت =====
-// التفريغ الصوتي، البصمة الصوتية، مطابقة المتحدث، وملء البيانات من الإملاء الصوتي.
+// ===== معالجة الصوت مع انتقال تلقائي بين المزوّدين =====
+const AUDIO_MODES = new Set(["voice_print", "voice_match", "student_voice_intake", "transcribe_and_grade"])
 const SUPPORTED_AUDIO_MIME_TYPES = new Set([
   "audio/webm", "audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp3",
   "audio/mp4", "audio/x-m4a", "audio/m4a", "audio/ogg", "audio/opus",
@@ -296,28 +301,60 @@ function audioMimeType(audioFormat: string) {
   return normalizeAudioMimeType(audioFormat.includes("/") ? audioFormat : audioFormat === "mp3" ? "audio/mpeg" : audioFormat === "ogg" ? "audio/ogg" : audioFormat === "m4a" ? "audio/mp4" : audioFormat === "webm" ? "audio/webm" : "audio/wav")
 }
 
-async function geminiAudio(prompt: string, system: string, temperature: number, audio: { mimeType: string; data: string }): Promise<string> {
-  if (!isGeminiConfigured()) throw new Error("GEMINI_API_KEY غير موجود على الخادم: جميناي هو المسؤول عن معالجة الصوت")
-  let lastError: unknown = new Error("تعذر بدء اتصال جميناي الصوتي")
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      return await geminiText(prompt, system, temperature, audio)
-    } catch (error) {
-      lastError = error
-      const message = error instanceof Error ? error.message : String(error || "")
-      if (!/408|429|5\d\d|fetch failed|Timeout|Abort|aborted|رد فارغ|network|ECONN|ETIMEDOUT/i.test(message) || attempt === 2) break
-      await new Promise(resolve => setTimeout(resolve, 800 * (2 ** attempt)))
-    }
-  }
-  throw lastError
+type AudioProviderResult = {
+  text: string
+  provider: "google-gemini" | "openrouter"
+  providerLabel: string
+  model: string
 }
 
-const SYS_AUDIO_TRANSCRIBE = "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن الكريم بالرسم العثماني."
+function audioErrorMessage(error: unknown) {
+  return (error instanceof Error ? error.message : String(error || "خطأ غير معروف")).slice(0, 400)
+}
 
-async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
+async function runAudio(prompt: string, system: string, temperature: number, audio: { mimeType: string; data: string }): Promise<AudioProviderResult> {
+  const errors: string[] = []
+
+  if (isGeminiConfigured()) {
+    let lastGeminiError: unknown
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const text = await geminiText(prompt, system, temperature, audio)
+        return { text, provider: "google-gemini", providerLabel: GEMINI.label, model: GEMINI.model }
+      } catch (error) {
+        lastGeminiError = error
+        const retryable = /408|429|5\d\d|fetch failed|Timeout|Abort|aborted|رد فارغ|network|ECONN|ETIMEDOUT/i.test(audioErrorMessage(error))
+        if (!retryable || attempt === 2) break
+        await new Promise(resolve => setTimeout(resolve, 800 * (2 ** attempt)))
+      }
+    }
+    errors.push(`Gemini: ${audioErrorMessage(lastGeminiError)}`)
+  } else {
+    errors.push("Gemini: GEMINI_API_KEY غير موجود على الخادم")
+  }
+
+  if (isOpenRouterConfigured()) {
+    try {
+      const text = await openRouterText(prompt, system, temperature, audio)
+      return { text, provider: "openrouter", providerLabel: OPENROUTER.label, model: OPENROUTER.model }
+    } catch (error) {
+      errors.push(`OpenRouter: ${audioErrorMessage(error)}`)
+    }
+  } else {
+    errors.push("OpenRouter: OPENROUTER_API_KEY غير موجود على الخادم")
+  }
+
+  throw new Error(`AUDIO_PROVIDERS_FAILED: ${errors.join(" | ")}`)
+}
+
+const SYS_AUDIO_TRANSCRIBE = `أنت محرك تفريغ صوتي دقيق يدعم العربية والإنجليزية والكلام المختلط بينهما.
+اكتشف لغة الكلام تلقائياً، وانسخ الكلام بلغته الأصلية دون ترجمة أو تعريب. حافظ على الأسماء والأرقام وكلمات المرور كما نُطقت.
+عند تلاوة القرآن، اكتب النص بالعربية واضبطه قدر الإمكان وفق الرسم القرآني.`
+
+async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<AudioProviderResult> {
   const mimeType = audioMimeType(audioFormat)
-  const prompt = "فرّغ هذ التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح."
-  return geminiAudio(prompt, SYS_AUDIO_TRANSCRIBE, 0.05, { mimeType, data: audioBase64 })
+  const prompt = "فرّغ التسجيل حرفياً بلغته الأصلية، سواء كان عربياً أو إنجليزياً أو مختلطاً. أعد النص فقط دون شرح."
+  return runAudio(prompt, SYS_AUDIO_TRANSCRIBE, 0.05, { mimeType, data: audioBase64 })
 }
 
 const SYS_VOICE_PRINT = `أنت محرك بصمة صوتية. تستمع إلى تسجيل عربي وتصف خصائص صوت المتحدث وصفاً رقمياً ثابتاً يمكن مقارنته لاحقاً.
@@ -378,7 +415,7 @@ const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة الق
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
-const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على ��فريغ صوتي عربي.
+const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على ����فريغ صوتي عربي.
 مهمتك:
 1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
 2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
@@ -418,7 +455,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 
 const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم نا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
 مهمتك: فهم اللب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعيلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
-احترم دائماً: عدم حذف الملفات، عدم إعادة بناء الم��روع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
+احترم دائماً: عدم حذف الملفات، عدم إعادة بناء ا��م��روع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
 أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (بدون ��ي نص خارجه):
 {
  "understanding": "إعادة صياغة موجزة لفهمك للطلب",
@@ -758,15 +795,19 @@ export async function POST(req: Request) {
     return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured: isOpenRouterConfigured() } }, 400)
   }
 
-  const audioModes = new Set(["voice_print", "voice_match", "student_voice_intake", "grade_recitation"])
-  const isAudioMode = typeof body?.mode === "string" && audioModes.has(body.mode)
+  const isAudioMode = typeof body?.mode === "string" && AUDIO_MODES.has(body.mode)
   const diagnostics = {
-  executedOn: "server",
-  keyConfigured: isAudioMode ? isGeminiConfigured() : (isOpenRouterConfigured() || isGeminiConfigured()),
-  providerStatus: 200,
-  provider: isAudioMode ? "google-gemini" : "automatic",
-  providerLabel: isAudioMode ? GEMINI.label : "Automatic AI provider",
-  configuredModel: isAudioMode ? "gemini-3.6-flash" : (isOpenRouterConfigured() ? OPENROUTER.model : GEMINI.model),
+    executedOn: "server",
+    keyConfigured: isAudioMode ? (isGeminiConfigured() || isOpenRouterConfigured()) : (isOpenRouterConfigured() || isGeminiConfigured()),
+    providerStatus: 200,
+    provider: isAudioMode ? "automatic-audio" : "automatic",
+    providerLabel: isAudioMode ? "Automatic audio provider" : "Automatic AI provider",
+    configuredModel: isAudioMode ? `${GEMINI.model} / ${OPENROUTER.model}` : (isOpenRouterConfigured() ? OPENROUTER.model : GEMINI.model),
+  }
+  const setAudioDiagnostics = (result: AudioProviderResult) => {
+    diagnostics.provider = result.provider
+    diagnostics.providerLabel = result.providerLabel
+    diagnostics.configuredModel = result.model
   }
 
   try {
@@ -776,7 +817,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt}`,
-        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجمة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
+        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجمة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خات��ة أو ذكر للنموذج أو للمرجع.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -909,13 +950,13 @@ export async function POST(req: Request) {
       if (!audioBase64) return json({ error: "لم يصل التسجيل الصوتي", diagnostics }, 400)
       if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
 
-      const system = `أنت تستخرج بيانات طالب من إملاء عربي لمسؤول مدرسة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
-transcript,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
-subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ كلمات المرور فقط إذا نطقها المسؤول صراحة. transcript هو التفريغ الكامل المسموع.`
-      // جميناي يستمع للتسجيل ويملأ الحقول في خطوة واحدة، دون أي مزوّد بديل.
-      const direct = await geminiAudio("استمع إلى هذا الإملاء العربي واستخرج بيانات الطالب منه. أعد JSON فقط.", system, 0.05, { mimeType, data: audioBase64 })
-      const parsed = extractJson(direct)
-      if (!parsed || typeof parsed !== "object") throw new Error("Gemini: تعذر فهم بيانات الطالب من التسجيل")
+      const system = `أنت تستخرج بيانات طالب من إملاء عربي أو إنجليزي أو مختلط لمسؤول مدرسة. اكتشف اللغة تلقائياً، وانسخ الكلام بلغته الأصلية دون ترجمة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
+transcript,detectedLanguage,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
+detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ الأسماء والأرقام وكلمات المرور بدقة، وكلمات المرور فقط إذا نطقها المسؤول صراحة. transcript هو التفريغ الكامل المسموع بلغته الأصلية.`
+      const audioResult = await runAudio("استمع إلى الإملاء واستخرج بيانات الطالب منه، سواء كان عربياً أو إنجليزياً أو مختلطاً. أعد JSON فقط.", system, 0.05, { mimeType, data: audioBase64 })
+      setAudioDiagnostics(audioResult)
+      const parsed = extractJson(audioResult.text)
+      if (!parsed || typeof parsed !== "object") throw new Error("AUDIO_PROVIDERS_FAILED: تعذر فهم بيانات الطالب من التسجيل")
       const clean = (value: unknown, max = 300) => typeof value === "string" ? value.trim().slice(0, max) : ""
       const latinDigits = (value: unknown) => clean(value, 500)
         .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
@@ -925,8 +966,12 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       const birthDate = /^\d{4}-\d{2}-\d{2}$/.test(birthCandidate) ? new Date(`${birthCandidate}T00:00:00Z`) : null
       const birth = birthDate && !Number.isNaN(birthDate.getTime()) && birthDate.toISOString().slice(0, 10) === birthCandidate ? birthCandidate : ""
       const juzNumber = Math.min(30, Math.max(0, Number.parseInt(digits(parsed.juz, 2), 10) || 0))
+      const detectedLanguage = parsed.detectedLanguage === "en" || parsed.detectedLanguage === "mixed" ? parsed.detectedLanguage : "ar"
       return json({ result: {
         transcript: clean(parsed.transcript, 4000),
+        detectedLanguage,
+        audioEngine: audioResult.provider,
+        audioModel: audioResult.model,
         fields: {
           name: clean(parsed.name, 120), username: clean(parsed.username, 80),
           national: digits(parsed.national, 14), phone: digits(parsed.phone, 11), birth,
@@ -948,12 +993,13 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       const audio = { mimeType, data: audioBase64 }
 
       if (mode === "voice_print") {
-        const text = await geminiAudio("حلّل خصائص صوت المتحدث في هذا التسجيل وأنشئ بصمة صوتية وصفية. أعد JSON فقط.", SYS_VOICE_PRINT, 0.05, audio)
-        const parsed = extractJson(text) || {}
+        const audioResult = await runAudio("حلّل خصائص صوت المتحدث في هذا التسجيل وأنشئ بصمة صوتية وصفية. تجاهل لغة الكلام. أعد JSON فقط.", SYS_VOICE_PRINT, 0.05, audio)
+        setAudioDiagnostics(audioResult)
+        const parsed = extractJson(audioResult.text) || {}
         const speaker = parsed.speaker && typeof parsed.speaker === "object" ? parsed.speaker : {}
         return json({ result: {
-          engine: "gemini",
-          model: "gemini-3.6-flash",
+          engine: audioResult.provider,
+          model: audioResult.model,
           createdAt: new Date().toISOString(),
           speaker,
           quality: typeof parsed.quality === "string" ? parsed.quality : "good",
@@ -964,16 +1010,18 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
 
       const referenceProfile = payload.referenceProfile && typeof payload.referenceProfile === "object" ? payload.referenceProfile : null
       if (!referenceProfile) return json({ error: "لا توجد بصمة صوتية مرجعية محفوظة لهذا الحساب", diagnostics }, 400)
-      const text = await geminiAudio(
-        `البصمة المرجعية المحفوظة:\n${JSON.stringify(referenceProfile).slice(0, 4000)}\n\nقارن صوت هذا التسجيل بالبصمة المرجعية. أعد JSON فقط.`,
+      const audioResult = await runAudio(
+        `البصمة المرجعية المحفوظة:\n${JSON.stringify(referenceProfile).slice(0, 4000)}\n\nقارن صوت هذا التسجيل بالبصمة المرجعية بصرف النظر عن كون الكلام عربياً أو إنجليزياً. أعد JSON فقط.`,
         SYS_VOICE_MATCH,
         0.05,
         audio,
       )
-      const parsed = extractJson(text) || {}
+      setAudioDiagnostics(audioResult)
+      const parsed = extractJson(audioResult.text) || {}
       const matchPercent = Math.max(0, Math.min(100, Math.round(Number(parsed.matchPercent) || 0)))
       return json({ result: {
-        engine: "gemini",
+        engine: audioResult.provider,
+        model: audioResult.model,
         sameSpeaker: parsed.sameSpeaker === true || (parsed.sameSpeaker !== false && matchPercent >= 70),
         matchPercent,
         confidence: typeof parsed.confidence === "string" ? parsed.confidence : "medium",
@@ -1035,15 +1083,15 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       try { normalizedMimeType = normalizeAudioMimeType(mimeType) } catch (error) { return json({ error: error instanceof Error ? error.message : "صيغة التسجيل غير مدعومة بواسطة جميناي", diagnostics }, 415) }
       if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
 
-      // جميناي وحده يستمع للتلاوة ويفرّغها ويقارنها بالمقطع المطلوب في خطوة واحدة.
-      const direct = await geminiAudio(
-        `المقطع المطلوب:\n${JSON.stringify({ surah, from, to, expectedText }).slice(0, 12_000)}\n\nاستمع إلى تلاوة الطالب، فرّغها ثم صححها مقابل المقطع المطلوب. أعد JSON فقط.`,
+      const audioResult = await runAudio(
+        `المقطع المطلوب:\n${JSON.stringify({ surah, from, to, expectedText }).slice(0, 12_000)}\n\nاستمع إلى تلاوة الطالب، فرّغها بالعربية ثم صححها مقابل المقطع المطلوب. أعد JSON فقط.`,
         SYS_TRANSCRIBE,
         0.05,
         { mimeType: normalizedMimeType, data: audioBase64 },
       )
-      const parsed = extractJson(direct)
-      if (!parsed || typeof parsed !== "object") throw new Error("Gemini: تعذر تحليل التلاوة")
+      setAudioDiagnostics(audioResult)
+      const parsed = extractJson(audioResult.text)
+      if (!parsed || typeof parsed !== "object") throw new Error("AUDIO_PROVIDERS_FAILED: تعذر تحليل التلاوة")
       const transcript = typeof parsed.transcript === "string" ? parsed.transcript.trim() : ""
       const totalAyahs = Math.max(1, Number(to || from || 1) - Number(from || 1) + 1)
       const missingCount = Array.isArray(parsed.missingAyahs) ? Math.min(totalAyahs, parsed.missingAyahs.length) : 0
@@ -1053,7 +1101,9 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       return json({
         result: {
           transcript: transcript || String(parsed.transcript || ""),
-          audioEngine: "gemini",
+          detectedLanguage: "ar",
+          audioEngine: audioResult.provider,
+          audioModel: audioResult.model,
           accepted: parsed.isRecitation !== false && score >= 0.5,
           score,
           matchedPercent: typeof parsed.matchedPercent === "number" ? Math.max(0, Math.min(100, parsed.matchedPercent)) : Math.round(score * 100),
@@ -1198,8 +1248,8 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
         retryable: failure.retryable,
         diagnostics: {
           executedOn: "server",
-          provider: ["voice_print", "voice_match", "student_voice_intake", "grade_recitation"].includes(mode) ? "google-gemini" : "automatic",
-          keyConfigured: ["voice_print", "voice_match", "student_voice_intake", "grade_recitation"].includes(mode) ? isGeminiConfigured() : (isOpenRouterConfigured() || isGeminiConfigured()),
+          provider: AUDIO_MODES.has(mode) ? "automatic-audio" : "automatic",
+          keyConfigured: AUDIO_MODES.has(mode) ? (isGeminiConfigured() || isOpenRouterConfigured()) : (isOpenRouterConfigured() || isGeminiConfigured()),
           stage,
           reason: failure.raw.slice(0, 300),
         },
