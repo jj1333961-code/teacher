@@ -85,6 +85,12 @@ body { background: var(--bg); min-height:100vh; color: var(--text); transition:0
   width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:1.3rem;
   display:flex; align-items:center; justify-content:center; box-shadow: var(--shadow);
 }
+.lang-toggle {
+  position:fixed; top:20px; left:80px; z-index:1000;
+  background: var(--card-bg); border:2px solid var(--primary); color: var(--primary);
+  width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:0.95rem; font-weight:700;
+  display:flex; align-items:center; justify-content:center; box-shadow: var(--shadow);
+}
 .home-page { text-align:center; padding-top:60px; }
 .home-page h1 { color:#fff; font-size:2.5rem; margin-bottom:10px; text-shadow:0 2px 10px rgba(0,0,0,0.3); }
 .home-page p { color:rgba(255,255,255,0.9); font-size:1.2rem; margin-bottom:40px; }
@@ -135,6 +141,8 @@ tr:hover { background: var(--table-hover); }
 .stat-box .label { opacity:0.9; margin-top:5px; }
 .stat-box[onclick] { cursor:pointer; transition:0.2s; }
 .stat-box[onclick]:hover { transform:translateY(-5px); box-shadow:0 5px 15px rgba(0,0,0,0.3); }
+.stat-action { margin-top:14px; width:100%; padding:9px 12px; border:1px solid rgba(255,255,255,0.55); border-radius:10px; background:rgba(255,255,255,0.16); color:#fff; font-size:0.9rem; font-weight:600; cursor:pointer; transition:0.2s; }
+.stat-action:hover { background:rgba(255,255,255,0.3); }
 .menu-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:15px; margin-bottom:25px; }
 .menu-btn { padding:20px; border-radius:15px; text-align:center; color:#fff; font-size:1.1rem; font-weight:600; cursor:pointer; transition:0.2s; border:none; }
 .menu-btn:hover { transform:scale(1.03); }
@@ -460,6 +468,7 @@ tr:hover { background: var(--table-hover); }
 <body>
 
   <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع">🌙</button>
+  <button class="lang-toggle" id="langToggleBtn" onclick="toggleLang()" title="تغيير اللغة / Change language">EN</button>
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
     <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
   </div>
@@ -475,6 +484,10 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group"><label>اسم المستخدم</label><input type="text" id="unifiedUser" placeholder="اسم المستخدم (أو رقم الموبايل للمسؤول)" onkeypress="if(event.key==='Enter')unifiedLogin()"></div>
   <div class="form-group"><label>الرقم السري</label><div style="position:relative;"><input type="password" id="unifiedPass" placeholder="أدخل الرقم السري" style="padding-left:45px;" onkeypress="if(event.key==='Enter')unifiedLogin()"><span onclick="togglePassVisibility('unifiedPass', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span></div></div>
   <button class="btn btn-primary" onclick="unifiedLogin()" style="width:100%">🔓 دخول</button>
+  <div style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border); text-align:center;">
+    <p style="color:var(--text-light); margin-bottom:10px;">ليس لديك حساب؟ أرسل طلب انضمام للمسؤول.</p>
+    <button class="btn btn-success" onclick="startSignup()" style="width:100%">🆕 إنشاء حساب جديد</button>
+  </div>
 </div>
 
 <!-- الصفحة الرئيسية -->
@@ -485,7 +498,48 @@ tr:hover { background: var(--table-hover); }
     <div class="card" onclick="showPage('adminLogin')"><div class="icon">👨‍💼</div><h3>المسؤول</h3><p>التحكم الكامل في النظام والطلاب</p></div>
     <div class="card" onclick="showPage('studentLogin')"><div class="icon">👨‍🎓</div><h3>الطالب</h3><p>متابعة المواد والواجبات والحفظ</p></div>
     <div class="card" onclick="showPage('parentLogin')"><div class="icon">👨‍👩‍👧</div><h3>ولي الأمر</h3><p>متابعة ابنك/ابنتك والتقارير</p></div>
+    <div class="card" onclick="startSignup()"><div class="icon">🆕</div><h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول</p></div>
   </div>
+</div>
+
+<!-- إنشاء حساب: الخطوة الأولى (التحقق من الهوية) -->
+<div id="signupStep1" class="page hidden" style="max-width:560px; margin:40px auto;">
+  <div class="page-header"><h2>🆕 إنشاء حساب — التحقق من الهوية</h2><button class="btn btn-secondary" onclick="showPage('lockScreen')">رجوع</button></div>
+  <div id="signupStep1Alert"></div>
+  <p style="color:var(--text-light); margin-bottom:15px;">اختر طريقة التسجيل، وسيتم إرسال رسالة تحقق على واتساب للتأكد من هويتك قبل إدخال البيانات.</p>
+  <div class="form-row" style="margin-bottom:5px;">
+    <div class="form-group"><button class="btn btn-outline" id="signupMethodGoogleBtn" onclick="setSignupMethod('google')" style="width:100%">🔵 التسجيل بحساب جوجل</button></div>
+    <div class="form-group"><button class="btn btn-outline" id="signupMethodPhoneBtn" onclick="setSignupMethod('phone')" style="width:100%">🟢 التسجيل برقم الهاتف (واتساب)</button></div>
+  </div>
+  <div class="form-group" id="signupGoogleBox" style="display:none;"><label>بريد حساب جوجل *</label><input type="email" id="signupEmail" placeholder="example@gmail.com"></div>
+  <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><input type="text" id="signupWhats" placeholder="01xxxxxxxxx" oninput="this.value=this.value.replace(/[^\d+]/g,'')"></div>
+  <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
+  <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
+    <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
+    <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 إعادة إرسال الكود</button>
+  </div>
+</div>
+
+<!-- إنشاء حساب: الخطوة الثانية (البيانات) -->
+<div id="signupStep2" class="page hidden" style="max-width:720px; margin:40px auto;">
+  <div class="page-header"><h2>📝 بيانات طلب الانضمام</h2><button class="btn btn-secondary" onclick="showPage('signupStep1')">رجوع</button></div>
+  <div id="signupStep2Alert"></div>
+  <div class="alert alert-success" id="signupVerifiedNote">✅ تم التحقق من هويتك بنجاح.</div>
+  <div class="form-row">
+    <div class="form-group"><label>نوع الحساب *</label><select id="signupRole"><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
+    <div class="form-group"><label>الاسم بالكامل *</label><input type="text" id="signupName" placeholder="الاسم كما في البطاقة"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div class="form-group"><label>رقم الهاتف *</label><input type="text" id="signupPhone" placeholder="01xxxxxxxxx" oninput="this.value=this.value.replace(/[^\d+]/g,'')"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
+    <div class="form-group"><label>السورة</label><select id="signupSurah"><option value="">اختر الجزء أولاً...</option></select></div>
+  </div>
+  <div class="form-group"><label>ملاحظات</label><textarea id="signupNotes" rows="3" placeholder="أي معلومات إضافية تريد إبلاغ المسؤول بها"></textarea></div>
+  <button class="btn btn-success" onclick="submitSignupRequest()" style="width:100%">📤 إرسال الطلب للمسؤول</button>
 </div>
 
 <!-- دخول المسؤول -->
@@ -504,25 +558,19 @@ tr:hover { background: var(--table-hover); }
     <h2>📊 لوحة تحكم المسؤول</h2>
     <div>
       <span id="adminDeviceInfo" style="color:var(--text-light); margin-left:15px; font-size:0.9rem"></span>
+      <button class="btn btn-outline admin-badge" onclick="showPage('messagesPage')">💬 الرسائل <span id="msgBadge" class="msg-count hidden">0</span></button>
       <button class="btn btn-outline" onclick="showPage('adminSettings')">⚙️ الإعدادات</button>
       <button class="btn btn-outline" onclick="logout()">خروج</button>
     </div>
   </div>
   <div class="stats">
-    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائمة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div></div>
-    <div class="stat-box"><div class="num" id="statTeachers">0</div><div class="label">عدد المعلمين</div></div>
-    <div class="stat-box"><div class="num" id="statAdmins">0</div><div class="label">المسؤولين</div></div>
+    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائمة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div><button class="stat-action" onclick="event.stopPropagation();showPage('addStudent')">➕ إضافة طالب جديد</button></div>
+    <div class="stat-box"><div class="num" id="statTeachers">0</div><div class="label">عدد المعلمين</div><button class="stat-action" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button></div>
+    <div class="stat-box"><div class="num" id="statAdmins">0</div><div class="label">المسؤولين</div><button class="stat-action" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button></div>
     <div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num" id="statDrafts">0</div><div class="label">تسميعات نشطة</div></div>
   </div>
   <div id="activeDraftsSection"></div>
   <div class="menu-grid">
-    <button class="menu-btn" style="background:#667eea" onclick="showPage('addStudent')">➕ إضافة طالب جديد</button>
-
-    <button class="menu-btn admin-badge" style="background:#17a2b8" onclick="showPage('messagesPage')">
-      💬 الرسائل <span id="msgBadge" class="msg-count hidden">0</span>
-    </button>
-    <button class="menu-btn" style="background:#6c757d" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button>
-    <button class="menu-btn" style="background:#fd7e14" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button>
     <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات ������لمرفوعة</button>
     <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
@@ -597,6 +645,16 @@ tr:hover { background: var(--table-hover); }
 <div id="adminsPage" class="page hidden">
   <div class="page-header"><h2>👨‍💼 إدارة المسؤولين</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="adminsAlert"></div>
+  <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
+    <div class="form-group" style="margin-bottom:0;">
+      <label>رقم واتساب المسؤول لاستلام طلبات الانضمام</label>
+      <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
+      <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة على واتساب (بصيغة الدولة، مثال: 201554542019)</small>
+    </div>
+    <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
+      <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حفظ الرقم</button>
+    </div>
+  </div>
   <div class="form-row" style="margin-bottom:20px;">
     <div class="form-group"><label>رقم الموبايل</label><input type="text" id="newAdminMobile" placeholder="رقم الموبايل (11 رقم)" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
     <div class="form-group"><label>الرقم السري</label><input type="password" id="newAdminPass" placeholder="الرقم السري"></div>
@@ -871,7 +929,7 @@ tr:hover { background: var(--table-hover); }
 <div id="subjectsPage" class="page hidden">
   <div class="page-header"><h2>📚 المواد والمعلمين</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div class="form-row" style="margin-bottom:20px;">
-    <div class="form-group"><label>اسم ا��مادة الجديدة</label><input type="text" id="newSubName"></div>
+    <div class="form-group"><label>اسم ا����مادة الجديدة</label><input type="text" id="newSubName"></div>
     <div class="form-group"><label>اسم المدرس</label><input type="text" id="newSubTeacher"></div>
     <div class="form-group"><label>رقم هاتف المدرس</label><input type="text" id="newSubPhone" maxlength="11" placeholder="11 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
@@ -1192,8 +1250,112 @@ if(localStorage.getItem('theme') === 'dark') {
   document.querySelector('.theme-toggle').textContent = '☀️';
 }
 
+// ====== تبديل اللغة (عربي / إنجليزي) ======
+const LANG_DICT = {
+  '🔒 دخول النظام': '🔒 System Login',
+  'أدخل اسم المستخدم والرقم السري — سيتم نقلك تلقائياً لصفحتك (مسؤول / طالب / ولي أمر).': 'Enter your username and password — you will be routed automatically to your page (admin / student / parent).',
+  'اسم المستخدم': 'Username',
+  'الرقم السري': 'Password',
+  '🔓 دخول': '🔓 Login',
+  'ليس لديك حساب؟ أرسل طلب انضمام للمسؤول.': "Don't have an account? Send a join request to the admin.",
+  '🆕 إنشاء حساب جديد': '🆕 Create New Account',
+  'إنشاء حساب جديد': 'Create New Account',
+  '📚 نظام إدارة الطلاب': '📚 Student Management System',
+  'مرحباً بك — اختر طريقة استخدامك للموقع': 'Welcome — choose how you want to use the site',
+  'المسؤول': 'Admin',
+  'الطالب': 'Student',
+  'ولي الأمر': 'Parent',
+  'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
+  'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
+  'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
+  'تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
+  '⚙️ الإعدادات': '⚙️ Settings',
+  'خروج': 'Logout',
+  'عدد الطلاب': 'Students',
+  'عدد المعلمين': 'Teachers',
+  'المسؤولين': 'Admins',
+  'تسميعات نشطة': 'Active recitations',
+  '➕ إضافة طالب جديد': '➕ Add New Student',
+  '📚 المواد والمعلمين': '📚 Subjects & Teachers',
+  '👨‍💼 إدارة المسؤولين': '👨‍💼 Manage Admins',
+  '📁 الملفات المرفوعة': '📁 Uploaded Files',
+  '🧪 الاختبارات من قائمة الطلاب': '🧪 Exams from students list',
+  '🛠️ مساعد تطوير الموقع': '🛠️ Site Development Assistant',
+  '🔗 مزامنة GitHub': '🔗 GitHub Sync',
+  'رجوع': 'Back',
+  'رقم الموبايل': 'Mobile number',
+  'رقم الواتساب لاستلام كود التحقق *': 'WhatsApp number to receive the verification code *',
+  'رقم واتساب المسؤول لاستلام طلبات الانضمام': 'Admin WhatsApp number for join requests',
+  '💾 حفظ الرقم': '💾 Save Number',
+  '🆕 إنشاء حساب — التحقق من الهوية': '🆕 Create Account — Identity Verification',
+  'اختر طريقة التسجيل، وسيتم إرسال رسالة تحقق على واتساب للتأكد من هويتك قبل إدخال البيانات.': 'Choose a sign-up method; a WhatsApp verification message will confirm your identity before entering your data.',
+  '🔵 التسجيل بحساب جوجل': '🔵 Sign up with Google',
+  '🟢 التسجيل برقم الهاتف (واتساب)': '🟢 Sign up with phone (WhatsApp)',
+  'بريد حساب جوجل *': 'Google account email *',
+  '📩 إرسال كود التحقق على واتساب': '📩 Send verification code on WhatsApp',
+  'كود التحقق (6 أرقام) *': 'Verification code (6 digits) *',
+  '✅ تأكيد الهوية والمتابعة': '✅ Verify identity and continue',
+  '🔁 إعادة إرسال الكود': '🔁 Resend code',
+  '📝 بيانات طلب الانضمام': '📝 Join Request Details',
+  'نوع الحساب *': 'Account type *',
+  'طالب': 'Student',
+  'ولي أمر': 'Parent',
+  'الاسم بالكامل *': 'Full name *',
+  'الرقم القومي *': 'National ID *',
+  'رقم الهاتف *': 'Phone number *',
+  'الجزء': 'Juz',
+  'السورة': 'Surah',
+  'ملاحظات': 'Notes',
+  '📤 إرسال الطلب للمسؤول': '📤 Send request to admin',
+  '💬 الرسائل': '💬 Messages',
+  '📥 الرسائل الواردة': '📥 Inbox',
+  '✉️ التواصل': '✉️ Compose',
+  '⚙️ إعدادات المسؤول': '⚙️ Admin Settings'
+};
+let currentLang = 'ar';
+function langTextNodes() {
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+  const nodes = [];
+  let node;
+  while((node = walker.nextNode())) { if(node.nodeValue && node.nodeValue.trim()) nodes.push(node); }
+  return nodes;
+}
+function applyLangToDom() {
+  if(currentLang !== 'en') return;
+  langTextNodes().forEach(function(node){
+    const key = node.nodeValue.trim();
+    if(LANG_DICT[key]) { if(node.__arText === undefined) node.__arText = node.nodeValue; node.nodeValue = node.nodeValue.replace(key, LANG_DICT[key]); }
+  });
+  document.querySelectorAll('[placeholder]').forEach(function(el){
+    const key = el.getAttribute('placeholder').trim();
+    if(LANG_DICT[key]) { if(!el.dataset.arPlaceholder) el.dataset.arPlaceholder = el.getAttribute('placeholder'); el.setAttribute('placeholder', LANG_DICT[key]); }
+  });
+}
+function restoreArabicDom() {
+  langTextNodes().forEach(function(node){ if(node.__arText !== undefined) { node.nodeValue = node.__arText; node.__arText = undefined; } });
+  document.querySelectorAll('[data-ar-placeholder]').forEach(function(el){ el.setAttribute('placeholder', el.dataset.arPlaceholder); delete el.dataset.arPlaceholder; });
+}
+function toggleLang() {
+  const btn = document.getElementById('langToggleBtn');
+  if(currentLang === 'ar') {
+    currentLang = 'en';
+    document.documentElement.setAttribute('lang', 'en');
+    document.documentElement.setAttribute('dir', 'ltr');
+    applyLangToDom();
+    if(btn) btn.textContent = 'ع';
+  } else {
+    currentLang = 'ar';
+    document.documentElement.setAttribute('lang', 'ar');
+    document.documentElement.setAttribute('dir', 'rtl');
+    restoreArabicDom();
+    if(btn) btn.textContent = 'EN';
+  }
+  localStorage.setItem('lang', currentLang);
+}
+
 let neonSaveTimer = null;
-const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','recordElements','extraElements'];
+const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','recordElements','extraElements','adminWhatsapp','joinRequests'];
 function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
@@ -1306,6 +1468,7 @@ function showPage(id) {
   if(id === 'studentExamPage') renderStudentExam();
   if(id === 'parentPendingTasksPage') renderParentPendingTasks();
   if(id === 'parentChartPage') renderParentFullChart();
+  applyLangToDom();
   window.scrollTo(0,0);
   saveSessionState();
 }
@@ -1566,6 +1729,121 @@ function updateSurahSelect() {
   const hint=document.getElementById('juzBoundaryHint');
   if(hint) hint.textContent='حدود الجزء: '+ranges.map(r=>'سورة '+(ALL_SURAHS_ORDERED[r[0]-1]||r[0])+' '+r[1]+'–'+r[2]).join(' | ');
 }
+// ====== إنشاء حساب جديد (طلب انضمام) ======
+let signupState = { method: null, email: '', whats: '', code: '', verified: false };
+
+function normalizeWaNumber(phone) {
+  let p = String(phone || '').replace(/\D/g, '');
+  if(p.indexOf('00') === 0) p = p.slice(2);
+  if(p.indexOf('0') === 0) p = '20' + p.slice(1);
+  return p;
+}
+function buildWaLink(phone, text) {
+  const p = normalizeWaNumber(phone);
+  return p ? 'https://wa.me/' + p + '?text=' + encodeURIComponent(text) : '';
+}
+function startSignup() {
+  signupState = { method: null, email: '', whats: '', code: '', verified: false };
+  ['signupEmail','signupWhats','signupCode','signupName','signupNid','signupPhone','signupNotes'].forEach(function(id){ const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('signupGoogleBox').style.display = 'none';
+  document.getElementById('signupVerifyBox').classList.add('hidden');
+  document.getElementById('signupStep1Alert').innerHTML = '';
+  document.getElementById('signupMethodGoogleBtn').classList.remove('btn-primary');
+  document.getElementById('signupMethodPhoneBtn').classList.remove('btn-primary');
+  showPage('signupStep1');
+}
+function setSignupMethod(method) {
+  signupState.method = method;
+  const g = document.getElementById('signupMethodGoogleBtn');
+  const p = document.getElementById('signupMethodPhoneBtn');
+  g.classList.toggle('btn-primary', method === 'google');
+  p.classList.toggle('btn-primary', method === 'phone');
+  document.getElementById('signupGoogleBox').style.display = method === 'google' ? 'block' : 'none';
+  document.getElementById('signupStep1Alert').innerHTML = '';
+}
+function sendSignupCode() {
+  const box = document.getElementById('signupStep1Alert');
+  const whats = document.getElementById('signupWhats').value.trim();
+  const email = (document.getElementById('signupEmail').value || '').trim();
+  if(!signupState.method) { box.innerHTML = '<div class="alert alert-danger">❌ اختر طريقة التسجيل أولاً (جوجل أو رقم الهاتف)</div>'; return; }
+  if(signupState.method === 'google' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل بريد حساب جوجل بشكل صحيح</div>'; return; }
+  if(normalizeWaNumber(whats).length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح</div>'; return; }
+  signupState.email = email;
+  signupState.whats = whats;
+  signupState.code = String(Math.floor(100000 + Math.random() * 900000));
+  const text = 'كود التحقق الخاص بإنشاء حسابك في نظام إدارة الطلاب: ' + signupState.code + (signupState.method === 'google' ? '\nحساب جوجل: ' + email : '') + '\nلا تشارك هذا الكود مع أي شخص.';
+  const link = buildWaLink(whats, text);
+  document.getElementById('signupVerifyBox').classList.remove('hidden');
+  box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق. <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال رسالة الكود على واتساب</strong></a> ثم أدخل الكود بالأسفل.</div>';
+  window.open(link, '_blank', 'noopener');
+}
+function verifySignupCode() {
+  const box = document.getElementById('signupStep1Alert');
+  const code = document.getElementById('signupCode').value.trim();
+  if(!signupState.code) { box.innerHTML = '<div class="alert alert-danger">❌ أرسل كود التحقق أولاً</div>'; return; }
+  if(code !== signupState.code) { box.innerHTML = '<div class="alert alert-danger">❌ الكود غير صحيح، تأكد من الرسالة أو أعد الإرسال</div>'; return; }
+  signupState.verified = true;
+  box.innerHTML = '';
+  document.getElementById('signupVerifiedNote').innerHTML = '✅ تم التحقق من هويتك بنجاح — ' + (signupState.method === 'google' ? 'حساب جوجل: ' + signupState.email : 'رقم الواتساب: ' + signupState.whats);
+  document.getElementById('signupPhone').value = signupState.whats;
+  initSignupJuzSelect();
+  showPage('signupStep2');
+}
+function initSignupJuzSelect() {
+  const select = document.getElementById('signupJuz');
+  let html = '<option value="">اختر الجزء...</option>';
+  for(let i = 1; i <= 30; i++) html += '<option value="' + i + '">الجزء ' + i + '</option>';
+  select.innerHTML = html;
+  document.getElementById('signupSurah').innerHTML = '<option value="">اختر الجزء أولاً...</option>';
+}
+function updateSignupSurahSelect() {
+  const juz = document.getElementById('signupJuz').value;
+  const select = document.getElementById('signupSurah');
+  if(!juz || !quranData[juz]) { select.innerHTML = '<option value="">اختر الجزء أولاً...</option>'; return; }
+  let html = '<option value="">اختر السورة...</option>';
+  quranData[juz].forEach(function(s){ html += '<option value="' + s + '">' + s + '</option>'; });
+  select.innerHTML = html;
+}
+function submitSignupRequest() {
+  const box = document.getElementById('signupStep2Alert');
+  if(!signupState.verified) { box.innerHTML = '<div class="alert alert-danger">❌ يجب التحقق من الهوية أولاً</div>'; return; }
+  const role = document.getElementById('signupRole').value;
+  const name = document.getElementById('signupName').value.trim();
+  const nid = document.getElementById('signupNid').value.trim();
+  const phone = document.getElementById('signupPhone').value.trim();
+  const juz = document.getElementById('signupJuz').value;
+  const surah = document.getElementById('signupSurah').value;
+  const notes = document.getElementById('signupNotes').value.trim();
+  if(!name || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
+  if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يكون 14 رقم</div>'; return; }
+  const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
+  const time = new Date().toLocaleString('ar-EG');
+  const details = '📋 طلب إنشاء حساب جديد\n'
+    + 'نوع الحساب: ' + roleLabel + '\n'
+    + 'الاسم: ' + name + '\n'
+    + 'الرقم القومي: ' + nid + '\n'
+    + 'رقم الهاتف: ' + phone + '\n'
+    + 'طريقة التسجيل: ' + (signupState.method === 'google' ? 'جوجل (' + signupState.email + ')' : 'رقم الهاتف / واتساب') + '\n'
+    + 'رقم الواتساب المُوثّق: ' + signupState.whats + '\n'
+    + 'الجزء: ' + (juz ? 'الجزء ' + juz : 'غير محدد') + '\n'
+    + 'السورة: ' + (surah || 'غير محددة') + '\n'
+    + 'ملاحظات: ' + (notes || 'لا يوجد') + '\n'
+    + 'وقت الطلب: ' + time;
+
+  const requests = getData('joinRequests');
+  requests.push({ id: 'jr' + Date.now(), role: role, name: name, nid: nid, phone: phone, whats: signupState.whats, email: signupState.email, method: signupState.method, juz: juz, surah: surah, notes: notes, status: 'pending', time: time });
+  setData('joinRequests', requests);
+
+  const msgs = getData('messages');
+  msgs.push({ id: 'm' + Date.now(), type: 'join_request', sender: name + ' (' + roleLabel + ')', receiverType: 'admin', text: details.replace(/\n/g, '<br>'), time: time, read: false, joinRequest: true });
+  setData('messages', msgs);
+
+  const link = buildWaLink(getAdminWhatsapp(), details);
+  box.innerHTML = '<div class="alert alert-success">✅ تم إرسال طلبك للمسؤول على المنصة. <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال نفس التفاصيل على واتساب المسؤول</strong></a></div>';
+  window.open(link, '_blank', 'noopener');
+  if(typeof showToast === 'function') showToast('✅ تم إرسال طلب إنشاء الحساب للمسؤول', 'success');
+}
+
 function initEditJuzSelect(val) {
   const select = document.getElementById('editJuz');
   let html = '<option value="">اختر الجزء...</option>';
@@ -1678,7 +1956,25 @@ async function toggleVoiceRecord() {
   } catch(err) { alert('لا يمكن الوصول للميكروفون. يرجى السماح بالوصول.'); }
 }
 
+const DEFAULT_ADMIN_WHATSAPP = '201554542019';
+function getAdminWhatsapp() {
+  const v = getData('adminWhatsapp', '');
+  const num = String(v || '').replace(/\D/g, '');
+  return num || DEFAULT_ADMIN_WHATSAPP;
+}
+function saveAdminWhatsapp() {
+  const input = document.getElementById('adminWhatsInput');
+  const num = String(input.value || '').replace(/\D/g, '');
+  const box = document.getElementById('adminsAlert');
+  if(num.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح بصيغة الدولة (مثال: 201554542019)</div>'; return; }
+  setData('adminWhatsapp', num);
+  input.value = num;
+  box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب المسؤول: ' + num + '</div>';
+}
+
 function renderAdmins() {
+  const whatsInput = document.getElementById('adminWhatsInput');
+  if(whatsInput) whatsInput.value = getAdminWhatsapp();
   const admins = getData('admins');
   let html = '<table><thead><tr><th>#</th><th>رقم الموبايل</th><th>الرقم السري</th><th>النوع</th><th>التحكم</th></tr></thead><tbody>';
   admins.forEach((a, i) => {
@@ -2391,7 +2687,7 @@ function renderRecordElementHTML(el, i, num) {
   html += '</div>';
   const _sur = el.name === 'اللوح' || el.name === 'ا��سورة' ? (el.surah || mainSurah) : el.surah;
   html += '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">';
-  html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">📖 عرض الآيات (صورة)</button>';
+  html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">📖 ع��ض الآيات (صورة)</button>';
   html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineAyat_'+i+'\', \''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">👁️ معاينة داخل الصفحة</button>';
   html += '</div><div id="inlineAyat_'+i+'" data-open="0" style="margin-top:10px;"></div>';
 
@@ -2814,7 +3110,7 @@ function renderExamQuestions(){
     '<div class="exam-question-header"><strong>السؤال '+(i+1)+' من '+examQuestions.length+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">رفض السؤال</button>')+'</div>'+
     quranQuestionMediaHtml(q,i)+
     '<div class="form-row"><div class="form-group"><label>النوع</label><select onchange="updateExamQuestion('+i+',\'type\',this.value);renderExamQuestions()"><option value="mcq" '+(q.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(q.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(q.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(q.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+ 
-    '<div class="form-group"><label>المستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+ 
+    '<div class="form-group"><label>��لمستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+ 
     '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
     (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
     (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+'</div>'+
@@ -3849,7 +4145,7 @@ function approveMessage(idx, approved) {
         msgs.push({
           type:'admin', sender:'المسؤو��', senderId:0,
           receiverType: 'student', receiverId: studentId,
-          text: '✅ تمت موافقة المسؤول على ملفك وتم تسجيل المهمة في السجلات بنجاح! أحسنت.',
+          text: '✅ تمت مو��فقة المسؤول على ملفك وتم تسجيل المهمة في السجلات بنجاح! أحسنت.',
           reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false
         });
 
@@ -5436,7 +5732,7 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلام','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح لك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهامي</em> — لعرض الواجبات والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ��ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح لك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مها��ي</em> — لعرض الواجبات والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ��ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
@@ -5510,7 +5806,7 @@ function generateAIResponse(text, student) {
   }
   // ديني عام
   if(has('دين','اسلام','إسلام','الله','نبي','رسول','دعاء','صلاة')) {
-    return 'الحمد لله رب العالمين 🌿<br><br>القرآن كتاب الله المعجز، نزل هداية للناس. ومن الأدعية النافعة للحفظ: «اللهم اجعل القرآن ربيع قلبي ونور صدري وجلاء حزني وذهاب همّي».';
+    return 'الحمد لله رب العالمين 🌿<br><br>القرآن كتاب الله المعجز، ��زل هداية للناس. ومن الأدعية النافعة للحفظ: «اللهم اجعل القرآن ربيع قلبي ونور صدري وجلاء حزني وذهاب همّي».';
   }
   // افتراضي ذكي
   let r = '🤖 أهلاً '+name+'، لم ��فهم سؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
@@ -5527,6 +5823,8 @@ function logout() {
   const ua = document.getElementById('unifiedLoginAlert'); if(ua) ua.innerHTML = '';
   showPage('lockScreen');
 }
+
+if(localStorage.getItem('lang') === 'en') { currentLang = 'ar'; toggleLang(); }
 
 // Restore session on page load
 if(restoreSession()) {
