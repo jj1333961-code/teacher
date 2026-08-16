@@ -871,7 +871,7 @@ tr:hover { background: var(--table-hover); }
 <div id="subjectsPage" class="page hidden">
   <div class="page-header"><h2>📚 المواد والمعلمين</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div class="form-row" style="margin-bottom:20px;">
-    <div class="form-group"><label>اسم المادة الجديدة</label><input type="text" id="newSubName"></div>
+    <div class="form-group"><label>اسم ا��مادة الجديدة</label><input type="text" id="newSubName"></div>
     <div class="form-group"><label>اسم المدرس</label><input type="text" id="newSubTeacher"></div>
     <div class="form-group"><label>رقم هاتف المدرس</label><input type="text" id="newSubPhone" maxlength="11" placeholder="11 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
@@ -1227,7 +1227,7 @@ if(!localStorage.getItem('initialized_v7')) {
 
 let currentUser = null, currentType = null, currentAdminId = null;
 let voiceBlob = null, voiceChunks = [], mediaRecorder = null;
-let voiceFingerprint = null, voiceDataUrl = null;
+let voiceFingerprint = null, voiceDataUrl = null, voiceProfileGemini = null;
 let recordElements = [], homeworkItems = [], readingItems = [];
 let fullChartStudentId = null;
 let currentRecordMainSurah = '';
@@ -1292,7 +1292,7 @@ function showPage(id) {
   if(id === 'messagesPage') { renderMessages(); markAdminMessagesRead(); }
   if(id === 'subjectsPage') renderSubjects();
   if(id === 'adminsPage') renderAdmins();
-  if(id === 'addStudent') { renderSubjectSelect(); initJuzSelect(); voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; document.getElementById('voicePreview').style.display='none'; document.getElementById('voiceRecordStatus').textContent='اضغط للتسجيل (20 ثانية)'; }
+  if(id === 'addStudent') { renderSubjectSelect(); initJuzSelect(); voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null; document.getElementById('voicePreview').style.display='none'; document.getElementById('voiceRecordStatus').textContent='اضغط للتسجيل (20 ثانية)'; }
   if(id === 'adminSettings') loadAdminSettings();
   if(id === 'studentDashboard' && currentType === 'student') { renderStudentDashboard(); updateStudentMsgBadge(); }
   if(id === 'studentInbox') { renderStudentInbox(); markStudentMessagesRead(); }
@@ -1663,10 +1663,12 @@ async function toggleVoiceRecord() {
       preview.src = URL.createObjectURL(voiceBlob); 
       preview.style.display = 'block';
       stream.getTracks().forEach(t => t.stop());
-      status.textContent = '🤖 جاري تحليل البصمة الصوتية...';
+      status.textContent = '🤖 جميناي يحلل البصمة الصوتية...';
+      voiceProfileGemini = await geminiVoiceProfile(voiceBlob);
       voiceFingerprint = await computeVoicePrint(voiceBlob);
       voiceDataUrl = await blobToDataURL(voiceBlob);
-      if(voiceFingerprint) { status.textContent = 'تم إنشاء البصمة الصوتية ✅'; showToast('🤖 تم تحليل البصمة الصوتية بنجاح', 'success'); }
+      if(voiceProfileGemini) { status.textContent = 'تم إنشاء البصمة الصوتية بجميناي ✅'; showToast('🤖 أنشأ جميناي البصمة الصوتية بنجاح', 'success'); }
+      else if(voiceFingerprint) { status.textContent = 'تم إنشاء البصمة الصوتية ✅'; showToast('🤖 تم تحليل البصمة الصوتية بنجاح', 'success'); }
       else { status.textContent = 'تعذّر تحليل الصوت ❌'; showToast('❌ تعذّر تحليل التسجيل — أعد التسجيل', 'error'); }
     };
     mediaRecorder.start();
@@ -1956,7 +1958,7 @@ async function saveStudent() {
   const alertBox = document.getElementById('addStudentAlert');
   const fail = function(msg) {
     alertBox.innerHTML = '<div class="alert alert-danger">❌ ' + msg + '</div>';
-    showToast('🚫 تم رفض تسجيل الطالب — ' + msg, 'error');
+    showToast('🚫 تم رفض تسجيل ��لطالب — ' + msg, 'error');
   };
 
   const name = document.getElementById('stName').value.trim();
@@ -1989,7 +1991,9 @@ async function saveStudent() {
   let printVec = voiceFingerprint;
   let voiceData = voiceDataUrl;
   // ✅ البصمة الصوتية اختيارية تماماً — يمكن حفظ الطالب ب��ونها
+  let voiceProfile = voiceProfileGemini;
   if(voiceBlob) {
+    if(!voiceProfile) { voiceProfile = await geminiVoiceProfile(voiceBlob); }
     if(!printVec) { printVec = await computeVoicePrint(voiceBlob); }
     if(!voiceData) { voiceData = await blobToDataURL(voiceBlob); }
     // منع تسجيل طالبين بنفس البصمة الصوتية
@@ -2009,11 +2013,12 @@ async function saveStudent() {
     surah: isQuran ? document.getElementById('stSurah').value : '',
     voicePrint: voiceData || null,
     voicePrintVec: printVec || null,
+    voiceProfile: voiceProfile || null,
     sessions: [], tasks: [], completedTasks: [], homeworkApproved: false, readingApproved: false, voiceApproved: false
   };
   students.push(newStudent);
   setData('students', students);
-  voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null;
+  voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null;
   alertBox.innerHTML = '<div class="alert alert-success">✅ تم حفظ الطالب بنجاح!</div>';
   showToast('✅ تم حفظ الطالب "' + name + '" بنجاح' + (printVec ? ' مع بصمته الصوتية 🎙️' : ' (بدون بصمة صوتية)'), 'success');
   ['stName','stUsername','stNational','stPhone','stBirth','stAge','stStudentPass','stParent','stParentPass','stNotes'].forEach(id => document.getElementById(id).value = '');
@@ -2041,9 +2046,9 @@ function openEdit(id) {
   document.getElementById('editParent').value = s.parent;
   document.getElementById('editParentPass').value = s.parentPass;
   document.getElementById('editNotes').value = s.notes || '';
-  editVoiceBlob=null; editVoiceFingerprint=null; editVoiceDataUrl=null;
+  editVoiceBlob=null; editVoiceFingerprint=null; editVoiceDataUrl=null; editVoiceProfileGemini=null;
   const evp=document.getElementById('editVoicePreview'); if(evp){evp.style.display='none';evp.removeAttribute('src');}
-  const evs=document.getElementById('editVoiceStatus'); if(evs)evs.textContent=s.voicePrintVec?'البصمة الصوتية موجودة. يمكنك استبدالها بتسجيل جديد.':'لا توجد بصمة صوتية محفوظة حالياً.';
+  const evs=document.getElementById('editVoiceStatus'); if(evs)evs.textContent=(s.voiceProfile||s.voicePrintVec)?('البصمة الصوتية موجودة'+(s.voiceProfile?' (جميناي)':'')+'. يمكنك استبدالها بتسجيل جديد.'):'لا توجد بصمة صوتية محفوظة حالياً.';
   renderEditSubjectSelect(s.subjectIds);
   initEditJuzSelect(s.juz);
   const isQuran = s.subjects && s.subjects.some(sub => sub.name.includes('قرآن'));
@@ -2061,7 +2066,7 @@ function openEdit(id) {
   showPage('editStudent');
 }
 
-let editVoiceBlob=null, editVoiceFingerprint=null, editVoiceDataUrl=null, editVoiceRecorder=null, editVoiceChunks=[];
+let editVoiceBlob=null, editVoiceFingerprint=null, editVoiceDataUrl=null, editVoiceRecorder=null, editVoiceChunks=[], editVoiceProfileGemini=null;
 async function toggleEditVoiceRecord(){
   const btn=document.getElementById('editVoiceBtn'),status=document.getElementById('editVoiceStatus'),preview=document.getElementById('editVoicePreview');
   if(!btn||!status||!preview)return;
@@ -2072,8 +2077,9 @@ async function toggleEditVoiceRecord(){
     editVoiceRecorder.onstop=async()=>{
       editVoiceBlob=new Blob(editVoiceChunks,{type:'audio/webm'}); stream.getTracks().forEach(t=>t.stop());
       preview.src=URL.createObjectURL(editVoiceBlob);preview.style.display='block';status.textContent='🤖 جاري تحليل البصمة الجديدة...';
+      editVoiceProfileGemini=await geminiVoiceProfile(editVoiceBlob);
       editVoiceFingerprint=await computeVoicePrint(editVoiceBlob);editVoiceDataUrl=await blobToDataURL(editVoiceBlob);
-      status.textContent=editVoiceFingerprint?'تم إنشاء بصمة جديدة — اضغط حفظ ��لتعدي��ات':'تعذر تحل��ل الصوت، أعد التسجيل';
+      status.textContent=(editVoiceProfileGemini||editVoiceFingerprint)?('تم إنشاء بصمة جديدة'+(editVoiceProfileGemini?' بجميناي':'')+' — اضغط حفظ التعديلات'):'تعذر تحليل الصوت، أعد التسجيل';
       btn.classList.remove('recording');
     };
     editVoiceRecorder.start();registerAudioRecorder('edit-fingerprint',editVoiceRecorder,stream,{statusId:'editVoiceStatus',buttonId:'editVoiceBtn',maxMs:20000});btn.classList.add('recording');status.textContent='جاري التسجيل... (20 ثانية فعلية)';
@@ -2123,6 +2129,10 @@ function updateStudent() {
       if(pct>=VOICE_DUPLICATE_THRESHOLD) return alert('هذه البصمة قريبة جداً من بصمة الطالب '+st.name+' ('+pct+'%). أعد التسجيل.');
     }
     students[idx].voicePrintVec=editVoiceFingerprint; students[idx].voicePrint=editVoiceDataUrl||students[idx].voicePrint||null;
+    if(editVoiceProfileGemini) students[idx].voiceProfile=editVoiceProfileGemini;
+  } else if(editVoiceProfileGemini) {
+    students[idx].voiceProfile=editVoiceProfileGemini;
+    students[idx].voicePrint=editVoiceDataUrl||students[idx].voicePrint||null;
   }
 
   setData('students', students);
@@ -2717,7 +2727,7 @@ function renderExamPlanRows(){
       '<div class="form-group"><label>عدد الأسئلة</label><input type="number" min="1" max="50" value="'+(r.count||1)+'" onchange="examPlanRows['+i+'].count=Math.max(1,Math.min(50,parseInt(this.value)||1))"></div>'+
       '<div class="form-group"><label>المستوى</label><select onchange="examPlanRows['+i+'].level=this.value">'+
       '<option value="easy" '+(r.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(r.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(r.level==='hard'?'selected':'')+'>صعب</option></select></div>'+
-      '<div class="form-group"><label>نوع السؤال</label><select onchange="examPlanRows['+i+'].type=this.value;renderExamPlanRows()">'+
+      '<div class="form-group"><label>ن��ع السؤال</label><select onchange="examPlanRows['+i+'].type=this.value;renderExamPlanRows()">'+
       '<option value="mcq" '+(r.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(r.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(r.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(r.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+
       '<div class="form-group"><label>موضع السؤال</label><select onchange="examPlanRows['+i+'].position=this.value"><option value="random" '+((r.position||'random')==='random'?'selected':'')+'>عشوائي ومتنوع</option><option value="start" '+(r.position==='start'?'selected':'')+'>أول السورة</option><option value="middle" '+(r.position==='middle'?'selected':'')+'>وسط السورة</option><option value="end" '+(r.position==='end'?'selected':'')+'>آخر السورة</option></select></div>'+
       '<div class="form-group"><label>وقت السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" title="الساعات" type="number" min="0" max="23" value="'+Math.floor((r.timeLimit||60)/3600)+'" onchange="setExamPlanTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" title="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((r.timeLimit||60)%3600)/60)+'" onchange="setExamPlanTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" title="الثواني" type="number" min="0" max="59" value="'+((r.timeLimit||60)%60)+'" onchange="setExamPlanTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+
@@ -2966,8 +2976,8 @@ async function recordStudentExamAudio(i){
     recorder.onstop=async()=>{
       stream.getTracks().forEach(t=>t.stop());if(asr)asr.stop();await new Promise(r=>setTimeout(r,400));
       const blob=new Blob(chunks,{type:'audio/webm'});const dataUrl=await blobToDataURL(blob);const transcript=asr?(asr.text||''):'';preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='🤖 جاري التحقق من البصمة والمحتوى...';
-      const live=await computeVoicePrint(blob), ref=currentUser.voicePrintVec||null;const match=(live&&ref)?voiceMatchPercent(live,ref):null;
-      if(match!==null && match<VOICE_MATCH_THRESHOLD){status.textContent='❌ البصمة غير مطابقة — لم يُحفظ التسجيل';aiBox.innerHTML='<div class="alert alert-danger">🚫 هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل بصوت الطالب نفسه.</div>';showToast('❌ التسجيل غير مطابق للبصمة ولم يتم حفظه','error');studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;btn.dataset.recording='false';btn.classList.remove('recording');return;}
+      const identity=await verifyVoiceIdentity(blob,currentUser);const match=identity?identity.pct:null;
+      if(match!==null && (match<VOICE_MATCH_THRESHOLD || identity.sameSpeaker===false)){status.textContent='❌ البصمة غير مطابقة — لم يُحفظ التسجيل';aiBox.innerHTML='<div class="alert alert-danger">🚫 هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل بصوت الطالب نفسه.</div>';showToast('❌ التسجيل غير مطابق للبصمة ولم يتم حفظه','error');studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;btn.dataset.recording='false';btn.classList.remove('recording');return;}
       // تحليل الصوت على الخادم (تفريغ حقيقي + تصحيح) مع احتياطي المتصفح
       let aiResult=await serverRecitationAnalysis(blob,{surah:q.surah,from:q.from,to:q.to});
       let usedTranscript=transcript;
@@ -3039,7 +3049,7 @@ function saveSession(isFinal) {
     return;
   }
 
-  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام الحالية والانتقال لليوم التالي.
+  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام ال��الية والانتقال لليوم التالي.
   const session = {date,elements:JSON.parse(JSON.stringify(activeElements)),homework:JSON.parse(JSON.stringify(homeworkItems)),reading:JSON.parse(JSON.stringify(readingItems)),totalScore,notes,isDraft:false,finalizedAt:nowText,status:'نهائ��',completedTaskSnapshot:previousTasks};
   students[idx].sessions = students[idx].sessions.filter(s => !s.isDraft && s.date !== date);
   students[idx].sessions.push(session);
@@ -4455,7 +4465,7 @@ async function analyzeRecitationContent(blob, task, transcript) {
   let aiResult=await serverRecitationAnalysis(blob, task);
   const serverError=aiResult&&aiResult.analysisError?aiResult.analysisError:'';
   if(serverError)aiResult=null;
-  // 2) احتياطي: تفريغ المتصفح + تصحيح نصي عند تعذّر الخادم
+  // 2) احتياطي: تفريغ المتصفح + ��صحيح نصي عند تعذّر الخادم
   if(!aiResult && expectedText && transcript){
     try{aiResult=await callStudentAI('grade_recitation',{surah:task.surah,from:task.from,to:task.to,expectedText,studentTranscript:transcript},0.05)}catch(e){}
   }
@@ -4477,12 +4487,12 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   const aiBox = document.getElementById(aiBoxId);
   if(aiBox) aiBox.innerHTML = '<div class="alert alert-info">🤖 جاري تحليل التسجيل بالذكاء الاصطناعي...</div>';
   const task = currentUser.tasks[taskIdx];
-  const liveVec = await computeVoicePrint(blob);
-  const refVec = currentUser.voicePrintVec || null;
-  let matchPct = (refVec && liveVec) ? voiceMatchPercent(liveVec, refVec) : null;
+  const identity = await verifyVoiceIdentity(blob, currentUser);
+  let matchPct = identity ? identity.pct : null;
+  if(identity && identity.sameSpeaker === false) matchPct = Math.min(matchPct, VOICE_MATCH_THRESHOLD - 1);
 
-  // لا يسمح النظام بإرسال تسجيل صوتي لمهمة تتطلب هوية صوتية بدون بصمة ��رجعية.
-  if(!refVec || !liveVec || matchPct === null) {
+  // لا يسمح النظام بإرسال تسجيل صوتي لمهمة تتطلب هوية صوتية بدون بصمة مرجعية.
+  if(matchPct === null) {
     showToast('❌ لا توجد بصمة صوتية مرجعية صالحة لهذا الطالب — لم يتم حفظ أو إرسال التسجيل', 'error');
     if(statusEl) statusEl.textContent='لا توجد بصمة مرجعية ❌';
     if(aiBox) aiBox.innerHTML='<div class="alert alert-warning">⚠️ يجب أن تكون للطالب بصمة صوتية محفوظة أولاً حتى يمكن التحقق من هويته.</div>';
@@ -4662,6 +4672,37 @@ function voiceCosine(a, b) {
 function voiceMatchPercent(a, b) { return Math.round(Math.max(0, Math.min(1, (voiceCosine(a, b) + 1) / 2)) * 100); }
 const VOICE_MATCH_THRESHOLD = 78;      // نسبة قبول مطابقة صوت الطالب
 const VOICE_DUPLICATE_THRESHOLD = 93;  // نسبة اعتبار البصمة مكررة لطالب آخر
+
+// ====== جميناي هو المسؤول عن البصمة الصوتية والتحقق من هوية المتحدث ======
+// المتجه المحلي (computeVoicePrint) يبقى احتياطياً فقط عند تعذّر الوصول لجميناي.
+async function voiceAudioPayload(blob){
+  const wav=await blobToWav(blob);
+  if(!wav) throw new Error('تعذر تحويل التسجيل إلى صيغة صوت مدعومة');
+  if(wav.size>3000000) throw new Error('التسجيل طويل جداً للتحليل الصوتي');
+  return {audioBase64:await audioBlobToBase64(wav),mimeType:'audio/wav'};
+}
+// إنشاء البصمة الصوتية بجميناي عند تسجيل الطالب أو تحديث بصمته.
+async function geminiVoiceProfile(blob){
+  try{
+    const audio=await voiceAudioPayload(blob);
+    const data=await callStudentAI('voice_print',audio,0.05);
+    return (data&&data.speaker)?data:null;
+  }catch(e){return null}
+}
+// مطابقة تسجيل حديث ببصمة جميناي المحفوظة، مع احتياطي المتجه المحلي.
+async function verifyVoiceIdentity(blob,student){
+  const profile=(student&&student.voiceProfile)?student.voiceProfile:null;
+  if(profile){
+    try{
+      const audio=await voiceAudioPayload(blob);
+      const data=await callStudentAI('voice_match',Object.assign({referenceProfile:profile},audio),0.05);
+      if(data&&typeof data.matchPercent==='number')return {pct:data.matchPercent,engine:'gemini',reason:data.reason||'',sameSpeaker:data.sameSpeaker!==false};
+    }catch(e){}
+  }
+  const live=await computeVoicePrint(blob),ref=(student&&student.voicePrintVec)||null;
+  if(!live||!ref)return null;
+  return {pct:voiceMatchPercent(live,ref),engine:'local',reason:'',sameSpeaker:null};
+}
 
 function blobToDataURL(blob) {
   return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(blob); });
