@@ -1,4 +1,5 @@
-import { createCanvas, DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas"
+import path from "node:path"
+import { createCanvas, loadImage, DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas"
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs"
 import { getQuranPdfBytes, normalizeQuranText } from "@/lib/quran-reference"
 
@@ -8,6 +9,9 @@ export const maxDuration = 60
 Object.assign(globalThis, { DOMMatrix, ImageData, Path2D })
 
 const QUESTION_TYPES = new Set(["mcq", "truefalse", "complete", "audio"])
+
+// إزاحة الصفحة المتعلّمة بين ترقيم المصدر (604 صفحات) وملف المصحف المرفق.
+let learnedPageOffset = 0
 
 async function getAyahRange(surah: number, from: number, to: number) {
   const response = await fetch(`https://api.alquran.cloud/v1/surah/${surah}/quran-uthmani`, {
@@ -31,6 +35,93 @@ async function getPageAyahs(page: number) {
   })
   const data = await response.json().catch(() => null)
   return Array.isArray(data?.data?.ayahs) ? data.data.ayahs : []
+}
+
+// ===== إطار الآية المزخرف =====
+// نطبع مقطع الآية المقتطع من المصحف داخل الإطار الزخرفي، في المساحة الفارغة
+// بمنتصفه، بأسلوب دمج multiply حتى يبدو النص مطبوعاً على الورق نفسه.
+const FRAME_PATH = path.join(process.cwd(), "public", "ayah-frame.png")
+// المساحة الآمنة داخل الإطار (بعيداً عن القوس والميدالية أعلاه وعن الفاصل أسفله).
+const FRAME_CONTENT = { x: 196, y: 306, width: 1148, height: 520 }
+let framePromise: Promise<any> | null = null
+
+function loadFrame() {
+  if (!framePromise) framePromise = loadImage(FRAME_PATH).catch(() => null)
+  return framePromise
+}
+
+async function composeFramedAyah(
+  pageCanvas: any,
+  crop: { cropX: number; cropY: number; cropWidth: number; cropHeight: number },
+) {
+  const { cropX, cropY, cropWidth, cropHeight } = crop
+  const frame = await loadFrame()
+  if (!frame) {
+    // احتياط: إن تعذّر تحميل الإطار نُعيد القصاصة كما هي بدل فشل السؤال.
+    const plain = createCanvas(cropWidth, cropHeight)
+    const plainContext = plain.getContext("2d")
+    plainContext.fillStyle = "#f8f5ec"
+    plainContext.fillRect(0, 0, cropWidth, cropHeight)
+    plainContext.drawImage(pageCanvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
+    return plain
+  }
+
+  const output = createCanvas(frame.width, frame.height)
+  const context = output.getContext("2d")
+  context.drawImage(frame, 0, 0, frame.width, frame.height)
+
+  // نجهّز القصاصة على لوحة مستقلة ونبيّض خلفيتها لتذوب في ورق الإطار.
+  const clip = createCanvas(cropWidth, cropHeight)
+  const clipContext = clip.getContext("2d")
+  clipContext.fillStyle = "#ffffff"
+  clipContext.fillRect(0, 0, cropWidth, cropHeight)
+  clipContext.drawImage(pageCanvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
+
+  // نقتطع الهوامش الفارغة حول النص حتى تتوسّط الآية داخل الإطار تماماً.
+  const ink = inkBounds(clipContext, cropWidth, cropHeight)
+  const scale = Math.min(FRAME_CONTENT.width / ink.width, FRAME_CONTENT.height / ink.height, 1.9)
+  const drawWidth = Math.max(1, Math.round(ink.width * scale))
+  const drawHeight = Math.max(1, Math.round(ink.height * scale))
+  const drawX = Math.round(FRAME_CONTENT.x + (FRAME_CONTENT.width - drawWidth) / 2)
+  const drawY = Math.round(FRAME_CONTENT.y + (FRAME_CONTENT.height - drawHeight) / 2)
+
+  context.save()
+  context.globalCompositeOperation = "multiply"
+  context.drawImage(clip, ink.x, ink.y, ink.width, ink.height, drawX, drawY, drawWidth, drawHeight)
+  context.restore()
+  return output
+}
+
+// حدود الحبر الفعلي داخل القصاصة (أي البكسلات غير الفارغة).
+function inkBounds(context: any, width: number, height: number) {
+  try {
+    const { data } = context.getImageData(0, 0, width, height)
+    let left = width, top = height, right = 0, bottom = 0
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const index = (y * width + x) * 4
+        // نعتبر البكسل حبراً إذا كان أغمق بوضوح من ورق المصحف الفاتح.
+        if (data[index] < 205 || data[index + 1] < 205 || data[index + 2] < 195) {
+          if (x < left) left = x
+          if (x > right) right = x
+          if (y < top) top = y
+          if (y > bottom) bottom = y
+        }
+      }
+    }
+    if (right <= left || bottom <= top) return { x: 0, y: 0, width, height }
+    const padding = 14
+    const x = Math.max(0, left - padding)
+    const y = Math.max(0, top - padding)
+    return {
+      x,
+      y,
+      width: Math.min(width - x, right - left + padding * 2),
+      height: Math.min(height - y, bottom - top + padding * 2),
+    }
+  } catch {
+    return { x: 0, y: 0, width, height }
+  }
 }
 
 function itemText(item: any) {
@@ -71,9 +162,14 @@ export async function GET(request: Request) {
 
     document = await getDocument({ data: pdfBytes, useSystemFonts: true, isEvalSupported: false }).promise
     let selected: { page: any; items: any[] } | null = null
+    // ملف المصحف لدينا 569 صفحة بينما ترقيم المصدر 604، فالتقدير الخطي يزيغ بعدة
+    // صفحات. لذلك نبحث بشكل حلزوني حول التقدير، ونتعلّم الإزاحة الناجحة ونعيد
+    // استخدامها في الطلبات التالية حتى تُصاب الصفحة من المحاولة الأولى.
     const estimatedPage = Math.max(1, Math.min(document.numPages, Math.round(((targetData.page - 1) / 603) * (document.numPages - 1)) + 1))
-    const candidatePages = Array.from(new Set([estimatedPage, estimatedPage - 1, estimatedPage + 1, estimatedPage - 2, estimatedPage + 2]))
-      .filter((pageNumber) => pageNumber >= 1 && pageNumber <= document.numPages)
+    const base = Math.max(1, Math.min(document.numPages, estimatedPage + learnedPageOffset))
+    const spiral: number[] = [base]
+    for (let step = 1; step <= 22; step++) spiral.push(base + step, base - step)
+    const candidatePages = Array.from(new Set(spiral)).filter((pageNumber) => pageNumber >= 1 && pageNumber <= document.numPages)
 
     for (const pageNumber of candidatePages) {
       const page = await document.getPage(pageNumber)
@@ -96,6 +192,7 @@ export async function GET(request: Request) {
       })
       if (matchedItems.length) {
         selected = { page, items: matchedItems }
+        learnedPageOffset = pageNumber - estimatedPage
         break
       }
     }
@@ -177,11 +274,7 @@ export async function GET(request: Request) {
 
     cropWidth = Math.max(1, Math.min(cropWidth, pageCanvas.width - cropX))
     cropHeight = Math.max(1, Math.min(cropHeight, pageCanvas.height - cropY))
-    const output = createCanvas(cropWidth, cropHeight)
-    const outputContext = output.getContext("2d")
-    outputContext.fillStyle = "#f8f5ec"
-    outputContext.fillRect(0, 0, cropWidth, cropHeight)
-    outputContext.drawImage(pageCanvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
+    const output = await composeFramedAyah(pageCanvas, { cropX, cropY, cropWidth, cropHeight })
 
     const png = output.toBuffer("image/png")
     return new Response(new Uint8Array(png), {

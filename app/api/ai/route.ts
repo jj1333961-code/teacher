@@ -1,5 +1,6 @@
 import { generateText } from "ai"
 import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
+import { findMutashabihat, formatMutashabihatContext, FAMOUS_SURAHS, FAMOUS_AYAHS } from "@/lib/quran-similarity"
 
 export const maxDuration = 300
 
@@ -14,6 +15,14 @@ const OPENROUTER = {
     return (process.env.OPENROUTER_MODEL || "openrouter/auto").trim()
   },
 }
+// نماذج Gemini المرشّحة بالترتيب. بعض المفاتيح لم تعد تدعم الطُرز القديمة
+// (مثل gemini-2.5-flash) فتعيد 404، لذلك نجرّب البدائل تلقائياً بدل الفشل.
+const GEMINI_MODEL_FALLBACKS = [
+  "gemini-3.5-flash",
+  "gemini-flash-latest",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
+]
 const GEMINI = {
   label: "Google Gemini",
   endpoint: "https://generativelanguage.googleapis.com/v1beta/models",
@@ -21,12 +30,19 @@ const GEMINI = {
     return (process.env.GEMINI_API_KEY || "").trim()
   },
   get model() {
-    return (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim()
+    return (process.env.GEMINI_MODEL || GEMINI_MODEL_FALLBACKS[0]).trim()
+  },
+  get models() {
+    return Array.from(new Set([GEMINI.model, ...GEMINI_MODEL_FALLBACKS]))
   },
 }
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
-const isOpenRouterConfigured = () => Boolean(OPENROUTER.key)
+// مفاتيح OpenRouter تبدأ دائماً بـ sk-or-. أي قيمة أخرى (مفتاح مزوّد آخر مثلاً)
+// تُعطي 401 وتُفشل الطلب بلا داعٍ، فنعتبرها غير مضبوطة ونعتمد Gemini مباشرة.
+const isOpenRouterConfigured = () => /^sk-or-/i.test(OPENROUTER.key)
 const isGeminiConfigured = () => Boolean(GEMINI.key)
+// آخر طراز Gemini نجح، لتفادي تكرار محاولات الطُرز غير المتاحة.
+let workingGeminiModel: string | null = null
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -86,8 +102,17 @@ function classifyAiFailure(error: unknown) {
   if (/OPENROUTER_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
     return { status: 503, code: "OPENROUTER_KEY_MISSING", retryable: false, message: "مفتاح OpenRouter غير متاح على الخادم. أضف OPENROUTER_API_KEY إلى متغيرات البيئة.", raw }
   }
+  if (/GEMINI_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
+    return { status: 503, code: "GEMINI_KEY_MISSING", retryable: false, message: "تحليل الصوت يعمل عبر Gemini، ومفتاح GEMINI_API_KEY غير مضبوط على الخادم.", raw }
+  }
+  if (/Gemini.*(?:401|403|API key|API_KEY_INVALID|unauthorized|forbidden|permission)/i.test(raw)) {
+    return { status: 503, code: "GEMINI_UNAUTHORIZED", retryable: false, message: "مفتاح Gemini مرفوض من جوجل. تأكد من صلاحية GEMINI_API_KEY وتفعيل Generative Language API.", raw }
+  }
+  if (/Gemini.*(?:404|no longer available|not found|not supported)/i.test(raw)) {
+    return { status: 503, code: "GEMINI_MODEL_UNAVAILABLE", retryable: true, message: "طراز Gemini المحدد في GEMINI_MODEL غير متاح لهذا المفتاح. جُرّبت الطُرز البديلة تلقائياً ولم ينجح أي منها.", raw }
+  }
   if (/401|403|API key|unauthorized|forbidden/i.test(raw)) {
-    return { status: 503, code: "AI_PROVIDERS_UNAUTHORIZED", retryable: false, message: "تعذر اعتماد مزوّدي الذكاء الاصطناعي المتاحين. جُرّب OpenRouter وGemini تلقائياً ولم ينجح أي منهما.", raw }
+    return { status: 503, code: "AI_PROVIDERS_UNAUTHORIZED", retryable: false, message: "تعذر اعتماد مزوّدي الذكاء الاصطناعي المتاحين. جُرّب Gemini ثم البدائل تلقائياً ولم ينجح أي منهما.", raw }
   }
   if (/402|insufficient credits|payment required|credit card|free credits/i.test(raw)) {
     return { status: 402, code: "AI_CREDITS_REQUIRED", retryable: false, message: "جُرّبت مزوّدات الذكاء الاصطناعي المتاحة، لكن المزوّد الأخير يحتاج رصيداً أو تفعيل فوترة.", raw }
@@ -228,11 +253,10 @@ function extractJson(text: string): any {
   return null
 }
 
-async function geminiText(prompt: string, system: string, temperature: number, audio?: { mimeType: string; data: string }): Promise<string> {
-  if (!GEMINI.key) throw new Error("GEMINI_API_KEY غير موجود على الخادم")
+async function geminiCall(model: string, prompt: string, system: string, temperature: number, audio?: { mimeType: string; data: string }): Promise<string> {
   const parts: any[] = [{ text: prompt }]
   if (audio) parts.unshift({ inlineData: { mimeType: audio.mimeType, data: audio.data } })
-  const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(GEMINI.model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
+  const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -241,15 +265,38 @@ async function geminiText(prompt: string, system: string, temperature: number, a
       generationConfig: { temperature },
     }),
     cache: "no-store",
-    signal: AbortSignal.timeout(audio ? 90_000 : 120_000),
+    signal: AbortSignal.timeout(audio ? 150_000 : 120_000),
   })
   const data = await response.json().catch(() => null)
-  if (!response.ok) throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
+  if (!response.ok) throw new Error(`Gemini(${model}) HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
   const text = Array.isArray(data?.candidates?.[0]?.content?.parts)
     ? data.candidates[0].content.parts.map((part: any) => String(part?.text || "")).join("").trim()
     : ""
-  if (!text) throw new Error("Gemini: وصل رد فارغ")
+  if (!text) throw new Error(`Gemini(${model}): وصل رد فارغ`)
   return text
+}
+
+// يجرّب طُرز Gemini بالترتيب ويتوقف عند أول طراز يعمل، ثم يتذكّره.
+async function geminiText(prompt: string, system: string, temperature: number, audio?: { mimeType: string; data: string }): Promise<string> {
+  if (!GEMINI.key) throw new Error("GEMINI_API_KEY غير موجود على الخادم")
+  const candidates = Array.from(new Set([...(workingGeminiModel ? [workingGeminiModel] : []), ...GEMINI.models]))
+  let lastError: unknown = new Error("Gemini: تعذر بدء الاتصال")
+  for (const model of candidates) {
+    try {
+      const text = await geminiCall(model, prompt, system, temperature, audio)
+      workingGeminiModel = model
+      return text
+    } catch (error) {
+      lastError = error
+      const message = error instanceof Error ? error.message : String(error)
+      // 404/400 على مستوى الطراز يعني أن الطراز غير متاح لهذا المفتاح، فننتقل للتالي.
+      const modelUnavailable = /HTTP (?:400|404)|not found|no longer available|not supported|unsupported/i.test(message)
+      const overloaded = /HTTP (?:429|500|502|503|504)|overloaded|quota|rate/i.test(message)
+      if (workingGeminiModel === model) workingGeminiModel = null
+      if (!modelUnavailable && !overloaded) throw error
+    }
+  }
+  throw lastError
 }
 
 async function gatewayText(prompt: string, system: string, temperature: number): Promise<string> {
@@ -259,16 +306,39 @@ async function gatewayText(prompt: string, system: string, temperature: number):
   return text
 }
 
+// Gemini هو المزوّد الأساسي، ثم Vercel AI Gateway، ثم OpenRouter إن كان مفتاحه صالحاً.
 async function runText(prompt: string, system: string, temperature: number) {
   const errors: unknown[] = []
-  if (isOpenRouterConfigured()) {
-    try { return await openRouterText(prompt, system, temperature) } catch (error) { errors.push(error) }
-  }
   if (isGeminiConfigured()) {
     try { return await geminiText(prompt, system, temperature) } catch (error) { errors.push(error) }
   }
   try { return await gatewayText(prompt, system, temperature) } catch (error) { errors.push(error) }
+  if (isOpenRouterConfigured()) {
+    try { return await openRouterText(prompt, system, temperature) } catch (error) { errors.push(error) }
+  }
   throw errors.at(-1) || new Error("لا يوجد مزوّد ذكاء اصطناعي صالح على الخادم")
+}
+
+// توحيد صيغة الصوت الواصل من المتصفح إلى صيغة يفهمها Gemini.
+function audioFormatFromMime(mimeType: unknown): string {
+  const value = String(mimeType || "").toLowerCase()
+  if (/mpeg|mp3/.test(value)) return "mp3"
+  if (/ogg|opus/.test(value)) return "ogg"
+  if (/webm/.test(value)) return "webm"
+  if (/mp4|m4a|aac/.test(value)) return "m4a"
+  if (/flac/.test(value)) return "flac"
+  return "wav"
+}
+
+function audioMimeFromFormat(format: string): string {
+  switch (format) {
+    case "mp3": return "audio/mpeg"
+    case "ogg": return "audio/ogg"
+    case "webm": return "audio/webm"
+    case "m4a": return "audio/mp4"
+    case "flac": return "audio/flac"
+    default: return "audio/wav"
+  }
 }
 
 async function externalTranscription(audioBase64: string, audioFormat: string): Promise<string> {
@@ -289,19 +359,28 @@ async function externalTranscription(audioBase64: string, audioFormat: string): 
   return text
 }
 
+// كل ما يتعلق بالصوت (التسجيل، البصمة الصوتية، تفريغ التلاوة، إدخال بيانات الطالب صوتياً)
+// يعتمد على Gemini حصراً؛ فهو المزوّد الوحيد المضبوط لدينا الذي يقبل الصوت مباشرة.
 async function transcribeAudio(audioBase64: string, audioFormat: string): Promise<string> {
-  const mimeType = audioFormat === "mp3" ? "audio/mpeg" : "audio/wav"
-  try { return await externalTranscription(audioBase64, audioFormat) } catch {}
-  if (isGeminiConfigured()) {
-    try { return await geminiText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType, data: audioBase64 }) } catch {}
+  const mimeType = audioMimeFromFormat(audioFormat)
+  const instruction = "فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح ولا مقدمة."
+  const system = "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن الكريم."
+  if (!isGeminiConfigured()) {
+    throw new Error("تحليل الصوت يعمل عبر Gemini فقط، ومفتاح GEMINI_API_KEY غير مضبوط على الخادم.")
   }
-  return openRouterText("فرّغ هذا التسجيل الصوتي العربي حرفياً فقط. أعد النص دون شرح.", "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن.", 0.05, { mimeType, data: audioBase64 })
+  try {
+    return await geminiText(instruction, system, 0.05, { mimeType, data: audioBase64 })
+  } catch (geminiError) {
+    // خدمة تفريغ خارجية اختيارية عند ضبطها فقط، كخطة بديلة أخيرة.
+    try { return await externalTranscription(audioBase64, audioFormat) } catch {}
+    throw geminiError
+  }
 }
 
 // ===== أنظمة التعليمات لكل وضع =====
 
 const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم واختبارات الحفظ لطلاب التحفيظ.
-مهمتك انتقاء أسئلة اختبار قرآنية احترافية ومتنوعة، والتحقق من مواضعها من الآيات المرسلة داخل sourceSurahs. استخدم مقتطفات دليل إعداد الاختبارات وملف المتشابهات داخل referenceContext مرجعاً لأسلوب السؤال وتنوعه ودرجة صعوبته. ملف المصحف مخصص لإنتاج صور الآيات فقط ولا يُستخدم لاستخراج نص الأسئلة. يظل sourceSurahs المصدر الحاكم لصحة نص الآية والإجابة.
+مهمتك انتقاء أسئلة اختبار قرآنية احترافية ومتنوعة، والتحقق من مواضعها من الآيات المرسلة داخل sourceSurahs. استخدم مقتطفات دليل إعداد الاختبارات وملف المتشابهات داخل referenceContext مرجعاً لأسلوب السؤال وتنوعه ودرجة صعوبته. ملف المصحف مخصص ل��نتاج صور الآيات فقط ولا يُستخدم لاستخراج نص الأسئلة. يظل sourceSurahs المصدر الحاكم لصحة نص الآية والإجابة.
 
 قواعد صارمة:
 - ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceSurahs.
@@ -314,8 +393,14 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - إذا كان type=complete فاختر حد بداية وحد نهاية حقيقيين لصيغة «أكمل من قوله تعالى … إلى قوله تعالى …»، واجعل from/to صحيحين وفي السورة نفسها، وعدد الآيات المطلوب يساوي completeAyahs قدر الإمكان.
 - إذا كان type=audio فحدد حد بداية وحد نهاية حقيقيين لصيغة «اقرأ من قوله تعالى … إلى قوله تعالى …»، ويجب أن يساوي عدد الآيات من from إلى to قيمة reciteAyahs بالضبط.
 - صور حد البداية وحد النهاية ستُعرض منفصلة وقابلة للتكبير، لذلك لا تنسخ نصهما داخل prompt ولا تكشف الجزء المطلوب إجابته.
-- level=easy: سؤال مباشر من النص.
-- level=medium: تمييز وربط أدق بين الآية والسورة أو موضعها.
+سياسة الصعوبة الإلزامية (أهم القواعد):
+- ممنوع تماماً الأسئلة السهلة أو المباشرة أو الشائعة. اجعل كل سؤال بمستوى امتحان متقدم لحفّاظ متمكنين، حتى لو طُلب level=easy أو medium فارفع صعوبته إلى تمييز دقيق لا يُحسم إلا بحفظ متين.
+- ممنوع اختيار الآيات المشهورة أو السور القصيرة المشهورة المذكورة في forbiddenFamous، وممنوع آية الكرسي وأشهر الآيات المتداولة، إلا إذا لم يوجد في النطاق غيرها إطلاقاً.
+- ابنِ الأسئلة أساساً على mutashabihatContext: وهي متشابهات حقيقية مستخرجة آلياً من المصحف الكامل مع بيان المقطع اللفظي المشترك والآيات المشابهة. اجعل السؤال يقع بالضبط على موضع الفرق بين المتشابهين.
+- اجعل المشتتات في الاختياري مأخوذة من الآيات المشابهة الواردة في mutashabihatContext نفسها (نفس المقطع بفارق ضمير أو حرف أو تقديم وتأخير أو خاتمة مختلفة)، حتى لا يُفرّق بينها إلا حافظ دقيق. ممنوع مشتت واضح البطلان.
+- فضّل أواسط السور الطويلة والمواضع غير المتداولة، وتجنب أوائل السور المشهورة وخواتيمها المتداولة.
+- level=easy: تمييز دقيق بين موضعين متقاربين في السورة نفسها.
+- level=medium: تمييز بين آيتين متشابهتين في سورتين مختلفتين.
 - level=hard: اجعل السؤال شديد الصعوبة من المتشابهات اللفظية الموثقة: فروق الواو والفاء، الزيادة والنقص، اختلاف الضمائر والمفرد والجمع، اختلاف بداية الآية أو خاتمتها، والتمييز بين آيتين متقاربتين. يجب أن يبقى له جواب واحد قطعي.
 - في الاختياري اجعل المشتتات من ألفاظ أو سور أو تكملات قرآنية شديدة التقارب، ولا تستخدم مشتتاً واضح البطلان أو بعيداً عن الصحيح.
 - أعط الماضي القريب أولوية مقدارها نحو 70% عند pastScope=both، مع إبقاء 30% للماضي البعيد، ودوّر المواضع بين أول السورة ووسطها وآخرها.
@@ -417,7 +502,7 @@ async function githubGetRepo() {
   if (res.status === 404) throw new Error(`المس��ودع ${GITHUB_OWNER}/${GITHUB_REPO} غير موجود أو لا يملك الرمز صلاحية الوصول إليه`)
   if (res.status === 401) throw new Error("GITHUB_TOKEN غير صالح (401 Unauthorized)")
   if (res.status === 403) throw new Error("الرمز GITHUB_TOKEN ممنوع من الوصول (403) — تحقق من صلاحياته")
-  if (!res.ok) throw new Error(`GitHub ${res.status}: تعذر قراءة بيانات المستودع`)
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ت��ذر قراءة بيانات المستودع`)
   return await res.json()
 }
 
@@ -727,11 +812,13 @@ export async function POST(req: Request) {
 
   const diagnostics = {
     executedOn: "server",
-    keyConfigured: isOpenRouterConfigured(),
+    keyConfigured: isGeminiConfigured(),
     providerStatus: 200,
-    provider: "openrouter",
-    providerLabel: OPENROUTER.label,
-    configuredModel: OPENROUTER.model,
+    provider: "gemini",
+    providerLabel: GEMINI.label,
+    configuredModel: workingGeminiModel || GEMINI.model,
+    audioProvider: "gemini",
+    openRouterAvailable: isOpenRouterConfigured(),
   }
 
   try {
@@ -741,7 +828,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt}`,
-        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجملة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
+        "أجب عن أي سؤا�� مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجملة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -782,7 +869,12 @@ export async function POST(req: Request) {
         alternatingNumbers.push(allNumbers[left])
         if (right !== left) alternatingNumbers.push(allNumbers[right])
       }
-      const selectedNumbers = alternatingNumbers.slice(0, Math.min(12, Math.max(requestedCount, 6), alternatingNumbers.length))
+      // نُقدّم السور غير المشهورة داخل النطاق حتى لا تأتي الأسئلة من سور يحفظها الجميع.
+      const rankedNumbers = [
+        ...alternatingNumbers.filter((number) => !FAMOUS_SURAHS.has(number)),
+        ...alternatingNumbers.filter((number) => FAMOUS_SURAHS.has(number)),
+      ]
+      const selectedNumbers = rankedNumbers.slice(0, Math.min(12, Math.max(requestedCount, 6), rankedNumbers.length))
       const sourceSurahs = await Promise.all(selectedNumbers.map(async (number) => {
         const quranResponse = await fetch(`https://api.alquran.cloud/v1/surah/${number}`, { cache: "no-store", signal: AbortSignal.timeout(12_000) })
         const quran = await quranResponse.json().catch(() => null)
@@ -806,8 +898,20 @@ export async function POST(req: Request) {
       const previousQuestionFingerprints = Array.isArray(payload.previousQuestionFingerprints)
         ? payload.previousQuestionFingerprints.map(String).map((value: string) => value.slice(0, 240)).slice(0, 500)
         : []
-      const safePayload = { plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext, useReferenceFiles, previousQuestionFingerprints }
-      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. استفد من referenceContext لصياغة أصعب المتشابهات والفروق اللفظية الدقيقة. نوّع صيغ الاختيار بين الآية التالية والتكملة واسم السورة والفارق اللفظي، وصيغ الصح والخطأ بين صحة التكملة وصحة نسبة الآية للسورة. لا تستخدم السورة والموضع نفسيهما مرتين قبل المرور على بقية السور. استبعد تماماً previousQuestionFingerprints. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem؛ سيعرض النظام صورتي البداية والنهاية منفصلتين حتى إن كانتا من الآية نفسها. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
+      // متشابهات حقيقية مستخرجة آلياً من المصحف الكامل عبر الشبكة: أساس الأسئلة الصعبة والمشتتات.
+      const similarityGroups = await findMutashabihat(selectedNumbers, Math.min(24, Math.max(8, requestedCount * 2))).catch(() => [])
+      const mutashabihatContext = formatMutashabihatContext(similarityGroups)
+      const forbiddenFamous = [
+        ...[...FAMOUS_SURAHS].map((number) => `سورة رقم ${number}`),
+        ...[...FAMOUS_AYAHS],
+      ]
+      const safePayload = {
+        plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs,
+        referenceContext, useReferenceFiles, previousQuestionFingerprints,
+        mutashabihatContext, forbiddenFamous,
+        difficultyPolicy: "كل الأسئلة يجب أن تكون بمستوى صعب أو صعب جداً، ومبنية على فروق لفظية دقيقة",
+      }
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. استفد من mutashabihatContext أولاً ثم referenceContext لصياغة أصعب المتشابهات والفروق اللفظية الدقيقة، والتزم بسياسة الصعوبة: لا سؤال سهل ولا آية مشهورة ولا سورة مشهورة من forbiddenFamous. نوّع صيغ الاختيار بين الآية التالية والتكملة واسم السورة والفارق اللفظي، وصيغ الصح والخطأ بين صحة التكملة وصحة نسبة الآية للسورة. لا تستخدم السورة والموضع نفسيهما مرتين قبل المرور على بقية السور. استبعد تماماً previousQuestionFingerprints. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem؛ سيعرض النظام صورتي البداية والنهاية منفصلتين حتى إن كانتا من الآية نفسها. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
@@ -877,7 +981,7 @@ export async function POST(req: Request) {
       const system = `أنت تستخرج بيانات طالب من إملاء عربي لمسؤول مدرسة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
 transcript,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
 subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ كلمات المرور فقط إذا نطقها المسؤول صراحة. transcript هو التفريغ الكامل المسموع.`
-      const audioFormat = /mpeg|mp3/i.test(mimeType) ? "mp3" : "wav"
+      const audioFormat = audioFormatFromMime(mimeType)
       const transcript = await transcribeAudio(audioBase64, audioFormat)
       const text = await runText(`استخرج بيانات الطالب من التفريغ التالي:\n${transcript}`, system, 0.05)
       const parsed = extractJson(text) || {}
@@ -947,14 +1051,10 @@ subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن
       if (!audioBase64) {
         return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
       }
-      // OpenRouter يقبل الصو�� بصيغة wav أو mp3 فقط (input_audio).
-      // المتصفح يحوّل التسجيل إلى wav قبل الإرسال؛ نستنتج الصيغة من mimeType.
-      let audioFormat = "wav"
-      const mt = (typeof mimeType === "string" ? mimeType : "").toLowerCase()
-      if (mt.includes("mpeg") || mt.includes("mp3")) audioFormat = "mp3"
-      else if (mt.includes("wav")) audioFormat = "wav"
+      // Gemini يقبل wav وmp3 وogg وm4a وwebm وflac؛ نستنتج الصيغة من mimeType.
+      const audioFormat = audioFormatFromMime(mimeType)
 
-      // المرحلة الأولى: تفريغ صوتي متخصص (مزوّد خارجي عند ض��طه، وإلا OpenRouter).
+      // المرحلة الأولى: تفريغ صوتي عبر Gemini (المسؤول عن كل الصوتيات).
       const transcript = await transcribeAudio(audioBase64, audioFormat)
 
       // المرحلة الثانية: مقارنة التفريغ بالنص القرآني المطلوب وحساب الدرجة.
