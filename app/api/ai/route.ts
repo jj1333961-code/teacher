@@ -235,8 +235,7 @@ async function geminiText(prompt: string, system: string, temperature: number, a
   if (!GEMINI.key) throw new Error("GEMINI_API_KEY غير موجود على الخادم")
   const parts: any[] = [{ text: prompt }]
   if (audio) parts.unshift({ inlineData: { mimeType: audio.mimeType, data: audio.data } })
-  // نموذج 2.5 لم يعد متاحاً للحسابات الجديدة؛ نستخدم نموذج Gemini الحديث للصوت.
-  const model = audio ? "gemini-3.6-flash" : GEMINI.model
+  const model = GEMINI.model
   const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -276,8 +275,8 @@ async function runText(prompt: string, system: string, temperature: number) {
   throw errors.at(-1) || new Error("لا يوجد مزوّد ذكاء اصطناعي صالح على الخادم")
 }
 
-// ===== جميناي هو المزوّد الوحيد المسؤول عن كل ما يتعلق بالصوت =====
-// التفريغ الصوتي، البصمة الصوتية، مطابقة المتحدث، وملء البيانات من الإملاء الصوتي.
+// ===== معالجة الصوت مع تحويل تلقائي إلى مزوّد احتياطي =====
+// نبدأ بـ Gemini، وإذا تعذر اعتماده أو أصبح غير متاح نستخدم OpenRouter دون تعطيل التسجيل.
 const SUPPORTED_AUDIO_MIME_TYPES = new Set([
   "audio/webm", "audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp3",
   "audio/mp4", "audio/x-m4a", "audio/m4a", "audio/ogg", "audio/opus",
@@ -297,19 +296,27 @@ function audioMimeType(audioFormat: string) {
 }
 
 async function geminiAudio(prompt: string, system: string, temperature: number, audio: { mimeType: string; data: string }): Promise<string> {
-  if (!isGeminiConfigured()) throw new Error("GEMINI_API_KEY غير موجود على الخادم: جميناي هو المسؤول عن معالجة الصوت")
-  let lastError: unknown = new Error("تعذر بدء اتصال جميناي الصوتي")
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      return await geminiText(prompt, system, temperature, audio)
-    } catch (error) {
-      lastError = error
-      const message = error instanceof Error ? error.message : String(error || "")
-      if (!/408|429|5\d\d|fetch failed|Timeout|Abort|aborted|رد فارغ|network|ECONN|ETIMEDOUT/i.test(message) || attempt === 2) break
-      await new Promise(resolve => setTimeout(resolve, 800 * (2 ** attempt)))
+  const errors: unknown[] = []
+  if (isGeminiConfigured()) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await geminiText(prompt, system, temperature, audio)
+      } catch (error) {
+        errors.push(error)
+        const message = error instanceof Error ? error.message : String(error || "")
+        if (!/408|429|5\d\d|fetch failed|Timeout|Abort|aborted|رد فارغ|network|ECONN|ETIMEDOUT/i.test(message) || attempt === 2) break
+        await new Promise(resolve => setTimeout(resolve, 800 * (2 ** attempt)))
+      }
     }
   }
-  throw lastError
+  if (isOpenRouterConfigured()) {
+    try {
+      return await openRouterText(prompt, system, temperature, audio)
+    } catch (error) {
+      errors.push(error)
+    }
+  }
+  throw errors.at(-1) || new Error("لا يوجد مزوّد صالح لمعالجة الصوت على الخادم")
 }
 
 const SYS_AUDIO_TRANSCRIBE = "أنت محرك تفريغ صوتي عربي دقيق، ومتخصص في تلاوة القرآن الكريم بالرسم العثماني."
@@ -763,11 +770,11 @@ export async function POST(req: Request) {
   const isAudioMode = typeof body?.mode === "string" && audioModes.has(body.mode)
   const diagnostics = {
   executedOn: "server",
-  keyConfigured: isAudioMode ? isGeminiConfigured() : (isOpenRouterConfigured() || isGeminiConfigured()),
+  keyConfigured: isOpenRouterConfigured() || isGeminiConfigured(),
   providerStatus: 200,
-  provider: isAudioMode ? "google-gemini" : "automatic",
-  providerLabel: isAudioMode ? GEMINI.label : "Automatic AI provider",
-  configuredModel: isAudioMode ? "gemini-3.6-flash" : (isOpenRouterConfigured() ? OPENROUTER.model : GEMINI.model),
+  provider: "automatic",
+  providerLabel: isAudioMode ? "Gemini / OpenRouter fallback" : "Automatic AI provider",
+  configuredModel: isAudioMode ? `${GEMINI.model} / ${OPENROUTER.model}` : (isOpenRouterConfigured() ? OPENROUTER.model : GEMINI.model),
   }
 
   try {

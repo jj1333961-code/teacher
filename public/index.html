@@ -514,7 +514,7 @@ tr:hover { background: var(--table-hover); }
   </div>
 </div>
 
-<!-- إنشاء حساب: الخطوة الأولى (التحقق من الهوية) -->
+<!-- إنشاء حساب: الخطوة الأولى (التحقق من الهوي��) -->
 <div id="signupStep1" class="page hidden" style="max-width:560px; margin:40px auto;">
   <div class="page-header"><h2>🆕 إنشاء حساب — التحقق من الهوية</h2><button class="btn btn-secondary" onclick="showPage('lockScreen')">رجوع</button></div>
   <div id="signupStep1Alert"></div>
@@ -1242,7 +1242,7 @@ const ALL_SURAHS_ORDERED = [
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
   "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الإنفطار",
   "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة",
-  "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس"
+  "الزلزلة", "العاديات", "القارعة", "التكاثر", "��لعصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس"
 ];
 
 const RATING_COLORS = {
@@ -1800,7 +1800,7 @@ function verifySignupCode() {
   const box = document.getElementById('signupStep1Alert');
   const code = document.getElementById('signupCode').value.trim();
   if(!signupState.code) { box.innerHTML = '<div class="alert alert-danger">❌ أرسل كود التحقق أولاً</div>'; return; }
-  if(code !== signupState.code) { box.innerHTML = '<div class="alert alert-danger">❌ الكود غير صحيح، تأكد من الرسالة أو أعد الإرسال</div>'; return; }
+  if(code !== signupState.code) { box.innerHTML = '<div class="alert alert-danger">❌ الكود غير صحيح، ت��كد من الرسالة أو أعد الإرسال</div>'; return; }
   signupState.verified = true;
   box.innerHTML = '';
   document.getElementById('signupVerifiedNote').innerHTML = '✅ تم التحقق من هويتك بنجاح — ' + (signupState.method === 'google' ? 'حساب جوجل: ' + signupState.email : 'رقم الواتساب: ' + signupState.whats);
@@ -2326,7 +2326,7 @@ async function saveStudent() {
   if(students.find(s => s.national === national)) return fail('هذا الرقم القومي مسجل مسبقاً');
   if(students.find(s => s.username === username)) return fail('اسم المستخدم مسجل مسبقاً');
   if(students.find(s => s.username === username)) return fail('اسم المستخدم مسجل مسبقاً');
-  // ✅ مسموح الآن أن يكون الرقم السري للطالب مطابقاً للرقم السري لولي الأمر
+  // ✅ مسمو�� الآن أن يكون الرقم السري للطالب مطابقاً للرقم السري لولي الأمر
 
   const subjects = getData('subjects');
   const selectedSubData = selectedSubjects.map(id => subjects.find(s => s.id === id)).filter(Boolean);
@@ -2609,7 +2609,7 @@ function addExtraElement() {
     deleted: false
   });
   renderExtraElements();
-  showToast('➕ تم إضافة عنصر تسميع إضافي', 'success');
+  showToast('➕ تم إضافة عنصر تسميع ��ضافي', 'success');
 }
 
 function renderRecordElementHTML(el, i, num) {
@@ -3111,7 +3111,7 @@ async function generateLocalQuranQuestions(base,lastSurah,plans){
     if(plan.type==='mcq'){const options=shuffled([src.surah].concat(shuffled(range.filter(s=>s!==src.surah)).slice(0,plan.optionsCount-1)));q.prompt='إلى أي سورة ينتمي المقطع المصور؟';q.options=options;q.correct=src.surah}
     else if(plan.type==='truefalse'){const truth=Math.random()>.5,shown=truth?src.surah:(shuffled(range.filter(s=>s!==src.surah))[0]||src.surah);q.prompt='هل المقطع المصور من سورة '+shown+'؟';q.options=['صح','خطأ'];q.correct=truth?'صح':'خطأ'}
     else if(plan.type==='complete'){const words=ayah.split(/\s+/),cut=Math.max(2,Math.floor(words.length*.55));q.prompt='أكمل المقطع المخفي في صورة المصحف';q.correct=words.slice(cut).join(' ')||next}
-    else {q.prompt='سجّل تلاوة المقطع المعروض من المصحف';q.correct=src.ayahs.slice(from-1,q.to).join(' ')}
+    else {q.prompt='سجّل تلاوة ا��مقطع المعروض من المصحف';q.correct=src.ayahs.slice(from-1,q.to).join(' ')}
     q.stem='';q.questionImage='/api/quran-question-image?surah='+(ALL_SURAHS_ORDERED.indexOf(src.surah)+1)+'&ayah='+from+'&to='+q.to+'&type='+plan.type;
     out.push(cleanExamQuestion(q));}}
   return out;
@@ -5080,10 +5080,10 @@ const VOICE_DUPLICATE_THRESHOLD = 93;  // نسبة اعتبار البصمة م�
 
 // ====== جميناي هو المسؤول الوحيد عن البصمة الصوتية والتحقق من هوية المت��دث ======
 async function voiceAudioPayload(blob){
-  const supported=/^audio\/(webm|wav|x-wav|mpeg|mp3|mp4|x-m4a|m4a|ogg|opus)(;|$)/i.test(blob.type||'');
+  const openRouterReady=/^audio\/(wav|x-wav|mpeg|mp3)(;|$)/i.test(blob.type||'');
   let audioBlob=blob;
-  if(!supported){audioBlob=await blobToWav(blob);}
-  if(!audioBlob) throw new Error('تعذر تجهيز التسجيل بصيغة يدعمها Gemini');
+  if(!openRouterReady){audioBlob=await blobToWav(blob);}
+  if(!audioBlob) throw new Error('تعذر تجهيز التسجيل بصيغة صوتية متوافقة');
   if(audioBlob.size>6000000) throw new Error('التسجيل طويل جداً للتحليل الصوتي');
   return {audioBase64:await audioBlobToBase64(audioBlob),mimeType:audioBlob.type.split(';')[0]||'audio/wav'};
 }
