@@ -650,7 +650,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group" style="margin-bottom:0;">
       <label>رقم واتساب المسؤول لاستلام طلبات الانضمام</label>
       <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
-      <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة على واتساب (بصيغة الدولة، مثال: 201554542019)</small>
+      <small style="color:var(--text-light)">��ُستخدم لإرسال طلبات الحسابات الجديدة على واتساب (بصيغة الدولة، مثال: 201554542019)</small>
     </div>
     <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
       <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حفظ الرقم</button>
@@ -1273,7 +1273,7 @@ const LANG_DICT = {
   '🔗 مزامنة GitHub': '🔗 GitHub Sync',
   'رجوع': 'Back',
   'رقم الموبايل': 'Mobile number',
-  'رقم الواتساب لاستلام كود التحقق *': 'WhatsApp number to receive the verification code *',
+  'رقم الواتساب لاستلام كود التحق�� *': 'WhatsApp number to receive the verification code *',
   'رقم واتساب المسؤول لاستلام طلبات الانضمام': 'Admin WhatsApp number for join requests',
   '💾 حفظ الرقم': '💾 Save Number',
   '🆕 إنشاء حساب — التحقق من الهوية': '🆕 Create Account — Identity Verification',
@@ -1760,26 +1760,28 @@ function startSignup() {
  const countryCode = document.getElementById('signupCountryCode').value;
  const localNumber = document.getElementById('signupWhats').value.replace(/\D/g, '').replace(/^0+/, '');
  if(name.length < 2 || localNumber.length < 7) { box.innerHTML = '<div class="alert alert-danger">يرجى كتابة الاسم ورقم واتساب صحيح</div>'; return; }
+ let adminWhats = getData('adminWhatsapp', '');
+ if(!adminWhats) { try { const configResponse = await fetch('/api/public-config'); const config = await configResponse.json(); adminWhats = config.adminWhatsappNumber || ''; } catch(e) {} }
+ adminWhats = normalizeWaNumber(adminWhats);
+ if(adminWhats.length < 10) { box.innerHTML = '<div class="alert alert-danger">رقم واتساب المسؤول غير مُعد بصورة صحيحة. لم يتم حفظ الطلب.</div>'; return; }
  signupState.method = 'phone';
  signupState.name = name;
  signupState.whats = countryCode + localNumber;
  signupState.code = String(Math.floor(100000 + Math.random() * 900000));
- signupState.verified = true;
+ signupState.verified = false;
  const time = new Date().toLocaleString('ar-EG');
  const requests = getData('joinRequests');
  const requestId = 'jr' + Date.now();
- requests.push({ id: requestId, role: 'student', name: name, phone: signupState.whats, whats: signupState.whats, method: 'phone', code: signupState.code, status: 'pending', time: time });
+ requests.push({ id: requestId, role: 'student', name: name, phone: signupState.whats, whats: signupState.whats, method: 'phone', code: signupState.code, status: 'awaiting_whatsapp_verification', time: time });
  setData('joinRequests', requests);
- const details = 'طلب إنشاء حساب جديد<br>اسم المستخدم: ' + name + '<br>رقم الهاتف: +' + signupState.whats + '<br>كود التحقق: ' + signupState.code;
+ const details = 'طلب إنشاء حساب جديد<br>اسم المستخدم: ' + name + '<br>رقم الهاتف: +' + signupState.whats + '<br>كود التحقق: ' + signupState.code + '<br><strong>بانتظار مطابقة المسؤول لرقم مرسل الرسالة مع الرقم المكتوب.</strong>';
  const msgs = getData('messages');
- msgs.push({ id: 'm' + Date.now(), type: 'join_request', sender: name, receiverType: 'admin', text: details, time: time, read: false, joinRequest: true });
+ msgs.push({ id: 'm' + Date.now(), requestId: requestId, type: 'join_request', sender: name, receiverType: 'admin', text: details, time: time, read: false, joinRequest: true, whatsappVerificationPending: true });
  setData('messages', msgs);
- let adminWhats = getData('adminWhatsapp', '');
- if(!adminWhats) { try { const configResponse = await fetch('/api/public-config'); const config = await configResponse.json(); adminWhats = config.adminWhatsappNumber || ''; } catch(e) {} }
- const text = 'طلب إنشاء حساب جديد\nاسم المستخدم: ' + name + '\nرقم الهاتف: +' + signupState.whats + '\nكود التحقق: ' + signupState.code;
+ const text = 'طلب الانضمام\nالاسم: ' + name + '\nرقم الهاتف: +' + signupState.whats + '\nالكود: ' + signupState.code;
  const link = buildWaLink(adminWhats, text);
- box.innerHTML = '<div class="alert alert-success">تم حفظ طلبك محلياً وظهر في رسائل المسؤول. أرسل الرسالة الجاهزة داخل واتساب لإبلاغه.</div>';
- if(link) window.open(link, '_blank', 'noopener,noreferrer');
+ box.innerHTML = '<div class="alert alert-success">تم حفظ الطلب بانتظار تحقق المسؤول. سيفتح واتساب برسالة جاهزة؛ أرسلها يدويًا من نفس الرقم الذي كتبته.</div>';
+ window.open(link, '_blank', 'noopener,noreferrer');
  document.getElementById('signupName').value = name;
  document.getElementById('signupPhone').value = '+' + signupState.whats;
  document.getElementById('signupVerifiedNote').textContent = 'تم تسجيل طلب واتساب وحفظ كود الطلب: ' + signupState.code;
@@ -2922,7 +2924,7 @@ function generateLocalFileQuestions(file,plans){const sentences=String(file.text
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
   const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الطالب';
-  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|مرحبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنني مساعدتك؟';
+  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|مرحبا|اهلا/.test(q))return 'م��حباً بك 🥰 كيف يمكنني مساعدتك؟';
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
@@ -4127,8 +4129,10 @@ function renderMessages() {
       shareBtn = '<div style="margin:8px 0;"><button class="btn btn-sm '+(m.shareWithParent ? 'btn-success' : 'btn-secondary')+'" onclick="toggleShareWithParent('+realIdx+')">'+(m.shareWithParent ? '👨‍👩‍👧 ولي الأر يمكنه الاطلاع (اضغط للمنع)' : '🔒 السماح لولي الأمر بالاطلاع على الملف')+'</button></div>';
     }
     let approvalBtns = '';
-    if((m.type === 'student' || m.type === 'parent') && !m.approved && !m.rejected) {
-      approvalBtns = '<div class="approval-btns"><button class="btn-approve" onclick="approveMessage('+realIdx+', true)">✅ موافق</button><button class="btn-reject" onclick="approveMessage('+realIdx+', false)">❌ رفض</button></div>';
+ if(m.type === 'join_request' && !m.approved && !m.rejected) {
+ approvalBtns = '<div class="alert alert-warning" style="margin-top:10px">قارن رقم مرسل رسالة واتساب بالرقم المكتوب قبل اتخاذ القرار.</div><div class="approval-btns"><button class="btn-approve" onclick="reviewJoinRequest('+realIdx+', true)">الرقم مطابق — قبول</button><button class="btn-reject" onclick="reviewJoinRequest('+realIdx+', false)">الرقم غير مطابق — رفض</button></div>';
+ } else if((m.type === 'student' || m.type === 'parent') && !m.approved && !m.rejected) {
+ approvalBtns = '<div class="approval-btns"><button class="btn-approve" onclick="approveMessage('+realIdx+', true)">✅ موافق</button><button class="btn-reject" onclick="approveMessage('+realIdx+', false)">❌ رفض</button></div>';
       approvalBtns += '<div style="margin-top:8px;"><input type="text" id="reply_'+realIdx+'" placeholder="رد على الرسالة..." style="padding:8px 12px; border-radius:8px; border:1px solid var(--border); width:70%; background:var(--input-bg); color:var(--text);"><button class="btn btn-sm btn-success" onclick="replyMessage('+realIdx+')">رد</button></div><div id="voiceBox_reply'+realIdx+'"></div>';
     } else if(m.approved) {
       approvalBtns = '<div style="color:var(--success); font-weight:bold;">✅ تمت الموافقة</div>';
@@ -4885,7 +4889,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
       'المطلوب: <strong>' + targetTxt + '</strong><br>' +
       'نسبة مطابقة المحتوى: <strong>' + rec.pct + '%</strong> (الحد الأدنى ' + RECITATION_MIN_PCT + '%)' + (rec.txtPct !== null && rec.txtPct !== undefined ? ' | مطابقة النص المنطوق: ' + rec.txtPct + '%' : '') + '<br>' +
       (rec.reason ? 'السبب: ' + rec.reason + '<br>' : '') +
-      '✋ لم تُرسل الرسالة للمسؤول — يرجى قراءة المقطع المطلوب نفسه ورفع ملف تسجيل آخر.</div>';
+      '✋ لم تُرسل الرسالة للمسؤول �� يرجى قراءة المقطع المطلوب نفسه ورفع ملف تسجيل آخر.</div>';
     return false;
   }
 
@@ -5770,7 +5774,7 @@ function generateParentWelcome(student) {
   const last = finalizedSessions.length > 0 ? finalizedSessions[finalizedSessions.length - 1] : null;
   const templates = [
     {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطوات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
-    {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
+    {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأه��ية ما يفعله.'},
     {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر لمن يتب في سبيله.'}
   ];
   const base = templates[Math.floor(Math.random() * templates.length)];
@@ -5807,7 +5811,7 @@ function generateAIResponse(text, student) {
     if(!last) return 'مرحباً '+name+'! 🌟<br><br>لم يُسجَّل أي تسميع نهائي بعد. ابدأ اليوم، وسيظهر تقييمك هنا فور اعتماد من المسؤول.';
     let r = '📊 <strong>آخر تسميع نهائي بتاريخ '+last.date+':</strong><br>';
     last.elements.forEach(e => {
-      const rate = e.rating === '4' ? 'ممتاز' : e.rating === '3' ? 'جيد جداً' : e.rating === '1' ? 'جيد' : e.rating === '0' ? 'يعاد' : 'بدون تقييم';
+      const rate = e.rating === '4' ? 'ممتاز' : e.rating === '3' ? 'جيد جداً' : e.rating === '1' ? '��يد' : e.rating === '0' ? 'يعاد' : 'بدون تقييم';
       r += '• '+e.name+': '+(e.surah || '-')+' من آية '+(e.from || '-')+' إلى '+(e.to || '-')+' — '+rate+' ('+(e.rating||0)+')<br>';
     });
     r += '<br><strong>المجموع: '+last.totalScore+' من 16</strong><br><br>'+generateAIReport(student);
@@ -5841,7 +5845,7 @@ function generateAIResponse(text, student) {
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صوت','ميكروفون','تحق')) {
-    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوتك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واضح.';
+    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوت�� أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واضح.';
   }
   // خطة الحفظ
   if(has('خطة','جدول','تنظيم','وقت','كيف احفظ','كيف أحفظ')) {
