@@ -25,6 +25,37 @@ const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KE
 const isGeminiConfigured = () => Boolean(GEMINI.key)
 const isGroqConfigured = () => Boolean(GROQ.key)
 
+const EXAM_INTERNET_SOURCES = [
+  { name: "متشابهات القرآن", url: "https://nourquran.com/sim/SimSurah.aspx" },
+  { name: "كتاباً متشابهاً", url: "https://similarayat.org/" },
+  { name: "اختبارات بصمة", url: "https://www.bassmaah.com/exams/exam/3582" },
+] as const
+
+function htmlToReferenceText(html: string) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/giu, " ")
+    .replace(/<style[\s\S]*?<\/style>/giu, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#160;/giu, " ")
+    .replace(/&amp;/giu, "&")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+async function getInternetExamContext() {
+  const results = await Promise.allSettled(EXAM_INTERNET_SOURCES.map(async (source) => {
+    const response = await fetch(source.url, {
+      cache: "no-store",
+      headers: { "User-Agent": "Teacher-Quran-Exam/1.0" },
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (!response.ok) throw new Error(`${source.name}: ${response.status}`)
+    const text = htmlToReferenceText(await response.text()).slice(0, 8_000)
+    return text ? `المصدر: ${source.name}\nالرابط: ${source.url}\n${text}` : ""
+  }))
+  return results.flatMap((result) => result.status === "fulfilled" && result.value ? [result.value] : []).join("\n\n").slice(0, 20_000)
+}
+
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
 const pickEnv = (...keys: string[]): string => {
@@ -380,7 +411,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - إذا كان type=complete فاختر حد بداية وحد نهاية حقيقيين لصيغة «أكمل من قوله تعالى … إلى قوله تعالى …»، واجعل from/to صحيحين وفي السورة نفسها، وعدد الآيات المطلوب يساوي completeAyahs قدر الإمكان.
 - إذا كان type=audio فحدد حد بداية وحد نهاية حقيقيين لصيغة «اقرأ من قوله تعالى … إلى قوله تعالى …»، ويجب أن يساوي عدد الآيات من from إلى to قيمة reciteAyahs بالضبط.
 - صور حد البداية وحد النهاية ستُعرض منفصلة وقابلة للتكبير، لذلك لا تنسخ نصهما داخل prompt ولا تكشف الجزء المطلوب إجابته.
-- لا تنشئ أسئلة سطحية من قصار السور، ولا سؤالاً يكتفي بالتعرف إلى اسم سورة مشهورة من مطلعها. تجنب سورة الفلق والناس وسائر السور القصيرة السهلة المستبعدة من النطاق.
+- لا تنشئ أسئلة سطحية من قصار السور، ولا سؤالاً يكتف�� بالتعرف إلى اسم سورة مشهورة من مطلعها. تجنب سورة الفلق والناس وسائر السور القصيرة السهلة المستبعدة من النطاق.
 - level=easy: سؤال واضح لكنه يحتاج استحضاراً حقيقياً، وليس سؤالاً بديهياً من أول السورة.
 - level=medium: تمييز وربط دقيق بين مواضع متقاربة يخدم topic مباشرة.
 - level=hard: سؤال شديد الصعوبة من المتشابهات اللفظية الموثقة: فروق الواو والفاء، الزيادة والنقص، اختلاف الضمائر والمفرد والجمع، اختلاف البداية أو الخاتمة، والتمييز بين آيتين متقاربتين. يجب أن يبقى له جواب واحد قطعي.
@@ -431,7 +462,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
 الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيق تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
-- "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي على:
+- "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي ع��ى:
   • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') وارجوع عبر goBack().
   • لوحة المسؤول (adminDashboard) وبها menu-grid فيها أزرار menu-btn.
   • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولي، إعدادات المسؤول (adminSettings).
@@ -893,17 +924,20 @@ export async function POST(req: Request) {
         const length = source.verses.length
         return [source.verses[0], source.verses[Math.floor(length / 2)], source.verses[length - 1]].filter(Boolean).map((verse: { text: string }) => verse.text)
       })
-      const referenceContext = useReferenceFiles
-        ? await getReferenceContext(`${topic} ${topicTerms.join(" ")} ${sourceSurahs.map((source) => source.surah).join(" ")}`, representativeVerses).catch(() => "")
-        : ""
+      const [referenceContext, internetContext] = await Promise.all([
+        useReferenceFiles
+          ? getReferenceContext(`${topic} ${topicTerms.join(" ")} ${sourceSurahs.map((source) => source.surah).join(" ")}`, representativeVerses).catch(() => "")
+          : Promise.resolve(""),
+        getInternetExamContext().catch(() => ""),
+      ])
       const pastScope = ["near", "far", "both"].includes(payload.pastScope) ? payload.pastScope : "both"
       const nearSurahs = Array.isArray(payload.nearSurahs) ? payload.nearSurahs.map(String).slice(0, 114) : []
       const farSurahs = Array.isArray(payload.farSurahs) ? payload.farSurahs.map(String).slice(0, 114) : []
       const previousQuestionFingerprints = Array.isArray(payload.previousQuestionFingerprints)
         ? payload.previousQuestionFingerprints.map(String).map((value: string) => value.slice(0, 240)).slice(0, 500)
         : []
-      const safePayload = { topic, plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext, sourceFile, useReferenceFiles, previousQuestionFingerprints }
-      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط، واجعل كل سؤال تطبيقاً مباشراً لموضوع المسؤول topic لا لمطلع السورة. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. إذا وُجد sourceFile فاستخرج منه أفكار الأسئلة والمتشابهات ذات الصلة بالموضوع، ثم طابق كل موضع مع sourceSurahs قبل اعتماده. استفد من referenceContext لصياغة المتشابهات والفروق اللفظية الدقيقة. نوّع المواضع عبر كامل السور ولا تبدأ دائماً من أوائلها. استبعد previousQuestionFingerprints تماماً. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
+      const safePayload = { topic, plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext, internetContext, internetSources: EXAM_INTERNET_SOURCES, sourceFile, useReferenceFiles, previousQuestionFingerprints }
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nاستلهم أفكار الأسئلة وصيغ المتشابهات من internetContext المجلوب الآن من مصادر الإنترنت المذكورة في internetSources، ولا تنسخ سؤالاً حرفياً. التزم بالسور الموجودة في sourceSurahs فقط، واجعل كل سؤال تطبيقاً مباشراً لموضوع المسؤول topic لا لمطلع السورة. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. إذا وُجد sourceFile فاستخرج منه أفكار الأسئلة والمتشابهات ذات الصلة بالموضوع، ثم طابق كل موضع مع sourceSurahs قبل اعتماده. استفد من referenceContext لصياغة المتشابهات والفروق اللفظية الدقيقة. نوّع المواضع عبر كامل السور ولا تبدأ دائماً من أوائلها. لا تستخدم أي موضع أو صيغة موجودة في previousQuestionFingerprints، حتى مع تغيير بسيط في الكلمات. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
@@ -960,9 +994,10 @@ export async function POST(req: Request) {
           options,
           correct,
           questionImage: `/api/quran-question-image?surah=${source.surahNumber}&ayah=${from}&to=${to}&type=${type}`,
-          source: sourceFile ? "file" : "مرجع قرآني موثوق",
+          source: sourceFile ? "file" : internetContext ? "internet-verified" : "مرجع قرآني موثوق",
           sourceFileId: sourceFile?.id || "",
           sourceFileName: sourceFile?.name || "",
+          internetSources: internetContext ? EXAM_INTERNET_SOURCES.map((item) => ({ name: item.name, url: item.url })) : [],
         }
       }).filter(Boolean)
       if (!safeQuestions.length) return json({ error: "لم تجتز الأسئلة فحص الجودة والوضوح. جرّب توسيع النطاق أو زيادة دقة الموضوع.", diagnostics }, 502)
@@ -977,7 +1012,7 @@ export async function POST(req: Request) {
       if (!audioBase64) return json({ error: "لم يصل التسجيل الصوتي", diagnostics }, 400)
       if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
 
-      const system = `أنت تستخرج بيانات طالب من إملاء عربي أو إنجليزي أو مختلط لمسؤول مدرسة. اكتشف اللغة تلقائياً، وانسخ الكلام بلغته الأصلية دون ترجمة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
+      const system = `أنت تستخرج بيانات طالب من إملاء عربي أو ��نجليزي أو مختلط لمسؤول مدرسة. اكتشف اللغة تلقائياً، وانسخ الكلام بلغته الأصلية دون ترجمة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
 transcript,detectedLanguage,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
 detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ الأسماء والأرقام وكلمات المرور بدقة، وكلمات المرور فقط إذا نطقها المسؤول صراحة. transcript هو التفريغ الكامل المسموع بلغته الأصلية.`
       const audioResult = await runAudio("استمع إلى الإملاء واستخرج بيانات الطالب منه، سواء كان عربياً أو إنجليزياً أو مختلطاً. أعد JSON فقط.", system, 0.05, { mimeType, data: audioBase64 })
