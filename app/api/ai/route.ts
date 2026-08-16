@@ -83,8 +83,14 @@ function isRetryableOpenRouterError(error: unknown) {
 
 function classifyAiFailure(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error || "خطأ غير معروف")
+  if (/AUDIO_TRANSCRIPTION_EMPTY/i.test(raw)) {
+  return { status: 422, code: "AUDIO_TRANSCRIPTION_EMPTY", retryable: false, message: "لم يظهر كلام واضح في التسجيل. اقترب من الميكروفون وسجّل التلاوة مرة أخرى في مكان هادئ.", raw }
+  }
+  if (/AUDIO_GRADING_FORMAT/i.test(raw)) {
+  return { status: 502, code: "AUDIO_GRADING_FORMAT", retryable: true, message: "تم تفريغ التسجيل، لكن تعذر إكمال التصحيح الآلي مؤقتاً. أعد المحاولة بعد قليل.", raw }
+  }
   if (/AUDIO_PROVIDERS_FAILED/i.test(raw)) {
-    return { status: 503, code: "AUDIO_PROVIDERS_FAILED", retryable: true, message: "تعذر تحليل التسجيل مؤقتاً بعد تجربة مزوّدي الصوت المتاحين. أعد المحاولة بعد قليل.", raw }
+  return { status: 503, code: "AUDIO_PROVIDERS_FAILED", retryable: true, message: "خدمة تحليل الصوت غير متاحة مؤقتاً بعد تجربة جميع المزوّدين. احتفظ بالتسجيل وأعد المحاولة بعد قليل.", raw }
   }
   if (/AUDIO_PAYLOAD_TOO_LARGE|payload too large|request entity too large|413/i.test(raw)) {
     return { status: 413, code: "AUDIO_PAYLOAD_TOO_LARGE", retryable: false, message: "التسجيل طويل جداً للتحليل. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.", raw }
@@ -467,7 +473,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • تخزين البيانات محلياً عبر getData(key)/setData(key,value) على localStorage (مفاتيح مثل students, admins, messages, files).
   • حالة الجلسة: currentUser, currentType ('admin'|'student'|'parent'), currentAdminId.
   • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد /api/ai.
-  • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
+  • بناء الاختب��رات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
 - "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم OpenRouter مباشرةً وحصرياً عبر OPENROUTER_API_KEY، وتدعم الأوضاع: assistant, admin_assistant, generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant، بالإضافة إلى وضع النص الحر (prompt).
 - "app/layout.tsx": تخطيط الجذر.
@@ -556,7 +562,7 @@ async function githubListTree(ref?: string) {
   const commit = await commitRes.json()
   const treeUrl = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/git/trees/${commit.tree.sha}?recursive=1`
   const treeRes = await fetch(treeUrl, { headers: githubHeaders(), cache: "no-store" })
-  if (!treeRes.ok) throw new Error(`GitHub ${treeRes.status}: تعذر قراءة شجرة المشروع`)
+  if (!treeRes.ok) throw new Error(`GitHub ${treeRes.status}: تعذر قراءة ش��رة المشروع`)
   const tree = await treeRes.json()
   const files = Array.isArray(tree.tree) ? tree.tree.filter((x:any) => x.type === "blob").map((x:any) => x.path).filter(safeProjectPath).slice(0, 500) : []
   return { files, commitSha }
@@ -925,7 +931,7 @@ export async function POST(req: Request) {
         ? payload.previousQuestionFingerprints.map(String).map((value: string) => value.slice(0, 240)).slice(0, 500)
         : []
       const safePayload = { plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext, useReferenceFiles, previousQuestionFingerprints }
-      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. استفد من referenceContext لصياغة أصعب المتشابهات والفروق اللفظية الدقيقة. نوّع صيغ الاختيار بين الآية التالية والتكملة واسم السورة والفارق اللفظي، وصيغ الصح والخطأ بين صحة التكملة وصحة نسبة الآية للسورة. لا تستخدم السورة والموضع نفسيهما مرتين قبل المرور على بقية السور. استبعد تماماً previousQuestionFingerprints. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem؛ سيعرض النظام صورتي البداية والنهاية منفصلتين حتى إن كانتا من الآية نفسها. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. استفد من referenceContext لصياغة أصعب المتشابهات والفروق اللفظية الدقيقة. نوّع صيغ الاختيار بين الآية التالية والتكملة واسم السورة والفارق اللفظي، وصيغ الصح والخطأ بين صحة التكملة وصحة نسبة الآية للسورة. لا تستخدم السورة ��الموضع نفسيهما مرتين قبل المرور على بقية السور. استبعد تماماً previousQuestionFingerprints. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem؛ سيعرض النظام صورتي البداية والنهاية منفصلتين حتى إن كانتا من الآية نفسها. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
@@ -1099,7 +1105,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
       })
     }
 
-    // 4) تصحيح تلاوة من تفريغ نصي
+    // 4) تصحيح تلاوة م�� تفريغ نصي
     if (mode === "grade_recitation") {
       const text = await runText(JSON.stringify(payload), SYS_GRADE_RECITATION, temperature)
       const parsed = extractJson(text) || {}
@@ -1122,39 +1128,70 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
         return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
       }
       let normalizedMimeType: string
-      try { normalizedMimeType = normalizeAudioMimeType(mimeType) } catch (error) { return json({ error: error instanceof Error ? error.message : "صيغة التسجيل غير مدعومة بواسطة جميناي", diagnostics }, 415) }
+      try { normalizedMimeType = normalizeAudioMimeType(mimeType) } catch (error) { return json({ error: error instanceof Error ? error.message : "صيغة التسجيل غير مدعومة", diagnostics }, 415) }
       if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
 
-      const audioResult = await runAudio(
+      const audio = { mimeType: normalizedMimeType, data: audioBase64 }
+      let audioResult = await runAudio(
         `المقطع المطلوب:\n${JSON.stringify({ surah, from, to, expectedText }).slice(0, 12_000)}\n\nاستمع إلى تلاوة الطالب، فرّغها بالعربية ثم صححها مقابل المقطع المطلوب. أعد JSON فقط.`,
         SYS_TRANSCRIBE,
         0.05,
-        { mimeType: normalizedMimeType, data: audioBase64 },
+        audio,
       )
       setAudioDiagnostics(audioResult)
-      const parsed = extractJson(audioResult.text)
-      if (!parsed || typeof parsed !== "object") throw new Error("AUDIO_PROVIDERS_FAILED: تعذر تحليل التلاوة")
+      let parsed = extractJson(audioResult.text)
+      let usedTwoStageFallback = false
+
+      // قد ينجح المزوّد في فهم الصوت لكنه يعيد نصاً عادياً بدلاً من JSON.
+      // في هذه الحالة نحافظ على التفريغ ثم نصححه بطلب نصي مستقل بدلاً من إرجاع 503.
+      if (!parsed || typeof parsed !== "object") {
+        usedTwoStageFallback = true
+        const transcriptResult = await transcribeAudio(audioBase64, normalizedMimeType)
+        setAudioDiagnostics(transcriptResult)
+        const transcript = transcriptResult.text.trim()
+        if (!transcript) throw new Error("AUDIO_TRANSCRIPTION_EMPTY: لم يتمكن مزود الصوت من استخراج كلام واضح من التسجيل")
+        const gradingText = await runText(
+          JSON.stringify({ surah, from, to, expectedText, transcript }),
+          SYS_GRADE_RECITATION,
+          0.05,
+        )
+        const grading = extractJson(gradingText)
+        if (!grading || typeof grading !== "object") throw new Error("AUDIO_GRADING_FORMAT: تم تفريغ التسجيل لكن تعذر تنسيق نتيجة التصحيح")
+        parsed = { ...grading, transcript, isRecitation: grading.isRecitation !== false }
+        audioResult = transcriptResult
+      }
+
       const transcript = typeof parsed.transcript === "string" ? parsed.transcript.trim() : ""
+      if (!transcript) {
+        const transcriptResult = await transcribeAudio(audioBase64, normalizedMimeType)
+        setAudioDiagnostics(transcriptResult)
+        parsed.transcript = transcriptResult.text.trim()
+        audioResult = transcriptResult
+        usedTwoStageFallback = true
+      }
       const totalAyahs = Math.max(1, Number(to || from || 1) - Number(from || 1) + 1)
-      const missingCount = Array.isArray(parsed.missingAyahs) ? Math.min(totalAyahs, parsed.missingAyahs.length) : 0
+      const missingAyahs = Array.isArray(parsed.missingAyahs) ? parsed.missingAyahs.map(String).slice(0, totalAyahs) : []
+      const missingCount = missingAyahs.length
       const calculatedScore = Math.max(0, Math.min(1, (totalAyahs - missingCount) / totalAyahs))
-      const modelScore = typeof parsed.score === "number" ? Math.max(0, Math.min(1, parsed.score)) : calculatedScore
+      const numericScore = Number(parsed.score)
+      const modelScore = Number.isFinite(numericScore) ? Math.max(0, Math.min(1, numericScore)) : calculatedScore
       const score = missingCount > 0 ? Math.min(modelScore, calculatedScore) : modelScore
+      const numericPercent = Number(parsed.matchedPercent)
       return json({
         result: {
-          transcript: transcript || String(parsed.transcript || ""),
+          transcript: String(parsed.transcript || "").trim(),
           detectedLanguage: "ar",
           audioEngine: audioResult.provider,
           audioModel: audioResult.model,
           accepted: parsed.isRecitation !== false && score >= 0.5,
           score,
-          matchedPercent: typeof parsed.matchedPercent === "number" ? Math.max(0, Math.min(100, parsed.matchedPercent)) : Math.round(score * 100),
+          matchedPercent: Number.isFinite(numericPercent) ? Math.max(0, Math.min(100, numericPercent)) : Math.round(score * 100),
           isRecitation: parsed.isRecitation !== false,
-          reason: parsed.reason || "",
-          missingAyahs: Array.isArray(parsed.missingAyahs) ? parsed.missingAyahs : [],
+          reason: typeof parsed.reason === "string" ? parsed.reason.slice(0, 500) : "",
+          missingAyahs,
           scoring: { totalAyahs, missingAyahs: missingCount, method: "(total-missing)/total" },
         },
-        diagnostics,
+        diagnostics: { ...diagnostics, stage: usedTwoStageFallback ? "transcription-then-grading" : "combined-audio-analysis" },
       })
     }
 
