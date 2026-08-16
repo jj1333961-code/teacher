@@ -340,8 +340,9 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceSurahs.
 - كل سؤال يجب أن يكون متعلقاً مباشرة بحفظ القرآن أو نص الآية أو السورة.
 - لا تنشئ أسئلة ثقافة عامة أو دين عام أو معلومات خارج نصوص القرآن.
-- التزم تماماً بعدد الأسئلة count المطلوب لكل plan، وبالنوع والمستوى وموضع السؤال position المحددين في كل plan.
-  - position=start: اختر من الثلث الأول للسورة، position=middle: الثلث الأوسط، position=end: الثلث الأخير، position=random: نوّع بين جميع المواضع.
+- جميع الأسئلة المطلوبة شديدة الصعوبة حصراً؛ لا تُخرج سؤالاً سهلاً أو متوسطاً حتى لو وصل level بقيمة أخرى، وأعد level=hard دائماً.
+- اجعل 80% على الأقل من الأسئلة من الثلث الأوسط للسور، والباقي من مواضع متشابهة دقيقة؛ لا تستخدم أوائل السور القصيرة أو الآيات المشهورة الواضحة إذا وُجد بديل أصعب داخل النطاق.
+- التزم تماماً بعدد الأسئلة count المطلوب لكل plan وبنوعه. position=middle هو الأصل الحاكم، وأي position أخرى لا تبرر سؤالاً مباشراً أو سهلاً.
 - إذا كان type=mcq فعدد الخيارات يجب أن يساوي optionsCount لذلك plan، مع إجابة صحيحة واحدة فقط. نوّع عشوائياً بين: اختيار الآية التالية، اختيار تكملة الآية، واختيار اسم السورة التي ينتمي إليها المقطع.
 - إذا كان type=truefalse فاجعل options=["صح","خطأ"] فقط، وبدّل بين: صحة تكملة الآية، وصحة نسبة الآية إلى سورة محددة. وازن بين الإجابات الصحيحة والخاطئة.
 - إذا كان type=complete فاختر حد بداية وحد نهاية حقيقيين لصيغة «أكمل من قوله تعالى … إلى قوله تعالى …»، واجعل from/to صحيحين وفي السورة نفسها، وعدد الآيات المطلوب يساوي completeAyahs قدر الإمكان.
@@ -378,7 +379,7 @@ const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة الق
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
-const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على ��فريغ صوتي عربي.
+const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على ����فريغ صوتي عربي.
 مهمتك:
 1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
 2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
@@ -418,7 +419,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 
 const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم نا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
 مهمتك: فهم اللب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعيلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
-احترم دائماً: عدم حذف الملفات، عدم إعادة بناء الم��روع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
+احترم دائماً: عدم حذف الملفات، عدم إعادة بناء ا��م��روع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
 أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (بدون ��ي نص خارجه):
 {
  "understanding": "إعادة صياغة موجزة لفهمك للطلب",
@@ -776,7 +777,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt}`,
-        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجمة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
+        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجمة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خات��ة أو ذكر للنموذج أو للمرجع.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -808,7 +809,8 @@ export async function POST(req: Request) {
 
       const plan = (Array.isArray(payload.plan) ? payload.plan : []).map((item: any) => ({
         ...item,
-        position: ["start", "middle", "end", "random"].includes(item?.position) ? item.position : "random",
+        level: "hard",
+        position: "middle",
       }))
       const requestedCount = Math.max(1, plan.reduce((sum: number, item: any) => sum + Math.max(0, Number(item?.count) || 0), 0))
       const allNumbers = Array.from({ length: endSurahNumber - startSurahNumber + 1 }, (_, index) => startSurahNumber + index)
@@ -842,7 +844,7 @@ export async function POST(req: Request) {
         ? payload.previousQuestionFingerprints.map(String).map((value: string) => value.slice(0, 240)).slice(0, 500)
         : []
       const safePayload = { plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext, useReferenceFiles, previousQuestionFingerprints }
-      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. استفد من referenceContext لصياغة أصعب المتشابهات والفروق اللفظية الدقيقة. نوّع صيغ الاختيار بين الآية التالية والتكملة واسم السورة والفارق اللفظي، وصيغ الصح والخطأ بين صحة التكملة وصحة نسبة الآية للسورة. لا تستخدم السورة والموضع نفسيهما مرتين قبل المرور على بقية السور. استبعد تماماً previousQuestionFingerprints. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem؛ سيعرض النظام صورتي البداية والنهاية منفصلتين حتى إن كانتا من الآية نفسها. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. ارفض داخلياً أي سؤال يمكن حله بالحفظ المباشر دون مقارنة عميقة. يجب أن يبنى كل سؤال على متشابه لفظي دقيق موثق، وأن تكون مشتتاته من مواضع قرآنية شديدة التقارب، وأن يأتي من وسط السورة. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. استفد من referenceContext لصياغة أصعب المتشابهات والفروق اللفظية الدقيقة. نوّع صيغ الاختيار بين الآية التالية والتكملة واسم السورة والفارق اللفظي، وصيغ الصح والخطأ بين صحة التكملة وصحة نسبة الآية للسورة. لا تستخدم السورة والموضع نفسيهما مرتين قبل المرور على بقية السور. استبعد تماماً previousQuestionFingerprints. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem؛ سيعرض النظام صورتي البداية والنهاية منفصلتين حتى إن كانتا من الآية نفسها. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
