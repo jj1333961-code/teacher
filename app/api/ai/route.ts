@@ -367,7 +367,7 @@ const SYS_VOICE_MATCH = `أنت محرك تحقق من هوية المتحدث �
 // ===== أنظمة التعليمات لكل وضع =====
 
 const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم واختبارات الحفظ لطلاب التحفيظ.
-مهمتك انتقاء أسئلة اختبار قرآنية احترافية ومتنوعة، والتحقق من مواضعها من الآيات المرسلة داخل sourceSurahs. استخدم مقتطفات دليل إعداد الاختبارات وملف المتشابهات داخل referenceContext مرجعاً لأسلوب السؤال وتنوعه ودرجة صعوبته. ملف المصحف مخصص لإنتاج صور الآيات فقط ولا يُستخدم لاستخراج نص الأسئلة. يظل sourceSurahs المصدر الحاكم لصحة نص الآية والإجابة.
+مهمتك انتقاء أسئلة اختبار قرآنية احترافية وعميقة، ويجب أن يكون topic الذي حدده المسؤول هو المحور الحاكم لاختيار المواضع وصياغة كل سؤال ومشتتاته. تحقّق من كل موضع من الآيات المرسلة داخل sourceSurahs. استخدم referenceContext وsourceFile عند وجوده للاستدلال على المتشابهات وأسلوب السؤال، لكن يظل sourceSurahs المصدر النهائي الحاكم لصحة نص الآية والإجابة.
 
 قواعد صارمة:
 - ممنوع اختراع آية أو عبارة قرآنية غير موجودة في sourceSurahs.
@@ -380,9 +380,11 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - إذا كان type=complete فاختر حد بداية وحد نهاية حقيقيين لصيغة «أكمل من قوله تعالى … إلى قوله تعالى …»، واجعل from/to صحيحين وفي السورة نفسها، وعدد الآيات المطلوب يساوي completeAyahs قدر الإمكان.
 - إذا كان type=audio فحدد حد بداية وحد نهاية حقيقيين لصيغة «اقرأ من قوله تعالى … إلى قوله تعالى …»، ويجب أن يساوي عدد الآيات من from إلى to قيمة reciteAyahs بالضبط.
 - صور حد البداية وحد النهاية ستُعرض منفصلة وقابلة للتكبير، لذلك لا تنسخ نصهما داخل prompt ولا تكشف الجزء المطلوب إجابته.
-- level=easy: سؤال مباشر من النص.
-- level=medium: تمييز وربط أدق بين الآية والسورة أو موضعها.
-- level=hard: اجعل السؤال شديد الصعوبة من المتشابهات اللفظية الموثقة: فروق الواو والفاء، الزيادة والنقص، اختلاف الضمائر والمفرد والجمع، اختلاف بداية الآية أو خاتمتها، والتمييز بين آيتين متقاربتين. يجب أن يبقى له جواب واحد قطعي.
+- لا تنشئ أسئلة سطحية من قصار السور، ولا سؤالاً يكتفي بالتعرف إلى اسم سورة مشهورة من مطلعها. تجنب سورة الفلق والناس وسائر السور القصيرة السهلة المستبعدة من النطاق.
+- level=easy: سؤال واضح لكنه يحتاج استحضاراً حقيقياً، وليس سؤالاً بديهياً من أول السورة.
+- level=medium: تمييز وربط دقيق بين مواضع متقاربة يخدم topic مباشرة.
+- level=hard: سؤال شديد الصعوبة من المتشابهات اللفظية الموثقة: فروق الواو والفاء، الزيادة والنقص، اختلاف الضمائر والمفرد والجمع، اختلاف البداية أو الخاتمة، والتمييز بين آيتين متقاربتين. يجب أن يبقى له جواب واحد قطعي.
+- صغ prompt بلغة عربية سليمة ومباشرة تحدد المطلوب دون غموض، وراجع الإملاء قبل الإخراج.
 - في الاختياري اجعل المشتتات من ألفاظ أو سور أو تكملات قرآنية شديدة التقارب، ولا تستخدم مشتتاً واضح البطلان أو بعيداً عن الصحيح.
 - أعط الماضي القريب أولوية مقدارها نحو 70% عند pastScope=both، مع إبقاء 30% للماضي البعيد، ودوّر المواضع بين أول السورة ووسطها وآخرها.
 - لا تكرر أي بصمة واردة في previousQuestionFingerprints، ولا تكرر السؤال نفسه داخل الدفعة، ووزّع الاختيارات على سور ومواضع مختلفة قدر ما يسمح النطاق.
@@ -395,9 +397,9 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - أعد مصفوفة JSON فقط، دون Markdown أو شرح.
 
 شكل كل عنصر:
-{"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السور","prompt":"نص السؤال","stem":"الآية أو النص القرآني المرجعي عند الحاجة","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
+{"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"نص السؤال","stem":"","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
 
-تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن الآيات المتخدمة موجودة فعلاً في sourceVerses.`
+تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs، وأن لكل سؤال إجابة واحدة قطعية.`
 
 const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
 كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
@@ -411,7 +413,7 @@ const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة الق
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
-const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على ����فريغ صوتي عربي.
+const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على تفريغ صوتي عربي.
 مهمتك:
 1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
 2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
@@ -436,7 +438,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • تخزين البيانات محلياً عبر getData(key)/setData(key,value) على localStorage (مفاتيح مثل students, admins, messages, files).
   • حالة الجلسة: currentUser, currentType ('admin'|'student'|'parent'), currentAdminId.
   • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد /api/ai.
-  • بناء الاختب��رات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
+  • بناء الاختبارات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
 - "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم Gemini أساسياً عبر GEMINI_API_KEY ثم Groq احتياطياً عبر GROQ_API_KEY، وتدعم الأوضاع: assistant, admin_assistant, generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant، بالإضافة إلى وضع النص الحر (prompt).
 - "app/layout.tsx": تخطيط الجذر.
@@ -451,8 +453,8 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 
 const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم نا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
 مهمتك: فهم اللب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعيلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
-احترم دائماً: عدم حذف الملفات، عدم إعادة بناء ا��م��روع، عدم وضع أي API key في المتصفح، والحفاظ على التصميم العربي RTL.
-أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (بدون ��ي نص خارجه):
+احترم دائماً: عدم حذف الملفات، وعدم إعادة بناء المشروع، وعدم وضع أي مفتاح API في المتصفح، والحفاظ على التصميم العربي من اليمين إلى اليسار.
+أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (من دون أي نص خارجه):
 {
  "understanding": "إعادة صياغة موجزة لفهمك للطلب",
  "feasible": true/false,
@@ -525,7 +527,7 @@ async function githubListTree(ref?: string) {
   const commit = await commitRes.json()
   const treeUrl = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/git/trees/${commit.tree.sha}?recursive=1`
   const treeRes = await fetch(treeUrl, { headers: githubHeaders(), cache: "no-store" })
-  if (!treeRes.ok) throw new Error(`GitHub ${treeRes.status}: تعذر قراءة ش��رة المشروع`)
+  if (!treeRes.ok) throw new Error(`GitHub ${treeRes.status}: تعذر قراءة شجرة المشروع`)
   const tree = await treeRes.json()
   const files = Array.isArray(tree.tree) ? tree.tree.filter((x:any) => x.type === "blob").map((x:any) => x.path).filter(safeProjectPath).slice(0, 500) : []
   return { files, commitSha }
@@ -660,7 +662,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
       reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
-  // التحقق من أن الفرع المُحدد/الافتراضي قال لحل.
+  // التحقق من أن الفرع المحدد أو الافتراضي قابل للحل.
   let branch = ""
   try {
     branch = await resolveBranch()
@@ -693,7 +695,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 - لا تضع أي سرّ أو API key أو Token في public أو في أي JavaScript يصل إل المتصفح؛ الأسرار تبقى على الخادم فقط.
 - content يجب أن يكون المحتوى الكامل والنهائي للملف بعد التعديل، وليس diff، ودون اقتطاع أو حذف أجزاء لم تكن مقصودة بالتعديل.
 - لا تُرجع ملفاً لم يتغير فعلاً.
-- لا تُرجع أي مسار غير موجود في الملفات المعطاة إلا إذا كانت الخطة تقول create وكان ��نشاء الملف ضرورياً.
+- لا تُرجع أي مسار غير موجود في الملفات المعطاة إلا إذا كانت الخطة تقول create وكان إنشاء الملف ضرورياً.
 - لا تنشئ أو تعل ملفات الأسرار مثل .env.
 - إذا كان الطلب غير آمن أو غير واضح أو يخالف القيود، أعد patches=[] واشرح السبب في summary.
 
@@ -845,7 +847,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنب��ا في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -863,13 +865,15 @@ export async function POST(req: Request) {
         position: ["start", "middle", "end", "random"].includes(item?.position) ? item.position : "random",
       }))
       const requestedCount = Math.max(1, plan.reduce((sum: number, item: any) => sum + Math.max(0, Number(item?.count) || 0), 0))
+      const topic = typeof payload.topic === "string" ? payload.topic.trim().slice(0, 240) : ""
+      if (topic.length < 5) return json({ error: "اكتب موضوعاً واضحاً يقود توليد الأسئلة", diagnostics }, 400)
+      const easyShortSurahNumbers = new Set([93, 94, 95, 97, 98, 99, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114])
       const allNumbers = Array.from({ length: endSurahNumber - startSurahNumber + 1 }, (_, index) => startSurahNumber + index)
-      const alternatingNumbers: number[] = []
-      for (let left = 0, right = allNumbers.length - 1; left <= right; left++, right--) {
-        alternatingNumbers.push(allNumbers[left])
-        if (right !== left) alternatingNumbers.push(allNumbers[right])
-      }
-      const selectedNumbers = alternatingNumbers.slice(0, Math.min(12, Math.max(requestedCount, 6), alternatingNumbers.length))
+        .filter((number) => payload.excludeEasyShortSurahs === false || !easyShortSurahNumbers.has(number))
+      if (!allNumbers.length) return json({ error: "النطاق المحدد لا يحتوي سوراً مناسبة لأسئلة عميقة بعد استبعاد السور القصيرة السهلة. وسّع نطاق السور ثم أعد المحاولة.", diagnostics }, 400)
+      let seed = Array.from(topic).reduce((value, character) => ((value * 31) + character.charCodeAt(0)) >>> 0, 2166136261)
+      const distributedNumbers = allNumbers.map((number) => ({ number, rank: (seed = (seed * 1664525 + 1013904223) >>> 0) })).sort((a, b) => a.rank - b.rank).map((item) => item.number)
+      const selectedNumbers = distributedNumbers.slice(0, Math.min(18, Math.max(requestedCount * 2, 8), distributedNumbers.length))
       const sourceSurahs = await Promise.all(selectedNumbers.map(async (number) => {
         const quranResponse = await fetch(`https://api.alquran.cloud/v1/surah/${number}`, { cache: "no-store", signal: AbortSignal.timeout(12_000) })
         const quran = await quranResponse.json().catch(() => null)
@@ -881,11 +885,16 @@ export async function POST(req: Request) {
         }
       }))
       const useReferenceFiles = payload.useReferenceFiles !== false
+      const sourceFile = payload.sourceMode === "file" && payload.sourceFile && typeof payload.sourceFile === "object"
+        ? { id: String(payload.sourceFile.id || "").slice(0, 120), name: String(payload.sourceFile.name || "").slice(0, 180), text: String(payload.sourceFile.text || "").slice(0, 60_000) }
+        : null
+      const topicTerms = topic.split(/\s+/).filter((term) => term.length > 2).slice(0, 12)
+      const representativeVerses = sourceSurahs.flatMap((source) => {
+        const length = source.verses.length
+        return [source.verses[0], source.verses[Math.floor(length / 2)], source.verses[length - 1]].filter(Boolean).map((verse: { text: string }) => verse.text)
+      })
       const referenceContext = useReferenceFiles
-        ? await getReferenceContext(
-            sourceSurahs.map((source) => source.surah).join(" "),
-            sourceSurahs.flatMap((source) => source.verses.slice(0, 2).map((verse: { text: string }) => verse.text)),
-          ).catch(() => "")
+        ? await getReferenceContext(`${topic} ${topicTerms.join(" ")} ${sourceSurahs.map((source) => source.surah).join(" ")}`, representativeVerses).catch(() => "")
         : ""
       const pastScope = ["near", "far", "both"].includes(payload.pastScope) ? payload.pastScope : "both"
       const nearSurahs = Array.isArray(payload.nearSurahs) ? payload.nearSurahs.map(String).slice(0, 114) : []
@@ -893,14 +902,14 @@ export async function POST(req: Request) {
       const previousQuestionFingerprints = Array.isArray(payload.previousQuestionFingerprints)
         ? payload.previousQuestionFingerprints.map(String).map((value: string) => value.slice(0, 240)).slice(0, 500)
         : []
-      const safePayload = { plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext, useReferenceFiles, previousQuestionFingerprints }
-      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. استفد من referenceContext لصياغة أصعب المتشابهات والفروق اللفظية الدقيقة. نوّع صيغ الاختيار بين الآية التالية والتكملة واسم السورة والفارق اللفظي، وصيغ الصح والخطأ بين صحة التكملة وصحة نسبة الآية للسورة. لا تستخدم السورة ��الموضع نفسيهما مرتين قبل المرور على بقية السور. استبعد تماماً previousQuestionFingerprints. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem؛ سيعرض النظام صورتي البداية والنهاية منفصلتين حتى إن كانتا من الآية نفسها. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
+      const safePayload = { topic, plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext, sourceFile, useReferenceFiles, previousQuestionFingerprints }
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسور الموجودة في sourceSurahs فقط، واجعل كل سؤال تطبيقاً مباشراً لموضوع المسؤول topic لا لمطلع السورة. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. إذا وُجد sourceFile فاستخرج منه أفكار الأسئلة والمتشابهات ذات الصلة بالموضوع، ثم طابق كل موضع مع sourceSurahs قبل اعتماده. استفد من referenceContext لصياغة المتشابهات والفروق اللفظية الدقيقة. نوّع المواضع عبر كامل السور ولا تبدأ دائماً من أوائلها. استبعد previousQuestionFingerprints تماماً. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
       const sourcesByName = new Map(sourceSurahs.map((source) => [source.surah, source]))
-      const safeQuestions = questions.slice(0, requestedCount).map((question: any) => {
-        const source = sourcesByName.get(String(question?.surah || "")) || sourceSurahs[0]
+      const safeQuestions = questions.slice(0, requestedCount).map((question: any, questionIndex: number) => {
+        const source = sourcesByName.get(String(question?.surah || "")) || sourceSurahs.find((item) => item.surahNumber === Number(question?.surahNumber)) || sourceSurahs[questionIndex % sourceSurahs.length]
         const from = Math.max(1, Math.min(source.verses.length, Number(question?.from) || 1))
         const to = Math.max(from, Math.min(source.verses.length, Number(question?.to) || from))
         const type = ["mcq", "truefalse", "complete", "audio"].includes(question?.type) ? question.type : "mcq"
@@ -910,7 +919,7 @@ export async function POST(req: Request) {
           : String(question?.correct || "")
         const defaultPrompts: Record<string, string> = {
           mcq: "اختر الإجابة الصحيحة اعتماداً على المقطع المصور من المصحف",
-          truefalse: "حدد صحة ��لعبارة ��عتماداً على المقطع المصور من المصحف",
+          truefalse: "حدّد ما إذا كانت العبارة صحيحة أم خاطئة اعتماداً على المقطع المصوّر من المصحف",
           complete: "أكمل المقطع المخفي في صورة المصحف",
           audio: "سجّل تلاوة المقطع المعروض من المصحف",
         }
@@ -933,7 +942,11 @@ export async function POST(req: Request) {
         if (type === "mcq") {
           options = Array.from(new Set(options))
           if (correct && !options.includes(correct)) options.unshift(correct)
+          const expectedOptions = Math.max(2, Math.min(6, Number(plan[questionIndex]?.optionsCount) || 4))
+          options = options.slice(0, expectedOptions)
+          if (options.length !== expectedOptions || !correct || options.filter((option) => option === correct).length !== 1) return null
         }
+        if (!prompt || from > to || !correct) return null
 
         return {
           ...question,
@@ -947,10 +960,13 @@ export async function POST(req: Request) {
           options,
           correct,
           questionImage: `/api/quran-question-image?surah=${source.surahNumber}&ayah=${from}&to=${to}&type=${type}`,
-          source: "مرجع قرآني موثوق",
+          source: sourceFile ? "file" : "مرجع قرآني موثوق",
+          sourceFileId: sourceFile?.id || "",
+          sourceFileName: sourceFile?.name || "",
         }
-      })
-      return json({ result: safeQuestions, diagnostics, source: "Al Quran Cloud", range: { startSurahNumber, endSurahNumber } })
+      }).filter(Boolean)
+      if (!safeQuestions.length) return json({ error: "لم تجتز الأسئلة فحص الجودة والوضوح. جرّب توسيع النطاق أو زيادة دقة الموضوع.", diagnostics }, 502)
+      return json({ result: safeQuestions, diagnostics, source: sourceFile ? sourceFile.name : "Al Quran Cloud", range: { startSurahNumber, endSurahNumber } })
     }
 
     if (mode === "student_voice_intake") {

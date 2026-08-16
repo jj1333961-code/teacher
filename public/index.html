@@ -503,7 +503,7 @@ tr:hover { background: var(--table-hover); }
     <div class="card" onclick="showPage('adminLogin')"><div class="icon">👨‍💼</div><h3>المسؤول</h3><p>التحكم الكامل في النظام والطلاب</p></div>
     <div class="card" onclick="showPage('studentLogin')"><div class="icon">👨‍🎓</div><h3>الطالب</h3><p>متابعة المواد والواجبات والحفظ</p></div>
     <div class="card" onclick="showPage('parentLogin')"><div class="icon">👨‍👩‍👧</div><h3>ولي الأمر</h3><p>متابعة ابنك/ابنتك والتقارير</p></div>
-    <div class="card" onclick="startSignup()"><div class="icon">🆕</div><h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب �� إرسال طلب لمسؤول</p></div>
+    <div class="card" onclick="startSignup()"><div class="icon">🆕</div><h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب إلى المسؤول</p></div>
   </div>
 </div>
 
@@ -837,11 +837,12 @@ tr:hover { background: var(--table-hover); }
       <h4 style="color:var(--primary);margin:0">🧪 اختبار مستقل بعد السورة الأساسية</h4>
       <span class="badge badge-primary">لا يختلط بعناصر التسميع</span>
     </div>
-    <p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. تحدد لكل نوع عدد الأسئلة والمستوى والوقت، وللاختياري عدد الاختيارات، ولأكمل/التسجيل عدد الآيات. الوقت مستقل لكل سؤال.</p>
+    <p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. حدّد موضوعاً دقيقاً يقود بناء الأسئلة، ثم اختر النوع والمستوى والوقت وعدد الآيات.</p>
+    <div class="form-group"><label for="examTopic">موضوع الأسئلة</label><input id="examTopic" type="text" maxlength="240" placeholder="مثال: المتشابهات بين البقرة وآل عمران، أو فروق الواو والفاء، أو خواتيم الآيات"><small style="color:var(--text-light)">سيكون هذا الموضوع هو الأساس في انتقاء المواضع وصياغة الأسئلة والمشتتات.</small></div>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الناس.</small></div>
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
- <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة الناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدوياً قبل ت������سيمه.</small></div>
+ <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة الناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدوياً قبل تقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
  <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.</small></div>
  <div class="form-group" id="examFileSourceGroup" style="display:none"><label for="examFileSource">ملف المرجع</label><select id="examFileSource"><option value="">اختر مرجعاً...</option></select><small style="color:var(--text-light)">يجب اختيار ملف عند استخدام «من الملفات».</small></div>
@@ -1078,7 +1079,7 @@ tr:hover { background: var(--table-hover); }
     <div id="parentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
 <span class="badge badge-primary">OpenRouter</span>
-      <input type="text" id="parentChatInput" placeholder="اسألني ن مستوى ابنك، أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendParentChat()">
+      <input type="text" id="parentChatInput" placeholder="اسألن�� ن مستوى ابنك، أو عن القرآن..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendParentChat()">
       <button class="btn btn-primary" onclick="sendParentChat()">إرسال</button>
     </div>
   </div>
@@ -1204,31 +1205,18 @@ const quranData = {
   30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "لضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص", "المسد", "الإخلاص", "الفلق", "الناس"]
 };
 
-const SURAH_AYAH_COUNTS = {
-  "الفاتحة": 7, "البقرة": 286, "آل عمران": 200, "النساء": 176, "المائدة": 120, "الأنعام": 165, "الأعراف": 206, "الأنفال": 75, "التوبة": 129,
-  "يونس": 109, "هود": 123, "يوسف": 111, "الرعد": 43, "إبراهيم": 52, "الحجر": 99, "الن��ل": 128, "الإسراء": 111, "الهف": 110, "مريم": 98,
-  "طه": 135, "الأنبياء": 112, "الحج": 78, "المؤمنون": 118, "النور": 64, "الفرقان": 77, "الشعراء": 227, "النمل": 93, "القصص": 88,
-  "العنكبوت": 69, "الروم": 60, "لقمان": 34, "السجدة": 30, "الأحزاب": 73, "سبأ": 54, "فاطر": 45, "يس": 83, "الصافات": 182,
-  "ص": 88, "الزمر": 75, "غافر": 85, "فصلت": 54, "الشورى": 53, "الزخرف": 89, "الدخان": 59, "الجاثية": 37, "الأحقاف": 35,
-  "محمد": 38, "الفتح": 29, "الحجرات": 18, "ق": 45, "الذاريات": 60, "الطور": 49, "النجم": 62, "القمر": 55, "الرحمن": 78,
-  "الواقعة": 96, "الحديد": 29, "المجادلة": 22, "الحشر": 24, "الممتحنة": 13, "الصف": 14, "الجمعة": 11, "المنافقون": 11,
-  "التغابن": 18, "الطلاق": 12, "التحريم": 12, "الملك": 30, "القلم": 52, "الحاقة": 52, "المارج": 44, "نوح": 28, "الجن": 28,
-  "المزمل": 20, "المدثر": 56, "القيامة": 40, "الإنسان": 31, "المرسلا": 50, "لنبأ": 40, "النازعات": 46, "عبس": 42,
-  "التكوير": 29, "الإنفطار": 19, "المطففين": 36, "الإنشقاق": 25, "البروج": 22, "الطارق": 17, "اأعلى": 19, "الغاشية": 26,
-  "الفجر": 30, "البلد": 20, "الشمس": 15, "الليل": 21, "الضحى": 11, "الشرح": 8, "التين": 8, "العلق": 19, "القدر": 5,
-  "البينة": 8, "الزلزلة": 8, "العاديات": 11, "القارعة": 11, "التكاثر": 8, "العصر": 3, "الهمزة": 9, "الفيل": 5, "قريش": 4,
-  "الماعون": 7, "الكوثر": 3, "الكافرون": 6, "النصر": 3, "المسد": 5, "الإخلاص": 4, "الفلق": 5, "الناس": 6
-};
-
 const ALL_SURAHS_ORDERED = [
-  "الفاتحة", "البقرة", "آل عمران", "النساء", "ا��مائدة", "الأنعام", "لأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
-  "الإساء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "لعنكبوت", "الروم", "لقمان", "السجدة",
+  "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
+  "الإسراء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
-  "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الإنفطار",
-  "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة",
+  "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الانفطار",
+  "المطففين", "الانشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة",
   "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس"
 ];
+const SURAH_AYAH_TOTALS = [7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
+const SURAH_AYAH_COUNTS = Object.fromEntries(ALL_SURAHS_ORDERED.map((name,index)=>[name,SURAH_AYAH_TOTALS[index]]));
+const EASY_SHORT_SURAHS = new Set(ALL_SURAHS_ORDERED.filter((name,index)=>SURAH_AYAH_TOTALS[index]<=11 && index>=92));
 
 const RATING_COLORS = {
   '4': '#28a745',
@@ -1825,7 +1813,7 @@ function submitSignupRequest() {
     + 'نوع الحساب: ' + roleLabel + '\n'
     + 'الاسم: ' + name + '\n'
     + 'الرقم القومي: ' + nid + '\n'
-    + 'رقم الهاتف: ' + phone + '\n'
+    + 'رقم الها��ف: ' + phone + '\n'
     + 'طريقة التسجيل: ' + (signupState.method === 'google' ? 'جوجل (' + signupState.email + ')' : 'رقم الهاتف / واتساب') + '\n'
     + 'رقم الواتساب المُوثّق: ' + signupState.whats + '\n'
     + 'الجزء: ' + (juz ? 'الجزء ' + juz : 'غير محدد') + '\n'
@@ -2021,7 +2009,7 @@ function addAdmin() {
   const pass = document.getElementById('newAdminPass').value.trim();
   const type = document.getElementById('newAdminType').value;
   if(!mobile || !pass) return alert('يرجى ملء جميع الحقول');
-  if(mobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
+  if(mobile.length !== 11) return alert('رق�� الموبايل يجب أن يكون 11 رقم');
   const admins = getData('admins');
   if(admins.find(a => a.mobile === mobile)) return alert('هذا الرقم مسجل مسبقاً');
   admins.push({id: Date.now(), mobile, password: pass, isMain: type === 'main'});
@@ -2987,9 +2975,10 @@ function openQuranImage(src){const box=document.getElementById('quranImageLightb
 function closeQuranImage(){const box=document.getElementById('quranImageLightbox'),img=document.getElementById('quranImageLightboxImg');if(box)box.classList.add('hidden');if(img)img.removeAttribute('src');document.body.style.overflow=''}
 document.addEventListener('keydown',function(event){if(event.key==='Escape')closeQuranImage()});
 function quranQuestionMediaHtml(q,index){
-  let images=[];
-  if(q.source==='file'||q.sourceFileId){if(q.questionImage)images=[{src:q.questionImage,label:'صورة السؤال'}]}
-  else{const from=Math.max(1,parseInt(q.from)||1),to=Math.max(from,parseInt(q.to)||from);images=[{src:quranQuestionImageUrl(q,from,q.type==='complete'?'masked':'anchor'),label:q.type==='complete'?'جزء من آية السؤال':'آية البداية'}];if(to!==from)images.push({src:quranQuestionImageUrl(q,to,'anchor'),label:'آية النهاية'})}
+  const from=Math.max(1,parseInt(q.from)||1),to=Math.max(from,parseInt(q.to)||from);
+  const primary=q.questionImage||quranQuestionImageUrl(q,from,q.type==='complete'?'masked':'anchor');
+  const images=primary?[{src:primary,label:q.type==='complete'?'جزء من آية السؤال':'آية البداية'}]:[];
+  if(to!==from){const ending=quranQuestionImageUrl(q,to,'anchor');if(ending)images.push({src:ending,label:'آية النهاية'})}
   if(!images.length)return '';
   return '<div class="quran-question-media quran-image-grid">'+images.map(function(item){return '<button type="button" class="quran-image-button" onclick="openQuranImage(\''+escapeHtml(item.src)+'\')" aria-label="تكبير '+item.label+'"><img class="quran-question-image" src="'+escapeHtml(item.src)+'" alt="'+item.label+' للسؤال '+(index+1)+'" loading="eager" onerror="showQuranQuestionImageError(this)"></button>'}).join('')+'</div>';
 }
@@ -3096,7 +3085,9 @@ function expandExamPlans(plans){const out=[];plans.forEach(plan=>{for(let i=0;i<
 function examQuestionFingerprint(q){return [q.type||'',q.surah||'',parseInt(q.from)||0,parseInt(q.to)||0,normalizeExamText(q.prompt||''),normalizeExamText(q.correct||'')].join('|')}
 async function generateExamQuestions(){
   const base=document.getElementById('examBaseSurah')?.value||currentRecordMainSurah||'';
-  if(!base){showExamAlert('حدد آخر سور�� محفوظة للطالب أولاً.','danger');return}
+  if(!base){showExamAlert('حدّد آخر سورة محفوظة للطالب أولاً.','danger');return}
+  const topic=document.getElementById('examTopic')?.value.trim()||'';
+  if(topic.length<5){showExamAlert('اكتب موضوعاً واضحاً للأسئلة أولاً، مثل المتشابهات أو فروق الألفاظ أو خواتيم الآيات.','danger');document.getElementById('examTopic')?.focus();return}
   const plans=examPlanRows.filter(r=>(parseInt(r.count)||0)>0);
   if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على الأقل.','danger');return}
   const btns=document.querySelectorAll('#examBuilderSection button');btns.forEach(b=>b.disabled=true);
@@ -3108,13 +3099,18 @@ async function generateExamQuestions(){
     const normalizedPlans=plans.map(r=>({count:parseInt(r.count)||1,level:r.level,type:r.type,position:['start','middle','end','random'].includes(r.position)?r.position:'random',timeLimit:Math.max(5,Math.min(3600,parseInt(r.timeLimit)||60)),completeAyahs:parseInt(r.completeAyahs)||1,reciteAyahs:parseInt(r.reciteAyahs)||1,audioShareWithParent:r.audioShareWithParent!==false,optionsCount:Math.max(2,Math.min(6,parseInt(r.optionsCount)||4))}));
     const expandedPlans=expandExamPlans(normalizedPlans).map(p=>Object.assign({},p,{count:1})),range=getExamPastRange(),startIndex=ALL_SURAHS_ORDERED.indexOf(range.start),endIndex=ALL_SURAHS_ORDERED.indexOf(range.end);
     const existingFingerprints=examQuestions.map(examQuestionFingerprint),existingSet=new Set(existingFingerprints);let raw=[];
-    if(sourceMode==='file')raw=generateLocalFileQuestions(file,expandedPlans);
-    else{try{const ai=await callStudentAI('generate_exam',{surahNumber:startIndex+1,endSurahNumber:endIndex+1,plan:expandedPlans,pastScope:range.scope,nearSurahs:range.near,farSurahs:range.far,useReferenceFiles:true,previousQuestionFingerprints:existingFingerprints},0.22);raw=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[])}catch(aiError){raw=await generateLocalQuranQuestions(range.start,range.end,expandedPlans);showExamAlert('استخدم النظام المولد القرآني الاحتياطي بعد تعذر مزودي الذكاء الاصطناعي.','warning')}}
+    try{
+      const ai=await callStudentAI('generate_exam',{topic,sourceMode,sourceFile:sourceMode==='file'?{id:file.id,name:file.name,text:String(file.text||'').slice(0,60000)}:null,surahNumber:startIndex+1,endSurahNumber:endIndex+1,plan:expandedPlans,pastScope:range.scope,nearSurahs:range.near,farSurahs:range.far,useReferenceFiles:true,excludeEasyShortSurahs:true,previousQuestionFingerprints:existingFingerprints},0.18);
+      raw=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[])
+    }catch(aiError){
+      if(sourceMode==='file')throw aiError;
+      raw=await generateLocalQuranQuestions(range.start,range.end,expandedPlans);showExamAlert('استخدم النظام المولد القرآني الاحتياطي بعد تعذر مزودي الذكاء الاصطناعي.','warning')
+    }
     const unique=[];for(const q of raw.map(cleanExamQuestion).filter(q=>q.prompt&&q.correct!==undefined)){const fingerprint=examQuestionFingerprint(q);if(existingSet.has(fingerprint))continue;existingSet.add(fingerprint);unique.push(q);if(unique.length===requestedTotal)break}
     if(!unique.length)throw new Error('لم تُنتج ادفعة أسئلة جديدة غير مكررة. غيّر النطاق أو الخطة ثم أعد المحاولة.');
     const stamp=Date.now(),added=unique.map((q,index)=>{const plan=expandedPlans[index]||normalizedPlans[0];return {id:'exam_'+stamp+'_'+index,type:plan.type,level:plan.level,surah:q.surah||base,prompt:q.prompt||'',stem:q.stem||'',options:Array.isArray(q.options)?q.options:[],correct:q.correct||'',from:parseInt(q.from)||1,to:parseInt(q.to)||parseInt(q.from)||1,surahNumber:parseInt(q.surahNumber)||0,timeLimit:plan.timeLimit,completeAyahs:plan.completeAyahs,reciteAyahs:plan.reciteAyahs,audioShareWithParent:plan.audioShareWithParent!==false,points:typeof q.points==='number'?q.points:1,rejected:false,weakened:false,source:q.source||(sourceMode==='file'?'file':'ai-verified'),sourceFileId:q.sourceFileId||'',sourceFileName:q.sourceFileName||'',questionImage:q.questionImage||'',optionsCount:plan.optionsCount||4,pastScope:range.scope}});
     const previousCount=examQuestions.length;examQuestions=examQuestions.concat(added);examEditorActiveIndex=previousCount;generationSucceeded=true;renderExamQuestions();showExamAlert('تمت إضافة '+added.length+' سؤالاً جديداً، والإجمالي الآن '+examQuestions.length+' سؤالاً. لم تُحذف الأسئلة السابقة.','success');
-  }catch(e){showExamAlert((e.message||'��عذر توليد الأسئلة')+' لم يتم حذف أي سؤال سابق.','danger')}
+  }catch(e){showExamAlert((e.message||'تعذر توليد الأسئلة')+' لم يتم حذف أي سؤال سابق.','danger')}
   finally{finishExamGenerationProgress(generationSucceeded);btns.forEach(b=>b.disabled=false)}
 }
 function addManualExamQuestion(){examQuestions.push({id:'manual_'+Date.now(),type:'mcq',level:'medium',surah:currentRecordMainSurah||'',prompt:'سؤال يدوي',stem:'',options:['','','',''],correct:'',from:1,to:1,timeLimit:60,completeAyahs:1,reciteAyahs:1,audioShareWithParent:true,points:1,rejected:false,weakened:false,source:'manual'});renderExamQuestions()}
@@ -3155,7 +3151,7 @@ function saveExamDraft(){
   const totalSeconds=qs.reduce((n,q)=>n+Math.max(5,parseInt(q.timeLimit)||60),0);
   const deadlineValue=document.getElementById('examDeadline')?.value||'';const deadlineAt=deadlineValue?new Date(deadlineValue).getTime():Date.now()+24*60*60*1000;if(!Number.isFinite(deadlineAt)||deadlineAt<=Date.now()){showExamAlert('حدد موعد انتهاء لاحقاً للوقت الحالي.','danger');return}
   const lastSurah=document.getElementById('examLastSurah')?.value||currentRecordMainSurah;
-  students[i].activeExam={id:'exam_'+Date.now(),date:document.getElementById('recordDate').value||new Date().toISOString().split('T')[0],questions:JSON.parse(JSON.stringify(qs)),totalSeconds,status:'pending',createdAt:Date.now(),deadlineAt,baseSurah:currentRecordMainSurah,lastSurah};
+  students[i].activeExam={id:'exam_'+Date.now(),date:document.getElementById('recordDate').value||new Date().toISOString().split('T')[0],topic:document.getElementById('examTopic')?.value.trim()||'',questions:JSON.parse(JSON.stringify(qs)),totalSeconds,status:'pending',createdAt:Date.now(),deadlineAt,baseSurah:currentRecordMainSurah,lastSurah};
   setData('students',students);
   notifyStudentExam(students[i]);
   showExamAlert('✅ تم إرسال الاختبار للطالب مع أزمنة منفصلة لكل سؤال.','success');showToast('🧪 تم إرسال الاختبار للطالب','success');
@@ -3316,7 +3312,7 @@ async function recordStudentExamAudio(i){
     recorder.start();registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});btn.onclick=()=>{if(recorder.state!=='inactive')recorder.stop()};
   }catch(e){status.textContent='تعذر الوصول إلى الميكروفون';btn.dataset.recording='false';btn.classList.remove('recording')}
 }
-function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاخت��ار</h3><p>النتيجة معلّقة لحين مراجعة المسؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
+function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاخت��ار</h3><p>النتيجة معلّقة لحين مراجعة الم��ؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
 function renderStudentExamResult(ex){const c=document.getElementById('studentExamContent');if(c)c.innerHTML=renderStudentResultHtml(ex)}
 function notifyExamExpired(student,ex){if(ex.expiryNotified)return;ex.expiryNotified=true;const text='انتهى الوقت المحدد لاختبار '+student.name+' بتاريخ '+(ex.date||'');let msgs=getData('messages');msgs.push({type:'system',sender:'النظام',receiverType:'student',receiverId:student.id,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'parent',receiverName:student.parent,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'admin',text,studentId:student.id,parentPhone:student.parentPhone||student.parentMobile||'',time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});setData('messages',msgs)}
 function examWhatsAppLink(phone,text){const p=String(phone||'').replace(/\D/g,'').replace(/^0/,'20');return p?'https://wa.me/'+p+'?text='+encodeURIComponent(text):''}
@@ -3485,7 +3481,7 @@ function openHistory(id) {
 
   let html = '<h3 style="color:var(--primary); margin-bottom:15px;">📋 سجل الطالب الكامل — '+escapeHtml(s.name)+'</h3><h4 style="color:var(--primary);margin-bottom:12px">التسميعات النهائية</h4>';
   if(finalizedSessions.length === 0) {
-    html += '<div class="alert alert-info">لا يوجد تسميعات نهائية مسجلة بعد. التسميعات المسودة تظل قابلة للتعديل لمدة 24 ساعة قبل نقلها هنا.</div>';
+    html += '<div class="alert alert-info">لا يوجد تسميعات نهائية مسجلة بعد. التسميعات المسو��ة تظل قابلة للتعديل لمدة 24 ساعة قبل نقلها هنا.</div>';
   } else {
     const grouped = {};
     finalizedSessions.forEach(sess => {
@@ -3678,7 +3674,7 @@ function renderVoiceBox(key) {
   if(!box) return;
   const v = voiceMsgStore[key];
   let h = '<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">';
-  h += '<button class="voice-record-btn" id="vmBtn_'+key+'" onclick="toggleVoiceMsg(\''+key+'\')">🎙️</button>';
+  h += '<button class="voice-record-btn" id="vmBtn_'+key+'" onclick="toggleVoiceMsg(\''+key+'\')">���️</button>';
   h += '<span id="vmStatus_'+key+'" style="color:var(--text-light);">'+(v ? 'رسالة صوتية جاهزة ✅' : 'اضغط لتسجيل رسالة صوتية')+'</span>';
   if(v) {
     h += '<audio controls src="'+v+'" style="height:40px;"></audio>';
@@ -3892,7 +3888,7 @@ function renderDevAudit(){
       h += e.files.map(function(f){ return '<code style="direction:ltr;background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:4px;margin:0 2px;">'+esc(f.path||'')+'</code>'+(f.commitUrl?(' <a href="'+esc(f.commitUrl)+'" target="_blank" rel="noopener">commit</a>'):''); }).join('، ');
       h += '</div>';
     }
-    if(e.error) h += '<div style="font-size:0.85rem;color:#b02a37;margin-top:4px;"><strong>سبب الفشل:</strong> '+esc(e.error)+'</div>';
+    if(e.error) h += '<div style="font-size:0.85rem;color:#b02a37;margin-top:4px;"><strong>سبب ا��فشل:</strong> '+esc(e.error)+'</div>';
     h += '</div>';
   });
   box.innerHTML = h;
@@ -4877,7 +4873,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   const targetTxt = task.surah ? ('سورة ' + task.surah + ' (من الآية ' + (task.from || '-') + ' إلى ' + (task.to || task.from || '-') + ')') : (task.name || task.text || 'المقطع المطلوب');
   if(rec.pct < RECITATION_MIN_PCT) {
     // لا يُحفظ التسجيل المرفوض ولا يُرسل للمسؤول إذا لم يطابق المقرر.
-    showToast('❌ التلاوة لا تطابق ' + targetTxt + ' — لم يتم حفظ التسجيل', 'error');
+    showToast('❌ التلاوة لا ت��ابق ' + targetTxt + ' — لم يتم حفظ التسجيل', 'error');
     if(statusEl) statusEl.textContent = 'مرفوض — أعد الرفع ❌';
     if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 قرير الذكاء الاصطناعي — المحتوى غير مطابق:</strong><br>' +
       'المطلوب: <strong>' + targetTxt + '</strong><br>' +
