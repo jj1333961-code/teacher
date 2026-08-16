@@ -1,32 +1,29 @@
-import { generateText } from "ai"
 import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
 
 export const maxDuration = 300
 
-// ===== اتصال OpenRouter من الخادم فقط =====
-const OPENROUTER = {
-  label: "OpenRouter",
-  endpoint: "https://openrouter.ai/api/v1/chat/completions",
-  get key() {
-    return (process.env.OPENROUTER_API_KEY || "").trim()
-  },
-  get model() {
-    return (process.env.OPENROUTER_MODEL || "openrouter/auto").trim()
-  },
-}
+// ===== مزوّدا الذكاء الاصطناعي (الخادم فقط) =====
+// Gemini هو الأساسي لكل النصوص والصوت، وGroq هو البديل التلقائي.
 const GEMINI = {
   label: "Google Gemini",
   endpoint: "https://generativelanguage.googleapis.com/v1beta/models",
+  model: "gemini-2.5-flash",
   get key() {
     return (process.env.GEMINI_API_KEY || "").trim()
   },
-  get model() {
-    return (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim()
+}
+const GROQ = {
+  label: "Groq",
+  endpoint: "https://api.groq.com/openai/v1",
+  model: "llama-3.3-70b-versatile",
+  transcriptionModel: "whisper-large-v3-turbo",
+  get key() {
+    return (process.env.GROQ_API_KEY || "").trim()
   },
 }
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
-const isOpenRouterConfigured = () => Boolean(OPENROUTER.key)
 const isGeminiConfigured = () => Boolean(GEMINI.key)
+const isGroqConfigured = () => Boolean(GROQ.key)
 
 // إعدادات التطبيق التلقائي عبر GitHub. جميعها Server-side فقط ولا تُرسل أبداً إلى المتصفح.
 // نفضّل المتغيرات الأحدث (‎*_2‎) عند وجودها، ثم نعود إلى المتغيرات الأصلية.
@@ -76,7 +73,7 @@ const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 // الفرع المُحلّ يُخزّن مؤقتاً بعد أول استعلام لتفادي استعلامات متكررة.
 let resolvedBranch: string | null = null
 
-function isRetryableOpenRouterError(error: unknown) {
+function isRetryableProviderError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "")
   return /408|409|429|5\d\d|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|AbortError|aborted|رد فارغ|empty/i.test(message)
 }
@@ -84,25 +81,25 @@ function isRetryableOpenRouterError(error: unknown) {
 function classifyAiFailure(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error || "خطأ غير معروف")
   if (/AUDIO_TRANSCRIPTION_EMPTY/i.test(raw)) {
-  return { status: 422, code: "AUDIO_TRANSCRIPTION_EMPTY", retryable: false, message: "لم يظهر كلام واضح في التسجيل. اقترب من الميكروفون وسجّل التلاوة مرة أخرى في مكان هادئ.", raw }
+    return { status: 422, code: "AUDIO_TRANSCRIPTION_EMPTY", retryable: false, message: "لم يظهر كلام واضح في التسجيل. اقترب من الميكروفون وسجّل التلاوة مرة أخرى في مكان هادئ.", raw }
   }
   if (/AUDIO_GRADING_FORMAT/i.test(raw)) {
-  return { status: 502, code: "AUDIO_GRADING_FORMAT", retryable: true, message: "تم تفريغ التسجيل، لكن تعذر إكمال التصحيح الآلي مؤقتاً. أعد المحاولة بعد قليل.", raw }
+    return { status: 502, code: "AUDIO_GRADING_FORMAT", retryable: true, message: "تم تفريغ التسجيل، لكن تعذر إكمال التصحيح الآلي مؤقتاً. أعد المحاولة بعد قليل.", raw }
   }
   if (/AUDIO_PROVIDERS_FAILED/i.test(raw)) {
-  return { status: 503, code: "AUDIO_PROVIDERS_FAILED", retryable: true, message: "خدمة تحليل الصوت غير متاحة مؤقتاً بعد تجربة جميع المزوّدين. احتفظ بالتسجيل وأعد المحاولة بعد قليل.", raw }
+    return { status: 503, code: "AUDIO_PROVIDERS_FAILED", retryable: true, message: "خدمة تحليل الصوت غير متاحة مؤقتاً بعد تجربة Gemini وGroq. احتفظ بالتسجيل وأعد المحاولة بعد قليل.", raw }
   }
   if (/AUDIO_PAYLOAD_TOO_LARGE|payload too large|request entity too large|413/i.test(raw)) {
     return { status: 413, code: "AUDIO_PAYLOAD_TOO_LARGE", retryable: false, message: "التسجيل طويل جداً للتحليل. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.", raw }
   }
   if (/Gemini HTTP 404|model.*(?:not found|no longer available)/i.test(raw)) {
-    return { status: 502, code: "GEMINI_MODEL_UNAVAILABLE", retryable: true, message: "نموذج Gemini المحدد غير متاح، وسيُستخدم مزوّد الصوت البديل عند إعادة المحاولة.", raw }
+    return { status: 502, code: "GEMINI_MODEL_UNAVAILABLE", retryable: true, message: "نموذج Gemini المحدد غير متاح، وسيُستخدم Groq عند إعادة المحاولة.", raw }
   }
   if (/GEMINI_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
     return { status: 503, code: "GEMINI_KEY_MISSING", retryable: false, message: "مفتاح Gemini غير متاح على الخادم.", raw }
   }
-  if (/OPENROUTER_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
-    return { status: 503, code: "OPENROUTER_KEY_MISSING", retryable: false, message: "مفتاح OpenRouter غير متاح على الخادم.", raw }
+  if (/GROQ_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
+    return { status: 503, code: "GROQ_KEY_MISSING", retryable: false, message: "مفتاح Groq غير متاح على الخادم.", raw }
   }
   if (/401|403|API key|unauthorized|forbidden/i.test(raw)) {
     return { status: 503, code: "AI_PROVIDER_UNAUTHORIZED", retryable: false, message: "رفض مزوّد الذكاء الاصطناعي بيانات الاعتماد على الخادم.", raw }
@@ -119,80 +116,72 @@ function classifyAiFailure(error: unknown) {
   if (/404|no endpoints found|not found|not supported/i.test(raw)) {
     return { status: 502, code: "AI_MODEL_UNAVAILABLE", retryable: true, message: "النموذج المحدد لا يدعم هذا الطلب حالياً.", raw }
   }
-  return { status: 502, code: "AI_PROVIDER_ERROR", retryable: isRetryableOpenRouterError(error), message: "تعذر الاتصال بخدمة الذكاء الاصطناعي حالياً.", raw }
+  return { status: 502, code: "AI_PROVIDER_ERROR", retryable: isRetryableProviderError(error), message: "تعذر الاتصال بخدمة الذكاء الاصطناعي حالياً.", raw }
 }
 
-function openRouterTimeout(system: string, audio?: { mimeType: string; data: string }) {
-  if (audio) return 90_000
-  if (/اختبار|JSON|تطوير|برمج/i.test(system)) return 120_000
-  return 35_000
+function providerTimeout(system: string) {
+  return /اختبار|JSON|تطوير|برمج/i.test(system) ? 120_000 : 35_000
 }
 
-function readOpenRouterText(content: unknown): string {
-  if (typeof content === "string") return content.trim()
-  if (!Array.isArray(content)) return ""
-  return content.map(part => typeof part === "string" ? part : String(part?.text || "")).join("").trim()
-}
-
-async function openRouterText(prompt: string, system: string, temperature: number, audio?: { mimeType: string; data: string }): Promise<string> {
-  if (!OPENROUTER.key) throw new Error("OPENROUTER_API_KEY غير موجود على الخادم")
-  if (audio && audio.data.length > 4_050_000) throw new Error("AUDIO_PAYLOAD_TOO_LARGE: التسجيل طويل جداً للتحليل")
-  const normalizedMime = audio?.mimeType.toLowerCase().split(";")[0]
-  const audioFormat = normalizedMime === "audio/mpeg" || normalizedMime === "audio/mp3" ? "mp3"
-    : normalizedMime === "audio/ogg" ? "ogg"
-    : normalizedMime === "audio/mp4" || normalizedMime === "audio/m4a" ? "m4a"
-    : "wav"
-  const userContent = audio
-    ? [
-        { type: "text", text: prompt },
-        { type: "input_audio", input_audio: { data: audio.data, format: audioFormat } },
-      ]
-    : prompt
-  const requestBody = JSON.stringify({
-    model: OPENROUTER.model,
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: userContent },
-    ],
-    temperature,
-  })
-  let lastError: unknown = new Error("تعذر بدء اتصال OpenRouter")
-
+async function groqText(prompt: string, system: string, temperature: number): Promise<string> {
+  if (!GROQ.key) throw new Error("GROQ_API_KEY غير موجود على الخادم")
+  let lastError: unknown = new Error("تعذر بدء اتصال Groq")
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const response = await fetch(OPENROUTER.endpoint, {
+      const response = await fetch(`${GROQ.endpoint}/chat/completions`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENROUTER.key}`,
-          "HTTP-Referer": process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://v0.app",
-          "X-OpenRouter-Title": "Teacher Quran Platform",
-        },
-        body: requestBody,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ.key}` },
+        body: JSON.stringify({
+          model: GROQ.model,
+          messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
+          temperature,
+        }),
         cache: "no-store",
-        signal: AbortSignal.timeout(openRouterTimeout(system, audio)),
+        signal: AbortSignal.timeout(providerTimeout(system)),
       })
       const data = await response.json().catch(() => null)
-      if (!response.ok) {
-        const providerMessage = String(data?.error?.message || data?.message || response.statusText).slice(0, 300)
-        const providerError = new Error(`OpenRouter HTTP ${response.status}: ${providerMessage}`)
-        lastError = providerError
-        if ([408, 409, 429, 500, 502, 503, 504].includes(response.status) && attempt < 2) {
-          await new Promise(resolve => setTimeout(resolve, 750 * (2 ** attempt)))
-          continue
-        }
-        throw providerError
-      }
-      const text = readOpenRouterText(data?.choices?.[0]?.message?.content)
-      if (!text) throw new Error("OpenRouter: وصل رد فارغ")
+      if (!response.ok) throw new Error(`Groq HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
+      const text = String(data?.choices?.[0]?.message?.content || "").trim()
+      if (!text) throw new Error("Groq: وصل رد فارغ")
       return text
     } catch (error) {
       lastError = error
-      if (!isRetryableOpenRouterError(error) || attempt === 2) break
+      if (!isRetryableProviderError(error) || attempt === 2) break
       await new Promise(resolve => setTimeout(resolve, 750 * (2 ** attempt)))
     }
   }
   throw lastError
+}
+
+function audioExtension(mimeType: string) {
+  if (mimeType === "audio/mpeg") return "mp3"
+  if (mimeType === "audio/ogg") return "ogg"
+  if (mimeType === "audio/mp4") return "m4a"
+  if (mimeType === "audio/webm") return "webm"
+  return "wav"
+}
+
+async function groqTranscribe(audio: { mimeType: string; data: string }): Promise<string> {
+  if (!GROQ.key) throw new Error("GROQ_API_KEY غير موجود على الخادم")
+  const bytes = Buffer.from(audio.data, "base64")
+  if (!bytes.length) throw new Error("AUDIO_TRANSCRIPTION_EMPTY")
+  if (bytes.length > 25_000_000) throw new Error("AUDIO_PAYLOAD_TOO_LARGE")
+  const form = new FormData()
+  form.append("model", GROQ.transcriptionModel)
+  form.append("response_format", "json")
+  form.append("file", new Blob([bytes], { type: audio.mimeType }), `recording.${audioExtension(audio.mimeType)}`)
+  const response = await fetch(`${GROQ.endpoint}/audio/transcriptions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${GROQ.key}` },
+    body: form,
+    cache: "no-store",
+    signal: AbortSignal.timeout(90_000),
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok) throw new Error(`Groq transcription HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
+  const transcript = String(data?.text || "").trim()
+  if (!transcript) throw new Error("AUDIO_TRANSCRIPTION_EMPTY")
+  return transcript
 }
 
 function json(data: unknown, status = 200) {
@@ -268,23 +257,19 @@ async function geminiText(prompt: string, system: string, temperature: number, a
   return text
 }
 
-async function gatewayText(prompt: string, system: string, temperature: number): Promise<string> {
-  const result = await generateText({ model: "google/gemini-3.5-flash", system, prompt, temperature })
-  const text = String(result.text || "").trim()
-  if (!text) throw new Error("Vercel AI Gateway: وصل رد فارغ")
-  return text
-}
-
 async function runText(prompt: string, system: string, temperature: number) {
   const errors: unknown[] = []
-  if (isOpenRouterConfigured()) {
-    try { return await openRouterText(prompt, system, temperature) } catch (error) { errors.push(error) }
-  }
   if (isGeminiConfigured()) {
     try { return await geminiText(prompt, system, temperature) } catch (error) { errors.push(error) }
+  } else {
+    errors.push(new Error("GEMINI_API_KEY غير موجود على الخادم"))
   }
-  try { return await gatewayText(prompt, system, temperature) } catch (error) { errors.push(error) }
-  throw errors.at(-1) || new Error("لا يوجد مزوّد ذكاء اصطناعي صالح على الخادم")
+  if (isGroqConfigured()) {
+    try { return await groqText(prompt, system, temperature) } catch (error) { errors.push(error) }
+  } else {
+    errors.push(new Error("GROQ_API_KEY غير موجود على الخادم"))
+  }
+  throw new Error(`فشل Gemini وGroq: ${errors.map(error => error instanceof Error ? error.message : String(error)).join(" | ")}`)
 }
 
 // ===== معالجة الصوت مع انتقال تلقائي بين المزوّدين =====
@@ -309,33 +294,13 @@ function audioMimeType(audioFormat: string) {
 
 type AudioProviderResult = {
   text: string
-  provider: "google-gemini" | "openrouter" | "vercel-ai-gateway"
+  provider: "google-gemini" | "groq"
   providerLabel: string
   model: string
 }
 
 function audioErrorMessage(error: unknown) {
   return (error instanceof Error ? error.message : String(error || "خطأ غير معروف")).slice(0, 400)
-}
-
-const GATEWAY_AUDIO_MODEL = "google/gemini-2.5-pro"
-
-async function gatewayAudio(prompt: string, system: string, temperature: number, audio: { mimeType: string; data: string }): Promise<string> {
-  const result = await generateText({
-    model: GATEWAY_AUDIO_MODEL,
-    system,
-    temperature,
-    messages: [{
-      role: "user",
-      content: [
-        { type: "text", text: prompt },
-        { type: "file", mediaType: audio.mimeType, data: audio.data },
-      ],
-    }],
-  })
-  const text = String(result.text || "").trim()
-  if (!text) throw new Error("Vercel AI Gateway: وصل رد صوتي فارغ")
-  return text
 }
 
 async function runAudio(prompt: string, system: string, temperature: number, audio: { mimeType: string; data: string }): Promise<AudioProviderResult> {
@@ -349,8 +314,7 @@ async function runAudio(prompt: string, system: string, temperature: number, aud
         return { text, provider: "google-gemini", providerLabel: GEMINI.label, model: GEMINI.model }
       } catch (error) {
         lastGeminiError = error
-        const retryable = /408|429|5\d\d|fetch failed|Timeout|Abort|aborted|رد فارغ|network|ECONN|ETIMEDOUT/i.test(audioErrorMessage(error))
-        if (!retryable || attempt === 2) break
+        if (!isRetryableProviderError(error) || attempt === 2) break
         await new Promise(resolve => setTimeout(resolve, 800 * (2 ** attempt)))
       }
     }
@@ -359,22 +323,21 @@ async function runAudio(prompt: string, system: string, temperature: number, aud
     errors.push("Gemini: GEMINI_API_KEY غير موجود على الخادم")
   }
 
-  if (isOpenRouterConfigured()) {
+  if (isGroqConfigured()) {
     try {
-      const text = await openRouterText(prompt, system, temperature, audio)
-      return { text, provider: "openrouter", providerLabel: OPENROUTER.label, model: OPENROUTER.model }
+      const transcript = await groqTranscribe(audio)
+      const biometricMode = /بصمة صوتية|هوية المتحدث|خصائص الصوت نفسه|الصوت فقط/.test(system)
+      const fallbackSystem = biometricMode
+        ? `أنت بديل نصي آمن لخدمة تحقق صوتي غير متاحة. لا يمكن استنتاج البصمة أو هوية المتحدث من التفريغ النصي. أعد JSON فقط: ${system.includes("sameSpeaker") ? '{"sameSpeaker":false,"matchPercent":0,"confidence":"low","quality":"too-short","reason":"تعذر إجراء مقارنة بيومترية للصوت عبر المزوّد الاحتياطي","profile":{"gender":"unknown","pitch":"medium","pitchHz":0,"timbre":"غير متاح","speed":"medium"}}' : '{"speaker":{"gender":"unknown","ageRange":"unknown","pitch":"medium","pitchHz":0,"timbre":"غير متاح","speed":"medium","nasality":"low","breathiness":"low","accent":"غير متاح","distinctiveTraits":[]},"quality":"too-short","usable":false,"reason":"تعذر إنشاء بصمة بيومترية عبر المزوّد الاحتياطي"}'}`
+        : system
+      const fallbackPrompt = `${prompt}\n\nهذا هو التفريغ الصوتي من Groq Whisper:\n${transcript}`
+      const text = await groqText(fallbackPrompt, fallbackSystem, temperature)
+      return { text, provider: "groq", providerLabel: GROQ.label, model: `${GROQ.transcriptionModel} + ${GROQ.model}` }
     } catch (error) {
-      errors.push(`OpenRouter: ${audioErrorMessage(error)}`)
+      errors.push(`Groq: ${audioErrorMessage(error)}`)
     }
   } else {
-    errors.push("OpenRouter: OPENROUTER_API_KEY غير موجود على الخادم")
-  }
-
-  try {
-    const text = await gatewayAudio(prompt, system, temperature, audio)
-    return { text, provider: "vercel-ai-gateway", providerLabel: "Vercel AI Gateway", model: GATEWAY_AUDIO_MODEL }
-  } catch (error) {
-    errors.push(`Vercel AI Gateway: ${audioErrorMessage(error)}`)
+    errors.push("Groq: GROQ_API_KEY غير موجود على الخادم")
   }
 
   throw new Error(`AUDIO_PROVIDERS_FAILED: ${errors.join(" | ")}`)
@@ -475,7 +438,7 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
   • الذكاء الاصطناعي عبر callStudentAI(mode,payload,temperature) الذي يناد /api/ai.
   • بناء الاختب��رات: examPlanRows, renderExamPlanRows(), أنواع الأسئلة mcq/truefalse/complete/audio.
   • التسجيل الصوتي والبصمة الصوتية: computeVoicePrint(), voiceMatchPercent(), blobToWav().
-- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم OpenRouter مباشرةً وحصرياً عبر OPENROUTER_API_KEY، وتدعم الأوضاع: assistant, admin_assistant, generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant، بالإضافة إلى وضع النص الحر (prompt).
+- "app/api/ai/route.ts": نقطة النهاية الآمنة على الخادم. تستخدم Gemini أساسياً عبر GEMINI_API_KEY ثم Groq احتياطياً عبر GROQ_API_KEY، وتدعم الأوضاع: assistant, admin_assistant, generate_exam, grade_text, grade_recitation, transcribe_and_grade, dev_assistant، بالإضافة إلى وضع النص الحر (prompt).
 - "app/layout.tsx": تخطيط الجذر.
 - "app/page.tsx": صفحة Next.js احتياطية؛ الجذر يعاد توجيهه إلى public/index.html عبر next.config.mjs.
 - "app/globals.css": الأنماط العامة لـNext.js.
@@ -846,11 +809,11 @@ export async function POST(req: Request) {
   const isAudioMode = typeof body?.mode === "string" && AUDIO_MODES.has(body.mode)
   const diagnostics = {
     executedOn: "server",
-    keyConfigured: isAudioMode ? (isGeminiConfigured() || isOpenRouterConfigured()) : (isOpenRouterConfigured() || isGeminiConfigured()),
+    keyConfigured: isAudioMode ? (isGeminiConfigured() || isGroqConfigured()) : (isGroqConfigured() || isGeminiConfigured()),
     providerStatus: 200,
     provider: isAudioMode ? "automatic-audio" : "automatic",
     providerLabel: isAudioMode ? "Automatic audio provider" : "Automatic AI provider",
-    configuredModel: isAudioMode ? `${GEMINI.model} / ${OPENROUTER.model}` : (isOpenRouterConfigured() ? OPENROUTER.model : GEMINI.model),
+    configuredModel: isAudioMode ? `${GEMINI.model} / ${GROQ.transcriptionModel} + ${GROQ.model}` : `${GEMINI.model} / ${GROQ.model}`,
   }
   const setAudioDiagnostics = (result: AudioProviderResult) => {
     diagnostics.provider = result.provider
@@ -882,13 +845,13 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت OpenRouter، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
     }
 
-    // 2) جلب نطاق السر المحدد كاملاً ثم توليد الأسئلة عبر OpenRouter.
+    // 2) جلب نطاق السور المحدد كاملاً ثم توليد الأسئلة عبر Gemini مع Groq احتياطياً.
     if (mode === "generate_exam") {
       const startSurahNumber = Number(payload.surahNumber)
       const endSurahNumber = payload.endSurahNumber == null ? 114 : Number(payload.endSurahNumber)
@@ -1085,7 +1048,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
       if (!message) return json({ error: "اكتب رسالتك أولاً", diagnostics }, 400)
       const context = JSON.stringify(payload.context || {}).slice(0, 18_000)
       const reference = await getReferenceContext(message).catch(() => "")
-      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أنت OpenRouter، مساعد عربي دقيق واحترافي وطبيعي. أجب عن أي سؤال مسموح داخل الموقع أو خارجه، واستخدم بيانات الموقع عند صلتها فقط. افهم مقصد المستخدم قبل الرد، وميّز بوضوح بين الحقيقة والاقتراح، ولا تختلق بيانات أو آيات. اجعل الرد مبسطاً ومهذباً وعلى قدر السؤال، مع تنظيم الخطوات عند الحاجة فقط. رد على التحيات بصورة ودودة وطبيعية؛ فإذا قال المستخدم السلام عليكم فابدأ بـ: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ 🤔 أنا في خدمتك! 🫡. استخدم الرموز التعبيرية باعتدال لتوضيح الحالة في الحديث الودي، وتجنبها في الردود العلمية والحساسة. استخدم المرجعين للمسائل القرآنية والمتشابهات للتحقق دون حصر معرفتك فيهما.", 0.2)
+      const result = await runText(`بيانات الموقع المنقحة:\n${context}\n\n${reference ? `${reference}\n\n` : ""}سؤال المسؤول:\n${message}`, "أنت مساعد المنصة الذكي، مساعد عربي دقيق واحترافي وطبيعي. أجب عن أي سؤال مسموح داخل الموقع أو خارجه، واستخدم بيانات الموقع عند صلتها فقط. افهم مقصد المستخدم قبل الرد، وميّز بوضوح بين الحقيقة والاقتراح، ولا تختلق بيانات أو آيات. اجعل الرد مبسطاً ومهذباً وعلى قدر السؤال، مع تنظيم الخطوات عند الحاجة فقط. رد على التحيات بصورة ودودة وطبيعية؛ فإذا قال المستخدم السلام عليكم فابدأ بـ: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ 🤔 أنا في خدمتك! 🫡. استخدم الرموز التعبيرية باعتدال لتوضيح الحالة في الحديث الودي، وتجنبها في الردود العلمية والحساسة. استخدم المرجعين للمسائل القرآنية وال��تشابهات للتحقق دون حصر معرفتك فيهما.", 0.2)
       return json({ result: result.trim(), diagnostics })
     }
 
@@ -1204,7 +1167,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
           ready: pf.ok,
           reason: pf.reason || "",
           checks: {
-            aiProviders: { openrouter: !!OPENROUTER.key, gemini: !!GEMINI.key, speechToText: !!(process.env.SPEECH_TO_TEXT_API_KEY || "").trim() },
+            aiProviders: { gemini: !!GEMINI.key, groq: !!GROQ.key, speechToText: !!(process.env.SPEECH_TO_TEXT_API_KEY || "").trim() },
             githubToken: !!GITHUB_TOKEN,
             githubOwner: !!GITHUB_OWNER,
             githubRepo: !!GITHUB_REPO,
@@ -1262,7 +1225,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
           return json({ result: { ...plan, ...applied, applied: true, autoApplied: true, note: "تم تطبيق التعديلات تلقائياً على المشروع من الخادم. إذا كان Vercel مربوطاً بالمستودع فسيبدأ النشر تلقائياً، أو يمكن استخدام VERCEL_DEPLOY_HOOK_URL." }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
         } catch (e:any) {
           const failure = classifyAiFailure(e)
-          const isProviderFailure = /OpenRouter|openrouter\.ai|rate.?limit|insufficient credits/i.test(failure.raw)
+          const isProviderFailure = /Gemini|Groq|generativelanguage|api\.groq\.com|rate.?limit|insufficient credits/i.test(failure.raw)
           return json({
             error: isProviderFailure ? failure.message : (e?.message || "تعذر التطبيق التلقائي"),
             result: { ...plan, applied: false, autoApplied: false },
@@ -1328,7 +1291,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
         diagnostics: {
           executedOn: "server",
           provider: AUDIO_MODES.has(mode) ? "automatic-audio" : "automatic",
-          keyConfigured: AUDIO_MODES.has(mode) ? (isGeminiConfigured() || isOpenRouterConfigured()) : (isOpenRouterConfigured() || isGeminiConfigured()),
+          keyConfigured: AUDIO_MODES.has(mode) ? (isGeminiConfigured() || isGroqConfigured()) : (isGroqConfigured() || isGeminiConfigured()),
           stage,
           reason: failure.raw.slice(0, 300),
         },
