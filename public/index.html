@@ -503,7 +503,7 @@ tr:hover { background: var(--table-hover); }
     <div class="card" onclick="showPage('adminLogin')"><div class="icon">👨‍💼</div><h3>المسؤول</h3><p>التحكم الكامل في النظام والطلاب</p></div>
     <div class="card" onclick="showPage('studentLogin')"><div class="icon">👨‍🎓</div><h3>الطالب</h3><p>متابعة المواد والواجبات والحفظ</p></div>
     <div class="card" onclick="showPage('parentLogin')"><div class="icon">👨‍👩‍👧</div><h3>ولي الأمر</h3><p>متابعة ابنك/ابنتك والتقارير</p></div>
-    <div class="card" onclick="startSignup()"><div class="icon">🆕</div><h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب م إرسال طلب لمسؤول</p></div>
+    <div class="card" onclick="startSignup()"><div class="icon">🆕</div><h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب �� إرسال طلب لمسؤول</p></div>
   </div>
 </div>
 
@@ -577,7 +577,6 @@ tr:hover { background: var(--table-hover); }
   <div id="activeDraftsSection"></div>
   <div class="menu-grid">
     <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات لمرفوعة</button>
-    <button class="menu-btn" style="background:#7952b3" onclick="showPage('studentsList')">🧪 الاختبارات من قائمة الطلاب</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
 <button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة OpenRouter الإدارية</button>
     <button class="menu-btn" style="background:#24292e" onclick="openGithubSync()">🔗 مزامنة GitHub</button>
@@ -842,7 +841,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الناس.</small></div>
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
- <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة الناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدوياً قبل ت����سيمه.</small></div>
+ <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة الناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدوياً قبل ت������سيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
  <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.</small></div>
  <div class="form-group" id="examFileSourceGroup" style="display:none"><label for="examFileSource">ملف المرجع</label><select id="examFileSource"><option value="">اختر مرجعاً...</option></select><small style="color:var(--text-light)">يجب اختيار ملف عند استخدام «من الملفات».</small></div>
@@ -884,7 +883,7 @@ tr:hover { background: var(--table-hover); }
 <!-- سجل الطالب -->
 <div id="studentHistory" class="page hidden">
   <div class="page-header">
-    <h2>📋 سجل التسميعات</h2>
+    <h2>📋 سجل الطالب: التسميعات والاختبارات</h2>
     <div>
       <button class="btn btn-info" onclick="openFullChart()">📊 عرض المخطط الكامل</button>
       <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
@@ -1222,7 +1221,7 @@ const SURAH_AYAH_COUNTS = {
 };
 
 const ALL_SURAHS_ORDERED = [
-  "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "لأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
+  "الفاتحة", "البقرة", "آل عمران", "النساء", "ا��مائدة", "الأنعام", "لأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
   "الإساء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "لعنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
@@ -1285,7 +1284,6 @@ const LANG_DICT = {
   '📚 المواد والمعلمين': '📚 Subjects & Teachers',
   '👨‍💼 إدارة المسؤولين': '👨‍💼 Manage Admins',
   '📁 الملفات المرفوعة': '📁 Uploaded Files',
-  '🧪 الاختبارات من قائمة الطلاب': '🧪 Exams from students list',
   '🛠️ مساعد تطوير الموقع': '🛠️ Site Development Assistant',
   '🔗 مزامنة GitHub': '🔗 GitHub Sync',
   'رجوع': 'Back',
@@ -2329,7 +2327,7 @@ async function saveStudent() {
       for(const st of students) {
         if(!st.voiceProfile) continue;
         const match = await verifyVoiceIdentity(voiceBlob,st);
-        if(match.sameSpeaker && match.pct >= VOICE_DUPLICATE_THRESHOLD) return fail('هذه البصمة الصوتية مسجلة مسبقاً للطالب: ' + st.name + ' (تطابق Gemini ' + match.pct + '%)');
+        if(match.sameSpeaker && match.pct >= VOICE_DUPLICATE_THRESHOLD) return fail('هذه البصمة الصوتية مس��لة مسبقاً للطالب: ' + st.name + ' (تطابق Gemini ' + match.pct + '%)');
       }
     } catch(e) { return fail((e&&e.message)||'تعذر إنشاء البصمة بواسطة Gemini'); }
   }
@@ -2476,6 +2474,7 @@ function renderStudents() {
   students.forEach((s, i) => {
     const subNames = s.subjects ? s.subjects.map(sub => sub.name).join('، ') : '-';
     const sessionCount = s.sessions ? s.sessions.filter(sess => !sess.isDraft).length : 0;
+    const examCount = Array.isArray(s.examResults) ? s.examResults.length : 0;
     const hasDraft = s.sessions ? s.sessions.some(sess => sess.isDraft) : false;
     html += '<div class="student-card">';
     html += '<div class="student-card-header"><div class="student-num">'+(i+1)+'</div><div class="student-name">'+s.name+'</div></div>';
@@ -2491,7 +2490,7 @@ function renderStudents() {
     html += '<div class="student-card-actions">';
     html += '<button class="btn btn-sm btn-info" onclick="openEdit('+s.id+')">✏️ تعديل</button>';
     html += '<button class="btn btn-sm btn-success" onclick="openRecord('+s.id+')">'+(hasDraft ? '📝 تعديل تسميع' : '🎙️ تسميع')+'</button>';
-    html += '<button class="btn btn-sm btn-warning" onclick="openHistory('+s.id+')">📋 السجل ('+sessionCount+')</button>';
+    html += '<button class="btn btn-sm btn-warning" onclick="openHistory('+s.id+')">📋 السجل ('+sessionCount+' تسميع، '+examCount+' اختبار)</button>';
     html += '<button class="btn btn-sm btn-danger" onclick="deleteStudent('+s.id+')">🗑️ حذف</button>';
     html += '</div></div>';
   });
@@ -3317,7 +3316,7 @@ async function recordStudentExamAudio(i){
     recorder.start();registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});btn.onclick=()=>{if(recorder.state!=='inactive')recorder.stop()};
   }catch(e){status.textContent='تعذر الوصول إلى الميكروفون';btn.dataset.recording='false';btn.classList.remove('recording')}
 }
-function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختبار</h3><p>النتيجة معلّقة لحين مراجعة المسؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
+function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاخت��ار</h3><p>النتيجة معلّقة لحين مراجعة المسؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
 function renderStudentExamResult(ex){const c=document.getElementById('studentExamContent');if(c)c.innerHTML=renderStudentResultHtml(ex)}
 function notifyExamExpired(student,ex){if(ex.expiryNotified)return;ex.expiryNotified=true;const text='انتهى الوقت المحدد لاختبار '+student.name+' بتاريخ '+(ex.date||'');let msgs=getData('messages');msgs.push({type:'system',sender:'النظام',receiverType:'student',receiverId:student.id,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'parent',receiverName:student.parent,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'admin',text,studentId:student.id,parentPhone:student.parentPhone||student.parentMobile||'',time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});setData('messages',msgs)}
 function examWhatsAppLink(phone,text){const p=String(phone||'').replace(/\D/g,'').replace(/^0/,'20');return p?'https://wa.me/'+p+'?text='+encodeURIComponent(text):''}
@@ -3422,7 +3421,60 @@ function resetRecordForm() {
 
 
 
-// ====== HISTORY - FINALIZED SESSIONS ONLY ======
+// ====== HISTORY - FINALIZED SESSIONS AND EXAMS ======
+function safeExamAttachmentUrl(value) {
+  const url=String(value||'').trim();
+  if(!url)return '';
+  if(/^data:audio\/(webm|wav|x-wav|mpeg|mp3|mp4|x-m4a|m4a|ogg|opus);base64,/i.test(url))return url;
+  if(/^\/(api|images)\//.test(url))return url;
+  return '';
+}
+function formatExamDate(value) {
+  if(!value)return 'غير محدد';
+  const date=typeof value==='number'?new Date(value):new Date(String(value));
+  return Number.isNaN(date.getTime())?escapeHtml(String(value)):date.toLocaleString('ar-EG');
+}
+function examStatusLabel(ex) {
+  if(ex.status==='pending_audio_review')return 'بانتظار مراجعة التسجيل';
+  if(ex.status==='graded')return 'مكتمل ومصحح';
+  if(ex.autoSubmitted)return 'أُرسل تلقائياً بعد انتهاء الوقت';
+  return escapeHtml(ex.status||'مكتمل');
+}
+function renderAdminExamHistory(s) {
+  const exams=Array.isArray(s.examResults)?s.examResults.slice().reverse():[];
+  let h='<section style="margin-top:24px"><h3 style="color:var(--info);margin-bottom:15px">🧪 سجل الاختبارات ('+exams.length+')</h3>';
+  if(!exams.length)return h+'<div class="alert alert-info">لم يؤدِ الطالب أي اختبار بعد.</div></section>';
+  exams.forEach(function(ex,examIndex){
+    const questions=Array.isArray(ex.questions)?ex.questions:[],answers=Array.isArray(ex.answers)?ex.answers:[];
+    const maxScore=Number(ex.maxScore)||questions.reduce(function(sum,q){return sum+(Number(q.points)||1)},0)||0;
+    const score=Number(ex.score)||0,percent=maxScore?Math.round(score/maxScore*100):0;
+    const submitted=ex.submittedAt||ex.reviewedAt||ex.createdAt||ex.date;
+    const range=Array.from(new Set(questions.map(function(q){return q&&q.surah}).filter(Boolean))).join('، ')||'غير محدد';
+    h+='<article class="history-day" style="border-right:5px solid var(--info)">';
+    h+='<div class="history-day-header" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span>اختبار '+(exams.length-examIndex)+' — '+formatExamDate(submitted)+'</span><span class="score-badge">'+score+' / '+maxScore+' ('+percent+'٪)</span></div>';
+    h+='<div class="history-element-details" style="margin:12px 0"><div class="history-detail"><strong>الحالة:</strong> '+examStatusLabel(ex)+'</div><div class="history-detail"><strong>الأسئلة:</strong> '+questions.length+'</div><div class="history-detail"><strong>السور:</strong> '+escapeHtml(range)+'</div><div class="history-detail"><strong>المدة:</strong> '+(Number(ex.totalDurationSeconds)||0)+' ثانية</div></div>';
+    h+='<details><summary style="cursor:pointer;font-weight:700;color:var(--primary)">سجل الاختبار: عرض الإجابات والملحقات</summary>';
+    if(!questions.length)h+='<div class="alert alert-info" style="margin-top:10px">لا تتوفر تفاصيل الأسئلة لهذه النتيجة القديمة.</div>';
+    questions.forEach(function(q,i){
+      q=q||{};const a=answers[i]||{},r=a.aiResult||{},audio=safeExamAttachmentUrl(a.audioData),image=safeExamAttachmentUrl(q.questionImage);
+      const answerScore=Number(a.score)||0,answerLabel=answerScore>=1?'صحيحة':answerScore>0?'جزئية':'غير صحيحة';
+      h+='<div class="task-card" style="margin-top:12px">';
+      h+='<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><strong>س'+(i+1)+': '+escapeHtml(q.prompt||q.stem||'سؤال بدون عنوان')+'</strong><span class="badge '+(answerScore>=1?'badge-success':answerScore>0?'badge-warning':'badge-danger')+'">'+answerLabel+' — '+answerScore+'</span></div>';
+      h+='<div class="history-element-details" style="margin-top:10px"><div class="history-detail"><strong>النوع:</strong> '+escapeHtml(q.type||'غير محدد')+'</div><div class="history-detail"><strong>السورة:</strong> '+escapeHtml(q.surah||'—')+'</div><div class="history-detail"><strong>الآيات:</strong> '+escapeHtml(String(q.from||'—'))+' إلى '+escapeHtml(String(q.to||'—'))+'</div><div class="history-detail"><strong>وقت الإجابة:</strong> '+(Number(a.timeSeconds)||0)+' ثانية</div></div>';
+      h+='<p><strong>إجابة الطالب:</strong> '+escapeHtml(a.answer||r.transcript||'لم تتم الإجابة')+'</p>';
+      h+='<p><strong>الإجابة الصحيحة:</strong> '+escapeHtml(q.correct||'غير متاحة')+'</p>';
+      if(r.reason)h+='<p><strong>سبب التصحيح:</strong> '+escapeHtml(r.reason)+'</p>';
+      if(Number.isFinite(Number(r.matchedPercent)))h+='<p><strong>نسبة المطابقة:</strong> '+Math.max(0,Math.min(100,Number(r.matchedPercent)))+'٪</p>';
+      if(Array.isArray(r.missingAyahs)&&r.missingAyahs.length)h+='<p><strong>الآيات الناقصة:</strong> '+r.missingAyahs.map(function(item){return escapeHtml(String(item))}).join('، ')+'</p>';
+      if(audio)h+='<div style="margin-top:10px"><strong>التسجيل الصوتي:</strong><br><audio controls preload="metadata" src="'+audio+'" style="width:100%;max-width:420px"></audio></div>';
+      if(image)h+='<div style="margin-top:10px"><strong>صورة/مرجع السؤال:</strong><br><img src="'+escapeHtml(image)+'" alt="مرجع السؤال '+(i+1)+'" loading="lazy" style="max-width:100%;border-radius:10px;border:1px solid var(--border)"></div>';
+      if(q.sourceFileName)h+='<p><strong>ملف المرجع:</strong> '+escapeHtml(q.sourceFileName)+'</p>';
+      h+='</div>';
+    });
+    h+='</details></article>';
+  });
+  return h+'</section>';
+}
 function openHistory(id) {
   const students = getData('students');
   const s = students.find(x => x.id === id);
@@ -3431,7 +3483,7 @@ function openHistory(id) {
   const sessions = s.sessions || [];
   const finalizedSessions = sessions.filter(sess => !sess.isDraft);
 
-  let html = '<h3 style="color:var(--primary); margin-bottom:15px;">📋 سجل اتسميعات النهائية — '+s.name+'</h3>';
+  let html = '<h3 style="color:var(--primary); margin-bottom:15px;">📋 سجل الطالب الكامل — '+escapeHtml(s.name)+'</h3><h4 style="color:var(--primary);margin-bottom:12px">التسميعات النهائية</h4>';
   if(finalizedSessions.length === 0) {
     html += '<div class="alert alert-info">لا يوجد تسميعات نهائية مسجلة بعد. التسميعات المسودة تظل قابلة للتعديل لمدة 24 ساعة قبل نقلها هنا.</div>';
   } else {
@@ -3467,6 +3519,7 @@ function openHistory(id) {
       html += '</div>';
     });
   }
+  html += renderAdminExamHistory(s);
   html += renderTaskArchiveHtml(s);
   document.getElementById('historyContent').innerHTML = html;
   showPage('studentHistory');
@@ -4794,7 +4847,7 @@ async function analyzeRecitationContent(blob, task, transcript) {
   return {pct:Math.max(0,Math.min(100,Math.round(pct))),dur:Math.round(dur),txtPct,expectedSec,reason,transcript:usedTranscript,aiResult};
 }
 
-// التحقق الكامل (بصمة صوتية + محتوى التلاوة) ثم الإرسال أو الرفض
+// التحقق الكامل (بصمة صوتية + محتوى ا��تلاوة) ثم الإرسال أو الرفض
 async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiBoxId, statusEl, fileName) {
   const aiBox = document.getElementById(aiBoxId);
   if(aiBox) aiBox.innerHTML = '<div class="alert alert-info">🤖 جاري تحليل التسجيل بالذكاء الاصطناعي...</div>';
@@ -4985,7 +5038,7 @@ function voiceMatchPercent(a, b) { return Math.round(Math.max(0, Math.min(1, (vo
 const VOICE_MATCH_THRESHOLD = 78;      // نسبة قبول مطابقة صوت الطالب
 const VOICE_DUPLICATE_THRESHOLD = 93;  // نسبة اعتبار البصمة مكررة لطالب آخر
 
-// ====== جميناي هو المسؤول الوحيد عن البصمة الصوتية والتحقق من هوية المتحدث ======
+// ====== جميناي هو المسؤو�� الوحيد عن البصمة الصوتية والتحقق من هوية المتحدث ======
 async function voiceAudioPayload(blob){
   const supported=/^audio\/(webm|wav|x-wav|mpeg|mp3|mp4|x-m4a|m4a|ogg|opus)(;|$)/i.test(blob.type||'');
   let audioBlob=blob;
