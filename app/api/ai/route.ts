@@ -1,14 +1,9 @@
-import { generateText } from "ai"
 import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
 
 export const maxDuration = 300
 
-// ===== مزوّدو الذكاء الاصطناعي (الخادم فقط) =====
-// Vercel AI Gateway هو الأساسي، ثم Gemini وGroq كبدائل تلقائية.
-const AI_GATEWAY = {
-  label: "Vercel AI Gateway",
-  model: "google/gemini-2.5-flash",
-}
+// ===== مزوّدا الذكاء الاصطناعي الثابتان (الخادم فقط) =====
+// Gemini هو الأساسي لكل الموقع، وGroq هو البديل التلقائي.
 const GEMINI = {
   label: "Google Gemini",
   endpoint: "https://generativelanguage.googleapis.com/v1beta/models",
@@ -27,10 +22,6 @@ const GROQ = {
   },
 }
 const speakerVerificationConfigured = !!(process.env.SPEAKER_VERIFICATION_API_KEY || "").trim()
-const isGatewayConfigured = () => Boolean(
-  (process.env.AI_GATEWAY_API_KEY || "").trim() ||
-  (process.env.VERCEL_OIDC_TOKEN || "").trim(),
-)
 const isGeminiConfigured = () => Boolean(GEMINI.key)
 const isGroqConfigured = () => Boolean(GROQ.key)
 
@@ -96,16 +87,13 @@ function classifyAiFailure(error: unknown) {
     return { status: 502, code: "AUDIO_GRADING_FORMAT", retryable: true, message: "تم تفريغ التسجيل، لكن تعذر إكمال التصحيح الآلي مؤقتاً. أعد المحاولة بعد قليل.", raw }
   }
   if (/AUDIO_PROVIDERS_FAILED/i.test(raw)) {
-    return { status: 503, code: "AUDIO_PROVIDERS_FAILED", retryable: true, message: "خدمة تحليل الصوت غير متاحة مؤقتاً بعد تجربة بوابة الذكاء والمزوّدات الاحتياطية. احتفظ بالتسجيل وأعد المحاولة بعد قليل.", raw }
+    return { status: 503, code: "AUDIO_PROVIDERS_FAILED", retryable: true, message: "خدمة تحليل الصوت غير متاحة مؤقتاً بعد تجربة Gemini وGroq. احتفظ بالتسجيل وأعد المحاولة بعد قليل.", raw }
   }
   if (/AUDIO_PAYLOAD_TOO_LARGE|payload too large|request entity too large|413/i.test(raw)) {
     return { status: 413, code: "AUDIO_PAYLOAD_TOO_LARGE", retryable: false, message: "التسجيل طويل جداً للتحليل. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.", raw }
   }
   if (/Gemini HTTP 404|model.*(?:not found|no longer available)/i.test(raw)) {
     return { status: 502, code: "GEMINI_MODEL_UNAVAILABLE", retryable: true, message: "نموذج Gemini المحدد غير متاح، وسيُستخدم Groq عند إعادة المحاولة.", raw }
-  }
-  if (/402|insufficient credits|payment required|credit card|free credits|add a card/i.test(raw)) {
-    return { status: 402, code: "AI_CREDITS_REQUIRED", retryable: false, message: "بوابة الذكاء متصلة، لكنها تحتاج إضافة وسيلة دفع لتفعيل الرصيد المجاني وتشغيل التحليل.", raw }
   }
   if (/GEMINI_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
     return { status: 503, code: "GEMINI_KEY_MISSING", retryable: false, message: "مفتاح Gemini غير متاح على الخادم.", raw }
@@ -130,36 +118,6 @@ function classifyAiFailure(error: unknown) {
 
 function providerTimeout(system: string) {
   return /اختبار|JSON|تطوير|برمج/i.test(system) ? 120_000 : 35_000
-}
-
-async function gatewayText(
-  prompt: string,
-  system: string,
-  temperature: number,
-  audio?: { mimeType: string; data: string },
-): Promise<string> {
-  const content: Array<
-    | { type: "text"; text: string }
-    | { type: "file"; mediaType: string; data: Buffer }
-  > = [{ type: "text", text: prompt }]
-
-  if (audio) {
-    const bytes = Buffer.from(audio.data, "base64")
-    if (!bytes.length) throw new Error("AUDIO_TRANSCRIPTION_EMPTY")
-    if (bytes.length > 25_000_000) throw new Error("AUDIO_PAYLOAD_TOO_LARGE")
-    content.push({ type: "file", mediaType: audio.mimeType, data: bytes })
-  }
-
-  const result = await generateText({
-    model: AI_GATEWAY.model,
-    system,
-    messages: [{ role: "user", content }],
-    temperature,
-    abortSignal: AbortSignal.timeout(audio ? 90_000 : providerTimeout(system)),
-  })
-  const text = result.text.trim()
-  if (!text) throw new Error("AI Gateway: وصل رد فارغ")
-  return text
 }
 
 async function groqText(prompt: string, system: string, temperature: number): Promise<string> {
@@ -298,11 +256,6 @@ async function geminiText(prompt: string, system: string, temperature: number, a
 
 async function runText(prompt: string, system: string, temperature: number) {
   const errors: unknown[] = []
-  try {
-    return await gatewayText(prompt, system, temperature)
-  } catch (error) {
-    errors.push(error)
-  }
   if (isGeminiConfigured()) {
     try { return await geminiText(prompt, system, temperature) } catch (error) { errors.push(error) }
   } else {
@@ -313,7 +266,7 @@ async function runText(prompt: string, system: string, temperature: number) {
   } else {
     errors.push(new Error("GROQ_API_KEY غير موجود على الخادم"))
   }
-  throw new Error(`فشلت بوابة الذكاء وGemini وGroq: ${errors.map(error => error instanceof Error ? error.message : String(error)).join(" | ")}`)
+  throw new Error(`فشل Gemini وGroq: ${errors.map(error => error instanceof Error ? error.message : String(error)).join(" | ")}`)
 }
 
 // ===== معالجة الصوت مع انتقال تلقائي بين المزوّدين =====
@@ -338,7 +291,7 @@ function audioMimeType(audioFormat: string) {
 
 type AudioProviderResult = {
   text: string
-  provider: "vercel-ai-gateway" | "google-gemini" | "groq"
+  provider: "google-gemini" | "groq"
   providerLabel: string
   model: string
 }
@@ -349,19 +302,6 @@ function audioErrorMessage(error: unknown) {
 
 async function runAudio(prompt: string, system: string, temperature: number, audio: { mimeType: string; data: string }): Promise<AudioProviderResult> {
   const errors: string[] = []
-
-  let lastGatewayError: unknown
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const text = await gatewayText(prompt, system, temperature, audio)
-      return { text, provider: "vercel-ai-gateway", providerLabel: AI_GATEWAY.label, model: AI_GATEWAY.model }
-    } catch (error) {
-      lastGatewayError = error
-      if (!isRetryableProviderError(error) || attempt === 2) break
-      await new Promise(resolve => setTimeout(resolve, 800 * (2 ** attempt)))
-    }
-  }
-  errors.push(`AI Gateway: ${audioErrorMessage(lastGatewayError)}`)
 
   if (isGeminiConfigured()) {
     let lastGeminiError: unknown
@@ -472,9 +412,9 @@ score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو �
 
 const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على تفريغ صوتي عربي.
 مهمتك:
-1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
+1) افحص transcript الناتج عن التعرف ال��وتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
 2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
-3) تجاهل أخطاء التعرف الآلي والتشكيل والأخطاء الإملائية البسيطة، ولا تعتبرها نقصاً في الآيات.
+3) تج��هل أخطاء التعرف الآلي والتشكيل والأخطاء الإملائية البسيطة، ولا تعتبرها نقصاً في الآيات.
 4) حدد الآات الناقصة فعلياً فقط.
 قواعد الدرجة:
 - احسب score أساساً من نسبة الآيات المكتملة: (عدد الآيات الكلية - الآيات الناقصة) / عدد الآيات الكلية.
@@ -744,7 +684,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 1) ارأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
 2) حدد بدقة أصغر جز يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
 3) اكتب التعديل بنفس أسلوب بنية المشروع (نفس التسمية، نس المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
-4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء ناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أ معرّف استُخدم معرّف فعلاً.
+4) بعد الكتابة راجع الكود ذهنياً ��تأكد من خلوه من أخطاء ناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أ معرّف استُخدم معرّف فعلاً.
 
 قواعد صرمة:
 - لا تحذف ملفات ولا تعيد بناء المشروع من الصفر.
@@ -868,13 +808,13 @@ export async function POST(req: Request) {
   const isAudioMode = typeof body?.mode === "string" && AUDIO_MODES.has(body.mode)
   const diagnostics = {
   executedOn: "server",
-  keyConfigured: isGatewayConfigured() || isGeminiConfigured() || isGroqConfigured(),
+  keyConfigured: isGeminiConfigured() || isGroqConfigured(),
   providerStatus: 200,
   provider: isAudioMode ? "automatic-audio" : "automatic",
-  providerLabel: isAudioMode ? "Automatic audio provider" : "Automatic AI provider",
+  providerLabel: isAudioMode ? "Gemini with Groq fallback" : "Gemini with Groq fallback",
   configuredModel: isAudioMode
-    ? `${AI_GATEWAY.model} / ${GEMINI.model} / ${GROQ.transcriptionModel} + ${GROQ.model}`
-    : `${AI_GATEWAY.model} / ${GEMINI.model} / ${GROQ.model}`,
+    ? `${GEMINI.model} / ${GROQ.transcriptionModel} + ${GROQ.model}`
+    : `${GEMINI.model} / ${GROQ.model}`,
   }
   const setAudioDiagnostics = (result: AudioProviderResult) => {
     diagnostics.provider = result.provider
@@ -906,7 +846,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنب��ا في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط ��ند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنب��ا في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -1242,7 +1182,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
           ready: pf.ok,
           reason: pf.reason || "",
           checks: {
-            aiProviders: { gateway: isGatewayConfigured(), gemini: !!GEMINI.key, groq: !!GROQ.key, speechToText: !!(process.env.SPEECH_TO_TEXT_API_KEY || "").trim() },
+            aiProviders: { gemini: !!GEMINI.key, groq: !!GROQ.key, speechToText: !!(process.env.SPEECH_TO_TEXT_API_KEY || "").trim() },
             githubToken: !!GITHUB_TOKEN,
             githubOwner: !!GITHUB_OWNER,
             githubRepo: !!GITHUB_REPO,
@@ -1366,7 +1306,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
         diagnostics: {
           executedOn: "server",
           provider: AUDIO_MODES.has(mode) ? "automatic-audio" : "automatic",
-          keyConfigured: isGatewayConfigured() || isGeminiConfigured() || isGroqConfigured(),
+          keyConfigured: isGeminiConfigured() || isGroqConfigured(),
           stage,
           reason: failure.raw.slice(0, 300),
         },
