@@ -303,13 +303,33 @@ function audioMimeType(audioFormat: string) {
 
 type AudioProviderResult = {
   text: string
-  provider: "google-gemini" | "openrouter"
+  provider: "google-gemini" | "openrouter" | "vercel-ai-gateway"
   providerLabel: string
   model: string
 }
 
 function audioErrorMessage(error: unknown) {
   return (error instanceof Error ? error.message : String(error || "خطأ غير معروف")).slice(0, 400)
+}
+
+const GATEWAY_AUDIO_MODEL = "google/gemini-2.5-pro"
+
+async function gatewayAudio(prompt: string, system: string, temperature: number, audio: { mimeType: string; data: string }): Promise<string> {
+  const result = await generateText({
+    model: GATEWAY_AUDIO_MODEL,
+    system,
+    temperature,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "text", text: prompt },
+        { type: "file", mediaType: audio.mimeType, data: audio.data },
+      ],
+    }],
+  })
+  const text = String(result.text || "").trim()
+  if (!text) throw new Error("Vercel AI Gateway: وصل رد صوتي فارغ")
+  return text
 }
 
 async function runAudio(prompt: string, system: string, temperature: number, audio: { mimeType: string; data: string }): Promise<AudioProviderResult> {
@@ -342,6 +362,13 @@ async function runAudio(prompt: string, system: string, temperature: number, aud
     }
   } else {
     errors.push("OpenRouter: OPENROUTER_API_KEY غير موجود على الخادم")
+  }
+
+  try {
+    const text = await gatewayAudio(prompt, system, temperature, audio)
+    return { text, provider: "vercel-ai-gateway", providerLabel: "Vercel AI Gateway", model: GATEWAY_AUDIO_MODEL }
+  } catch (error) {
+    errors.push(`Vercel AI Gateway: ${audioErrorMessage(error)}`)
   }
 
   throw new Error(`AUDIO_PROVIDERS_FAILED: ${errors.join(" | ")}`)
@@ -683,7 +710,7 @@ function safeProjectPath(path: string) {
 
 async function buildDevPatches(request: string, plan: any, files: Array<{path:string,content:string}>) {
   const source = files.map(f => `\n===== FILE: ${f.path} =====\n${f.content}\n===== END FILE =====`).join("\n")
-  const system = `أنت مبرمج ومطوّر ويب محترف (Senior Software Engineer) خبير في HTML وCSS وJavaScript وTypeScript وNext.js وReact وواجهات API. أنت مسؤول عن تعديل مشروع ويب موجود بشكل مباشر. سيُبّق ناتجك تلقائياً على مستودع GitHub بعد التحقق منه، لذا يجب أن يكون الكود كاملاً وصحيحاً وجاهزاً للتشغيل فوراً.
+  const system = `أنت مبرمج ومطوّر ويب محترف (Senior Software Engineer) خبير في HTML وCSS وJavaScript وTypeScript وNext.js وReact وواجهات API. أنت مسؤول عن تعديل مشروع ويب موجود بشكل مباشر. سيُبّق ناتجك تلقائياً على مستودع GitHub بعد الت��قق منه، لذا يجب أن يكون الكود كاملاً وصحيحاً وجاهزاً للتشغيل فوراً.
 
 منهجية العمل الإلزامية قبل الكتابة:
 1) ارأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
@@ -790,9 +817,24 @@ async function autoApplyDevRequest(request: string, plan: any) {
 export async function POST(req: Request) {
   let body: any = {}
   try {
+    const contentLength = Number(req.headers.get("content-length") || 0)
+    if (contentLength > 4_200_000) {
+      return json({
+        error: "حجم التسجيل كبير جداً للإرسال. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.",
+        code: "AUDIO_PAYLOAD_TOO_LARGE",
+        retryable: false,
+        diagnostics: { executedOn: "server", stage: "request", provider: "automatic-audio" },
+      }, 413)
+    }
     body = await req.json()
-  } catch {
-    return json({ error: "طلب غير صالح", diagnostics: { executedOn: "server", keyConfigured: isOpenRouterConfigured() } }, 400)
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error || "طلب غير صالح")
+    return json({
+      error: "تعذر قراءة التسجيل المرسل. تأكد من أن المقطع غير فارغ وبصيغة صوت مدعومة.",
+      code: "INVALID_AUDIO_REQUEST",
+      retryable: false,
+      diagnostics: { executedOn: "server", stage: "request", reason: reason.slice(0, 200) },
+    }, 400)
   }
 
   const isAudioMode = typeof body?.mode === "string" && AUDIO_MODES.has(body.mode)
@@ -899,7 +941,7 @@ export async function POST(req: Request) {
           : String(question?.correct || "")
         const defaultPrompts: Record<string, string> = {
           mcq: "اختر الإجابة الصحيحة اعتماداً على المقطع المصور من المصحف",
-          truefalse: "حدد صحة ��لعبارة اعتماداً على المقطع المصور من المصحف",
+          truefalse: "حدد صحة ��لعبارة ��عتماداً على المقطع المصور من المصحف",
           complete: "أكمل المقطع المخفي في صورة المصحف",
           audio: "سجّل تلاوة المقطع المعروض من المصحف",
         }
