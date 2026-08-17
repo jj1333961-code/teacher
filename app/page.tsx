@@ -1,5 +1,5 @@
-import { TeacherDashboard } from '@/components/teacher-dashboard'
+import { RegistrationPortal } from '@/components/registration-portal'
 
 export default function Page() {
-  return <TeacherDashboard />
+  return <RegistrationPortal />
 }
