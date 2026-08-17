@@ -471,9 +471,9 @@ tr:hover { background: var(--table-hover); }
   .proctor-panel h2{margin:0 0 8px;color:#f8fafc}.proctor-panel p{color:#cbd5e1;line-height:1.7}.proctor-camera{position:relative;overflow:hidden;border-radius:14px;background:#020617;aspect-ratio:4/3;margin:14px 0}.proctor-camera video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}.proctor-camera-status{position:absolute;inset:auto 10px 10px;background:rgba(2,6,23,.82);padding:7px 10px;border-radius:8px;font-size:.85rem}.proctor-touch-zone{width:100%;min-height:90px;border:2px dashed #60a5fa;border-radius:14px;background:#172554;color:#dbeafe;font-weight:700;touch-action:none;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center;text-align:center}.proctor-touch-zone.holding{background:#14532d;border-color:#4ade80;color:#dcfce7}
   .proctor-checks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.proctor-check{padding:9px;border-radius:9px;background:#1e293b;color:#cbd5e1}.proctor-check.ok{background:#123d2c;color:#bbf7d0}.proctor-check.bad{background:#4c1d24;color:#fecaca}.proctor-hold{width:100%;min-height:76px;border:2px dashed #60a5fa;border-radius:14px;background:#172554;color:#dbeafe;font-weight:700;touch-action:none;user-select:none;-webkit-user-select:none}.proctor-hold.holding{background:#14532d;border-color:#4ade80;color:#dcfce7}.proctor-actions{display:flex;gap:10px;margin-top:12px}.proctor-actions .btn{flex:1}
   .proctor-warning{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:10001;width:min(92%,520px);padding:14px;border-radius:12px;background:#7f1d1d;color:#fff;text-align:center;font-weight:700;box-shadow:0 12px 35px rgba(0,0,0,.35)}.proctor-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#111c2f;color:#f8fafc;border-radius:12px;padding:10px 12px;margin-bottom:12px}.proctor-live-hold{min-width:140px;min-height:48px;border:2px dashed #60a5fa;border-radius:10px;background:#172554;color:#dbeafe;font-weight:700;touch-action:none}.proctor-live-hold.holding{background:#14532d;border-color:#4ade80}
-  .student-work-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.student-work-card{margin:0!important;min-width:0}.student-work-card>h4{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}.student-work-card .task-card{margin-bottom:10px}
-  @media(max-width:800px){.student-work-grid{grid-template-columns:1fr}}
-  @media(max-width:480px){.proctor-panel{padding:14px}.proctor-checks{grid-template-columns:1fr}.proctor-camera{aspect-ratio:16/11}.proctor-bar{align-items:stretch;flex-direction:column}.proctor-live-hold{width:100%}}
+.student-work-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.student-work-card{margin:0!important;min-width:0;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}.student-work-card:hover,.student-work-card:focus-within{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--primary)}.student-work-card>h4{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.student-work-card .work-card-action{width:100%;margin-top:12px}.student-work-modal{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(8,15,28,.82);backdrop-filter:blur(4px)}.student-work-modal.hidden{display:none}.student-work-dialog{width:min(100%,820px);max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border);border-radius:18px;background:var(--card-bg);box-shadow:0 24px 70px rgba(0,0,0,.4)}.student-work-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}.student-work-dialog-header h3{margin:0;color:var(--primary)}.student-work-dialog-body{overflow:auto;padding:18px;overscroll-behavior:contain}.student-work-dialog-body .task-card{margin-bottom:12px}.proctor-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px;margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--table-header)}
+@media(max-width:800px){.student-work-grid{grid-template-columns:1fr}.proctor-settings-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.proctor-panel{padding:14px}.proctor-checks{grid-template-columns:1fr}.proctor-camera{aspect-ratio:16/11}.proctor-bar{align-items:stretch;flex-direction:column}.proctor-live-hold{width:100%}.student-work-dialog-body{padding:12px}}
 </style>
 </head>
 <body>
@@ -483,7 +483,7 @@ tr:hover { background: var(--table-hover); }
     <button class="lang-toggle" type="button" id="langToggleBtn" onclick="toggleLang()" title="تغيير اللغة / Change language" aria-label="تغيير اللغة / Change language">EN</button>
   </div>
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
-    <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
+    <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختب��ر</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
   </div>
   <div id="quranImageLightbox" class="quran-lightbox hidden" role="dialog" aria-modal="true" aria-label="تكبير صورة السؤال" onclick="if(event.target===this)closeQuranImage()"><button class="btn btn-secondary quran-lightbox-close" onclick="closeQuranImage()">إغلاق</button><img id="quranImageLightboxImg" alt="صورة السؤال القرآني بحجم كبير"></div>
 
@@ -633,7 +633,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- مزامنة GitHub (للمسؤول فقط) -->
 <div id="githubSyncPage" class="page hidden" style="max-width:820px; margin:40px auto;">
-  <div class="page-header"><h2>🔗 مزامنة المشروع مع GitHub</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>🔗 ��زامنة المشروع مع GitHub</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light); margin-bottom:12px;">المشروع مرتبط بمستودعك الشخصي فقط عبر متغيرات البيئة على الخادم (<code>GITHUB_TOKEN</code>, <code>GITHUB_OWNER</code>, <code>GITHUB_REPO</code>, <code>GITHUB_BRANCH</code>). كل إضافة أو تعديل يقوم به مساعد التطوير يُنشئ <b>Commit</b> ويُدفع تلقائياً إلى فرعك المحدد، مع الحفاظ على كامل تاريخ الإصدارات. لا يتم وضع أي مفتاح أو سرّ داخل الملفات أو في المتصفح.</p>
   <div id="githubSyncAlert"></div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
@@ -1173,8 +1173,14 @@ tr:hover { background: var(--table-hover); }
   </div>
 </div>
 <div id="proctorWarning" class="proctor-warning hidden" role="alert" aria-live="assertive"></div>
-
-<script>
+<div id="studentWorkModal" class="student-work-modal hidden" role="dialog" aria-modal="true" aria-labelledby="studentWorkModalTitle" onclick="if(event.target===this)closeStudentWorkModal()">
+  <div class="student-work-dialog">
+    <div class="student-work-dialog-header"><h3 id="studentWorkModalTitle">المطلوب</h3><button type="button" class="btn btn-secondary" onclick="closeStudentWorkModal()" aria-label="إغلاق النافذة">إغلاق</button></div>
+    <div id="studentWorkModalBody" class="student-work-dialog-body"></div>
+  </div>
+</div>
+  
+  <script>
 function getSelectedAIModel(){return 'openrouter';}
 function getAIModelLabel(){return 'OpenRouter';}
 
@@ -1291,7 +1297,7 @@ const LANG_DICT = {
   'عدد الطلاب': 'Students',
   'عدد المعلمين': 'Teachers',
   'المسؤولين': 'Admins',
-  'تسميعات نشطة': 'Active recitations',
+  'تسميعات نش��ة': 'Active recitations',
   '➕ إضافة طالب جديد': '➕ Add New Student',
   '📚 المواد والمعلمين': '📚 Subjects & Teachers',
   '👨‍💼 إدارة المسؤولين': '👨‍💼 Manage Admins',
@@ -1412,8 +1418,8 @@ let currentRecordAvailableSurahs = [];
 let currentRecordJuz = 0;
 
 // ====== PROCTORING: camera, gaze approximation and continuous touch ======
-const PROCTOR_GRACE_MS=12000;
-const proctor={stream:null,detector:null,detectorType:'',faceMeshResults:null,analyzing:false,scanTimer:null,active:false,context:null,onReady:null,warningAt:0,touchWarningAt:0,lastGoodAt:0,stableSince:0,holding:false,touches:new Set(),baseline:null,gazeSamples:[],eyeSamples:[],screenWidth:0,screenHeight:0,cancelled:false};
+const proctor={stream:null,detector:null,detectorType:'',faceMeshResults:null,analyzing:false,scanTimer:null,active:false,context:null,onReady:null,warningAt:0,touchWarningAt:0,lastGoodAt:0,stableSince:0,holding:false,touches:new Set(),baseline:null,gazeSamples:[],eyeSamples:[],screenWidth:0,screenHeight:0,cancelled:false,violations:0};
+function getProctorSettings(){const ctx=proctor.context||{};return{touchGraceMs:Math.max(3,parseInt(ctx.proctorTouchGrace)||12)*1000,gazeGraceMs:Math.max(3,parseInt(ctx.proctorGazeGrace)||12)*1000,maxViolations:Math.max(1,parseInt(ctx.proctorMaxViolations)||1)}}
 function setProctorCheck(id,ok,text){const el=document.getElementById(id);if(!el)return;el.className='proctor-check '+(ok?'ok':'bad');el.textContent=(ok?'✓ ':'! ')+text}
 function isTouchDevice(){return navigator.maxTouchPoints>0&&('ontouchstart' in window||navigator.maxTouchPoints>0)}
 function proctorTaskLabel(ctx){return ctx&&ctx.type==='exam'?'الاختبار':'مهمة '+(ctx&&ctx.type==='reading'?'القراءة':'التسميع')}
@@ -1435,7 +1441,7 @@ function proctorHandleTouches(e){if(!proctor.active)return;if(e.cancelable)e.pre
 function recordProctorIncident(reason){if(!currentUser)return;const incident={id:'pi_'+Date.now(),studentId:currentUser.id,studentName:currentUser.name,taskType:proctor.context?.type||'unknown',taskId:proctor.context?.id||'',reason,time:new Date().toLocaleString('ar-EG'),timestamp:Date.now(),status:'cancelled'};const incidents=getData('proctoringIncidents',[]);incidents.unshift(incident);setData('proctoringIncidents',incidents.slice(0,500));const messages=getData('messages',[]);messages.push({type:'system',sender:'نظام المراقبة',senderId:0,receiverType:'admin',text:'تنبيه مخالفة مراقبة: '+currentUser.name+' — '+proctorTaskLabel(proctor.context)+' — '+reason+' — '+incident.time,time:incident.time,approved:true,read:false,proctorIncidentId:incident.id});setData('messages',messages);return incident}
 function cancelProctoredTask(reason){if(!proctor.active||proctor.cancelled)return;proctor.cancelled=true;recordProctorIncident(reason);clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);Object.keys(typeof activeAudioRecorders==='object'?activeAudioRecorders:{}).forEach(function(key){const state=activeAudioRecorders[key];try{if(state.recorder&&state.recorder.state!=='inactive')state.recorder.stop()}catch(e){}try{state.stream?.getTracks().forEach(t=>t.stop())}catch(e){}});const ctx=proctor.context;if(ctx?.type==='exam'){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].activeExam){const ex=students[idx].activeExam;ex.status='cancelled_proctoring';ex.cancelReason=reason;ex.cancelledAt=Date.now();students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].activeExam=null;setData('students',students);currentUser=students[idx];document.getElementById('studentExamContent').innerHTML='<div class="alert alert-danger"><h3>أُلغي الاختبار بسبب مخالفة المراقبة</h3><p>'+escapeHtml(reason)+'</p></div>'}}else if(Number.isInteger(ctx?.taskIndex)){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].tasks[ctx.taskIndex]){students[idx].tasks[ctx.taskIndex].proctorCancelled=true;students[idx].tasks[ctx.taskIndex].cancelReason=reason;setData('students',students);currentUser=students[idx];renderStudentTasks()}}proctorStop(true);showToast('أُلغيت المهمة وتم إرسال تنبيه للمسؤول','error')}
 function proctorStop(closeCamera=true){proctor.active=false;proctor.holding=false;proctor.touches.clear();proctor.warningAt=0;proctor.touchWarningAt=0;document.getElementById('proctorWarning')?.classList.add('hidden');if(closeCamera)proctorStopCamera()}
-document.addEventListener('visibilitychange',()=>{if(proctor.active&&document.hidden)cancelProctoredTask('تمت مغادرة صفحة المهمة')});window.addEventListener('pagehide',()=>{if(proctor.active)recordProctorIncident('تم الخروج المفاجئ من الموقع')});window.addEventListener('resize',()=>{if(proctor.active&&((screen.width&&screen.width<proctor.screenWidth*.72)||(window.innerWidth<screen.availWidth*.62)))cancelProctoredTask('تم اكتشاف تقسيم الشاشة أو تصغير نافذة المهمة')});
+document.addEventListener('visibilitychange',()=>{if(proctor.active&&document.hidden)cancelProctoredTask('تمت مغادرة صفحة المهمة')});window.addEventListener('pagehide',()=>{if(proctor.active)recordProctorIncident('تم الخروج المفاج�� من الموقع')});window.addEventListener('resize',()=>{if(proctor.active&&((screen.width&&screen.width<proctor.screenWidth*.72)||(window.innerWidth<screen.availWidth*.62)))cancelProctoredTask('تم اكتشاف تقسيم الشاشة أو تصغير نافذة المهمة')});
 document.addEventListener('DOMContentLoaded',()=>setupProctorHold(document.getElementById('proctorGateHold'),true));
 
 // ====== SESSION PERSISTENCE ======
@@ -2572,7 +2578,7 @@ function openRecord(id) {
   const existingDraft = s.sessions ? s.sessions.find(sess => sess.isDraft) : null;
 
   if(existingDraft) {
-    recordElements = JSON.parse(JSON.stringify(existingDraft.elements)).map(el=>Object.assign({proctorEnabled:true},el));
+    recordElements = JSON.parse(JSON.stringify(existingDraft.elements)).map(el=>Object.assign({proctorEnabled:true,proctorTouchGrace:12,proctorGazeGrace:12,proctorMaxViolations:1},el));
     homeworkItems = JSON.parse(JSON.stringify(existingDraft.homework || []));
     readingItems = JSON.parse(JSON.stringify(existingDraft.reading || []));
     document.getElementById('recordDate').value = existingDraft.date;
@@ -2586,9 +2592,12 @@ function openRecord(id) {
       rating: '',
       color: '',
       isHomework: false,
-      isVoice: false,
-      proctorEnabled: true
-    }));
+isVoice: false,
+proctorEnabled: true,
+proctorTouchGrace: 12,
+proctorGazeGrace: 12,
+proctorMaxViolations: 1
+}));
     homeworkItems = []; readingItems = [];
     document.getElementById('recordNotes').value = '';
   }
@@ -2630,9 +2639,12 @@ function addExtraElement() {
     rating: '',
     color: '',
     isHomework: false,
-    isVoice: false,
-    proctorEnabled: true,
-    deleted: false
+isVoice: false,
+proctorEnabled: true,
+proctorTouchGrace: 12,
+proctorGazeGrace: 12,
+proctorMaxViolations: 1,
+deleted: false
   });
   renderExtraElements();
   showToast('➕ تم إضافة عنصر تسميع إضافي', 'success');
@@ -2752,9 +2764,14 @@ function renderRecordElementHTML(el, i, num) {
   html += '<div class="record-option"><input type="checkbox" id="hw_'+i+'" '+(el.isHomework?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'isHomework' + "'" + ', this.checked)"><label for="hw_'+i+'">📝 واجب</label></div>';
   html += '<div class="record-option"><input type="checkbox" id="voice_'+i+'" '+(el.isVoice?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'isVoice' + "'" + ', this.checked)"><label for="voice_'+i+'">🎙️ تسجيل صوتي</label></div>';
   html += '<div class="record-option"><input type="checkbox" id="showay_'+i+'" '+(el.showAyat?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'showAyat' + "'" + ', this.checked)"><label for="showay_'+i+'">👁️ إظهار الآيات للطالب</label></div>';
-  html += '<div class="record-option"><input type="checkbox" id="proctor_'+i+'" '+(el.proctorEnabled!==false?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'proctorEnabled' + "'" + ', this.checked)"><label for="proctor_'+i+'">تفعيل فحص الغش لهذا العنصر</label></div>';
-  html += '</div>';
-  const _sur = el.name === 'اللوح' || el.name === 'اسورة' ? (el.surah || mainSurah) : el.surah;
+html += '<div class="record-option"><input type="checkbox" id="proctor_'+i+'" '+(el.proctorEnabled!==false?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'proctorEnabled' + "'" + ', this.checked)"><label for="proctor_'+i+'">تفعيل فحص الغش لهذا العنصر</label></div>';
+html += '</div>';
+if(el.proctorEnabled!==false){
+  html += '<div class="proctor-settings-grid"><div class="form-group" style="margin:0"><label for="proctorTouchGrace_'+i+'">مهلة إعادة الأصابع (ثانية)</label><input id="proctorTouchGrace_'+i+'" type="number" min="3" max="120" value="'+(parseInt(el.proctorTouchGrace)||12)+'" onchange="updateRecordElement('+i+', \'proctorTouchGrace\', Math.max(3,Math.min(120,parseInt(this.value)||12)))"><small style="color:var(--text-light)">لا تمنع التمرير أو اختيار العناصر.</small></div>';
+  html += '<div class="form-group" style="margin:0"><label for="proctorGazeGrace_'+i+'">مهلة إعادة النظر (ثانية)</label><input id="proctorGazeGrace_'+i+'" type="number" min="3" max="120" value="'+(parseInt(el.proctorGazeGrace)||12)+'" onchange="updateRecordElement('+i+', \'proctorGazeGrace\', Math.max(3,Math.min(120,parseInt(this.value)||12)))"><small style="color:var(--text-light)">قبل احتساب مخالفة النظر أو الوجه.</small></div>';
+  html += '<div class="form-group" style="margin:0"><label for="proctorMaxViolations_'+i+'">المخالفات المسموحة</label><input id="proctorMaxViolations_'+i+'" type="number" min="1" max="10" value="'+(parseInt(el.proctorMaxViolations)||1)+'" onchange="updateRecordElement('+i+', \'proctorMaxViolations\', Math.max(1,Math.min(10,parseInt(this.value)||1)))"><small style="color:var(--text-light)">يُلغى التسميع بعد تجاوز العدد.</small></div></div>';
+}
+const _sur = el.name === 'اللوح' || el.name === 'اسورة' ? (el.surah || mainSurah) : el.surah;
   html += '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">';
   html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">📖 عض الآيات (صورة)</button>';
   html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineAyat_'+i+'\', \''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">👁️ معاين داخل الصفحة</button>';
@@ -2813,9 +2830,9 @@ function updateRecordElement(idx, field, value) {
       recordElements[idx].to = '';
     }
   }
-  if(field === 'surah' || field === 'from') {
-    renderRecordElements(); renderExtraElements();
-  }
+if(field === 'surah' || field === 'from' || field === 'proctorEnabled') {
+renderRecordElements(); renderExtraElements();
+}
 }
 
 function selectRating(idx, rating) {
@@ -3131,7 +3148,7 @@ function startExamGenerationProgress(questionCount){
   const overlay=document.getElementById('examGenerationOverlay'),stage=document.getElementById('examGenerationStage'),bar=document.getElementById('examGenerationBar'),eta=document.getElementById('examGenerationEta');
   let elapsed=0,total=Math.max(45,Math.min(180,35+(Math.max(1,questionCount||1)*7)));overlay?.classList.remove('hidden');
   clearInterval(examGenerationTimer);
-  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينتقي الذكاء الاصطناعي أسئلة المتشابهات ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
+  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينتق�� الذكاء الاصطناعي أسئلة المتشابهات ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
   update();examGenerationTimer=setInterval(update,1000);
 }
 function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'اكتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
@@ -3416,7 +3433,7 @@ function saveSession(isFinal) {
     activeElements.forEach(el=>{
       const _sur=(el.name==='اللوح'||el.name==='السورة')?(el.surah||currentRecordMainSurah):el.surah;
       if(el.isHomework) students[idx].tasks.push({type:'homework',name:el.name,surah:_sur,from:el.from,to:el.to,showAyat:!!el.showAyat,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++});
-      if(el.isVoice) students[idx].tasks.push({type:'voice',name:el.name,surah:_sur,from:el.from,to:el.to,showAyat:!!el.showAyat,proctorEnabled:el.proctorEnabled!==false,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++});
+      if(el.isVoice) students[idx].tasks.push({type:'voice',name:el.name,surah:_sur,from:el.from,to:el.to,showAyat:!!el.showAyat,proctorEnabled:el.proctorEnabled!==false,proctorTouchGrace:Math.max(3,parseInt(el.proctorTouchGrace)||12),proctorGazeGrace:Math.max(3,parseInt(el.proctorGazeGrace)||12),proctorMaxViolations:Math.max(1,parseInt(el.proctorMaxViolations)||1),approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++});
     });
     homeworkItems.forEach(h=>students[idx].tasks.push({type:'homework',text:h.text,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++}));
     readingItems.forEach(r=>students[idx].tasks.push({type:'reading',text:r.text,surah:r.surah,from:r.from,to:r.to,showAyat:!!r.showAyat,audio:r.audio||'',approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++}));
@@ -5342,7 +5359,7 @@ function parentLogin() {
   const students = getData('students');
   const matched = students.filter(s => s.parent === name && s.parentPass === pass);
   if(matched.length === 0) {
-    document.getElementById('parentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ الاسم أو الرقم السري غير صحيح</div>'; return;
+    document.getElementById('parentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ الاسم أو ا��رقم السري غير صحيح</div>'; return;
   }
   currentUser = matched; currentType = 'parent';
   saveSessionState();
