@@ -29,31 +29,34 @@ async function loadExactAyah(surah: number, ayah: number) {
   return loadImage(bytes)
 }
 
-function renderAyahSnippet(image: Image, masked: boolean) {
+function renderAyahSnippet(images: Image[], masked: boolean) {
   const paddingX = 48
-  const paddingY = 38
-  const width = Math.max(720, image.width + paddingX * 2)
-  const height = Math.max(180, image.height + paddingY * 2)
+  const paddingY = 30
+  const rowGap = 18
+  const width = Math.max(720, ...images.map((image) => image.width + paddingX * 2))
+  const rows = images.map((image) => {
+    const scale = Math.min((width - paddingX * 2) / image.width, 2.4)
+    return { image, width: Math.max(1, Math.round(image.width * scale)), height: Math.max(1, Math.round(image.height * scale)) }
+  })
+  const height = Math.max(180, paddingY * 2 + rows.reduce((sum, row) => sum + row.height, 0) + rowGap * Math.max(0, rows.length - 1))
   const canvas = createCanvas(width, height)
   const context = canvas.getContext("2d")
   context.fillStyle = "#ffffff"
   context.fillRect(0, 0, width, height)
-  const scale = Math.min((width - paddingX * 2) / image.width, (height - paddingY * 2) / image.height, 3)
-  const drawWidth = Math.max(1, Math.round(image.width * scale))
-  const drawHeight = Math.max(1, Math.round(image.height * scale))
-  const drawX = width - paddingX - drawWidth
-  const drawY = Math.round((height - drawHeight) / 2)
-  context.drawImage(image as any, drawX, drawY, drawWidth, drawHeight)
-
-  if (masked) {
-    // الآية العربية تبدأ من اليمين؛ نُبقي بدايتها ونخفي جزء الإجابة في اليسار فقط.
-    const maskWidth = Math.round(drawWidth * 0.46)
-    context.fillStyle = "#ffffff"
-    context.fillRect(drawX, drawY - 8, maskWidth, drawHeight + 16)
-    context.strokeStyle = "#204f45"
-    context.lineWidth = 3
-    context.strokeRect(drawX, drawY - 8, maskWidth, drawHeight + 16)
-  }
+  let drawY = paddingY
+  rows.forEach((row, index) => {
+    const drawX = width - paddingX - row.width
+    context.drawImage(row.image as any, drawX, drawY, row.width, row.height)
+    if (masked && index === rows.length - 1) {
+      const maskWidth = Math.round(row.width * 0.46)
+      context.fillStyle = "#ffffff"
+      context.fillRect(drawX, drawY - 8, maskWidth, row.height + 16)
+      context.strokeStyle = "#204f45"
+      context.lineWidth = 3
+      context.strokeRect(drawX, drawY - 8, maskWidth, row.height + 16)
+    }
+    drawY += row.height + rowGap
+  })
 
   const pixels = context.getImageData(0, 0, width, height).data
   let ink = 0
@@ -90,15 +93,16 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const surah = Number(url.searchParams.get("surah"))
     const ayah = Number(url.searchParams.get("ayah"))
+    const to = Number(url.searchParams.get("to") || ayah)
     const requestedType = url.searchParams.get("type") || "complete"
     const type = QUESTION_TYPES.has(requestedType) ? requestedType : "complete"
     const masked = url.searchParams.get("display") !== "anchor" && type === "complete"
-    if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1) {
-      return Response.json({ error: "مرجع الآية غير صالح" }, { status: 400 })
+    if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1 || !Number.isInteger(to) || to < ayah || to - ayah > 24) {
+      return Response.json({ error: "نطاق الآيات غير صالح أو أكبر من 25 آية" }, { status: 400 })
     }
 
-    const exactAyah = await loadExactAyah(surah, ayah)
-    const snippet = renderAyahSnippet(exactAyah, masked)
+    const exactAyahs = await Promise.all(Array.from({ length: to - ayah + 1 }, (_, index) => loadExactAyah(surah, ayah + index)))
+    const snippet = renderAyahSnippet(exactAyahs, masked)
     const output = await printOnFrame(snippet).catch(() => snippet)
     return new Response(new Uint8Array(output.toBuffer("image/png")), {
       headers: {
