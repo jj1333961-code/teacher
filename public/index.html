@@ -823,6 +823,14 @@ tr:hover { background: var(--table-hover); }
 <div id="recordSession" class="page hidden">
   <div class="page-header"><h2>🎙️ تسجيل تسميع جديد</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="recordAlert"></div>
+  <section class="page" style="margin:0 0 15px;border:2px solid var(--primary);">
+    <h4 style="color:var(--primary);margin-bottom:8px;">إعدادات فحص الغش العامة</h4>
+    <p style="color:var(--text-light);margin-bottom:10px;">تُستخدم هذه القيم في كل امتحان وتسميع ومهمة مفعّل عليها الفحص. يظل التفعيل منفصلًا داخل كل عنصر.</p>
+    <div class="proctor-settings-grid">
+      <div class="form-group" style="margin:0"><label for="globalProctorGrace">مهلة جميع التغيّرات (ثانية)</label><input id="globalProctorGrace" type="number" min="3" max="120" value="12" onchange="updateGlobalProctorSetting('graceSeconds',this.value)"><small style="color:var(--text-light)">للأصابع والنظر والوجه والإضاءة.</small></div>
+      <div class="form-group" style="margin:0"><label for="globalProctorViolations">المخالفات المسموحة</label><input id="globalProctorViolations" type="number" min="1" max="10" value="1" onchange="updateGlobalProctorSetting('maxViolations',this.value)"><small style="color:var(--text-light)">تُطبق على كل العناصر المفعّل عليها الفحص.</small></div>
+    </div>
+  </section>
   <input type="hidden" id="recordStudentId">
   <div class="form-group"><label>اسم الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
   <div class="form-row">
@@ -1376,7 +1384,7 @@ function toggleLang() {
 }
 
 let neonSaveTimer = null;
-const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests'];
+const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','proctorSettings','recordElements','extraElements','adminWhatsapp','joinRequests'];
 function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
@@ -1419,25 +1427,29 @@ let currentRecordJuz = 0;
 
 // ====== PROCTORING: camera, gaze approximation and continuous touch ======
 const proctor={stream:null,detector:null,detectorType:'',faceMeshResults:null,analyzing:false,scanTimer:null,active:false,context:null,onReady:null,warningAt:0,touchWarningAt:0,lastGoodAt:0,stableSince:0,holding:false,touches:new Set(),baseline:null,gazeSamples:[],eyeSamples:[],screenWidth:0,screenHeight:0,cancelled:false,violations:0};
-function getProctorSettings(){const ctx=proctor.context||{};return{touchGraceMs:Math.max(3,parseInt(ctx.proctorTouchGrace)||12)*1000,gazeGraceMs:Math.max(3,parseInt(ctx.proctorGazeGrace)||12)*1000,maxViolations:Math.max(1,parseInt(ctx.proctorMaxViolations)||1)}}
+function getGlobalProctorSettings(){const saved=getData('proctorSettings',{});return{graceSeconds:Math.max(3,Math.min(120,parseInt(saved.graceSeconds)||12)),maxViolations:Math.max(1,Math.min(10,parseInt(saved.maxViolations)||1))}}
+function getProctorSettings(){const settings=getGlobalProctorSettings(),graceMs=settings.graceSeconds*1000;return{touchGraceMs:graceMs,gazeGraceMs:graceMs,maxViolations:settings.maxViolations}}
+function updateGlobalProctorSetting(field,value){const settings=getGlobalProctorSettings();settings[field]=field==='graceSeconds'?Math.max(3,Math.min(120,parseInt(value)||12)):Math.max(1,Math.min(10,parseInt(value)||1));setData('proctorSettings',settings);syncGlobalProctorSettings();showToast('تم حفظ إعدادات فحص الغش العامة','success')}
+function syncGlobalProctorSettings(){const settings=getGlobalProctorSettings(),grace=document.getElementById('globalProctorGrace'),violations=document.getElementById('globalProctorViolations');if(grace)grace.value=settings.graceSeconds;if(violations)violations.value=settings.maxViolations}
 function setProctorCheck(id,ok,text){const el=document.getElementById(id);if(!el)return;el.className='proctor-check '+(ok?'ok':'bad');el.textContent=(ok?'✓ ':'! ')+text}
 function isTouchDevice(){return navigator.maxTouchPoints>0&&('ontouchstart' in window||navigator.maxTouchPoints>0)}
 function proctorTaskLabel(ctx){return ctx&&ctx.type==='exam'?'الاختبار':'مهمة '+(ctx&&ctx.type==='reading'?'القراءة':'التسميع')}
 function proctorStopCamera(){clearInterval(proctor.scanTimer);proctor.scanTimer=null;proctor.analyzing=false;proctor.faceMeshResults=null;if(proctor.detectorType==='mediapipe')try{proctor.detector?.close()}catch(e){}proctor.detector=null;proctor.detectorType='';if(proctor.stream){proctor.stream.getTracks().forEach(t=>t.stop());proctor.stream=null}const v=document.getElementById('proctorVideo');if(v)v.srcObject=null;const scan=document.getElementById('proctorScanBtn');if(scan)scan.disabled=false}
 function closeProctorGate(){proctorStopCamera();proctor.onReady=null;proctor.context=null;document.getElementById('proctorGate')?.classList.add('hidden')}
-function openProctorGate(context,onReady){proctorStop(false);proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبعان':'هذه المهمة تعمل على هاتف بشاشة لمس فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبعين هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اضغط تشغيل الفحص للسماح بالكاميرا'}
+function openProctorGate(context,onReady){proctorStop(false);proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبعان':'هذه المهمة تعمل على هاتف بشاشة لمس فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبعين هنا للبدء'}const help=document.getElementById('proctorHelp');if(help)help.textContent='ضع الهاتف أمامك وانظر إلى الشاشة. بعد نجاح الفحص ضع إصبعين معًا؛ يمكنك تحريكهما والتمرير والضغط بصورة طبيعية، ولديك مهلة '+getGlobalProctorSettings().graceSeconds+' ثانية لإعادتهما إذا رفعتهما.';document.getElementById('proctorCameraStatus').textContent='اضغط تشغيل الفحص للسماح بالكاميرا'}
 async function startProctorScan(){if(!isTouchDevice()){document.getElementById('proctorHelp').textContent='يجب استخدام هاتف أو جهاز لوحي بشاشة لمس.';return}if(!navigator.mediaDevices?.getUserMedia){document.getElementById('proctorHelp').textContent='الكاميرا تحتاج متصفحاً حديثاً واتصال HTTPS.';return}try{proctor.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});const video=document.getElementById('proctorVideo');video.srcObject=proctor.stream;await video.play();if('FaceDetector' in window){proctor.detector=new FaceDetector({fastMode:true,maxDetectedFaces:2});proctor.detectorType='native'}else if(window.FaceMesh){const mesh=new FaceMesh({locateFile:file=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/'+file});mesh.setOptions({maxNumFaces:2,refineLandmarks:true,minDetectionConfidence:.55,minTrackingConfidence:.55});mesh.onResults(results=>{proctor.faceMeshResults=results.multiFaceLandmarks||[]});proctor.detector=mesh;proctor.detectorType='mediapipe'}else{throw new Error('face-model-unavailable')}document.getElementById('proctorScanBtn').disabled=true;document.getElementById('proctorHelp').textContent='يعمل الفحص على Chrome وSafari وFirefox وEdge الحديثة.';proctor.scanTimer=setInterval(proctorAnalyzeFrame,350);proctorAnalyzeFrame()}catch(e){proctorStopCamera();document.getElementById('proctorHelp').textContent=e&&e.message==='face-model-unavailable'?'تعذر تحميل نموذج فحص الوجه. تحقق من اتصال الإنترنت ثم أعد المحاولة.':'تعذر فتح الكاميرا. اسمح بالكاميرا من إعدادات المتصفح ثم أعد المحاولة.'}}
 async function proctorDetectFaces(video){if(proctor.detectorType==='native')return await proctor.detector.detect(video);if(proctor.detectorType==='mediapipe'){await proctor.detector.send({image:video});return (proctor.faceMeshResults||[]).map(points=>{let minX=1,minY=1,maxX=0,maxY=0;points.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});return{boundingBox:{x:minX*video.videoWidth,y:minY*video.videoHeight,width:(maxX-minX)*video.videoWidth,height:(maxY-minY)*video.videoHeight},landmarks:points}})}return[]}
 function proctorAverage(list){return list.length?list.reduce((a,b)=>a+b,0)/list.length:0}
 function proctorEyeRatio(points,upper,lower,left,right){if(!points||!points[upper]||!points[lower]||!points[left]||!points[right])return null;const vertical=Math.hypot(points[upper].x-points[lower].x,points[upper].y-points[lower].y),horizontal=Math.max(.001,Math.hypot(points[left].x-points[right].x,points[left].y-points[right].y));return vertical/horizontal}
 async function proctorAnalyzeFrame(){const video=document.getElementById('proctorVideo'),canvas=document.getElementById('proctorCanvas');if(!video||video.readyState<2||!proctor.detector||proctor.analyzing)return;proctor.analyzing=true;try{const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,0,canvas.width,canvas.height);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;let sum=0;for(let i=0;i<pixels.length;i+=16)sum+=(pixels[i]+pixels[i+1]+pixels[i+2])/3;const light=sum/(pixels.length/16),lightOk=light>=42&&light<=240;let faces=[];try{faces=await proctorDetectFaces(video)}catch(e){}const oneFace=faces.length===1;let gazeOk=false,faceOk=false,eyesOk=true;if(oneFace){const face=faces[0],b=face.boundingBox,cx=(b.x+b.width/2)/video.videoWidth,cy=(b.y+b.height/2)/video.videoHeight,ratio=b.width/video.videoWidth;faceOk=ratio>.16&&ratio<.78&&cy>.23&&cy<.78;proctor.gazeSamples.push({cx,cy,ratio});if(proctor.gazeSamples.length>7)proctor.gazeSamples.shift();const smooth={cx:proctorAverage(proctor.gazeSamples.map(x=>x.cx)),cy:proctorAverage(proctor.gazeSamples.map(x=>x.cy)),ratio:proctorAverage(proctor.gazeSamples.map(x=>x.ratio))};if(!proctor.baseline&&faceOk&&lightOk)proctor.baseline=smooth;if(face.landmarks){const left=proctorEyeRatio(face.landmarks,159,145,33,133),right=proctorEyeRatio(face.landmarks,386,374,362,263),eye=(left!==null&&right!==null)?(left+right)/2:null;if(eye!==null){proctor.eyeSamples.push(eye);if(proctor.eyeSamples.length>9)proctor.eyeSamples.shift();const smoothEye=proctorAverage(proctor.eyeSamples),adaptiveFloor=Math.max(.035,Math.min(.095,(proctor.baseline?.eye||smoothEye)*.48));if(proctor.baseline&&!proctor.baseline.eye&&proctor.eyeSamples.length>=5)proctor.baseline.eye=smoothEye;eyesOk=smoothEye>=adaptiveFloor}}if(proctor.baseline)gazeOk=eyesOk&&Math.abs(smooth.cx-proctor.baseline.cx)<.14&&Math.abs(smooth.cy-proctor.baseline.cy)<.14&&Math.abs(smooth.ratio-proctor.baseline.ratio)<.2}setProctorCheck('proctorLightCheck',lightOk,lightOk?'الإضاءة مناسبة':'عدّل الإضاءة أمام الوجه');setProctorCheck('proctorFaceCheck',faceOk,faceOk?'وجه واحد واضح':'اجعل وجهاً واحداً كاملاً في المنتصف');setProctorCheck('proctorGazeCheck',gazeOk,gazeOk?'تركيز العينين ثابت على الشاشة':'انظر مباشرة إلى الشاشة وافتح عينيك بصورة طبيعية');const allOk=isTouchDevice()&&lightOk&&faceOk&&gazeOk;if(allOk){if(!proctor.stableSince)proctor.stableSince=Date.now()}else proctor.stableSince=0;const stable=allOk&&Date.now()-proctor.stableSince>=1800;const hold=document.getElementById('proctorGateHold');if(hold)hold.setAttribute('aria-disabled',String(!stable));document.getElementById('proctorCameraStatus').textContent=stable?'جميع الشروط مستوفاة — ضع إصبعين للبدء':'يتم تثبيت التركيز على العينين...';if(proctor.active)proctorHandleLiveState(allOk,lightOk?'أبعدت وجهك أو نظرك عن الشاشة':'الإضاءة غير مناسبة')}finally{proctor.analyzing=false}}
-function setupProctorHold(zone){if(!zone||zone.dataset.proctorBound)return;zone.dataset.proctorBound='1';const sync=function(e){e.preventDefault();proctor.touches=new Set(Array.from(e.touches||[]).map(t=>t.identifier));proctor.holding=proctor.touches.size>=2;zone.classList.toggle('holding',proctor.holding);zone.textContent=proctor.holding?'تم رصد إصبعين — بدء المهمة':'ضع إصبعين معًا هنا للبدء';if(proctor.holding&&zone.getAttribute('aria-disabled')==='false'&&proctor.onReady){const cb=proctor.onReady,ctx=proctor.context;proctor.onReady=null;document.getElementById('proctorGate').classList.add('hidden');proctor.active=true;proctor.context=ctx;proctor.screenWidth=screen.width;proctor.screenHeight=screen.height;proctor.warningAt=0;proctor.touchWarningAt=0;proctor.lastGoodAt=Date.now();cb()}};zone.addEventListener('touchstart',sync,{passive:false});zone.addEventListener('touchmove',sync,{passive:false});zone.addEventListener('touchend',sync,{passive:false});zone.addEventListener('touchcancel',sync,{passive:false})}
-function proctorLiveBar(){return '<div class="proctor-bar"><span>المراقبة فعالة: أبقِ عينيك على الشاشة وإصبعين عليها. يمكنك تحريكهما بحرية.</span><span id="proctorTouchStatus" class="badge badge-success">إصبعان متصلان</span></div>'}
+function setupProctorHold(zone){if(!zone||zone.dataset.proctorBound)return;zone.dataset.proctorBound='1';const sync=function(e){e.preventDefault();proctor.touches=new Set(Array.from(e.touches||[]).map(t=>t.identifier));proctor.holding=proctor.touches.size>=2;zone.classList.toggle('holding',proctor.holding);zone.textContent=proctor.holding?'تم رصد إصبعين — بدء المهمة':'ضع إصبعين معًا هنا للبدء';if(proctor.holding&&zone.getAttribute('aria-disabled')==='false'&&proctor.onReady){const cb=proctor.onReady,ctx=proctor.context;proctor.onReady=null;document.getElementById('proctorGate').classList.add('hidden');proctor.active=true;proctor.context=ctx;proctor.screenWidth=screen.width;proctor.screenHeight=screen.height;proctor.warningAt=0;proctor.touchWarningAt=0;proctor.violations=0;proctor.lastGoodAt=Date.now();cb()}};zone.addEventListener('touchstart',sync,{passive:false});zone.addEventListener('touchmove',sync,{passive:false});zone.addEventListener('touchend',sync,{passive:false});zone.addEventListener('touchcancel',sync,{passive:false})}
+function proctorLiveBar(){return ''}
 function bindLiveProctorHold(){}
-function proctorShowWarning(reason,startedAt){const left=Math.max(0,12-Math.floor((Date.now()-startedAt)/1000)),w=document.getElementById('proctorWarning');if(w){w.textContent='تنبيه: '+reason+' — صحح الوضع خلال '+left+' ثانية';w.classList.remove('hidden')}}
-function proctorHandleLiveState(ok,reason){if(ok){proctor.warningAt=0;if(!proctor.touchWarningAt)document.getElementById('proctorWarning')?.classList.add('hidden');return}if(!proctor.warningAt)proctor.warningAt=Date.now();proctorShowWarning(reason,proctor.warningAt);if(Date.now()-proctor.warningAt>=PROCTOR_GRACE_MS)cancelProctoredTask(reason)}
-function proctorHandleTouches(e){if(!proctor.active)return;if(e.cancelable)e.preventDefault();proctor.touches=new Set(Array.from(e.touches||[]).map(t=>t.identifier));proctor.holding=proctor.touches.size>=2;const status=document.getElementById('proctorTouchStatus');if(proctor.holding){proctor.touchWarningAt=0;if(status){status.textContent='إصبعان متصلان';status.className='badge badge-success'}if(!proctor.warningAt)document.getElementById('proctorWarning')?.classList.add('hidden')}else{if(!proctor.touchWarningAt)proctor.touchWarningAt=Date.now();if(status){status.textContent='أعد الإصبعين';status.className='badge badge-warning'}proctorShowWarning('يجب إبقاء إصبعين على الشاشة',proctor.touchWarningAt);if(Date.now()-proctor.touchWarningAt>=PROCTOR_GRACE_MS)cancelProctoredTask('لم تتم إعادة الإصبعين خلال 12 ثانية')}}
-['touchstart','touchmove','touchend','touchcancel'].forEach(type=>document.addEventListener(type,proctorHandleTouches,{passive:false,capture:true}));setInterval(()=>{if(proctor.active&&!proctor.holding)proctorHandleTouches({touches:Array.from(proctor.touches).map(identifier=>({identifier})),cancelable:false})},250);
+function proctorShowWarning(reason,startedAt){const seconds=getGlobalProctorSettings().graceSeconds,left=Math.max(0,seconds-Math.floor((Date.now()-startedAt)/1000)),w=document.getElementById('proctorWarning');if(w){w.textContent='تنبيه: '+reason+' — صحح الوضع خلال '+left+' ثانية';w.classList.remove('hidden')}}
+function proctorRegisterViolation(reason){proctor.violations+=1;const max=getProctorSettings().maxViolations;if(proctor.violations>=max){cancelProctoredTask(reason);return true}showToast('تم تسجيل مخالفة '+proctor.violations+' من '+max,'error');return false}
+function proctorHandleLiveState(ok,reason){const graceMs=getProctorSettings().gazeGraceMs;if(ok){proctor.warningAt=0;if(!proctor.touchWarningAt)document.getElementById('proctorWarning')?.classList.add('hidden');return}if(!proctor.warningAt)proctor.warningAt=Date.now();proctorShowWarning(reason,proctor.warningAt);if(Date.now()-proctor.warningAt>=graceMs){if(!proctorRegisterViolation(reason))proctor.warningAt=Date.now()}}
+function proctorHandleTouches(e){if(!proctor.active)return;proctor.touches=new Set(Array.from(e.touches||[]).map(t=>t.identifier));proctor.holding=proctor.touches.size>=2;if(proctor.holding){proctor.touchWarningAt=0;if(!proctor.warningAt)document.getElementById('proctorWarning')?.classList.add('hidden')}else{if(!proctor.touchWarningAt)proctor.touchWarningAt=Date.now();proctorShowWarning('يجب إبقاء إصبعين على الشاشة',proctor.touchWarningAt);const settings=getGlobalProctorSettings(),graceMs=settings.graceSeconds*1000;if(Date.now()-proctor.touchWarningAt>=graceMs){if(!proctorRegisterViolation('لم تتم إعادة الإصبعين خلال '+settings.graceSeconds+' ثانية'))proctor.touchWarningAt=Date.now()}}}
+['touchstart','touchmove','touchend','touchcancel'].forEach(type=>document.addEventListener(type,proctorHandleTouches,{passive:true,capture:true}));setInterval(()=>{if(proctor.active&&!proctor.holding)proctorHandleTouches({touches:Array.from(proctor.touches).map(identifier=>({identifier}))})},250);
 function recordProctorIncident(reason){if(!currentUser)return;const incident={id:'pi_'+Date.now(),studentId:currentUser.id,studentName:currentUser.name,taskType:proctor.context?.type||'unknown',taskId:proctor.context?.id||'',reason,time:new Date().toLocaleString('ar-EG'),timestamp:Date.now(),status:'cancelled'};const incidents=getData('proctoringIncidents',[]);incidents.unshift(incident);setData('proctoringIncidents',incidents.slice(0,500));const messages=getData('messages',[]);messages.push({type:'system',sender:'نظام المراقبة',senderId:0,receiverType:'admin',text:'تنبيه مخالفة مراقبة: '+currentUser.name+' — '+proctorTaskLabel(proctor.context)+' — '+reason+' — '+incident.time,time:incident.time,approved:true,read:false,proctorIncidentId:incident.id});setData('messages',messages);return incident}
 function cancelProctoredTask(reason){if(!proctor.active||proctor.cancelled)return;proctor.cancelled=true;recordProctorIncident(reason);clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);Object.keys(typeof activeAudioRecorders==='object'?activeAudioRecorders:{}).forEach(function(key){const state=activeAudioRecorders[key];try{if(state.recorder&&state.recorder.state!=='inactive')state.recorder.stop()}catch(e){}try{state.stream?.getTracks().forEach(t=>t.stop())}catch(e){}});const ctx=proctor.context;if(ctx?.type==='exam'){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].activeExam){const ex=students[idx].activeExam;ex.status='cancelled_proctoring';ex.cancelReason=reason;ex.cancelledAt=Date.now();students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].activeExam=null;setData('students',students);currentUser=students[idx];document.getElementById('studentExamContent').innerHTML='<div class="alert alert-danger"><h3>أُلغي الاختبار بسبب مخالفة المراقبة</h3><p>'+escapeHtml(reason)+'</p></div>'}}else if(Number.isInteger(ctx?.taskIndex)){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].tasks[ctx.taskIndex]){students[idx].tasks[ctx.taskIndex].proctorCancelled=true;students[idx].tasks[ctx.taskIndex].cancelReason=reason;setData('students',students);currentUser=students[idx];renderStudentTasks()}}proctorStop(true);showToast('أُلغيت المهمة وتم إرسال تنبيه للمسؤول','error')}
 function proctorStop(closeCamera=true){proctor.active=false;proctor.holding=false;proctor.touches.clear();proctor.warningAt=0;proctor.touchWarningAt=0;document.getElementById('proctorWarning')?.classList.add('hidden');if(closeCamera)proctorStopCamera()}
@@ -2392,7 +2404,7 @@ async function saveStudent() {
   setData('students', students);
   voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null;
   alertBox.innerHTML = '<div class="alert alert-success">✅ تم حفظ الطالب بنجاح!</div>';
-  showToast('تم حفظ الطالب "' + name + '" بنجاح' + (voiceProfile ? ' مع بصمة Gemini الصوتية' : ' (بدون بصمة صوتية)'), 'success');
+  showToast('تم حفظ الطالب "' + name + '" بنجاح' + (voiceProfile ? ' مع بصمة Gemini الصوتية' : ' (بد��ن بصمة صوتية)'), 'success');
   ['stName','stUsername','stNational','stPhone','stBirth','stAge','stStudentPass','stParent','stParentPass','stNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('stJuz').value = '';
   document.getElementById('stSurah').innerHTML = '<option value="">اختر الجزء أولاً...</option>';
@@ -2578,9 +2590,9 @@ function openRecord(id) {
   const existingDraft = s.sessions ? s.sessions.find(sess => sess.isDraft) : null;
 
   if(existingDraft) {
-    recordElements = JSON.parse(JSON.stringify(existingDraft.elements)).map(el=>Object.assign({proctorEnabled:true,proctorTouchGrace:12,proctorGazeGrace:12,proctorMaxViolations:1},el));
-    homeworkItems = JSON.parse(JSON.stringify(existingDraft.homework || []));
-    readingItems = JSON.parse(JSON.stringify(existingDraft.reading || []));
+    recordElements = JSON.parse(JSON.stringify(existingDraft.elements)).map(el=>Object.assign({proctorEnabled:true},el));
+homeworkItems = JSON.parse(JSON.stringify(existingDraft.homework || [])).map(item=>Object.assign({proctorEnabled:true},item));
+readingItems = JSON.parse(JSON.stringify(existingDraft.reading || [])).map(item=>Object.assign({proctorEnabled:true},item));
     document.getElementById('recordDate').value = existingDraft.date;
     document.getElementById('recordNotes').value = existingDraft.notes || '';
   } else {
@@ -2593,16 +2605,14 @@ function openRecord(id) {
       color: '',
       isHomework: false,
 isVoice: false,
-proctorEnabled: true,
-proctorTouchGrace: 12,
-proctorGazeGrace: 12,
-proctorMaxViolations: 1
+proctorEnabled: true
 }));
     homeworkItems = []; readingItems = [];
     document.getElementById('recordNotes').value = '';
   }
 
   renderRecordElements(); renderExtraElements(); renderHomeworkItems(); renderReadingItems();
+  syncGlobalProctorSettings();
   initExamBuilder();
   const mb=students.find(x=>x.id===id).manualBoard||{}; if(document.getElementById('manualBoardText')) document.getElementById('manualBoardText').value=mb.text||''; if(document.getElementById('manualBoardImage')) document.getElementById('manualBoardImage').value=mb.image||'';
   document.getElementById('recordAlert').innerHTML = '';
@@ -2641,9 +2651,6 @@ function addExtraElement() {
     isHomework: false,
 isVoice: false,
 proctorEnabled: true,
-proctorTouchGrace: 12,
-proctorGazeGrace: 12,
-proctorMaxViolations: 1,
 deleted: false
   });
   renderExtraElements();
@@ -2766,11 +2773,7 @@ function renderRecordElementHTML(el, i, num) {
   html += '<div class="record-option"><input type="checkbox" id="showay_'+i+'" '+(el.showAyat?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'showAyat' + "'" + ', this.checked)"><label for="showay_'+i+'">👁️ إظهار الآيات للطالب</label></div>';
 html += '<div class="record-option"><input type="checkbox" id="proctor_'+i+'" '+(el.proctorEnabled!==false?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'proctorEnabled' + "'" + ', this.checked)"><label for="proctor_'+i+'">تفعيل فحص الغش لهذا العنصر</label></div>';
 html += '</div>';
-if(el.proctorEnabled!==false){
-  html += '<div class="proctor-settings-grid"><div class="form-group" style="margin:0"><label for="proctorTouchGrace_'+i+'">مهلة إعادة الأصابع (ثانية)</label><input id="proctorTouchGrace_'+i+'" type="number" min="3" max="120" value="'+(parseInt(el.proctorTouchGrace)||12)+'" onchange="updateRecordElement('+i+', \'proctorTouchGrace\', Math.max(3,Math.min(120,parseInt(this.value)||12)))"><small style="color:var(--text-light)">لا تمنع التمرير أو اختيار العناصر.</small></div>';
-  html += '<div class="form-group" style="margin:0"><label for="proctorGazeGrace_'+i+'">مهلة إعادة النظر (ثانية)</label><input id="proctorGazeGrace_'+i+'" type="number" min="3" max="120" value="'+(parseInt(el.proctorGazeGrace)||12)+'" onchange="updateRecordElement('+i+', \'proctorGazeGrace\', Math.max(3,Math.min(120,parseInt(this.value)||12)))"><small style="color:var(--text-light)">قبل احتساب مخالفة النظر أو الوجه.</small></div>';
-  html += '<div class="form-group" style="margin:0"><label for="proctorMaxViolations_'+i+'">المخالفات المسموحة</label><input id="proctorMaxViolations_'+i+'" type="number" min="1" max="10" value="'+(parseInt(el.proctorMaxViolations)||1)+'" onchange="updateRecordElement('+i+', \'proctorMaxViolations\', Math.max(1,Math.min(10,parseInt(this.value)||1)))"><small style="color:var(--text-light)">يُلغى التسميع بعد تجاوز العدد.</small></div></div>';
-}
+
 const _sur = el.name === 'اللوح' || el.name === 'اسورة' ? (el.surah || mainSurah) : el.surah;
   html += '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">';
   html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">📖 عض الآيات (صورة)</button>';
@@ -2848,7 +2851,7 @@ function selectRating(idx, rating) {
 
 
 function addHomeworkItem() {
-  homeworkItems.push({text:'', approved:false, rejected:false});
+  homeworkItems.push({text:'', proctorEnabled:true, approved:false, rejected:false});
   renderHomeworkItems();
 }
 function removeHomeworkItem(idx) {
@@ -2865,13 +2868,14 @@ function renderHomeworkItems() {
     html += '<div style="background:#fff; padding:12px; border-radius:8px; margin-bottom:8px; border:1px solid var(--border);">';
     html += '<div class="form-row"><div class="form-group" style="flex:3;"><input type="text" value="'+item.text+'" onchange="updateHomeworkItem('+i+', ' + "'" + 'text' + "'" + ', this.value)" placeholder="نص الواجب..."></div>';
     html += '<div class="form-group" style="flex:1; display:flex; align-items:flex-end;"><button class="btn btn-xs btn-danger" onclick="removeHomeworkItem('+i+')">حذف</button></div></div>';
+    html += '<div class="record-option"><input type="checkbox" id="homeworkProctor_'+i+'" '+(item.proctorEnabled!==false?'checked':'')+' onchange="updateHomeworkItem('+i+', \'proctorEnabled\', this.checked)"><label for="homeworkProctor_'+i+'">تفعيل فحص الغش لهذا الواجب</label></div>';
     html += '</div>';
   });
   container.innerHTML = html;
 }
 
 function addReadingItem() {
-  readingItems.push({surah:'', from:'', to:'', showAyat:false, text:'', audio:'', approved:false, rejected:false});
+  readingItems.push({surah:'', from:'', to:'', showAyat:false, text:'', audio:'', proctorEnabled:true, approved:false, rejected:false});
   renderReadingItems();
 }
 function removeReadingItem(idx) {
@@ -2937,7 +2941,7 @@ function renderReadingItems() {
       html += '</div><span style="color:var(--text-light); font-size:0.85rem; align-self:center;">(السورة '+ayahCount+' آية)</span></div>';
     }
 
-    html += '<div class="record-options" style="margin-top:8px;"><div class="record-option"><input type="checkbox" id="rdShow_'+i+'" '+(item.showAyat?'checked':'')+' onchange="updateReadingItem('+i+', \'showAyat\', this.checked)"><label for="rdShow_'+i+'">👁️ إظهار صورة الآيات للطالب</label></div></div>';
+    html += '<div class="record-options" style="margin-top:8px;"><div class="record-option"><input type="checkbox" id="rdShow_'+i+'" '+(item.showAyat?'checked':'')+' onchange="updateReadingItem('+i+', \'showAyat\', this.checked)"><label for="rdShow_'+i+'">👁️ إظهار صورة الآيات للطالب</label></div><div class="record-option"><input type="checkbox" id="readingProctor_'+i+'" '+(item.proctorEnabled!==false?'checked':'')+' onchange="updateReadingItem('+i+', \'proctorEnabled\', this.checked)"><label for="readingProctor_'+i+'">تفعيل فحص الغش لهذه المهمة</label></div></div>';
 
     html += '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">';
     html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(item.surah||'')+'\', \''+(item.from||'')+'\', \''+(item.to||item.from||'')+'\')">📖 عرض الآيات (صورة)</button>';
@@ -3209,7 +3213,7 @@ function renderExamQuestions(){
     (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
     (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
     '<div class="form-group"><label>فحص الغش لهذا السؤال</label><select onchange="updateExamQuestion('+i+',\'proctorEnabled\',this.value===\'true\')"><option value="true" '+(q.proctorEnabled!==false?'selected':'')+'>مفعّل</option><option value="false" '+(q.proctorEnabled===false?'selected':'')+'>غير مفعّل</option></select></div></div>'+
-    '<div class="form-group"><label>تعليمات السؤال (من دون الإجابة)</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+ 
+    '<div class="form-group"><label>تعليمات السؤال (��ن دون الإجابة)</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+
     '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآيات محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
   if(q.type==='mcq'||q.type==='truefalse')h+='<div class="form-group"><label>الاختيارات (كل اختيار في سطر)</label><textarea rows="4" onchange="updateExamQuestion('+i+',\'options\',this.value.split(/\\n/).map(x=>x.trim()).filter(Boolean))">'+escapeHtml((q.options||[]).join('\n'))+'</textarea></div><div class="form-group"><label>الإجابة الصحيحة — لا تظهر للطالب</label><input value="'+escapeHtml(q.correct||'')+'" onchange="updateExamQuestion('+i+',\'correct\',this.value)"></div>';
   else if(q.type==='complete')h+='<div class="form-group"><label>الإجابة المرجعية — لا تظهر للطالب</label><textarea rows="3" onchange="updateExamQuestion('+i+',\'correct\',this.value)">'+escapeHtml(q.correct||'')+'</textarea></div>';
@@ -3267,7 +3271,7 @@ function renderStudentExam(){
   if(typeof studentExamCurrentIndex!=='number'||studentExamCurrentIndex<0)studentExamCurrentIndex=0;
   const requiredQuestion=ex.questions[studentExamCurrentIndex],questionNeedsProctor=requiredQuestion&&requiredQuestion.proctorEnabled!==false,questionAuthId=ex.id+':'+studentExamCurrentIndex;
   if(!questionNeedsProctor&&proctor.active){proctorStop(true);proctorExamAuthorizedId=''}
-  if(questionNeedsProctor&&(proctorExamAuthorizedId!==questionAuthId||!proctor.active)){c.innerHTML='<div class="alert alert-info"><h3>التحقق الأمني مطلوب لهذا السؤال</h3><p>يبدأ وقت السؤال فقط بعد نجاح فحص العين والوجه ووضع إصبعين على الشاشة. يمكن تحريكهما بحرية، وتوجد مهلة 12 ثانية لإعادتهما.</p><button class="btn btn-primary" onclick="openProctorGate({type:\'exam\',id:\''+escapeHtml(ex.id)+'\',questionIndex:'+studentExamCurrentIndex+'},function(){proctorExamAuthorizedId=\''+escapeHtml(questionAuthId)+'\';renderStudentExam()})">بدء فحص السؤال</button></div>';return}
+  if(questionNeedsProctor&&(proctorExamAuthorizedId!==questionAuthId||!proctor.active)){c.innerHTML='<div class="alert alert-info"><h3>التحقق الأمني مطلوب لهذا السؤال</h3><p>يبدأ وقت السؤال فقط بعد نجاح فحص العين والوجه ووضع إصبعين على الشاشة. يمكن التمرير والضغط وتحريك الأصابع بصورة طبيعية، وتوجد مهلة '+getGlobalProctorSettings().graceSeconds+' ثانية لإعادتهما.</p><button class="btn btn-primary" onclick="openProctorGate({type:\'exam\',id:\''+escapeHtml(ex.id)+'\',questionIndex:'+studentExamCurrentIndex+'},function(){proctorExamAuthorizedId=\''+escapeHtml(questionAuthId)+'\';renderStudentExam()})">بدء فحص السؤال</button></div>';return}
   if(studentExamCurrentIndex>=ex.questions.length){submitStudentExam(true);return}
   studentExamViewIndex=Math.max(0,Math.min(studentExamViewIndex,studentExamCurrentIndex));
   const i=studentExamViewIndex,q=ex.questions[i],isCurrent=i===studentExamCurrentIndex;
@@ -3387,7 +3391,7 @@ async function recordStudentExamAudio(i){
     recorder.start();registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});btn.onclick=()=>{if(recorder.state!=='inactive')recorder.stop()};
   }catch(e){status.textContent='تعذر الوصول إلى الميكروفون';btn.dataset.recording='false';btn.classList.remove('recording')}
 }
-function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاخت��ار</h3><p>النتيجة معلّقة لحين مراجعة الم��ؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
+function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاخت��ار</h3><p>النتيجة معلّقة لحين مراجعة الم��ؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جم��ع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
 function renderStudentExamResult(ex){const c=document.getElementById('studentExamContent');if(c)c.innerHTML=renderStudentResultHtml(ex)}
 function notifyExamExpired(student,ex){if(ex.expiryNotified)return;ex.expiryNotified=true;const text='انتهى الوقت المحدد لاختبار '+student.name+' بتاريخ '+(ex.date||'');let msgs=getData('messages');msgs.push({type:'system',sender:'النظام',receiverType:'student',receiverId:student.id,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'parent',receiverName:student.parent,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'admin',text,studentId:student.id,parentPhone:student.parentPhone||student.parentMobile||'',time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});setData('messages',msgs)}
 function examWhatsAppLink(phone,text){const p=String(phone||'').replace(/\D/g,'').replace(/^0/,'20');return p?'https://wa.me/'+p+'?text='+encodeURIComponent(text):''}
@@ -3432,11 +3436,11 @@ function saveSession(isFinal) {
     let taskCounter=0;
     activeElements.forEach(el=>{
       const _sur=(el.name==='اللوح'||el.name==='السورة')?(el.surah||currentRecordMainSurah):el.surah;
-      if(el.isHomework) students[idx].tasks.push({type:'homework',name:el.name,surah:_sur,from:el.from,to:el.to,showAyat:!!el.showAyat,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++});
-      if(el.isVoice) students[idx].tasks.push({type:'voice',name:el.name,surah:_sur,from:el.from,to:el.to,showAyat:!!el.showAyat,proctorEnabled:el.proctorEnabled!==false,proctorTouchGrace:Math.max(3,parseInt(el.proctorTouchGrace)||12),proctorGazeGrace:Math.max(3,parseInt(el.proctorGazeGrace)||12),proctorMaxViolations:Math.max(1,parseInt(el.proctorMaxViolations)||1),approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++});
+      if(el.isHomework) students[idx].tasks.push({type:'homework',name:el.name,surah:_sur,from:el.from,to:el.to,showAyat:!!el.showAyat,proctorEnabled:el.proctorEnabled!==false,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++});
+      if(el.isVoice) students[idx].tasks.push({type:'voice',name:el.name,surah:_sur,from:el.from,to:el.to,showAyat:!!el.showAyat,proctorEnabled:el.proctorEnabled!==false,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++});
     });
-    homeworkItems.forEach(h=>students[idx].tasks.push({type:'homework',text:h.text,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++}));
-    readingItems.forEach(r=>students[idx].tasks.push({type:'reading',text:r.text,surah:r.surah,from:r.from,to:r.to,showAyat:!!r.showAyat,audio:r.audio||'',approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++}));
+    homeworkItems.forEach(h=>students[idx].tasks.push({type:'homework',text:h.text,proctorEnabled:h.proctorEnabled!==false,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++}));
+    readingItems.forEach(r=>students[idx].tasks.push({type:'reading',text:r.text,surah:r.surah,from:r.from,to:r.to,showAyat:!!r.showAyat,audio:r.audio||'',proctorEnabled:r.proctorEnabled!==false,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++}));
     setData('students',students);
     sendSystemSessionMessage(students[idx], 'تم حفظ تسميع '+students[idx].name+' بتاريخ '+date+' كمسودة. المهام الحالية ما زالت ظاهرة للطالب.');
     showToast('💾 تم الحفظ كمسودة والمهام ما زالت متاحة للطالب', 'success');
@@ -3482,7 +3486,7 @@ function resetRecordForm() {
     name: name,
     surah: (name === 'اللوح' || name === 'السورة') ? mainSurah : '',
     from: '', to: '', rating: '', color: '',
-    isHomework: false, isVoice: false, deleted: false
+    isHomework: false, isVoice: false, proctorEnabled: true, deleted: false
   }));
   homeworkItems = []; readingItems = [];
   document.getElementById('recordNotes').value = '';
@@ -4530,7 +4534,7 @@ function renderStudentDashboard() {
   // Render active draft if exists
   const draft = s.sessions ? s.sessions.find(sess => sess.isDraft) : null;
   if(draft && isQuran) {
-    let draftHtml = '<div class="page draft-card" style="margin-top:20px;"><h4 style="color:var(--warning); margin-bottom:15px;"> تسميع اليوم (مسودة - قيد التعديل)</h4>';
+    let draftHtml = '<div class="page draft-card" style="margin-top:20px;"><h4 style="color:var(--warning); margin-bottom:15px;"> تسميع اليوم (مسودة - ��يد التعديل)</h4>';
     draftHtml += '<p><strong>التاريخ:</strong> '+draft.date+'</p>';
     draft.elements.forEach((el, ei) => {
       draftHtml += '<div style="padding:10px; background:var(--input-bg); border-radius:8px; margin-bottom:8px; border-right:3px solid '+(el.color || 'var(--primary)')+';">';
@@ -4721,9 +4725,11 @@ function renderStudentTasks() {
   if(proctor.active)bindLiveProctorHold();
 }
 
-function uploadTaskFile(taskIdx, input, type) {
+function uploadTaskFile(taskIdx, input, type, proctorAuthorized) {
   const file = input.files[0];
   if(!file) return;
+  const task=currentUser&&currentUser.tasks&&currentUser.tasks[taskIdx];
+  if(task&&task.proctorEnabled!==false&&!proctorAuthorized&&(!proctor.active||!proctor.context||proctor.context.taskIndex!==taskIdx)){openProctorGate({type:task.type||type,id:String(task.originalTaskIndex??taskIdx),taskIndex:taskIdx},function(){uploadTaskFile(taskIdx,input,type,true)});return}
   const reader = new FileReader();
   reader.onload = function(e) {
     let messages = getData('messages');
@@ -4768,7 +4774,7 @@ function studentVoiceRecorderHTML(idx) {
   const monitored=proctor.active&&proctor.context&&proctor.context.taskIndex===idx;
   return (monitored?proctorLiveBar():'')+'<div style="margin-top:10px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">' +
     '<button class="voice-record-btn" onclick="recordStudentVoice('+idx+')" id="stVoiceBtn_'+idx+'">🎙️</button>' +
-    '<span id="stVoiceStatus_'+idx+'">'+(monitored?'اضغط لبدء التسجيل المراقب':'اضغط لبدء فحص المراقبة')+'</span>' +
+    '<span id="stVoiceStatus_'+idx+'">'+(monitored?'اضغط لبدء التسجيل':'اضغط لبدء التسجيل')+'</span>' +
     '<audio id="stVoicePreview_'+idx+'" controls style="display:none; height:40px;"></audio>' +
     '</div><div id="stVoiceAI_'+idx+'" style="margin-top:8px;"></div>';
 }
@@ -5590,7 +5596,7 @@ function renderParentPendingTasks() {
     // المهام التي رفضها المسؤول اليوم
     html += '<h4 style="color:var(--danger); margin:15px 0 10px;">❌ المهام المرفوضة اليوم ('+rejectedToday.length+')</h4>';
     if(rejectedToday.length === 0) {
-      html += '<div class="alert alert-info">لا توجد مهام مرفوضة اليوم</div>';
+      html += '<div class="alert alert-info">لا ��وجد مهام مرفوضة اليوم</div>';
     } else {
       rejectedToday.slice().reverse().forEach(task => {
         html += '<div class="task-card" style="border-right-color:var(--danger);">';
@@ -5823,7 +5829,7 @@ function generateAIReport(student) {
   if(avgScore >= 14) report = 'ممتاز يا '+student.name+'! 🌟 مستواك رائع جداً. أنت تحفظ بثبات وتميز. استمر في المراجعة وستكون من حفاظ كتاب الله.';
   else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرارة.';
   else if(avgScore >= 6) report = 'جيد يا '+student.name+'! 📚 مستواك في تقدم مستمر. أنصحك بزيادة وقت المراجعة اليومي.';
-  else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على التكرار والمراجعة اليومية وسترى التحسن قريباً.';
+  else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على التكرار والمر��جعة اليومية وسترى التحسن قريباً.';
   report += '<br><br>📊 متوسط آخر 3 تسميعات: <strong>'+avgScore.toFixed(1)+' / 16</strong><br>📈 عدد التسميعات المسجلة: '+finalizedSessions.length;
   return report;
 }
