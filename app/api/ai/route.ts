@@ -7,6 +7,7 @@ export const maxDuration = 300
 const GEMINI = {
   label: "Google Gemini",
   endpoint: "https://generativelanguage.googleapis.com/v1beta/models",
+  models: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"],
   model: "gemini-2.5-flash",
   get key() {
     return (process.env.GEMINI_API_KEY || "").trim()
@@ -86,8 +87,14 @@ function classifyAiFailure(error: unknown) {
   if (/AUDIO_GRADING_FORMAT/i.test(raw)) {
     return { status: 502, code: "AUDIO_GRADING_FORMAT", retryable: true, message: "تم تفريغ التسجيل، لكن تعذر إكمال التصحيح الآلي مؤقتاً. أعد المحاولة بعد قليل.", raw }
   }
+  if (/AUDIO_EMPTY_PAYLOAD|AUDIO_INVALID_BASE64/i.test(raw)) {
+    return { status: 422, code: "AUDIO_INVALID_PAYLOAD", retryable: false, message: "ملف التسجيل فارغ أو تالف. أعد التسجيل من زر الميكروفون.", raw }
+  }
+  if (/AUDIO_UNSUPPORTED_MIME/i.test(raw)) {
+    return { status: 415, code: "AUDIO_UNSUPPORTED_MIME", retryable: false, message: "صيغة التسجيل غير مدعومة. أعد التسجيل باستخدام متصفح حديث.", raw }
+  }
   if (/AUDIO_PROVIDERS_FAILED/i.test(raw)) {
-    return { status: 503, code: "AUDIO_PROVIDERS_FAILED", retryable: true, message: "خدمة تحليل الصوت غير متاحة مؤقتاً بعد تجربة Gemini وGroq. احتفظ بالتسجيل وأعد المحاولة بعد قليل.", raw }
+    return { status: 503, code: "AUDIO_PROVIDERS_FAILED", retryable: true, message: "تعذر تحليل التسجيل عبر Gemini وGroq. تم الاحتفاظ به؛ أعد المحاولة الآن أو سجّل مقطعاً أقصر.", raw }
   }
   if (/AUDIO_PAYLOAD_TOO_LARGE|payload too large|request entity too large|413/i.test(raw)) {
     return { status: 413, code: "AUDIO_PAYLOAD_TOO_LARGE", retryable: false, message: "التسجيل طويل جداً للتحليل. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.", raw }
@@ -236,25 +243,34 @@ async function geminiText(prompt: string, system: string, temperature: number, a
   if (!GEMINI.key) throw new Error("GEMINI_API_KEY غير موجود على الخادم")
   const parts: any[] = [{ text: prompt }]
   if (audio) parts.unshift({ inlineData: { mimeType: audio.mimeType, data: audio.data } })
-  const model = GEMINI.model
-  const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: "user", parts }],
-      generationConfig: { temperature },
-    }),
-    cache: "no-store",
-    signal: AbortSignal.timeout(audio ? 90_000 : 120_000),
-  })
-  const data = await response.json().catch(() => null)
-  if (!response.ok) throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
-  const text = Array.isArray(data?.candidates?.[0]?.content?.parts)
-    ? data.candidates[0].content.parts.map((part: any) => String(part?.text || "")).join("").trim()
-    : ""
-  if (!text) throw new Error("Gemini: وصل رد فارغ")
-  return text
+  const models = audio ? GEMINI.models : [GEMINI.model]
+  let lastError: unknown = null
+  for (const model of models) {
+    try {
+      const response = await fetch(`${GEMINI.endpoint}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI.key)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents: [{ role: "user", parts }],
+          generationConfig: { temperature },
+        }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(audio ? 90_000 : 120_000),
+      })
+      const data = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(`Gemini HTTP ${response.status}: ${String(data?.error?.message || response.statusText).slice(0, 300)}`)
+      const text = Array.isArray(data?.candidates?.[0]?.content?.parts)
+        ? data.candidates[0].content.parts.map((part: any) => String(part?.text || "")).join("").trim()
+        : ""
+      if (!text) throw new Error("Gemini: وصل رد فارغ")
+      return text
+    } catch (error) {
+      lastError = error
+      if (!audio || !/404|400|not found|unsupported|model/i.test(audioErrorMessage(error))) throw error
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Gemini: لم يُرجع نموذج الصوت نتيجة")
 }
 
 async function runText(prompt: string, system: string, temperature: number) {
@@ -280,16 +296,25 @@ const SUPPORTED_AUDIO_MIME_TYPES = new Set([
 ])
 
 function normalizeAudioMimeType(value: unknown) {
-  const mimeType = String(value || "audio/webm").toLowerCase().split(";")[0].trim()
-  if (!SUPPORTED_AUDIO_MIME_TYPES.has(mimeType)) throw new Error("صيغة التسجيل غير مدعومة بواسطة جميناي")
-  if (mimeType === "audio/x-wav") return "audio/wav"
-  if (mimeType === "audio/mp3") return "audio/mpeg"
-  if (mimeType === "audio/x-m4a" || mimeType === "audio/m4a") return "audio/mp4"
+  const raw = String(value || "audio/webm").toLowerCase().split(";")[0].trim()
+  const aliases: Record<string, string> = { "audio/x-wav": "audio/wav", "audio/mp3": "audio/mpeg", "audio/x-m4a": "audio/mp4", "audio/m4a": "audio/mp4", "video/webm": "audio/webm" }
+  const mimeType = aliases[raw] || raw
+  if (!SUPPORTED_AUDIO_MIME_TYPES.has(mimeType)) throw new Error(`AUDIO_UNSUPPORTED_MIME: ${mimeType}`)
   return mimeType
 }
 
 function audioMimeType(audioFormat: string) {
-  return normalizeAudioMimeType(audioFormat.includes("/") ? audioFormat : audioFormat === "mp3" ? "audio/mpeg" : audioFormat === "ogg" ? "audio/ogg" : audioFormat === "m4a" ? "audio/mp4" : audioFormat === "webm" ? "audio/webm" : "audio/wav")
+  const normalized = String(audioFormat || "audio/webm").trim().toLowerCase()
+  return normalizeAudioMimeType(normalized.includes("/") ? normalized : normalized === "mp3" ? "audio/mpeg" : normalized === "ogg" ? "audio/ogg" : normalized === "m4a" ? "audio/mp4" : normalized === "webm" ? "audio/webm" : "audio/wav")
+}
+function normalizeAudioData(raw: unknown) {
+  const value = String(raw || "").trim().replace(/^data:[^,]+,/, "").replace(/\s/g, "")
+  if (!value || value.length < 32) throw new Error("AUDIO_EMPTY_PAYLOAD")
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(value)) throw new Error("AUDIO_INVALID_BASE64")
+  const bytes = Buffer.from(value, "base64")
+  if (!bytes.length) throw new Error("AUDIO_EMPTY_PAYLOAD")
+  if (bytes.length > 25_000_000) throw new Error("AUDIO_PAYLOAD_TOO_LARGE")
+  return value
 }
 
 type AudioProviderResult = {
@@ -380,7 +405,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - إذا كان type=complete فاختر حد بداية وحد نهاية حقيقيين لصيغة «أكمل من قوله تعالى … إلى قوله تعالى …»، واجعل from/to صحيحين وفي السورة نفسها، وعدد الآيات المطلوب يساوي completeAyahs قدر الإمكان.
 - إذا كان type=audio فحدد حد بداية وحد نهاية حقيقيين لصيغة «اقرأ من قوله تعالى … إلى قوله تعالى …»، ويجب أن يساوي عدد الآيات من from إلى to قيمة reciteAyahs بالضبط.
 - صور حد البداية وحد النهاية ستُعرض منفصلة وقابلة للتكبير، لذلك لا تنسخ نصهما داخل prompt ولا تكشف الجزء المطلوب إجابته.
-- لا تنشئ أسئلة سطحية من قصار السور، ولا سؤالاً يكتفي بالتعرف إلى اسم سورة مشهورة من مطلعها. تجنب سورة الفلق والناس وسائر السور القصيرة السهلة المستبعدة من النطاق.
+- لا تنشئ أسئلة سطحية من قصار السور، ولا سؤالاً يكتف�� بالتعرف إلى اسم سورة مشهورة من مطلعها. تجنب سورة الفلق والناس وسائر السور القصيرة السهلة المستبعدة من النطاق.
 - level=easy: سؤال واضح لكنه يحتاج استحضاراً حقيقياً، وليس سؤالاً بديهياً من أول السورة.
 - level=medium: تمييز وربط دقيق بين مواضع متقاربة يخدم topic مباشرة.
 - level=hard: سؤال شديد الصعوبة من المتشابهات اللفظية الموثقة: فروق الواو والفاء، الزيادة والنقص، اختلاف الضمائر والمفرد والجمع، اختلاف البداية أو الخاتمة، والتمييز بين آيتين متقاربتين. يجب أن يبقى له جواب واحد قطعي.
@@ -431,7 +456,7 @@ const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن 
 const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — منصة إدارة طلاب تحفيظ القرآن واختبارهم (Next.js + صفحة SPA واحدة).
 الهدف من هذا الوضع: مساعد تطوير فعلي للمسؤول. يحلل المشروع، يحدد الملفات المطلوبة، ثم يمكنه إنشاء كود كامل وتطبيق تلقائياً على مستودع المشروع من الخادم فقط. لا تنتظر موافقة بشرية بعد إرسال الطلب إذا كان التطبيق التلقائي مفعلاً.
 البنية والملفات الرئيسية:
-- "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي على:
+- "public/index.html": التطبيق كامل (واجهة عربية RTL + كل منطق JavaScript). يحتوي ع��ى:
   • صفحات معرّفة كـ <div class="page hidden" id="..."> وتُعرض عبر showPage('id') وارجوع عبر goBack().
   • لوحة المسؤول (adminDashboard) وبها menu-grid فيها أزرار menu-btn.
   • صفحات الطالب وولي الأمر، الرسائل، الملفات، إدارة المسؤولي، إعدادات المسؤول (adminSettings).
@@ -971,11 +996,9 @@ export async function POST(req: Request) {
 
     if (mode === "student_voice_intake") {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
-      const audioBase64 = typeof payload.audioBase64 === "string" ? payload.audioBase64 : ""
-      let mimeType: string
-      try { mimeType = normalizeAudioMimeType(payload.mimeType) } catch (error) { return json({ error: error instanceof Error ? error.message : "صيغة التسجيل غير مدعومة بواسطة جميناي", diagnostics }, 415) }
-      if (!audioBase64) return json({ error: "لم يصل التسجيل الصوتي", diagnostics }, 400)
-      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
+  let audioBase64: string
+  let mimeType: string
+  try { audioBase64 = normalizeAudioData(payload.audioBase64); mimeType = normalizeAudioMimeType(payload.mimeType) } catch (error) { const failure = classifyAiFailure(error); return json({ error: failure.message, code: failure.code, diagnostics }, failure.status) }
 
       const system = `أنت تستخرج بيانات طالب من إملاء عربي أو إنجليزي أو مختلط لمسؤول مدرسة. اكتشف اللغة تلقائياً، وانسخ الكلام بلغته الأصلية دون ترجمة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
 transcript,detectedLanguage,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
@@ -1012,11 +1035,9 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
 
     // البصمة الصوتية: إنشاؤها بجميناي عند التسجيل الأول للطالب.
     if (mode === "voice_print" || mode === "voice_match") {
-      const audioBase64 = typeof payload.audioBase64 === "string" ? payload.audioBase64 : ""
-      let mimeType: string
-      try { mimeType = normalizeAudioMimeType(payload.mimeType || "audio/wav") } catch (error) { return json({ error: error instanceof Error ? error.message : "صيغة التسجيل غير مدعومة بواسطة جميناي", diagnostics }, 415) }
-      if (!audioBase64) return json({ error: "لم يصل التسجيل الصوتي", diagnostics }, 400)
-      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
+  let audioBase64: string
+  let mimeType: string
+  try { audioBase64 = normalizeAudioData(payload.audioBase64); mimeType = normalizeAudioMimeType(payload.mimeType || "audio/wav") } catch (error) { const failure = classifyAiFailure(error); return json({ error: failure.message, code: failure.code, diagnostics }, failure.status) }
       const audio = { mimeType, data: audioBase64 }
 
       if (mode === "voice_print") {
