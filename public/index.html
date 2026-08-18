@@ -533,7 +533,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <!-- منطقة التسجيل برقم الهاتف: تظهر خانة الواتساب وكود التحقق فقط -->
   <div id="signupPhoneBox" style="display:none;">
-    <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><input type="text" id="signupWhats" placeholder="01xxxxxxxxx" oninput="this.value=this.value.replace(/[^\d+]/g,'')"></div>
+    <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupWhatsCountry" aria-label="كود دولة الواتساب" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupWhats" placeholder="رقم واتساب بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,''); updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational')" style="flex:1; direction:ltr;"></div><small id="signupWhatsInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
     <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
@@ -549,12 +549,16 @@ tr:hover { background: var(--table-hover); }
   <div id="signupStep2Alert"></div>
   <div class="alert alert-success" id="signupVerifiedNote">✅ تم التحقق من هويتك بنجاح.</div>
   <div class="form-row">
-    <div class="form-group"><label>نوع الحساب *</label><select id="signupRole"><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
+    <div class="form-group"><label>نوع الحساب *</label><select id="signupRole" onchange="syncSignupRelationshipField()"><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
     <div class="form-group"><label>الاسم بالكامل *</label><input type="text" id="signupName" placeholder="الاسم كما في البطاقة"></div>
+  </div>
+  <div class="form-group" id="signupRelationshipGroup">
+    <label id="signupRelationshipLabel">اسم ولي الأمر *</label>
+    <input type="text" id="signupRelationshipName" placeholder="اكتب اسم ولي الأمر بالكامل">
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><input type="text" id="signupPhone" placeholder="01xxxxxxxxx" oninput="this.value=this.value.replace(/[^\d+]/g,'')"></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاتف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -1875,9 +1879,28 @@ function handleGoogleCredential(resp) {
   showPage('signupStep2');
 }
 
-function normalizeWaNumber(phone) {
+function getInternationalNumber(inputId, countryId) {
+  const raw = String(document.getElementById(inputId)?.value || '').replace(/\D/g, '');
+  const country = String(document.getElementById(countryId)?.value || '20').replace(/\D/g, '');
+  return country + raw.replace(/^0+/, '');
+}
+function updateSignupInternationalNumber(inputId, countryId, outputId) {
+  const output = document.getElementById(outputId);
+  if(output) output.textContent = 'الرقم الدولي: +' + getInternationalNumber(inputId, countryId);
+}
+function syncSignupRelationshipField() {
+  const role = document.getElementById('signupRole')?.value || 'student';
+  const label = document.getElementById('signupRelationshipLabel');
+  const input = document.getElementById('signupRelationshipName');
+  if(!label || !input) return;
+  const isStudent = role === 'student';
+  label.textContent = isStudent ? 'اسم ولي الأمر *' : 'اسم الطالب *';
+  input.placeholder = isStudent ? 'اكتب اسم ولي الأمر بالكامل' : 'اكتب اسم الطالب بالكامل';
+}
+function normalizeWaNumber(phone, countryCode) {
   let p = String(phone || '').replace(/\D/g, '');
   if(p.indexOf('00') === 0) p = p.slice(2);
+  if(countryCode) return String(countryCode).replace(/\D/g, '') + p.replace(/^0+/, '');
   if(p.indexOf('0') === 0) p = '20' + p.slice(1);
   return p;
 }
@@ -1887,7 +1910,12 @@ function buildWaLink(phone, text) {
 }
 function startSignup() {
   signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
-  ['signupWhats','signupCode','signupName','signupNid','signupPhone','signupNotes'].forEach(function(id){ const el = document.getElementById(id); if(el) el.value = ''; });
+  ['signupWhats','signupCode','signupName','signupNid','signupPhone','signupNotes','signupRelationshipName'].forEach(function(id){ const el = document.getElementById(id); if(el) el.value = ''; });
+  const phoneCountry = document.getElementById('signupPhoneCountry'); if(phoneCountry) phoneCountry.value = '20';
+  const whatsCountry = document.getElementById('signupWhatsCountry'); if(whatsCountry) whatsCountry.value = '20';
+  syncSignupRelationshipField();
+  updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational');
+  updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational');
   document.getElementById('signupGoogleBox').style.display = 'none';
   document.getElementById('signupPhoneBox').style.display = 'none';
   const gc = document.getElementById('googleBtnContainer'); if(gc) gc.innerHTML = '';
@@ -1911,7 +1939,9 @@ function setSignupMethod(method) {
 }
 function sendSignupCode() {
   const box = document.getElementById('signupStep1Alert');
-  const whats = document.getElementById('signupWhats').value.trim();
+  const whatsRaw = document.getElementById('signupWhats').value.trim();
+  const whatsCountry = document.getElementById('signupWhatsCountry').value;
+  const whats = getInternationalNumber('signupWhats','signupWhatsCountry');
   if(signupState.method !== 'phone') { box.innerHTML = '<div class="alert alert-danger">❌ اختر التسجيل برقم الهاتف أولاً</div>'; return; }
   if(normalizeWaNumber(whats).length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح</div>'; return; }
   signupState.email = '';
@@ -1921,7 +1951,7 @@ function sendSignupCode() {
   const text = 'طلب كود تحقق لحساب جديد في نظام إدارة الطلاب\n'
     + 'رقم واتساب مقدّم الطلب: ' + whats + '\n'
     + 'كود التحقق: ' + signupState.code + '\n'
-    + 'يرجى إرسال هذا الكود لمقدّم الطلب لإكمال التسجيل.';
+    + 'يرجى إرسال هذا الكود لمقدّم الطلب لإ��مال التسجيل.';
   const link = buildWaLink(adminWa, text);
   document.getElementById('signupVerifyBox').classList.remove('hidden');
   box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق لإرسالها إلى المسؤول (' + adminWa + '). <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال الكود إلى واتساب المسؤول</strong></a> ثم أدخل الكود بالأسفل بعد استلامه من المسؤول.</div>';
@@ -1935,7 +1965,8 @@ function verifySignupCode() {
   signupState.verified = true;
   box.innerHTML = '';
   document.getElementById('signupVerifiedNote').innerHTML = '✅ تم التحقق من هويتك بنجاح — ' + (signupState.method === 'google' ? 'حساب جوجل: ' + signupState.email : 'رقم الواتساب: ' + signupState.whats);
-  document.getElementById('signupPhone').value = signupState.whats;
+  const verifiedPhone = document.getElementById('signupPhone');
+  if(verifiedPhone && !verifiedPhone.value) { verifiedPhone.value = String(signupState.whats || '').replace(/^20/, '0'); updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational'); }
   initSignupJuzSelect();
   showPage('signupStep2');
 }
@@ -1959,20 +1990,23 @@ function submitSignupRequest() {
   if(!signupState.verified) { box.innerHTML = '<div class="alert alert-danger">❌ يجب التحقق من الهوية أولاً</div>'; return; }
   const role = document.getElementById('signupRole').value;
   const name = document.getElementById('signupName').value.trim();
+  const relationshipName = document.getElementById('signupRelationshipName').value.trim();
   const nid = document.getElementById('signupNid').value.trim();
-  const phone = document.getElementById('signupPhone').value.trim();
+  const phone = getInternationalNumber('signupPhone','signupPhoneCountry');
   const juz = document.getElementById('signupJuz').value;
   const surah = document.getElementById('signupSurah').value;
   const notes = document.getElementById('signupNotes').value.trim();
-  if(!name || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
+  if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
+  if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هاتف صحيحًا مع اختيار كود الدولة</div>'; return; }
   if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يكون 14 رقم</div>'; return; }
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
   const time = new Date().toLocaleString('ar-EG');
   const details = '📋 طلب ئنشاء حساب جديد\n'
     + 'نوع الحساب: ' + roleLabel + '\n'
     + 'الاسم: ' + name + '\n'
+    + (role === 'student' ? 'اسم ولي الأمر: ' : 'اسم الطالب: ') + relationshipName + '\n'
     + 'الرقم القومي: ' + nid + '\n'
-    + 'رقم الهائف: ' + phone + '\n'
+    + 'رقم الهاتف الدولي: +' + phone + '\n'
     + 'طريقة التسجيل: ' + (signupState.method === 'google' ? 'جوجل (' + signupState.email + ')' : 'رقم الهاتف / واتساب') + '\n'
     + (signupState.method === 'google' ? 'حساب جوجل المُوثّق: ' + signupState.email + '\n' : 'رقم الواتساب المُوثّق: ' + signupState.whats + '\n')
     + 'الجزء: ' + (juz ? 'الجزء ' + juz : 'غير محدد') + '\n'
@@ -1981,7 +2015,7 @@ function submitSignupRequest() {
     + 'وقت الطلب: ' + time;
 
   const requests = getData('joinRequests');
-  requests.push({ id: 'jr' + Date.now(), role: role, name: name, nid: nid, phone: phone, whats: signupState.whats, email: signupState.email, method: signupState.method, juz: juz, surah: surah, notes: notes, status: 'pending', time: time });
+  requests.push({ id: 'jr' + Date.now(), role: role, name: name, guardianName: role === 'student' ? relationshipName : '', studentName: role === 'parent' ? relationshipName : '', relationshipName: relationshipName, nid: nid, phone: phone, whats: signupState.whats, email: signupState.email, method: signupState.method, juz: juz, surah: surah, notes: notes, status: 'pending', time: time });
   setData('joinRequests', requests);
 
   const msgs = getData('messages');
@@ -3100,7 +3134,7 @@ function localSmartChatReply(message,role){
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكره|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أئ سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
-  if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
+  if(/صعب|ضعف|نسي|نس��ان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت الهدف والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
 }
 async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';box.innerHTML+='<div class="ai-msg user">'+escapeHtml(message)+'</div><div id="adminAiTyping" class="ai-msg bot">جاري التحليل...</div>';box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await readApiJson(res,'تعذر رد OpenRouter');document.getElementById('adminAiTyping').outerHTML='<div class="ai-msg bot">'+escapeHtml(data.result).replace(/\n/g,'<br>')+'</div>'}catch(e){document.getElementById('adminAiTyping').textContent=localSmartChatReply(message,'admin')}box.scrollTop=box.scrollHeight}
@@ -3313,7 +3347,7 @@ function renderExamQuestions(){
     (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
     '<div class="form-group"><label>فحص الغش لهذا السؤال</label><select onchange="updateExamQuestion('+i+',\'proctorEnabled\',this.value===\'true\')"><option value="true" '+(q.proctorEnabled!==false?'selected':'')+'>مفعّل</option><option value="false" '+(q.proctorEnabled===false?'selected':'')+'>غير مفعّل</option></select></div></div>'+
     '<div class="form-group"><label>تعليمات السؤال (ئن دون الإجابة)</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+ 
-    '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآيات محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
+    '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآي��ت محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
   if(q.type==='mcq'||q.type==='truefalse')h+='<div class="form-group"><label>الاختيارات (كل اختيار في سطر)</label><textarea rows="4" onchange="updateExamQuestion('+i+',\'options\',this.value.split(/\\n/).map(x=>x.trim()).filter(Boolean))">'+escapeHtml((q.options||[]).join('\n'))+'</textarea></div><div class="form-group"><label>الإجابة الصحيحة — لا تظهر للطالب</label><input value="'+escapeHtml(q.correct||'')+'" onchange="updateExamQuestion('+i+',\'correct\',this.value)"></div>';
   else if(q.type==='complete')h+='<div class="form-group"><label>الإجابة المرجعية — لا تظهر للطالب</label><textarea rows="3" onchange="updateExamQuestion('+i+',\'correct\',this.value)">'+escapeHtml(q.correct||'')+'</textarea></div>';
   else h+='<div class="alert alert-info">سيتم التحقق من بصمة الطالب أولاً، ثم من محتوى التلاوة. إذا كانت البصمة غير مطابقة فلن يُحفظ التسجيل.</div>';
@@ -3322,7 +3356,7 @@ function renderExamQuestions(){
 function showExamAlert(t,type){const e=document.getElementById('examBuilderAlert');if(e)e.innerHTML='<div class="alert alert-'+(type||'info')+'">'+t+'</div>'}
 function saveExamDraft(){
   const id=parseInt(document.getElementById('recordStudentId').value);let students=getData('students');const i=students.findIndex(s=>s.id===id);const qs=examQuestions.filter(q=>!q.rejected).map(cleanExamQuestion);
-  if(i<0||!qs.length){showExamAlert('أضف سؤالاً واحداً على الأقل قبل الحفظ.','danger');return}
+  if(i<0||!qs.length){showExamAlert('أضف سؤالاً ��احداً على الأقل قبل الحفظ.','danger');return}
   const totalSeconds=qs.reduce((n,q)=>n+Math.max(5,parseInt(q.timeLimit)||60),0);
   const deadlineValue=document.getElementById('examDeadline')?.value||'';const deadlineAt=deadlineValue?new Date(deadlineValue).getTime():Date.now()+24*60*60*1000;if(!Number.isFinite(deadlineAt)||deadlineAt<=Date.now()){showExamAlert('حدد موعد انتهاء لاحقاً للوقت الحالي.','danger');return}
   const lastSurah=document.getElementById('examLastSurah')?.value||currentRecordMainSurah;
@@ -4211,7 +4245,7 @@ function renderDevPlan(plan){
       plan.applied.forEach(function(a){
         h += '<li><code style="direction:ltr;background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:5px;">'+esc(a.path||'')+'</code>'+
              (a.reason ? ' — '+esc(a.reason) : '')+
-             (a.commitUrl ? ' — <a href="'+esc(a.commitUrl)+'" target="_blank" rel="noopener">عرض الـcommit</a>' : '')+'</li>';
+             (a.commitUrl ? ' — <a href="'+esc(a.commitUrl)+'" target="_blank" rel="noopener">عرض ال��commit</a>' : '')+'</li>';
       });
       h += '</ul>';
     }
@@ -6010,7 +6044,7 @@ function generateAIResponse(text, student) {
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
     let r = '📈 <strong>تحليل تقدمك:</strong><br>• عدد التسميعات النهائية: '+scores.length+'<br>• المتوسط العام: '+avg+' من 16<br>• أعلى درجة: '+Math.max.apply(null,scores)+'<br>• أقل درجة: '+Math.min.apply(null,scores)+'<br>';
-    r += '• آخ تغيّر: '+(diff>0?('ارتفاع بمقدار '+diff+' درجة 🎉'):(diff<0?('انخفاض بمقدار '+Math.abs(diff)+' درجة — لا بأس، عوّضها بمراجعة إضافية 💪'):'ثبات في المستوى '));
+    r += '• آخ تغيّر: '+(diff>0?('ارتفاع بمقدار '+diff+' درجة 🎉'):(diff<0?('انخفاض بمقدار '+Math.abs(diff)+' درجة — لا بأس، عوّضها بمراجعة إضافية 💪'):'ثبات ��ي المستوى '));
     return r;
   }
   // المهام / الواجب
