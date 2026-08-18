@@ -676,6 +676,16 @@ tr:hover { background: var(--table-hover); }
       <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حفظ الرقم</button>
     </div>
   </div>
+  <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
+    <div class="form-group" style="margin-bottom:0;">
+      <label>معرّف عميل جوجل (Google Client ID) لتفعيل التسجيل بحساب جوجل</label>
+      <input type="text" id="googleClientIdInput" placeholder="xxxxxxxx.apps.googleusercontent.com">
+      <small style="color:var(--text-light)">انسخه من Google Cloud Console (OAuth Client ID). بعد الحفظ سيعمل زر التسجيل بحساب جوجل وعرض حسابات الجهاز.</small>
+    </div>
+    <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
+      <button class="btn btn-primary" onclick="saveGoogleClientId()">💾 حفظ المعرّف</button>
+    </div>
+  </div>
   <div class="form-row" style="margin-bottom:20px;">
     <div class="form-group"><label>رقم الموبايل</label><input type="text" id="newAdminMobile" placeholder="رقم الموبايل (11 رقم)" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
     <div class="form-group"><label>الرقم السري</label><input type="password" id="newAdminPass" placeholder="الرقم السري"></div>
@@ -796,7 +806,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم المستخدم</label><input type="text" id="editUsername"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم القومي (14 رقم)</label><input type="text" id="editNational" maxlength="14" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div class="form-group"><label>الرقم القو��ي (14 رقم)</label><input type="text" id="editNational" maxlength="14" oninput="this.value=this.value.replace(/\D/g,'')"></div>
     <div class="form-group"><label>رقم الهاتف (11 رقم)</label><input type="text" id="editPhone" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
   <div class="form-row">
@@ -885,7 +895,7 @@ tr:hover { background: var(--table-hover); }
     <div id="homeworkItems"></div>
   </div>
   <div class="homework-section" style="background:linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); border-color:var(--primary);">
-    <h4>🎙️ التسميع الإضافي <button class="add-item-btn" onclick="addExtraElement()">+</button></h4>
+    <h4>🎙️ ال��سميع الإضافي <button class="add-item-btn" onclick="addExtraElement()">+</button></h4>
     <div id="extraElements"></div>
   </div>
 
@@ -1385,7 +1395,7 @@ function toggleLang() {
 }
 
 let neonSaveTimer = null;
-const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests'];
+const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','googleClientId','joinRequests'];
 function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
@@ -1790,9 +1800,9 @@ function updateSurahSelect() {
 let signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
 
 // ====== إعداد تسجيل الدخول بحساب جوجل (Google Identity Services) ======
-// ضع هنا معرّف العميل (OAuth Client ID) من Google Cloud Console
-const GOOGLE_CLIENT_ID = 'ضع_معرف_العميل_هنا.apps.googleusercontent.com';
+// معرّف العميل (OAuth Client ID) يُدار من إعدادات المسؤول > إدارة المسؤولين
 let googleGsiInited = false;
+let currentGoogleClientId = '';
 
 function decodeJwt(token) {
   try {
@@ -1802,20 +1812,24 @@ function decodeJwt(token) {
 }
 
 function googleClientIdReady() {
-  return GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.indexOf('ضع_معرف') !== 0 && GOOGLE_CLIENT_ID.indexOf('.apps.googleusercontent.com') !== -1;
+  const id = (typeof getGoogleClientId === 'function') ? getGoogleClientId() : '';
+  return !!id && id.indexOf('.apps.googleusercontent.com') !== -1;
 }
 
 function initGoogleGsi() {
-  if(googleGsiInited) return true;
+  const id = (typeof getGoogleClientId === 'function') ? getGoogleClientId() : '';
+  if(!id || id.indexOf('.apps.googleusercontent.com') === -1) return false;
   if(!window.google || !google.accounts || !google.accounts.id) return false;
-  if(!googleClientIdReady()) return false;
+  // إعادة التهيئة إذا تغيّر المعرّف
+  if(googleGsiInited && id === currentGoogleClientId) return true;
   google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
+    client_id: id,
     callback: handleGoogleCredential,
     auto_select: false,
     itp_support: true,
     ux_mode: 'popup'
   });
+  currentGoogleClientId = id;
   googleGsiInited = true;
   return true;
 }
@@ -1826,7 +1840,7 @@ function renderGoogleButton() {
   if(!container) return;
   container.innerHTML = '';
   if(!initGoogleGsi()) {
-    box.innerHTML = '<div class="alert alert-warning">⚠️ لم يتم ضبط معرّف عميل جوجل (Client ID) بعد. عدّل قيمة GOOGLE_CLIENT_ID في الكود لتفعيل اختيار حسابات جوجل.</div>';
+    box.innerHTML = '<div class="alert alert-warning">⚠️ لم يتم تفعيل التسجيل بحساب جوجل بعد. على المسؤول إدخال معرّف عميل جوجل (Client ID) من: إعدادات المسؤول ← إدارة المسؤولين ← خانة "معرّف عميل جوجل". يمكنك الآن استخدام التسجيل برقم الهاتف.</div>';
     return;
   }
   google.accounts.id.renderButton(container, { theme: 'filled_blue', size: 'large', type: 'standard', shape: 'pill', text: 'signup_with', locale: 'ar' });
@@ -1893,10 +1907,14 @@ function sendSignupCode() {
   signupState.email = '';
   signupState.whats = whats;
   signupState.code = String(Math.floor(100000 + Math.random() * 900000));
-  const text = 'كود التحقق الخاص بإنشاء حسابك في نظام إدارة الطلاب: ' + signupState.code + '\nلا تشارك هذا الكود مع أي شخص.';
-  const link = buildWaLink(whats, text);
+  const adminWa = getAdminWhatsapp();
+  const text = 'طلب كود تحقق لحساب جديد في نظام إدارة الطلاب\n'
+    + 'رقم واتساب مقدّم الطلب: ' + whats + '\n'
+    + 'كود التحقق: ' + signupState.code + '\n'
+    + 'يرجى إرسال هذا الكود لمقدّم الطلب لإكمال التسجيل.';
+  const link = buildWaLink(adminWa, text);
   document.getElementById('signupVerifyBox').classList.remove('hidden');
-  box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق. <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال رسالة الكود على واتساب</strong></a> ثم أدخل الكود بالأسفل.</div>';
+  box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق لإرسالها إلى المسؤول (' + adminWa + '). <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال الكود إلى واتساب المسؤول</strong></a> ثم أدخل الكود بالأسفل بعد استلامه من المسؤول.</div>';
   window.open(link, '_blank', 'noopener');
 }
 function verifySignupCode() {
@@ -2123,9 +2141,27 @@ function saveAdminWhatsapp() {
   box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب المسؤول: ' + num + '</div>';
 }
 
+function getGoogleClientId() {
+  return String(getData('googleClientId', '') || '').trim();
+}
+function saveGoogleClientId() {
+  const input = document.getElementById('googleClientIdInput');
+  const val = String(input.value || '').trim();
+  const box = document.getElementById('adminsAlert');
+  if(val && val.indexOf('.apps.googleusercontent.com') === -1) {
+    box.innerHTML = '<div class="alert alert-danger">❌ معرّف عميل جوجل غير صحيح، يجب أن ينتهي بـ .apps.googleusercontent.com</div>';
+    return;
+  }
+  setData('googleClientId', val);
+  googleGsiInited = false;
+  box.innerHTML = '<div class="alert alert-success">✅ تم حفظ معرّف عميل جوجل بنجاح، أصبح التسجيل بحساب جوجل مفعّلاً.</div>';
+}
+
 function renderAdmins() {
   const whatsInput = document.getElementById('adminWhatsInput');
   if(whatsInput) whatsInput.value = getAdminWhatsapp();
+  const gciInput = document.getElementById('googleClientIdInput');
+  if(gciInput) gciInput.value = getGoogleClientId();
   const admins = getData('admins');
   let html = '<table><thead><tr><th>#</th><th>رقم الموبايل</th><th>الرقم السري</th><th>النوع</th><th>التحكم</th></tr></thead><tbody>';
   admins.forEach((a, i) => {
@@ -3985,7 +4021,7 @@ function openDevAssistant(){
 // ===== سجل التدقيق لمساعد التطوير (Audit Log) =====
 // عبارات تدل على عمليات خطيرة تتطلب تأكيداً صريحاً قبل التنفي اللقائي.
 const DEV_DANGER_PATTERNS = [
-  {re:/حذف\s*(قاعدة|لقاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
+  {re:/��ذف\s*(قاعدة|لقاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
   {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*الملفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
   {re:/حذف\s*(المستخدمين|كل\s*المستخدمين|جميع\s*المستخدمين)|delete\s+users/i, label:'حذف المستخدمين'},
   {re:/حذف\s*(الطلاب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},
@@ -5054,7 +5090,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
     receiverType: 'admin', text: 'تم إرسال تسجيل صوتي من الطالب ' + currentUser.name + '. ' + (task.name || task.text || ''),
     fileData: dataUrl, fileName: fileName || 'voice_recording.webm', fileType: 'voice',
     voiceMatch: matchPct, recitationMatch: rec.pct, recitationTarget: targetTxt,
-    aiReport: 'مطابقة البصمة: ' + (matchPct !== null ? matchPct + '%' : 'غير متاحة') + ' | مطابقة التلاوة: ' + rec.pct + '%' + (rec.reason ? ' | ' + rec.reason : ''),
+    aiReport: 'م��ابقة البصمة: ' + (matchPct !== null ? matchPct + '%' : 'غير متاحة') + ' | مطابقة التلاوة: ' + rec.pct + '%' + (rec.reason ? ' | ' + rec.reason : ''),
     taskIndex: task.originalTaskIndex !== undefined ? task.originalTaskIndex : taskIdx,
     time: new Date().toLocaleString('ar-EG'), approved: false, read: false
   });
@@ -5317,7 +5353,7 @@ function openAyatViewer(surah, from, to) {
       '<strong id="ayatViewerTitle" style="color:#667eea;">📖 عض الآيات</strong>' +
       '<div style="display:flex; gap:6px;">' +
       '<button class="btn btn-xs btn-info" onclick="zoomAyat(25)">➕ تكبير</button>' +
-      '<button class="btn btn-xs btn-info" onclick="zoomAyat(100)">🔍 تكبير قوي</button>' +
+      '<button class="btn btn-xs btn-info" onclick="zoomAyat(100)">🔍 تكبير ��وي</button>' +
       '<button class="btn btn-xs btn-info" onclick="zoomAyat(-25)">➖ تصغير</button>' +
       '<button class="btn btn-xs btn-secondary" onclick="zoomAyatReset()">↺ الحجم الأصلي</button>' +
       '<span id="ayatZoomLabel" style="align-self:center; font-size:0.85rem; color:var(--text-light);">100%</span>' +
