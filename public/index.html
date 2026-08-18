@@ -676,16 +676,8 @@ tr:hover { background: var(--table-hover); }
       <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حفظ الرقم</button>
     </div>
   </div>
-  <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
-    <div class="form-group" style="margin-bottom:0;">
-      <label>معرّف عميل جوجل (Google Client ID) لتفعيل التسجيل بحساب جوجل</label>
-      <input type="text" id="googleClientIdInput" placeholder="xxxxxxxx.apps.googleusercontent.com">
-      <small style="color:var(--text-light)">انسخه من Google Cloud Console (OAuth Client ID). بعد الحفظ سيعمل زر التسجيل بحساب جوجل وعرض حسابات الجهاز.</small>
-    </div>
-    <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
-      <button class="btn btn-primary" onclick="saveGoogleClientId()">💾 حفظ المعرّف</button>
-    </div>
-  </div>
+  <div class="alert alert-info" style="margin-bottom:20px;">تسجيل Google مركزي ومتاح لجميع الأجهزة عبر إعداد GOOGLE_CLIENT_ID في بيئة Vercel.</div>
+
   <div class="form-row" style="margin-bottom:20px;">
     <div class="form-group"><label>رقم الموبايل</label><input type="text" id="newAdminMobile" placeholder="رقم الموبايل (11 رقم)" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
     <div class="form-group"><label>الرقم السري</label><input type="password" id="newAdminPass" placeholder="الرقم السري"></div>
@@ -1398,7 +1390,7 @@ let langObserver = new MutationObserver(function(){ if(currentLang==='en'){ lang
 function initLanguage(){ applyLangToDom(); langObserver.observe(document.body,{childList:true,subtree:true}); }
 
 let neonSaveTimer = null;
-const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','googleClientId','joinRequests'];
+const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests'];
 function getData(key, def) { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
@@ -1797,7 +1789,7 @@ function updateSurahSelect() {
   select.innerHTML = html;
   const ranges=getJuzVerseRanges(juz);
   const hint=document.getElementById('juzBoundaryHint');
-  if(hint) hint.textContent='حدود الجزء: '+ranges.map(r=>'سورة '+(ALL_SURAHS_ORDERED[r[0]-1]||r[0])+' '+r[1]+'–'+r[2]).join(' | ');
+  if(hint) hint.textContent='حدود الج��ء: '+ranges.map(r=>'سورة '+(ALL_SURAHS_ORDERED[r[0]-1]||r[0])+' '+r[1]+'–'+r[2]).join(' | ');
 }
 // ====== إنشاء حساب جديد (طلب انضمام) ======
 let signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
@@ -1806,6 +1798,8 @@ let signupState = { method: null, email: '', name: '', whats: '', code: '', veri
 // معرّف العميل (OAuth Client ID) يُدار من إعدادات المسؤول > إدارة المسؤولين
 let googleGsiInited = false;
 let currentGoogleClientId = '';
+let serverGoogleClientId = '';
+let googleClientIdRequest = null;
 
 function decodeJwt(token) {
   try {
@@ -1814,13 +1808,23 @@ function decodeJwt(token) {
   } catch(e) { return null; }
 }
 
+function getGoogleClientId() {
+  return serverGoogleClientId;
+}
+function loadGoogleClientId() {
+  if(googleClientIdRequest) return googleClientIdRequest;
+  googleClientIdRequest = fetch('/api/config/google', { cache: 'no-store' })
+    .then(function(res) { return res.json().then(function(body) { if(!res.ok) throw new Error(body.message || 'Google Client ID is not configured'); return body; }); })
+    .then(function(body) { serverGoogleClientId = String(body.clientId || '').trim(); return serverGoogleClientId; })
+    .catch(function() { serverGoogleClientId = ''; return ''; });
+  return googleClientIdRequest;
+}
 function googleClientIdReady() {
-  const id = (typeof getGoogleClientId === 'function') ? getGoogleClientId() : '';
-  return !!id && id.indexOf('.apps.googleusercontent.com') !== -1;
+  return !!serverGoogleClientId && serverGoogleClientId.indexOf('.apps.googleusercontent.com') !== -1;
 }
 
 function initGoogleGsi() {
-  const id = (typeof getGoogleClientId === 'function') ? getGoogleClientId() : '';
+  const id = getGoogleClientId();
   if(!id || id.indexOf('.apps.googleusercontent.com') === -1) return false;
   if(!window.google || !google.accounts || !google.accounts.id) return false;
   // إعادة التهيئة إذا تغيّر المعرّف
@@ -1837,15 +1841,18 @@ function initGoogleGsi() {
   return true;
 }
 
-function renderGoogleButton() {
+async function renderGoogleButton() {
   const container = document.getElementById('googleBtnContainer');
   const box = document.getElementById('signupStep1Alert');
   if(!container) return;
   container.innerHTML = '';
+  box.innerHTML = '<div class="alert alert-info">جارٍ تحميل تسجيل الدخول بحساب Google...</div>';
+  await loadGoogleClientId();
   if(!initGoogleGsi()) {
-    box.innerHTML = '<div class="alert alert-warning">⚠️ لم يتم تفعيل التسجيل بحساب جوجل بعد. على المسؤول إدخال معرّف عميل جوجل (Client ID) من: إعدادات المسؤول ← إدارة المسؤولين ← خانة "معرّف عميل جوجل". يمكنك الآن استخدام التسجيل برقم الهاتف.</div>';
+    box.innerHTML = '<div class="alert alert-danger">تعذر تفعيل تسجيل الدخول بحساب Google من الخادم. يرجى مراجعة إعداد GOOGLE_CLIENT_ID في Vercel.</div>';
     return;
   }
+  box.innerHTML = '';
   google.accounts.id.renderButton(container, { theme: 'filled_blue', size: 'large', type: 'standard', shape: 'pill', text: 'signup_with', locale: 'ar' });
   // إظهار نافذة اختيار حسابات جوجل الموجودة على الجهاز تلقائياً
   google.accounts.id.prompt();
@@ -2144,27 +2151,10 @@ function saveAdminWhatsapp() {
   box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب المسؤول: ' + num + '</div>';
 }
 
-function getGoogleClientId() {
-  return String(getData('googleClientId', '') || '').trim();
-}
-function saveGoogleClientId() {
-  const input = document.getElementById('googleClientIdInput');
-  const val = String(input.value || '').trim();
-  const box = document.getElementById('adminsAlert');
-  if(val && val.indexOf('.apps.googleusercontent.com') === -1) {
-    box.innerHTML = '<div class="alert alert-danger">❌ معرّف عميل جوجل غير صحيح، يجب أن ينتهي بـ .apps.googleusercontent.com</div>';
-    return;
-  }
-  setData('googleClientId', val);
-  googleGsiInited = false;
-  box.innerHTML = '<div class="alert alert-success">✅ تم حفظ معرّف عميل جوجل بنجاح، أصبح التسجيل بحساب جوجل مفعّلاً.</div>';
-}
 
 function renderAdmins() {
   const whatsInput = document.getElementById('adminWhatsInput');
   if(whatsInput) whatsInput.value = getAdminWhatsapp();
-  const gciInput = document.getElementById('googleClientIdInput');
-  if(gciInput) gciInput.value = getGoogleClientId();
   const admins = getData('admins');
   let html = '<table><thead><tr><th>#</th><th>رقم الموبايل</th><th>الرقم السري</th><th>النوع</th><th>التحكم</th></tr></thead><tbody>';
   admins.forEach((a, i) => {
@@ -3106,7 +3096,7 @@ function localSmartChatReply(message,role){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
       return 'ملخص البيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
     }
-    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر المواضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
+    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مق��ع أقدم، وسجّل المواضع التي توقفت فيها. كرر المواضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكره|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أئ سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
@@ -5062,7 +5052,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   // 1) مطابقة البصمة الصوتية
   if(matchPct !== null && matchPct < VOICE_MATCH_THRESHOLD) {
     showToast('❌ فشل التحقق من البصمة الصوتية (' + matchPct + '%) — لم يتم حفظ أو إرسال التسجيل', 'error');
-    if(statusEl) statusEl.textContent = 'غير مطابق — أعد التسجيل ❌';
+    if(statusEl) statusEl.textContent = 'غير مطابق — ��عد التسجيل ❌';
     if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 التحقق الأمني:</strong><br>البصمة الصوتية غير مطابقة لصوت الطال (' + matchPct + '%).<br>لم يتم حفظ التسجيل أو إرساله للمسؤول أو ولي الأمر.</div>';
     return false;
   }
@@ -5197,7 +5187,7 @@ function _fft(re, im) {
 }
 
 async function computeVoicePrint(blob) {
-  // بصة محلية متعددة السمات: طيف صوتي + مركز الطيف + عبور الصفر + إحصاءات زمنية.
+  // بصة محلية متعددة السم��ت: طيف صوتي + مركز الطيف + عبور الصفر + إحصاءات زمنية.
   // لا نرفع البصمة الخام إلى OpenRouter؛ تبقى المقارنة على جهاز المستخدم.
   try{
     const buf=await blob.arrayBuffer(),AC=window.AudioContext||window.webkitAudioContext,ctx=new AC(),audio=await ctx.decodeAudioData(buf.slice(0)),ch=audio.getChannelData(0);
