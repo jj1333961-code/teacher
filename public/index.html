@@ -9,6 +9,7 @@
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>نظام إدارة الطلاب المتكامل</title>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js" crossorigin="anonymous"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 /* 🔐 تشغيل آمن على أي استضافة HTTPS (Netlify / Vercel / GitHub Pages) */
 (function(){
@@ -524,13 +525,21 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><button class="btn btn-outline" id="signupMethodGoogleBtn" onclick="setSignupMethod('google')" style="width:100%">🔵 التسجيل بحساب جوجل</button></div>
     <div class="form-group"><button class="btn btn-outline" id="signupMethodPhoneBtn" onclick="setSignupMethod('phone')" style="width:100%">🟢 التسجيل برقم الهاتف (واتساب)</button></div>
   </div>
-  <div class="form-group" id="signupGoogleBox" style="display:none;"><label>بريد حساب جوجل *</label><input type="email" id="signupEmail" placeholder="example@gmail.com"></div>
-  <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><input type="text" id="signupWhats" placeholder="01xxxxxxxxx" oninput="this.value=this.value.replace(/[^\d+]/g,'')"></div>
-  <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
-  <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
-    <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
-    <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 إعادة إرسال الكود</button>
+  <!-- منطقة التسجيل بحساب جوجل: تظهر حسابات جوجل الموجودة على الجهاز للاختيار مباشرةً بدون تحقق واتساب -->
+  <div class="form-group" id="signupGoogleBox" style="display:none;">
+    <label>اختر حساب جوجل لإكمال التسجيل *</label>
+    <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
+    <p style="color:var(--text-light); font-size:0.9rem; margin-top:5px;">اضغط لعرض حسابات جوجل الموجودة على جهازك واختيار أحدها. لن يُطلب منك رقم هاتف أو كود تحقق.</p>
+  </div>
+  <!-- منطقة التسجيل برقم الهاتف: تظهر خانة الواتساب وكود التحقق فقط -->
+  <div id="signupPhoneBox" style="display:none;">
+    <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><input type="text" id="signupWhats" placeholder="01xxxxxxxxx" oninput="this.value=this.value.replace(/[^\d+]/g,'')"></div>
+    <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
+    <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
+      <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+      <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
+      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 إعادة إرسال الكود</button>
+    </div>
   </div>
 </div>
 
@@ -1240,7 +1249,7 @@ const ALL_SURAHS_ORDERED = [
   "الإسراء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
-  "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "الت��وير", "الانفطار",
+  "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "الناز��ات", "عبس", "الت��وير", "الانفطار",
   "المطففين", "الانشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "البينة",
   "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس"
 ];
@@ -1778,7 +1787,69 @@ function updateSurahSelect() {
   if(hint) hint.textContent='حدود الجزء: '+ranges.map(r=>'سورة '+(ALL_SURAHS_ORDERED[r[0]-1]||r[0])+' '+r[1]+'–'+r[2]).join(' | ');
 }
 // ====== إنشاء حساب جديد (طلب انضمام) ======
-let signupState = { method: null, email: '', whats: '', code: '', verified: false };
+let signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
+
+// ====== إعداد تسجيل الدخول بحساب جوجل (Google Identity Services) ======
+// ضع هنا معرّف العميل (OAuth Client ID) من Google Cloud Console
+const GOOGLE_CLIENT_ID = 'ضع_معرف_العميل_هنا.apps.googleusercontent.com';
+let googleGsiInited = false;
+
+function decodeJwt(token) {
+  try {
+    const base = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(decodeURIComponent(escape(atob(base))));
+  } catch(e) { return null; }
+}
+
+function googleClientIdReady() {
+  return GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.indexOf('ضع_معرف') !== 0 && GOOGLE_CLIENT_ID.indexOf('.apps.googleusercontent.com') !== -1;
+}
+
+function initGoogleGsi() {
+  if(googleGsiInited) return true;
+  if(!window.google || !google.accounts || !google.accounts.id) return false;
+  if(!googleClientIdReady()) return false;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    auto_select: false,
+    itp_support: true,
+    ux_mode: 'popup'
+  });
+  googleGsiInited = true;
+  return true;
+}
+
+function renderGoogleButton() {
+  const container = document.getElementById('googleBtnContainer');
+  const box = document.getElementById('signupStep1Alert');
+  if(!container) return;
+  container.innerHTML = '';
+  if(!initGoogleGsi()) {
+    box.innerHTML = '<div class="alert alert-warning">⚠️ لم يتم ضبط معرّف عميل جوجل (Client ID) بعد. عدّل قيمة GOOGLE_CLIENT_ID في الكود لتفعيل اختيار حسابات جوجل.</div>';
+    return;
+  }
+  google.accounts.id.renderButton(container, { theme: 'filled_blue', size: 'large', type: 'standard', shape: 'pill', text: 'signup_with', locale: 'ar' });
+  // إظهار نافذة اختيار حسابات جوجل الموجودة على الجهاز تلقائياً
+  google.accounts.id.prompt();
+}
+
+function handleGoogleCredential(resp) {
+  const box = document.getElementById('signupStep1Alert');
+  const payload = decodeJwt(resp && resp.credential);
+  if(!payload || !payload.email) { box.innerHTML = '<div class="alert alert-danger">❌ تعذّر قراءة بيانات حساب جوجل، حاول مرة أخرى</div>'; return; }
+  // حساب جوجل يُثبت الهوية → لا حاجة لرقم واتساب ولا كود تحقق
+  signupState.method = 'google';
+  signupState.email = payload.email;
+  signupState.name = payload.name || '';
+  signupState.whats = '';
+  signupState.verified = true;
+  box.innerHTML = '';
+  document.getElementById('signupVerifiedNote').innerHTML = '✅ تم التحقق من هويتك عبر جوجل — ' + payload.email;
+  if(payload.name) { const n = document.getElementById('signupName'); if(n && !n.value) n.value = payload.name; }
+  initSignupJuzSelect();
+  showPage('signupStep2');
+}
 
 function normalizeWaNumber(phone) {
   let p = String(phone || '').replace(/\D/g, '');
@@ -1791,9 +1862,11 @@ function buildWaLink(phone, text) {
   return p ? 'https://wa.me/' + p + '?text=' + encodeURIComponent(text) : '';
 }
 function startSignup() {
-  signupState = { method: null, email: '', whats: '', code: '', verified: false };
-  ['signupEmail','signupWhats','signupCode','signupName','signupNid','signupPhone','signupNotes'].forEach(function(id){ const el = document.getElementById(id); if(el) el.value = ''; });
+  signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
+  ['signupWhats','signupCode','signupName','signupNid','signupPhone','signupNotes'].forEach(function(id){ const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('signupGoogleBox').style.display = 'none';
+  document.getElementById('signupPhoneBox').style.display = 'none';
+  const gc = document.getElementById('googleBtnContainer'); if(gc) gc.innerHTML = '';
   document.getElementById('signupVerifyBox').classList.add('hidden');
   document.getElementById('signupStep1Alert').innerHTML = '';
   document.getElementById('signupMethodGoogleBtn').classList.remove('btn-primary');
@@ -1807,19 +1880,20 @@ function setSignupMethod(method) {
   g.classList.toggle('btn-primary', method === 'google');
   p.classList.toggle('btn-primary', method === 'phone');
   document.getElementById('signupGoogleBox').style.display = method === 'google' ? 'block' : 'none';
+  document.getElementById('signupPhoneBox').style.display = method === 'phone' ? 'block' : 'none';
+  document.getElementById('signupVerifyBox').classList.add('hidden');
   document.getElementById('signupStep1Alert').innerHTML = '';
+  if(method === 'google') renderGoogleButton();
 }
 function sendSignupCode() {
   const box = document.getElementById('signupStep1Alert');
   const whats = document.getElementById('signupWhats').value.trim();
-  const email = (document.getElementById('signupEmail').value || '').trim();
-  if(!signupState.method) { box.innerHTML = '<div class="alert alert-danger">❌ اختر طريقة التسجيل أولاً (جوجل أو رقم الهاتف)</div>'; return; }
-  if(signupState.method === 'google' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل بريد حساب جوجل بشكل صحيح</div>'; return; }
+  if(signupState.method !== 'phone') { box.innerHTML = '<div class="alert alert-danger">❌ اختر التسجيل برقم الهاتف أولاً</div>'; return; }
   if(normalizeWaNumber(whats).length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح</div>'; return; }
-  signupState.email = email;
+  signupState.email = '';
   signupState.whats = whats;
   signupState.code = String(Math.floor(100000 + Math.random() * 900000));
-  const text = 'كود التحقق الخاص بإنشاء حسابك في نظام إدارة الطلاب: ' + signupState.code + (signupState.method === 'google' ? '\nحساب جوجل: ' + email : '') + '\nلا تشارك هذا الكود مع أي شخص.';
+  const text = 'كود التحقق الخاص بإنشاء حسابك في نظام إدارة الطلاب: ' + signupState.code + '\nلا تشارك هذا الكود مع أي شخص.';
   const link = buildWaLink(whats, text);
   document.getElementById('signupVerifyBox').classList.remove('hidden');
   box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق. <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال رسالة الكود على واتساب</strong></a> ثم أدخل الكود بالأسفل.</div>';
@@ -1872,7 +1946,7 @@ function submitSignupRequest() {
     + 'الرقم القومي: ' + nid + '\n'
     + 'رقم الها��ف: ' + phone + '\n'
     + 'طريقة التسجيل: ' + (signupState.method === 'google' ? 'جوجل (' + signupState.email + ')' : 'رقم الهاتف / واتساب') + '\n'
-    + 'رقم الواتساب المُوثّق: ' + signupState.whats + '\n'
+    + (signupState.method === 'google' ? 'حساب جوجل المُوثّق: ' + signupState.email + '\n' : 'رقم الواتساب المُوثّق: ' + signupState.whats + '\n')
     + 'الجزء: ' + (juz ? 'الجزء ' + juz : 'غير محدد') + '\n'
     + 'السورة: ' + (surah || 'غير محددة') + '\n'
     + 'ملاحظات: ' + (notes || 'لا يوجد') + '\n'
@@ -2074,7 +2148,7 @@ function addAdmin() {
   document.getElementById('newAdminMobile').value = '';
   document.getElementById('newAdminPass').value = '';
   renderAdmins();
-  alert('تم إضافة المسؤول بنجاح');
+  alert('تم إضافة ��لمسؤول بنجاح');
 }
 
 function editAdmin(id) {
@@ -2392,7 +2466,7 @@ async function saveStudent() {
   setData('students', students);
   voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null;
   alertBox.innerHTML = '<div class="alert alert-success">✅ تم حفظ الطالب بنجاح!</div>';
-  showToast('تم حفظ الطالب "' + name + '" بنجاح' + (voiceProfile ? ' مع بصمة Gemini الصوتية' : ' (بدون بصمة صوتية)'), 'success');
+  showToast('تم حفظ الطالب "' + name + '" بنجاح' + (voiceProfile ? ' مع بصمة Gemini الصوتية' : ' (بد��ن بصمة صوتية)'), 'success');
   ['stName','stUsername','stNational','stPhone','stBirth','stAge','stStudentPass','stParent','stParentPass','stNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('stJuz').value = '';
   document.getElementById('stSurah').innerHTML = '<option value="">اختر الجزء أولاً...</option>';
@@ -2986,7 +3060,7 @@ function generateLocalFileQuestions(file,plans){const sentences=String(file.text
 
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
-  const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الطالب';
+  const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الط��لب';
   if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|مرحبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنني مساعدتك؟';
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
@@ -3209,7 +3283,7 @@ function renderExamQuestions(){
     (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
     (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
     '<div class="form-group"><label>فحص الغش لهذا السؤال</label><select onchange="updateExamQuestion('+i+',\'proctorEnabled\',this.value===\'true\')"><option value="true" '+(q.proctorEnabled!==false?'selected':'')+'>مفعّل</option><option value="false" '+(q.proctorEnabled===false?'selected':'')+'>غير مفعّل</option></select></div></div>'+
-    '<div class="form-group"><label>تعليمات السؤال (من دون الإجابة)</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+ 
+    '<div class="form-group"><label>تعليمات السؤال (��ن دون الإجابة)</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+ 
     '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآيات محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
   if(q.type==='mcq'||q.type==='truefalse')h+='<div class="form-group"><label>الاختيارات (كل اختيار في سطر)</label><textarea rows="4" onchange="updateExamQuestion('+i+',\'options\',this.value.split(/\\n/).map(x=>x.trim()).filter(Boolean))">'+escapeHtml((q.options||[]).join('\n'))+'</textarea></div><div class="form-group"><label>الإجابة الصحيحة — لا تظهر للطالب</label><input value="'+escapeHtml(q.correct||'')+'" onchange="updateExamQuestion('+i+',\'correct\',this.value)"></div>';
   else if(q.type==='complete')h+='<div class="form-group"><label>الإجابة المرجعية — لا تظهر للطالب</label><textarea rows="3" onchange="updateExamQuestion('+i+',\'correct\',this.value)">'+escapeHtml(q.correct||'')+'</textarea></div>';
@@ -5343,7 +5417,7 @@ function updateStudentMsgBadge() {
 
 async function sendStudentChat() {
   const input = document.getElementById('studentChatInput'); const text=input.value.trim(); if(!text)return; input.value='';
-  const chatDiv=document.getElementById('studentChatMessages'); chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="studentAiTyping" class="ai-msg bot">⏳ جاري التفكير...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
+  const chatDiv=document.getElementById('studentChatMessages'); chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="studentAiTyping" class="ai-msg bot">⏳ جاري ال��فكير...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
   const s=currentUser||{}; const last=(s.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
     const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانات الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
