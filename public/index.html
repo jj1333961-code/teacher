@@ -1309,7 +1309,6 @@ if(localStorage.getItem('theme') === 'dark') {
 // ====== تبديل اللغة (عربي / إنجليزي) ======
 const LANG_DICT = {
   '🔒 دخول النظام': '🔒 System Login',
-  'أدخل اسم المستخدم والرقم السري — سيتم نقلك تلقائياً لصفحتك (مسؤول / طالب / ولي أمر).': 'Enter your username and password — you will be routed automatically to your page (admin / student / parent).',
   'اسم المستخدم': 'Username',
   'الرقم السري': 'Password',
   '🔓 دخول': '🔓 Login',
@@ -4051,8 +4050,8 @@ async function refreshGithubSync(){
   const btn = document.getElementById('githubSyncRefreshBtn');
   const link = document.getElementById('githubHistoryLink');
   const del = document.getElementById('githubDeleteBox');
-  if(btn){ btn.disabled = true; btn.textContent = '⏳ جارٍ التحقق...'; }
-  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من التال بمستودعك...</p>';
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ ج��رٍ التحقق...'; }
+  if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التح��ق من التال بمستودعك...</p>';
   try {
     const st = await callStudentAI('github_status', { role:'admin', adminId: currentAdminId || null }, 0.1);
     if(!st || st.connected !== true){
@@ -4162,7 +4161,7 @@ function clearDevAudit(){
   if(!confirm('هل تريد مسح سجل التدقيق بالكامل؟ لا يمكن التراجع عن هذا الإجراء.\nملاحظة: تاريخ Git على GitHub يبقى محفوظاً ولا يتأثر.')) return;
   setData('devAuditLog', []);
   renderDevAudit();
-  showToast('تم مسح سجل التدقيق', 'info');
+  showToast('تم مسح سجل ال��دقيق', 'info');
 }
 function renderDevAudit(){
   const box = document.getElementById('devAuditLog'); if(!box) return;
@@ -4448,7 +4447,7 @@ function toggleShareWithParent(idx) {
   msgs[idx].shareWithParent = !msgs[idx].shareWithParent;
   setData('messages', msgs);
   renderMessages();
-  alert(msgs[idx].shareWithParent ? '✅ أصبح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعديل).' : '🚫 تم منع ولي الأر من الاطلاع على هذا الملف.');
+  alert(msgs[idx].shareWithParent ? '✅ أصبح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعدي��).' : '🚫 تم منع ولي الأر من الاطلاع على هذا الملف.');
 }
 
 function openMessageFileById(msgId, readonly) {
@@ -5125,7 +5124,7 @@ async function serverRecitationAnalysis(blob, task) {
     }, 0.05);
     return res || null; // {transcript, accepted, score, matchedPercent, isRecitation, reason, missingAyahs}
   } catch(e) {
-    return {analysisError:e&&e.message?e.message:'تعذر تحليل التسجيل على الخادم'};
+    return {analysisError:e&&e.message?e.message:'تعذر ��حليل التسجيل على الخادم'};
   }
 }
 
@@ -5230,7 +5229,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   return true;
 }
 
-// رفع ملف تسجيل صوتي جاهز من جهاز الطالب (يمر بنفس التحقق)
+// رفع ملف تسجيل صوتي جاهز من جهاز ال��الب (يمر بنفس التحقق)
 async function uploadVoiceTaskFile(taskIdx, input) {
   const file = input.files[0];
   if(!file) return;
@@ -6168,7 +6167,7 @@ function generateAIResponse(text, student) {
   // تحفيز
   if(has('تحفيز','همة','ملل','تعبان','زهقان','احبت','أحبطت')) {
     const quotes = [
-      '🌟 «وَلَقَدْ يَسَّرْنَا الْقُْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ فقط.',
+      '🌟 «وَلَقَدْ يَسَّرْنَا الْقُْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ ف��ط.',
       '💚 قال ﷺ: «خيركم من تعلم القرآن وعلمه». أنت اليوم في أفضل طريق.',
       '🚀 كل صفحة تحفظها اليوم هي درة ترتف بها غداً. لا تستهن بالقليل.'
     ];
