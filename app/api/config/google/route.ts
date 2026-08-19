@@ -4,16 +4,9 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim() ?? ''
-
-  if (!clientId || !clientId.endsWith('.apps.googleusercontent.com')) {
-    return NextResponse.json(
-      { configured: false, clientId: '' },
-      { status: 503, headers: { 'Cache-Control': 'no-store' } },
-    )
-  }
-
+  const configured = Boolean(clientId && process.env.GOOGLE_CLIENT_SECRET?.trim())
   return NextResponse.json(
-    { configured: true, clientId },
-    { headers: { 'Cache-Control': 'no-store' } },
+    { configured, redirectUri: 'https://teacher.vercel.app/api/auth/google' },
+    { status: configured ? 200 : 503, headers: { 'Cache-Control': 'no-store' } },
   )
 }

@@ -4,19 +4,11 @@ import { useState } from 'react'
 import { Eye, Fingerprint, ShieldCheck, SlidersHorizontal, TimerReset } from 'lucide-react'
 
 export type AntiCheatConfig = {
-  enabled: boolean
-  eyeTracking: boolean
-  singleTouch: boolean
-  warnOnAway: boolean
-  sensitivity: 'low' | 'medium' | 'high'
+  enabled: boolean; requireCamera: boolean; eyeTracking: boolean; gaze: boolean; singleTouch: boolean; warnOnAway: boolean; facePresence: boolean; multipleFaces: boolean; headPose: boolean; eyeClosure: boolean; focus: boolean; fullscreen: boolean; warningThreshold: number; suspiciousThreshold: number; cheatingThreshold: number; graceMs: number; blockMs: number; autoRestore: boolean; analysisIntervalMs: number; sensitivity: 'low' | 'medium' | 'high'
 }
 
 export const defaultAntiCheatConfig: AntiCheatConfig = {
-  enabled: true,
-  eyeTracking: true,
-  singleTouch: true,
-  warnOnAway: true,
-  sensitivity: 'medium',
+  enabled: true, requireCamera: true, eyeTracking: true, gaze: true, singleTouch: true, warnOnAway: true, facePresence: true, multipleFaces: true, headPose: true, eyeClosure: true, focus: true, fullscreen: false, warningThreshold: 20, suspiciousThreshold: 45, cheatingThreshold: 75, graceMs: 2500, blockMs: 8000, autoRestore: true, analysisIntervalMs: 150, sensitivity: 'medium',
 }
 
 export function AntiCheatSettings({ value, onChange }: { value: AntiCheatConfig; onChange: (value: AntiCheatConfig) => void }) {
