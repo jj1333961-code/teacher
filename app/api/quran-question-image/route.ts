@@ -99,7 +99,7 @@ export async function GET(request: Request) {
 
     const exactAyah = await loadExactAyah(surah, ayah)
     const snippet = renderAyahSnippet(exactAyah, masked)
-    const output = await printOnFrame(snippet).catch(() => snippet)
+    const output = await printOnFrame(snippet as any).catch(() => snippet)
     return new Response(new Uint8Array(output.toBuffer("image/png")), {
       headers: {
         "Content-Type": "image/png",
