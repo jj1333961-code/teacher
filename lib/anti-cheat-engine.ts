@@ -23,7 +23,7 @@ export type AntiCheatConfig = {
 
 export const defaultAntiCheatConfig: AntiCheatConfig = {
   enabled: false, requireCamera: true, facePresence: true, multipleFaces: true, gaze: true,
-  headPose: true, eyeClosure: true, focus: true, fullscreen: false, singleTouch: false,
+  headPose: true, eyeClosure: true, focus: true, fullscreen: false, singleTouch: true,
   warningThreshold: 20, suspiciousThreshold: 45, cheatingThreshold: 75, graceMs: 2500,
   blockMs: 8000, autoRestore: true, analysisIntervalMs: 150, sensitivity: 'medium',
 }
@@ -31,9 +31,9 @@ export const defaultAntiCheatConfig: AntiCheatConfig = {
 export type Signal = { type: string; active: boolean; durationMs?: number; weight?: number; frequency?: number }
 
 const signalWeights: Record<string, number> = {
-  'face-missing': 24, 'multiple-faces': 38, 'gaze-away': 18, 'head-turn': 16,
-  'eyes-closed': 14, 'page-hidden': 12, 'window-blur': 8, 'fullscreen-exit': 10,
-  'touch-missing': 18, 'multiple-touch': 16,
+  'face-missing': 28, 'multiple-faces': 42, 'gaze-away': 20, 'head-turn': 18,
+  'eyes-closed': 16, 'page-hidden': 14, 'window-blur': 10, 'fullscreen-exit': 12,
+  'touch-missing': 16, 'multiple-touch': 20,
 }
 
 export function normalizeServerConfig(value: unknown): AntiCheatConfig {
@@ -70,7 +70,10 @@ export function calculateRiskScore(signals: Signal[], previous = 0) {
   const distinct = new Set(active.map((signal) => signal.type)).size
   const compound = active.some((signal) => signal.type === 'face-missing') && active.some((signal) => signal.type === 'gaze-away' || signal.type === 'head-turn')
   const combinationBonus = compound ? 28 : distinct >= 3 ? 20 : distinct >= 2 ? 8 : 0
-  return Math.max(0, Math.min(100, Math.round(previous * 0.72 + base + combinationBonus)))
+  // Keep sustained, independent signals meaningful while allowing a clean recovery.
+  const persistence = Math.min(100, previous * 0.84)
+  const corroborationBonus = distinct >= 4 ? 24 : distinct >= 3 ? 14 : distinct >= 2 ? 6 : 0
+  return Math.max(0, Math.min(100, Math.round(persistence + base + combinationBonus + corroborationBonus)))
 }
 export function shouldRecord(signal: Signal, config: AntiCheatConfig) {
   return signal.active && (signal.durationMs ?? 0) >= config.graceMs
