@@ -36,6 +36,12 @@ export async function GET(request: NextRequest) {
   try {
     const { clientId, clientSecret } = config()
     const url = new URL(request.url)
+    // Older bookmarks may still start OAuth on teacher.vercel.app. Move the
+    // browser to the canonical production origin before creating state/cookies.
+    if (url.hostname === "teacher.vercel.app") {
+      const canonical = new URL(`${CALLBACK}${url.search}`)
+      return NextResponse.redirect(canonical)
+    }
     const code = url.searchParams.get("code")
     const error = url.searchParams.get("error")
     if (!code) {
