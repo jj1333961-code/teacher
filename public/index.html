@@ -558,7 +558,8 @@ tr:hover { background: var(--table-hover); }
   .role-sidebar-item { display:flex; align-items:center; gap:12px; width:100%; padding:13px 14px; border:1px solid var(--border); border-radius:14px; background:var(--table-header); color:var(--text); text-align:start; cursor:pointer; font-weight:700; }
   .role-sidebar-item:hover { border-color:var(--primary); color:var(--primary); background:var(--input-bg); }
   .role-sidebar-item .role-sidebar-icon { width:28px; text-align:center; font-size:1.1rem; }
-  @media(max-width:900px){ .role-menu-toggle { display:flex; align-items:center; justify-content:center; } }
+  /* يظهر زر القائمة فقط داخل لوحات المسؤول والطالب وولي الأمر، وليس في الرئيسية أو صفحات الدخول */
+  @media(max-width:900px){ body.role-dashboard .role-menu-toggle { display:flex; align-items:center; justify-content:center; } }
   @media(min-width:901px){ body.role-dashboard .role-menu-toggle { display:flex; align-items:center; justify-content:center; } }
   @media(prefers-reduced-motion:reduce){ .role-sidebar { transition:none; } }
   </style>
@@ -830,7 +831,7 @@ tr:hover { background: var(--table-hover); }
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
     <label style="font-size:1.05rem;">الإملاء الصوتي لبيانات الطالب</label>
-    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البيانات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم القومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، المواد القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ الخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البيانات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم ا��قومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، المواد القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ الخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
       <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
@@ -1319,7 +1320,7 @@ const quranData = {
   12: ["هود", "يسف"],
   13: ["يوسف", "الرعد", "إبراهيم"],
   14: ["الحجر", "النحل"],
-  15: ["الإسراء", "الكهف"],
+  15: ["الإ��راء", "الكهف"],
   16: ["الكهف", "مريم", "طه"],
   17: ["الأنبياء", "الحج"],
   18: ["المؤمنون", "النور", "الفرقان"],
@@ -1334,7 +1335,7 @@ const quranData = {
   27: ["الذاريات", "الطور", "النجم", "القمر", "الحمن", "الواقعة", "الحديد"],
   28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "المعة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
   29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزل", "المدثر", "القيا��ة", "الإنسان", "المرسلات"],
-  30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "لضحى", "الشرح", "ال��ين", "العلق", "ال��در", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص", "المسد", "الإخلاص", "الفلق", "الناس"]
+  30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "لضحى", "الشرح", "ال��ين", "العلق", "ال��در", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاث��", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص", "المسد", "الإخلاص", "الفلق", "الناس"]
 };
 
 const ALL_SURAHS_ORDERED = [
@@ -1441,7 +1442,7 @@ const LANG_DICT = {
   '📥 الرسائل الواردة': '📥 Inbox',
   '✉️ التواصل': '✉️ Compose',
   '⚙�� إعدادات الم��ؤول': '⚙️ Admin Settings',
-  'الاختبارات': 'Exams', 'المهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل الصوتي': 'Audio recording',
+  'الاختبارات': 'Exams', '��لمهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل الصوتي': 'Audio recording',
   'مكافحة الغش': 'Anti-cheat', 'تحليل التسجيل': 'Analyze recording', 'جاري التحليل...': 'Analyzing...',
   'تعذر تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
   'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا توجد بيانات': 'No data available',
@@ -1801,7 +1802,7 @@ function renderStudentRecordsBox() {
       html += '<div class="history-day"><div class="history-day-header">📅 ' + date + '</div>';
       grouped[date].forEach(function(sess){
         html += '<div style="margin-bottom:10px;">';
-        html += '<div style="margin-bottom:6px;">' + (sess.isDraft ? '<span class="badge badge-warning">📝 مسودة اليوم</span>' : '<span class="badge badge-success">✅ نهائي</span>') + ' <span class="score-badge">المجموع: ' + (sess.totalScore || 0) + ' درجة</span></div>';
+        html += '<div style="margin-bottom:6px;">' + (sess.isDraft ? '<span class="badge badge-warning">📝 مسودة اليوم</span>' : '<span class="badge badge-success">✅ نها��ي</span>') + ' <span class="score-badge">المجموع: ' + (sess.totalScore || 0) + ' درجة</span></div>';
         (sess.elements || []).forEach(function(el, ei){
           html += '<div class="history-element" style="border-right-color:' + (el.color || 'var(--info)') + ';">';
           html += '<div class="history-element-name">' + (ei + 1) + '. ' + el.name + '</div>';
@@ -1904,7 +1905,7 @@ function initJuzSelect() {
   let html = '<option value="">اختر الجزء...</option>';
   for(let i=1; i<=30; i++) html += '<option value="'+i+'">الجزء '+i+'</option>';
   select.innerHTML = html;
-  document.getElementById('stSurah').innerHTML = '<option value="">اختر الجزء أولاً...</option>';
+  document.getElementById('stSurah').innerHTML = '<option value="">��ختر الجزء أولاً...</option>';
 }
 function updateSurahSelect() {
   const juz = document.getElementById('stJuz').value;
@@ -2429,7 +2430,7 @@ function adminLogin() {
   }
 }
 
-// ====== شاشة القفل الموحدة: توجيه لقائي للصفحة المناسبة ======
+// ====== شاشة القفل الموحدة: توج��ه لقائي للصفحة المناسبة ======
 function unifiedLogin() {
   const u = (document.getElementById('unifiedUser').value || '').trim();
   const p = (document.getElementById('unifiedPass').value || '').trim();
@@ -2734,7 +2735,7 @@ function openEdit(id) {
   const evs=document.getElementById('editVoiceStatus'); if(evs)evs.textContent=(s.voiceProfile||s.voicePrintVec)?('البصمة الصوتية موجودئ'+(s.voiceProfile?' (جميناي)':'')+'. يمكنك استبدالها بتسجيل جديد.'):'لا توجد بصمة صوتية محفوظة حالياً.';
   renderEditSubjectSelect(s.subjectIds);
   initEditJuzSelect(s.juz);
-  const isQuran = s.subjects && s.subjects.some(sub => sub.name.includes('قرآن'));
+  const isQuran = s.subjects && s.subjects.some(sub => sub.name.includes('ق��آن'));
   if(isQuran && s.juz) {
     setTimeout(() => {
       const surahSelect = document.getElementById('editSurah');
@@ -3017,7 +3018,7 @@ function renderRecordElementHTML(el, i, num) {
     }
   } else if(el.isExtra) {
     html += '<select onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="margin-bottom:8px; width:100%;">';
-    html += '<option value="">-- اختر السورة --</option>';
+    html += '<option value="">-- اختر ا��سورة --</option>';
     ALL_SURAHS_ORDERED.forEach(sur => {
       html += '<option value="'+sur+'" '+(el.surah===sur?'selected':'')+'>'+sur+'</option>';
     });
@@ -3302,7 +3303,7 @@ function localSmartChatReply(message,role){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
       return 'ملخص البيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
     }
-    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر المواضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
+    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر المو��ضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
@@ -3581,7 +3582,7 @@ function renderStudentExam(){
   studentExamViewIndex=Math.max(0,Math.min(studentExamViewIndex,studentExamCurrentIndex));
   const i=studentExamViewIndex,q=ex.questions[i],isCurrent=i===studentExamCurrentIndex;
   const currentQuestion=ex.questions[studentExamCurrentIndex],remaining=Math.max(0,studentExamQuestionRemaining[studentExamCurrentIndex]||parseInt(currentQuestion.timeLimit)||60);
-  let h=(questionNeedsProctor?proctorLiveBar():'')+'<div class="exam-sticky"><strong>اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال الحالي '+(studentExamCurrentIndex+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)+'</span></div><div>لكل سؤال وقت مستقل. الشرائح السابقة للعرض فقط، والقادمة تُفتح بعد تأكيد الإجابة.</div></div>';
+  let h=(questionNeedsProctor?proctorLiveBar():'')+'<div class="exam-sticky"><strong>اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال الحالي '+(studentExamCurrentIndex+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)+'</span></div><div>لكل سؤال وقت مستقل. الش��ائح السابقة للعرض فقط، والقادمة تُفتح بعد تأكيد الإجابة.</div></div>';
   h+='<div class="exam-slide-strip" role="tablist" aria-label="شرائح أسئلة الاختبار">'+ex.questions.map((item,index)=>{const future=index>studentExamCurrentIndex,complete=!!studentExamLockedIndices[index]&&studentExamQuestionRemaining[index]>0,expired=!!studentExamLockedIndices[index]&&studentExamQuestionRemaining[index]===0;return '<button type="button" role="tab" aria-selected="'+(index===i)+'" '+(future?'disabled':'')+' class="exam-slide-tab '+(index===i?'active ':'')+(complete?'complete ':'')+(expired?'expired ':'')+(future?'locked':'')+'" onclick="viewStudentExamSlide('+index+')" title="السؤال '+(index+1)+'">'+(index+1)+'</button>'}).join('')+'</div>';
   h+='<div id="studentExamQuestions"><div class="exam-question exam-slide-panel" id="examQuestionBox_'+i+'"><div class="exam-question-header"><h4>السؤال '+(i+1)+': '+escapeHtml(q.prompt||'')+'</h4>'+(isCurrent?'<span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)+'</span>':'<span class="badge badge-success">تم تأكيد هذا السؤال</span>')+'</div>'+
     quranQuestionMediaHtml(q,i);
@@ -4294,7 +4295,7 @@ async function runDevAssistant(){
       '\n\nهذه العمليات قد تؤثر على البيانات أئ الأمان أو المستخدمين. لن يُنفَّذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتابعة والتنفيذ التلقائي؟'
     );
     if(!confirmed){
-      recordDevAudit({ status:'blocked', request, summary:'أُلغي بواسطة المسؤول قبل التنفيذ.', flagged:dangers });
+      recordDevAudit({ status:'blocked', request, summary:'أُلغي بواسطة ��لمسؤول قبل التنفيذ.', flagged:dangers });
       renderDevAudit();
       showToast('🛑 تم إلغاء العملية الحسّاسة', 'info');
       return;
@@ -4409,7 +4410,7 @@ function renderDevPlan(plan){
     }
 
     // 2) ملخص التغييرات
-    h += '<div style="margin-bottom:6px;"><strong>🧾 ملخص التغييرات:</strong> '+esc(plan.summary || 'تم تطبيق التعديلات البرمجية المطلوبة بنجاح.')+'</div>';
+    h += '<div style="margin-bottom:6px;"><strong>🧾 ملخص التغييرات:</strong> '+esc(plan.summary || 'تم تط��يق التعديلات البرمجية المطلوبة بنجاح.')+'</div>';
 
     // 3) أسماء الملفات التي تم تعديلها
     if(Array.isArray(plan.applied) && plan.applied.length){
@@ -4971,10 +4972,10 @@ function renderStudentTasks() {
 
       if(isRejected) {
         html += '<div class="task-rejected-alert">⚠️ تم رفض الملف السابق. يرجى إرسال ملف جديد.</div>';
-        html += '<div style="margin-top:10px;"><div class="file-upload" onclick="document.getElementById(&quot;hwFile_'+originalIdx+'&quot;).click()"><div>📷 اضغط لرفع صورة الواجب الجديدة</div></div>';
+        html += '<div style="margin-top:10px;"><div class="file-upload" onclick="document.getElementById(&quot;hwFile_'+originalIdx+'&quot;).click()"><div>📷 اضغط لرفع ص��رة الواجب الجديدة</div></div>';
         html += '<input type="file" id="hwFile_'+originalIdx+'" accept="image/*" style="display:none" onchange="uploadTaskFile('+originalIdx+', this, &quot;homework&quot;)"></div>';
       } else if(!isSubmitted) {
-        html += '<div style="margin-top:10px;"><div class="file-upload" onclick="document.getElementById(&quot;hwFile_'+originalIdx+'&quot;).click()"><div>📷 اضغط لرفع صورة الواجب</div></div>';
+        html += '<div style="margin-top:10px;"><div class="file-upload" onclick="document.getElementById(&quot;hwFile_'+originalIdx+'&quot;).click()"><div>📷 اضغط لرفع صورة ال��اجب</div></div>';
         html += '<input type="file" id="hwFile_'+originalIdx+'" accept="image/*" style="display:none" onchange="uploadTaskFile('+originalIdx+', this, &quot;homework&quot;)"></div>';
       } else {
         html += '<div class="task-pending-box">📤 تم إرسال الملف للمسؤول - انتظر الموافقة</div>';
@@ -5249,7 +5250,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
 
   // لا يسمح النظام بإرسال تسجيل صوتي لمهمة تتطلب هوية صوتية بدون بصمة مرجعية.
   if(matchPct === null) {
-    showToast('❌ لا توجد بصمة صوتية مرجعية صالحة لهذا الطالب — لم يتم حفظ أو إرسال التسجيل', 'error');
+    showToast('❌ لا ��وجد بصمة صوتية مرجعية صالحة لهذا الطالب — لم يتم حفظ أو إرسال التسجيل', 'error');
     if(statusEl) statusEl.textContent='لا توجد بصمة مرجعية ❌';
     if(aiBox) aiBox.innerHTML='<div class="alert alert-warning">⚠️ يجب أن تكون للطالئ بصمة صوتية محفوظة أولاً حتى يمكن التحقق من هويته.</div>';
     return false;
@@ -6131,7 +6132,7 @@ function generateAIReport(student) {
   const last3 = finalizedSessions.slice(-3);
   const avgScore = last3.reduce((sum, s) => sum + s.totalScore, 0) / last3.length;
   let report = '';
-  if(avgScore >= 14) report = 'ممتاز يا '+student.name+'! 🌟 مستواك رائع جداً. أنت تحفظ بثبات وتميز. استمر في المراجعة وستكون من حفاظ كتاب الله.';
+  if(avgScore >= 14) report = 'ممتاز يا '+student.name+'! 🌟 مستواك رائع جداً. أنت تحفظ بثبا�� وتميز. استمر في المراجعة وستكون من حفاظ كتاب الله.';
   else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرارة.';
   else if(avgScore >= 6) report = 'جيد يا '+student.name+'! 📚 مستواك في تقدم مستمر. أنصحك بزيادة وقت المراجعة اليومي.';
   else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على التكرار والمراجعة اليومية وسترى التحسن قريباً.';
@@ -6213,7 +6214,7 @@ function generateAIResponse(text, student) {
   }
   // التقدم عبر الجلسات
   if(has('تقد','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
-    if(finalizedSessions.length < 2) return ' أحتاج تسميعين نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
+    if(finalizedSessions.length < 2) return ' أحتاج تسميع��ن نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
