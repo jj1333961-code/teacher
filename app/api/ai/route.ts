@@ -438,7 +438,7 @@ const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة الق
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
-const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على تفريغ صوتي عربي.
+const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة ال��رآن الكريم اعتماداً على تفريغ صوتي عربي.
 مهمتك:
 1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
 2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
@@ -706,7 +706,7 @@ function safeProjectPath(path: string) {
 
 async function buildDevPatches(request: string, plan: any, files: Array<{path:string,content:string}>) {
   const source = files.map(f => `\n===== FILE: ${f.path} =====\n${f.content}\n===== END FILE =====`).join("\n")
-  const system = `أنت مبرمج ومطوّر ويب محترف (Senior Software Engineer) خبير في HTML وCSS وJavaScript وTypeScript وNext.js وReact وواجهات API. أنت مسؤول عن تعديل مشروع ويب موجود بشكل مباشر. سيُبّق ناتجك تلقائياً على مستودع GitHub بعد التحقق منه، لذا يجب أن يكون الكود كاملاً وصحيحاً وجاهزاً للتشغيل فوراً.
+  const system = `أنت مبرمج ومطوّر ويب محترف (Senior Software Engineer) خبير في HTML وCSS وJavaScript وTypeScript وNext.js وReact و��اجهات API. أنت مسؤول عن تعديل مشروع ويب موجود بشكل مباشر. سيُبّق ناتجك تلقائياً على مستودع GitHub بعد التحقق منه، لذا يجب أن يكون الكود كاملاً وصحيحاً وجاهزاً للتشغيل فوراً.
 
 منهجية العمل الإلزامية قبل الكتابة:
 1) ارأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
@@ -896,7 +896,7 @@ export async function POST(req: Request) {
       const allNumbers = Array.from({ length: endSurahNumber - startSurahNumber + 1 }, (_, index) => startSurahNumber + index)
         .filter((number) => payload.excludeEasyShortSurahs === false || !easyShortSurahNumbers.has(number))
       if (!allNumbers.length) return json({ error: "النطاق المحدد لا يحتوي سوراً مناسبة لأسئلة عميقة بعد استبعاد السور القصيرة السهلة. وسّع نطاق السور ثم أعد المحاولة.", diagnostics }, 400)
-      let seed = Array.from(topic).reduce((value, character) => ((value * 31) + character.charCodeAt(0)) >>> 0, 2166136261)
+      let seed: number = Array.from(topic as string).reduce<number>((value, character) => ((value * 31) + character.charCodeAt(0)) >>> 0, 2166136261)
       const distributedNumbers = allNumbers.map((number) => ({ number, rank: (seed = (seed * 1664525 + 1013904223) >>> 0) })).sort((a, b) => a.rank - b.rank).map((item) => item.number)
       const selectedNumbers = distributedNumbers.slice(0, Math.min(18, Math.max(requestedCount * 2, 8), distributedNumbers.length))
       const sourceSurahs = await Promise.all(selectedNumbers.map(async (number) => {
@@ -913,7 +913,7 @@ export async function POST(req: Request) {
       const sourceFile = payload.sourceMode === "file" && payload.sourceFile && typeof payload.sourceFile === "object"
         ? { id: String(payload.sourceFile.id || "").slice(0, 120), name: String(payload.sourceFile.name || "").slice(0, 180), text: String(payload.sourceFile.text || "").slice(0, 60_000) }
         : null
-      const topicTerms = topic.split(/\s+/).filter((term) => term.length > 2).slice(0, 12)
+      const topicTerms = topic.split(/\s+/).filter((term: string) => term.length > 2).slice(0, 12)
       const representativeVerses = sourceSurahs.flatMap((source) => {
         const length = source.verses.length
         return [source.verses[0], source.verses[Math.floor(length / 2)], source.verses[length - 1]].filter(Boolean).map((verse: { text: string }) => verse.text)
@@ -969,7 +969,7 @@ export async function POST(req: Request) {
           if (correct && !options.includes(correct)) options.unshift(correct)
           const expectedOptions = Math.max(2, Math.min(6, Number(plan[questionIndex]?.optionsCount) || 4))
           options = options.slice(0, expectedOptions)
-          if (options.length !== expectedOptions || !correct || options.filter((option) => option === correct).length !== 1) return null
+          if (options.length !== expectedOptions || !correct || options.filter((option: string) => option === correct).length !== 1) return null
         }
         if (!prompt || from > to || !correct) return null
 
