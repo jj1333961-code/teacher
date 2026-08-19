@@ -626,7 +626,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاتف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الها��ف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -726,7 +726,7 @@ tr:hover { background: var(--table-hover); }
   <!-- حذف ملف بتأكيد صريح -->
   <div id="githubDeleteBox" style="display:none; background:rgba(220,53,69,0.08); border:1px solid #dc3545; border-radius:10px; padding:14px 16px;">
     <h3 style="margin:0 0 8px; color:#dc3545;">🗑️ حذف ملف من المستودع</h3>
-    <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">يُنشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأساسية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
+    <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">يُ��شئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأساسية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
     <div class="form-group"><label>مسر الملف المراد حذفه</label><input id="githubDeletePath" placeholder="مثال: public/old-file.js" /></div>
     <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أنني أريد حذف هذا الملف نهائياً من المستودع</label>
     <button class="btn" style="background:#dc3545; color:#fff;" onclick="deleteGithubFile()">حذف الملف</button>
@@ -3442,7 +3442,7 @@ function startExamGenerationProgress(questionCount){
   const overlay=document.getElementById('examGenerationOverlay'),stage=document.getElementById('examGenerationStage'),bar=document.getElementById('examGenerationBar'),eta=document.getElementById('examGenerationEta');
   let elapsed=0,total=Math.max(45,Math.min(180,35+(Math.max(1,questionCount||1)*7)));overlay?.classList.remove('hidden');
   clearInterval(examGenerationTimer);
-  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينتقئ الذكاء الاصطناعي أسئلة المتشابهات ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
+  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينتقئ الذكاء الاصطناع�� أسئلة المتشابهات ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
   update();examGenerationTimer=setInterval(update,1000);
 }
 function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'اكتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
@@ -3493,7 +3493,7 @@ function renderExamQuestions(){
   if(!examQuestions.length){c.innerHTML='<div class="alert alert-info">ستظهر شرائح الأسئلة هنا بعد التوليد.</div>';return}
   examEditorActiveIndex=Math.max(0,Math.min(examEditorActiveIndex,examQuestions.length-1));
   const q=examQuestions[examEditorActiveIndex],i=examEditorActiveIndex;
-  let h='<div class="exam-slide-strip" role="tablist" aria-label="شرائح أسئلة الاختبار">'+examQuestions.map((item,index)=>'<button type="button" role="tab" aria-selected="'+(index===i)+'" class="exam-slide-tab '+(index===i?'active ':'')+(item.rejected?'expired':'')+'" onclick="selectExamEditorSlide('+index+')" title="السؤال '+(index+1)+'">'+(index+1)+'</button>').join('')+'</div>';
+  let h='<div class="exam-slide-strip" role="tablist" aria-label="شرائح ��سئلة الاختبار">'+examQuestions.map((item,index)=>'<button type="button" role="tab" aria-selected="'+(index===i)+'" class="exam-slide-tab '+(index===i?'active ':'')+(item.rejected?'expired':'')+'" onclick="selectExamEditorSlide('+index+')" title="السؤال '+(index+1)+'">'+(index+1)+'</button>').join('')+'</div>';
   h+='<div class="exam-question exam-slide-panel '+(q.rejected?'rejected':'')+'">'+
     '<div class="exam-question-header"><strong>السؤال '+(i+1)+' من '+examQuestions.length+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">رفض السؤال</button>')+'</div>'+
     quranQuestionMediaHtml(q,i)+
@@ -3708,7 +3708,7 @@ function saveSession(isFinal) {
   if(!students[idx].sessions) students[idx].sessions = [];
 
   const activeElements = recordElements.filter(e => !e.deleted);
-  if(activeElements.length === 0) { showToast('🚫 لم يتم الحفظ — لا يوجد عنصر تسم��ع', 'error'); return; }
+  if(activeElements.length === 0) { showToast('🚫 لم يتم الحفظ — لا يوجد ��نصر تسم��ع', 'error'); return; }
   const totalScore = activeElements.reduce((sum, e) => sum + (parseInt(e.rating) || 0), 0);
   const nowText = new Date().toLocaleString('ar-EG');
   const previousTasks = JSON.parse(JSON.stringify(students[idx].tasks || []));
@@ -4205,7 +4205,7 @@ function openDevAssistant(){
 // ===== سجل التدقيق لمساعد التطوير (Audit Log) =====
 // عبارات تدل على عمليات خطيرة تتطلب تأكيداً صريحاً قبل التنفيذ التلقائي.
 const DEV_DANGER_PATTERNS = [
-  {re:/حذف\s*(قاعدة|لقاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
+  {re:/حذف\s*(قاعدة|لقاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البي��نات'},
   {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*الملفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
   {re:/حذف\s*(المستخدمين|كل\s*المستخدمين|جميع\s*المستخدمين)|delete\s+users/i, label:'حذف المستخدمين'},
   {re:/حذف\s*(الطل��ب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},
@@ -4992,7 +4992,7 @@ function renderStudentTasks() {
       html += status;
 
       if(isProctorCancelled) {
-        html += '<div class="task-rejected-alert">لا يمكن إعادة هذه المهمة بعد إلغائها. تواصل مع المسؤول لإسنا�� مهمة جديدة.</div>';
+        html += '<div class="task-rejected-alert">لا يمكن إعادة هذه المهمة بعد إلغائها. تواصل مع الم��ؤول لإسنا�� مهمة جديدة.</div>';
       } else if(isRejected) {
         html += '<div class="task-rejected-alert">⚠️ تم رفض التسيل السابق. يرجى إرسال تسجيل جديد.</div>';
         html += studentVoiceRecorderHTML(originalIdx);
@@ -5946,7 +5946,7 @@ function uploadFile(input) {
       type: file.type,
       data: e.target.result,
       uploadedAt: new Date().toLocaleString('ar-EG'),
-      uploadedBy: currentUser ? (currentUser.mobile || currentUser.name || 'مسؤول') : 'مسؤول'
+      uploadedBy: currentUser ? (currentUser.mobile || currentUser.name || 'مسؤول') : 'م��ؤول'
     };
     files.push(fileData);
     setData('uploadedFiles', files);
@@ -6352,21 +6352,11 @@ if(restoreSession()) {
   function startAudio(){
     const result=audio.play();
     if(result&&typeof result.catch==='function')result.catch(function(){
-      status.textContent='سيبدأ الصوت تلقائيًا عند السماح بتشغيل الوسائط في المتصفح';
-      window.setTimeout(function(){
-        alert('للاستماع إلى تلاوة المنشاوي، اسمح بتشغيل الوسائط في المتصفح ثم اضغط «الدخول إلى المنصة».');
-      },120);
+      status.textContent='تعذر التشغيل التلقائي؛ اضغط «الدخول إلى المنصة» لتشغيل التلاوة.';
     });
   }
-  window.setTimeout(function(){
-    const approved=window.confirm('هل توافق على تشغيل تلاوة الآية بصوت الشيخ المنشاوي؟');
-    if(approved){
-      status.textContent='تمت الموافقة، جارٍ تشغيل التلاوة';
-      startAudio();
-    }else{
-      status.textContent='لم يتم تشغيل الصوت. اضغط «الدخول إلى المنصة» للموافقة وتشغيل التلاوة.';
-    }
-  },120);
+  // تشغيل الصوت مباشرة عند فتح الموقع دون رسالة موافقة أو نافذة منبثقة.
+  startAudio();
   start.addEventListener('click',function(){
     status.textContent='تمت الموافقة على التشغيل، جارٍ تشغيل التلاوة';
     startAudio();
