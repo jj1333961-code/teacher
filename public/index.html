@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#5b6ee1">
-<meta name="description" content="نظام إدارة الطلاب: تسجيل الطلاب، متابعة الحفظ والتسميع، صناديق السجلات للطالب وولي الأمر، ومشاركة الملفات.">
+<meta name="theme-color" content="#315c4b">
+<meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-<title>نظام إدارة الطلاب المتكامل</title>
+<title>ثمار | منصة القرآن والتعليم</title>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js" crossorigin="anonymous"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
@@ -60,24 +60,29 @@
 </script>
 <style>
 :root {
-  --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --card-bg: #fff; --text: #333; --text-light: #888; --border: #e0e0e0;
-  --primary: #667eea; --primary-hover: #5a6fd6; --success: #28a745;
-  --danger: #dc3545; --warning: #ffc107; --info: #17a2b8; --secondary: #6c757d;
-  --input-bg: #fff; --table-header: #f8f9fa; --table-hover: #f8f9fa;
-  --shadow: 0 10px 30px rgba(0,0,0,0.2);
+  --bg: linear-gradient(135deg, #eaf1e8 0%, #d7e7dc 100%);
+  --card-bg: #fffdf7; --text: #263c34; --text-light: #6c7d74; --border: #d7e1d8;
+  --primary: #315c4b; --primary-hover: #244738; --success: #4d7b5e;
+  --danger: #b54f4f; --warning: #b98535; --info: #4e7b83; --secondary: #74837b;
+  --input-bg: #fffdf7; --table-header: #f2f6ef; --table-hover: #f5f8f3;
+  --shadow: 0 16px 40px rgba(39,76,59,0.12);
   --chart-bg: #fff; --chart-grid: #e0e0e0; --chart-text: #333;
 }
 [data-theme="dark"] {
-  --bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  --card-bg: #1e1e2f; --text: #e0e0e0; --text-light: #aaa; --border: #333;
-  --primary: #7b8cde; --primary-hover: #6a7bd0; --input-bg: #2a2a3c;
-  --table-header: #2a2a3c; --table-hover: #2a2a3c;
-  --shadow: 0 10px 30px rgba(0,0,0,0.5);
+  --bg: linear-gradient(135deg, #13271f 0%, #1b3930 100%);
+  --card-bg: #1e3028; --text: #edf4ec; --text-light: #b4c5ba; --border: #355143;
+  --primary: #d3aa5b; --primary-hover: #e1bd73; --input-bg: #20382f;
+  --table-header: #254238; --table-hover: #29493d;
+  --shadow: 0 16px 40px rgba(0,0,0,0.28);
   --chart-bg: #1e1e2f; --chart-grid: #333; --chart-text: #e0e0e0;
 }
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,sans-serif; }
-body { background: var(--bg); min-height:100vh; color: var(--text); transition:0.3s; }
+body { background: var(--bg); min-height:100vh; color: var(--text); transition:background .3s ease, color .3s ease; }
+body::before { content:''; position:fixed; inset:0; pointer-events:none; opacity:.28; background-image:radial-gradient(circle at 12% 18%, rgba(49,92,75,.16) 0 1px, transparent 1px), radial-gradient(circle at 84% 74%, rgba(185,133,53,.13) 0 1px, transparent 1px); background-size:32px 32px, 44px 44px; }
+button, .card, .page, input, select, textarea { transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease; }
+button:hover, .card:hover { transform:translateY(-2px); }
+button:active { transform:scale(.98); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
 .container { max-width:1400px; margin:0 auto; padding:20px; padding-bottom:100px; }
   .hidden { display:none !important; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
@@ -106,7 +111,12 @@ body { background: var(--bg); min-height:100vh; color: var(--text); transition:0
 .card .icon { font-size:4rem; margin-bottom:15px; }
 .card h3 { font-size:1.5rem; color: var(--primary); margin-bottom:8px; }
 .card p { color: var(--text-light); font-size:0.95rem; }
-.page { background: var(--card-bg); border-radius:20px; padding:30px; margin-top:20px; box-shadow: var(--shadow); position:relative; }
+.page { background: color-mix(in srgb, var(--card-bg) 94%, transparent); border:1px solid var(--border); border-radius:22px; padding:30px; margin-top:20px; box-shadow:var(--shadow); position:relative; }
+#lockScreen { margin-top: clamp(28px, 9vh, 90px) !important; padding:clamp(24px, 4vw, 42px); }
+#lockScreen .page-header { align-items:flex-start; }
+#lockScreen .page-header h2 { font-size:clamp(1.35rem, 3vw, 1.8rem); letter-spacing:-.02em; }
+#lockScreen::before { content:'ثمار'; display:block; color:var(--primary); font-size:clamp(2rem, 6vw, 3.2rem); font-weight:800; letter-spacing:.04em; margin-bottom:8px; }
+#lockScreen::after { content:'تعلمٌ هادئ، ونموٌ ثابت'; display:block; color:var(--text-light); font-size:.92rem; margin-top:-20px; margin-bottom:22px; }
 .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; border-bottom:2px solid var(--border); padding-bottom:15px; flex-wrap:wrap; gap:10px; }
 .page-header h2 { color: var(--primary); }
 .btn { padding:10px 22px; border:none; border-radius:10px; cursor:pointer; font-size:1rem; transition:0.2s; }
@@ -791,7 +801,7 @@ tr:hover { background: var(--table-hover); }
         <span id="voiceRecordStatus">اضغط للتسجيل (20 ثانية)</span>
         <audio id="voicePreview" controls style="display:none; height:40px;"></audio>
       </div>
-      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصو��ية، ومكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتحق من هوية الطالب.</small>
+      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصو����ية، ومكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتحق من هوية الطالب.</small>
     </div>
   </div>
   <div class="form-group"><label>ملاحظات إضافية</label><textarea id="stNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea></div>
@@ -910,7 +920,7 @@ tr:hover { background: var(--table-hover); }
     <div id="readingItems"></div>
   </div>
   <div class="form-group"><label>ملاحظات التسميع</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
-  <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حفظ مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, #764ba2, #667eea);">🔒 حفظ نهائي (لا يمكن التعديل)</button></div>
+  <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حفظ مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, #764ba2, #667eea);">🔒 ��فظ نهائي (لا يمكن التعديل)</button></div>
 </div>
 
 <!-- سجل الطالب -->
@@ -1777,7 +1787,7 @@ function togglePassVisibility(inputId, iconEl) {
 }
 
 // ====== التقسيم الحقيقي للـ30 جزءاً (حدود الآيات، لا أسماء السور فقط) ======
-// الحدود مبنية على خريطة الآيات التقليدية للجزء: بداية كل جزء هي الآية التالية لنهاية الجزء السابق.
+// الحدود مبنية على خريطة الآيات التقليدية لل��زء: بداية كل جزء هي الآية التالية لنهاية الجزء السابق.
 const JUZ_BOUNDARIES = {
   1:[[1,1,7],[2,1,141]], 2:[[2,142,252]], 3:[[2,253,286],[3,1,92]],
   4:[[3,93,200],[4,1,23]], 5:[[4,24,147]], 6:[[4,148,176],[5,1,81]],
@@ -3328,7 +3338,7 @@ function renderExamPlanRows(){
       '<option value="easy" '+(r.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(r.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(r.level==='hard'?'selected':'')+'>صعب</option></select></div>'+
       '<div class="form-group"><label>نع السؤال</label><select onchange="examPlanRows['+i+'].type=this.value;renderExamPlanRows()">'+
       '<option value="mcq" '+(r.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(r.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(r.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(r.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+
-      '<div class="form-group"><label>موضع السؤال</label><select onchange="examPlanRows['+i+'].position=this.value"><option value="random" '+((r.position||'random')==='random'?'selected':'')+'>عشوائي ومتنوع</option><option value="start" '+(r.position==='start'?'selected':'')+'>أول السورة</option><option value="middle" '+(r.position==='middle'?'selected':'')+'>وسط السورة</option><option value="end" '+(r.position==='end'?'selected':'')+'>آخر السورة</option></select></div>'+
+      '<div class="form-group"><label>موضع السؤال</label><select onchange="examPlanRows['+i+'].position=this.value"><option value="random" '+((r.position||'random')==='random'?'selected':'')+'>عشوائي ومتنوع</option><option value="start" '+(r.position==='start'?'selected':'')+'>أول السورة</option><option value="middle" '+(r.position==='middle'?'selected':'')+'>وسط السورة</option><option value="end" '+(r.position==='end'?'selected':'')+'>آخر السو��ة</option></select></div>'+
       '<div class="form-group"><label>وقت السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" title="الساعات" type="number" min="0" max="23" value="'+Math.floor((r.timeLimit||60)/3600)+'" onchange="setExamPlanTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" title="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((r.timeLimit||60)%3600)/60)+'" onchange="setExamPlanTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" title="الثواني" type="number" min="0" max="59" value="'+((r.timeLimit||60)%60)+'" onchange="setExamPlanTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+
       (r.type==='mcq'?'<div class="form-group"><label>عدد الاختيارات</label><input type="number" min="2" max="6" value="'+(r.optionsCount||4)+'" onchange="examPlanRows['+i+'].optionsCount=Math.max(2,Math.min(6,parseInt(this.value)||4))"></div>':'')+
       (r.type==='complete'?'<div class="form-group"><label>عدد الآيات المراد إكمالها</label><input type="number" min="1" max="20" value="'+(r.completeAyahs||1)+'" onchange="examPlanRows['+i+'].completeAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">يحدد عدد الآيات التي سيكملها الطالب بعد بداية السؤال</small></div>':'')+
@@ -3603,7 +3613,7 @@ async function recordStudentExamAudio(i){
     recorder.start();registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});btn.onclick=()=>{if(recorder.state!=='inactive')recorder.stop()};
   }catch(e){status.textContent='تعذر الوصول إلى الميكروفون';btn.dataset.recording='false';btn.classList.remove('recording')}
 }
-function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختئار</h3><p>النتيجة معلّقة لحين مراجعة المئؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيجة النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
+function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختئار</h3><p>النتيجة معلّقة لحين مراجعة المئؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيج�� النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
 function renderStudentExamResult(ex){const c=document.getElementById('studentExamContent');if(c)c.innerHTML=renderStudentResultHtml(ex)}
 function notifyExamExpired(student,ex){if(ex.expiryNotified)return;ex.expiryNotified=true;const text='انتهى الوقت المحدد لاختبار '+student.name+' بتاريخ '+(ex.date||'');let msgs=getData('messages');msgs.push({type:'system',sender:'النظام',receiverType:'student',receiverId:student.id,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'parent',receiverName:student.parent,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'admin',text,studentId:student.id,parentPhone:student.parentPhone||student.parentMobile||'',time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});setData('messages',msgs)}
 function examWhatsAppLink(phone,text){const p=String(phone||'').replace(/\D/g,'').replace(/^0/,'20');return p?'https://wa.me/'+p+'?text='+encodeURIComponent(text):''}
