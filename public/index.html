@@ -533,8 +533,7 @@ tr:hover { background: var(--table-hover); }
   #thimarWelcome::before { top:-100px; inset-inline-start:-100px; box-shadow:0 0 0 18px rgba(45,112,76,.035),0 0 0 36px rgba(191,153,74,.035); }
   #thimarWelcome::after { bottom:-110px; inset-inline-end:-110px; box-shadow:0 0 0 18px rgba(45,112,76,.035),0 0 0 36px rgba(191,153,74,.035); }
   .thimar-welcome-inner { width:min(760px,100%); text-align:center; padding:clamp(28px,6vw,68px) clamp(20px,6vw,72px); border:1px solid rgba(45,112,76,.18); border-radius:32px; background:rgba(255,255,255,.72); box-shadow:0 28px 80px rgba(35,88,54,.14); backdrop-filter:blur(12px); position:relative; }
-  .thimar-welcome-mark { width:84px; height:84px; margin:0 auto 18px; border-radius:50% 50% 46% 46%; display:grid; place-items:center; color:#fff; background:linear-gradient(145deg,#2d704c,#1d5038); box-shadow:0 12px 28px rgba(45,112,76,.25); font-size:2rem; }
-  .thimar-welcome-title { margin:0; color:#1d5038; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-size:clamp(2.8rem,9vw,6rem); font-weight:900; letter-spacing:-.08em; line-height:1.1; text-shadow:0 2px 0 rgba(191,153,74,.25),0 10px 26px rgba(45,112,76,.13); }
+  .thimar-welcome-title { margin:0; color:#1d5038; font-family:'Diwan Kufi','Diwani Letter','Noto Kufi Arabic','Traditional Arabic',serif; font-size:clamp(2.8rem,9vw,6rem); font-weight:900; letter-spacing:-.08em; line-height:1.1; text-shadow:0 2px 0 rgba(191,153,74,.25),0 10px 26px rgba(45,112,76,.13); }
   .thimar-welcome-subtitle { margin:12px 0 26px; color:#587264; font-size:clamp(1.1rem,3vw,1.55rem); font-weight:700; }
   .thimar-ayah { margin:0 auto 24px; max-width:650px; color:#254d3a; font-family:'Amiri','Traditional Arabic','Segoe UI',serif; font-size:clamp(1.45rem,4vw,2.45rem); line-height:2.05; text-shadow:0 0 18px rgba(191,153,74,.26); }
   .thimar-ayah::before,.thimar-ayah::after { content:'۞'; color:#bf994a; font-family:serif; font-size:.8em; margin-inline:12px; }
@@ -1324,7 +1323,7 @@ const quranData = {
   26: ["الأحقاف", "محمد", "الفتح", "الحجرات", "ق", "الذاريات"],
   27: ["الذاريات", "الطور", "النجم", "القمر", "الحمن", "الواقعة", "الحديد"],
   28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "المعة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
-  29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزل", "المدثر", "القيامة", "الإنسان", "المرسلات"],
+  29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزل", "المدثر", "القيا��ة", "الإنسان", "المرسلات"],
   30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "لضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص", "المسد", "الإخلاص", "الفلق", "الناس"]
 };
 
@@ -4209,7 +4208,7 @@ const DEV_DANGER_PATTERNS = [
   {re:/حذف\s*(قاعدة|لقاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
   {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*الملفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
   {re:/حذف\s*(المستخدمين|كل\s*المستخدمين|جميع\s*المستخدمين)|delete\s+users/i, label:'حذف المستخدمين'},
-  {re:/حذف\s*(الطلاب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},
+  {re:/حذف\s*(الطل��ب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},
   {re:/(المصادقة|تسجيل\s*ادخول|نظام\s*الدخول|كلمة\s*المرور\s*الرئيسية|authentication|login\s*system)/i, label:'تغيير نظام المصادقة'},
   {re:/(تغيير|تعديل|حذف)\s*(الصلاحيات|الأذونات|permissions)/i, label:'تغيير الصلاحيات'},
   {re:/(تغيير|تعديل|حذف)\s*(مفاتيح|متغيرات)\s*البئة|env(ironment)?\s*var|\.env/i, label:'تغيير مفاتيح البيئة'},
@@ -5012,7 +5011,7 @@ function renderStudentTasks() {
   const extraTasks=Array.from(temp.querySelectorAll('[data-task-category="extra"]')).map(el=>el.outerHTML).join('');
   const exam=s.activeExam&&s.activeExam.status==='pending'?s.activeExam:null;
   const examHtml=exam?'<p>لديك اختبار نشط من '+(exam.questions?.length||0)+' سؤال.</p><button class="btn btn-primary" onclick="showPage(\'studentExamPage\')">فتح الاختبار</button>':'<p style="color:var(--text-light)">لا يوجد اختبار نشط حاليًا.</p>';
-  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المهمات الإضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمات إضافية حالية.</p>')+'</section></div>';
+  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المهمات ا��إضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمات إضافية حالية.</p>')+'</section></div>';
   if(proctor.active)bindLiveProctorHold();
 }
 
@@ -5264,7 +5263,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
     return false;
   }
 
-  if(aiBox) aiBox.innerHTML = '<div class="alert alert-success"><strong>✅ تقرير الذكاء الاصطنعي:</strong><br>' +
+  if(aiBox) aiBox.innerHTML = '<div class="alert alert-success"><strong>✅ تقرير الذكاء ا��اصطنعي:</strong><br>' +
     (matchPct !== null ? 'مطابقة البصمة الصوية: <strong>' + matchPct + '%</strong><br>' : '') +
     'مطابقة التلاوة مع ' + targetTxt + ': <strong>' + rec.pct + '%</strong>' + (rec.txtPct !== null && rec.txtPct !== undefined ? ' (تطابق النص ' + rec.txtPct + '%)' : '') + ' | مدة التسجيل: ' + rec.dur + ' ثانية<br>تم إرسال التسجيل للمسؤول.</div>';
 
@@ -5908,7 +5907,7 @@ function renderParentFullChart() {
   const children = currentUser;
   const finalizedSessions = children[0].sessions ? children[0].sessions.filter(sess => !sess.isDraft) : [];
   if(finalizedSessions.length === 0) {
-    document.getElementById('parentChartContainer').innerHTML = '<div class="alert alert-info">لا توجد بيانات كافية للمخطط</div>'; return;
+    document.getElementById('parentChartContainer').innerHTML = '<div class="alert alert-info">لا توجد بيانات كافية ��لمخطط</div>'; return;
   }
   const canvasId = 'parentFullChart';
   document.getElementById('parentChartContainer').innerHTML = 
@@ -6014,7 +6013,7 @@ function renderFileTargetSelect() {
 
 function fileTargetLabel(f) {
   const aud = f.audience || f.category;
-  if(!f.targetId || f.targetId === 'all') return aud === 'parent' ? 'كل أولياء الأمور' : 'كل الطلاب';
+  if(!f.targetId || f.targetId === 'all') return aud === 'parent' ? 'كل أولياء الأمور' : 'كل ال��لاب';
   const st = getData('students', []).find(x => String(x.id) === String(f.targetId));
   if(!st) return 'مستلم محدد';
   return aud === 'parent' ? ('ولي أمر ' + st.name) : st.name;
@@ -6221,7 +6220,7 @@ function generateAIResponse(text, student) {
   }
   // الآيات والصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>الآيات تُعرض بارم العثماني المشكَّل كصورة مطابقة تماماً لمصحف.';
+    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>��لآيات تُعرض بارم العثماني المشكَّل كصورة مطابقة تماماً لمصحف.';
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صوت','ميكروفون','تحق')) {
@@ -6322,18 +6321,13 @@ if(restoreSession()) {
 </script>
   <section id="thimarWelcome" aria-label="شاشة ترحيب منصة ثمار" aria-live="polite">
     <div class="thimar-welcome-inner">
-      <div class="thimar-welcome-mark" aria-hidden="true">ن</div>
       <h1 class="thimar-welcome-title">ثمار</h1>
       <p class="thimar-welcome-subtitle">منصة ثمار ترحب بكم</p>
       <p class="thimar-ayah" lang="ar">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ<br>أَلَمْ تَرَ كَيْفَ ضَرَبَ اللَّهُ مَثَلًا كَلِمَةً طَيِّبَةً كَشَجَرَةٍ طَيِّبَةٍ أَصْلُهَا ثَابِتٌ وَفَرْعُهَا فِي السَّمَاءِ</p>
       <p class="thimar-description">منصة كاملة لطالب القرآن</p>
       <p class="thimar-intention">هذا العمل ابتغاء وجه الله تعالى</p>
       <p class="thimar-prayer">صَلِّ على النبي ﷺ</p>
-      <div class="thimar-welcome-actions">
-        <button id="thimarWelcomeStart" class="btn btn-primary" type="button">الدخول إلى المنصة</button>
-        <button id="thimarWelcomeSkip" class="btn btn-outline" type="button">تخطي الترحيب</button>
-      </div>
-      <div class="thimar-welcome-audio"><span id="thimarAudioStatus">جارٍ تشغيل التلاوة</span><button id="thimarAudioToggle" type="button">إيقاف الصوت</button></div>
+      <p class="thimar-welcome-audio" id="thimarAudioStatus">تبدأ التلاوة تلقائيًا، ثم تُفتح المنصة</p>
       <audio id="thimarWelcomeAudio" preload="auto" autoplay playsinline src="/audio/ibrahim-ayah-24-minshawi.mp3"></audio>
     </div>
   </section>
@@ -6341,12 +6335,8 @@ if(restoreSession()) {
 (function(){
   const welcome=document.getElementById('thimarWelcome');
   const audio=document.getElementById('thimarWelcomeAudio');
-  const start=document.getElementById('thimarWelcomeStart');
-  const skip=document.getElementById('thimarWelcomeSkip');
-  const toggle=document.getElementById('thimarAudioToggle');
   const status=document.getElementById('thimarAudioStatus');
   if(!welcome||!audio)return;
-  try{if(sessionStorage.getItem('thimar_welcome_seen_v1')==='1'){welcome.remove();return;}}catch(e){}
   let closed=false;
   function closeWelcome(){
     if(closed)return; closed=true;
@@ -6358,18 +6348,11 @@ if(restoreSession()) {
   function startAudio(){
     const result=audio.play();
     if(result&&typeof result.catch==='function')result.catch(function(){
-      status.textContent='اضغط للدخول لتشغيل التلاوة';
-      toggle.textContent='تشغيل الصوت';
+      status.textContent='سيبدأ الصوت تلقائيًا عند السماح بتشغيل الوسائط في المتصفح';
     });
   }
   startAudio();
   audio.addEventListener('ended',closeWelcome,{once:true});
-  start.addEventListener('click',function(){startAudio();closeWelcome();});
-  skip.addEventListener('click',closeWelcome);
-  toggle.addEventListener('click',function(){
-    if(audio.paused){startAudio();toggle.textContent='إيقاف الصوت';status.textContent='جارٍ تشغيل التلاوة';}
-    else{audio.pause();toggle.textContent='تشغيل الصوت';status.textContent='التلاوة متوقفة';}
-  });
 })();
 </script>
 </body>
