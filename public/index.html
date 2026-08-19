@@ -680,7 +680,7 @@ tr:hover { background: var(--table-hover); }
       <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حفظ الرقم</button>
     </div>
   </div>
-  <div class="alert alert-info" style="margin-bottom:20px;">تس��يل Google مركزي ومتاح لجميع الأجهزة عبر إعداد GOOGLE_CLIENT_ID في بيئة Vercel.</div>
+  <div class="alert alert-info" style="margin-bottom:20px;">ت����يل Google مركزي ومتاح لجميع الأجهزة عبر إعداد GOOGLE_CLIENT_ID في بيئة Vercel.</div>
 
   <div class="form-row" style="margin-bottom:20px;">
     <div class="form-group"><label>رقم الموبايل</label><input type="text" id="newAdminMobile" placeholder="رقم الموبايل (11 رقم)" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
@@ -772,7 +772,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
-    <h4>📖 بيان��ت حفظ القرآن الكريم</h4>
+    <h4>📖 ب��ان��ت حفظ القرآن الكريم</h4>
     <div class="form-row">
       <div class="form-group"><label>الجزء</label><select id="stJuz" onchange="updateSurahSelect()"><option value="">اختر الجزء...</option></select></div>
       <div class="form-group"><label>السورة</label><select id="stSurah"><option value="">اختر الجزء أولاً...</option></select></div>
@@ -1052,7 +1052,7 @@ tr:hover { background: var(--table-hover); }
   <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
 </div>
 
-<!-- دخول ولي الأمر -->
+<!-- دخول ولي ال��مر -->
 <div id="parentLogin" class="page hidden" style="max-width:500px; margin:40px auto;">
   <div class="page-header"><h2>👨‍👩‍👧 دخول ولي الأمر</h2></div>
   <div id="parentLoginAlert"></div>
@@ -1178,7 +1178,7 @@ tr:hover { background: var(--table-hover); }
 
 <div id="proctorGate" class="proctor-gate hidden" role="dialog" aria-modal="true" aria-labelledby="proctorTitle">
   <div class="proctor-panel">
-    <h2 id="proctorTitle">التحقق قبل بدء المهمة</h2>
+    <h2 id="proctorTitle">التحقق قبل بدء المهم��</h2>
     <p>لن ت����حفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
     <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص للسماح بالكاميرا</div></div>
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
@@ -2188,7 +2188,7 @@ function saveAdminWhatsapp() {
   if(num.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح بصيغة الدولة (مثال: 201554542019)</div>'; return; }
   setData('adminWhatsapp', num);
   input.value = num;
-  box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب المسؤول: ' + num + '</div>';
+  box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب ا��مسؤول: ' + num + '</div>';
 }
 
 
@@ -3497,7 +3497,7 @@ async function submitStudentExam(auto){
   let students=getData('students');const idx=students.findIndex(x=>x.id===s.id);if(idx<0)return;students[idx].activeExam=null;students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].completedTasks=students[idx].completedTasks||[];students[idx].completedTasks.push({type:'exam',name:'اختبار '+ex.date,date:ex.date,completedAt:new Date().toLocaleString('ar-EG'),score,maxScore:ex.maxScore});setData('students',students);currentUser=students[idx];
   let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوي  النتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة التسجيل الصوتي':'نتيجة اختبار '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
-  setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبار وإرساله للمسؤول وولي الأمر','success');
+  setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبا�� وإرساله للمسؤول وولي الأمر','success');
 }
 
 let studentExamAudioAnswers=[];
@@ -5298,7 +5298,7 @@ function blobToDataURL(blob) {
   return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(blob); });
 }
 // ====== تحويل الصوت المسجّل (webm/ogg) إلى WAV ======
-// OpenRouter يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصية webm.
+// OpenRouter يقبل صوت الإدخال ��صيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصية webm.
 // نفكّ الترميز عبر Web Audio ثم نعيد ترميزه PCM 16-bit أحادي القناة بمعدل 12kHz.
 // يحافظ المعدل على وضوح الكلام ويُبقي تسجيل الدقيقة والنصف دون حد طلبات Vercel بعد Base64.
 async function blobToWav(blob) {
@@ -6159,6 +6159,24 @@ window.togglePassVisibility = window.togglePassVisibility || function(id, trigge
   if(input){ input.type = input.type === 'password' ? 'text' : 'password'; if(trigger) trigger.textContent = input.type === 'password' ? '👁️' : '🙈'; }
 };
 window.startSignup = window.startSignup || function(){ window.showPage('signupStep1'); };
+window.toggleTheme = window.toggleTheme || function(){
+  var root = document.documentElement;
+  var dark = root.getAttribute('data-theme') === 'dark';
+  root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  var button = document.querySelector('.theme-toggle');
+  if(button) button.textContent = dark ? '🌙' : '☀️';
+};
+window.toggleLang = window.toggleLang || function(){
+  var next = document.documentElement.dir === 'rtl' ? 'ltr' : 'rtl';
+  document.documentElement.dir = next;
+  document.documentElement.lang = next === 'rtl' ? 'ar' : 'en';
+  var button = document.getElementById('langToggleBtn');
+  if(button) button.textContent = next === 'rtl' ? 'EN' : 'AR';
+};
+window.closeStudentWorkModal = window.closeStudentWorkModal || function(){
+  var modal = document.getElementById('studentWorkModal');
+  if(modal) modal.classList.add('hidden');
+};
 window.unifiedLogin = window.unifiedLogin || function(){
   var alertBox = document.getElementById('unifiedLoginAlert');
   if(alertBox) alertBox.innerHTML = '<div class="alert alert-info">جارٍ التحقق من بيانات الدخول...</div>';
