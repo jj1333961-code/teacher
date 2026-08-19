@@ -89,7 +89,16 @@ function isRetryableProviderError(error: unknown) {
 
 function shouldFallbackAudio(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "")
-  return !/(401|403|402|quota|billing|credit|api key|unauthorized|forbidden|invalid.*key|model.*(?:not found|unavailable)|unsupported.*(?:audio|mime)|400)/i.test(message)
+  // Authentication failures on one provider are safe to fail over to the other.
+  // Do not retry malformed audio, billing, or unsupported-model failures endlessly.
+  return !/(402|quota|billing|credit|model.*(?:not found|unavailable)|unsupported.*(?:audio|mime)|400)/i.test(message)
+}
+
+function providerFromError(error: unknown) {
+  const raw = error instanceof Error ? error.message : String(error || "")
+  const gemini = /\bGemini\b/i.test(raw)
+  const groq = /\bGroq\b/i.test(raw)
+  return gemini && groq ? "multiple" : groq ? "groq" : gemini ? "gemini" : undefined
 }
 
 function classifyAiFailure(error: unknown) {
@@ -122,10 +131,12 @@ function classifyAiFailure(error: unknown) {
     return { status: 503, code: "GROQ_KEY_MISSING", retryable: false, message: "مفتاح Groq غير متاح على الخادم.", raw }
   }
   if (/401|invalid.*key|API key|unauthorized/i.test(raw)) {
-    return { status: 502, code: /missing|غير موجود|not set/i.test(raw) ? "AI_KEY_MISSING" : "AI_AUTH_FAILED", retryable: false, message: "تعذر اعتماد مزوّد الذكاء الاصطناعي على الخادم.", raw }
+    const provider = providerFromError(error)
+    return { status: 502, code: /missing|غير موجود|not set/i.test(raw) ? "AI_KEY_MISSING" : "AI_UNAUTHORIZED", provider, retryable: false, message: "مزود الذكاء الاصطناعي رفض بيانات المصادقة. يرجى مراجعة إعدادات مفتاح الخدمة.", raw }
   }
   if (/403|forbidden/i.test(raw)) {
-    return { status: 502, code: "AI_UNAUTHORIZED", retryable: false, message: "رفض مزوّد الذكاء الاصطناعي الطلب.", raw }
+    const provider = providerFromError(error)
+    return { status: 502, code: "AI_UNAUTHORIZED", provider, retryable: false, message: "مزود الذكاء الاصطناعي رفض صلاحية الطلب. يرجى مراجعة صلاحيات الخدمة أو النموذج.", raw }
   }
   if (/402|insufficient credits|payment required|credit card|free credits|billing/i.test(raw)) {
     return { status: 502, code: "AI_QUOTA_BILLING", retryable: false, message: "حساب مزوّد الذكاء الاصطناعي يحتاج تفعيل الفوترة أو رصيداً.", raw }
@@ -1351,9 +1362,10 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
         retryable: failure.retryable,
       diagnostics: {
         executedOn: "server",
-        provider: AUDIO_MODES.has(mode) ? "automatic-audio" : "automatic",
+        provider: providerFromError(err) || (AUDIO_MODES.has(mode) ? "automatic-audio" : "automatic"),
         keyConfigured: AUDIO_MODES.has(mode) ? (isGeminiConfigured() || isGroqConfigured()) : (isGroqConfigured() || isGeminiConfigured()),
         stage: AUDIO_MODES.has(mode) ? "audio-analysis" : stage,
+        status: failure.status,
         requestId,
       },
       },
