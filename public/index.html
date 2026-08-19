@@ -626,7 +626,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الها����������ف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الها������������ف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -1075,7 +1075,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- صندوق التسجيلات للطالب -->
 <div id="studentExamPage" class="page hidden">
-  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رج��ع</button></div>
   <div id="studentExamContent"></div>
 </div>
 
@@ -1781,7 +1781,7 @@ function renderStudentRecordsBox() {
   if(!s || !box) return;
   const sessions = (s.sessions || []).slice();
   let html = '<div class="page" style="margin-top:0; border-right:5px solid var(--primary);">';
-  html += '<h4 style="color:var(--primary); margin-bottom:15px;">🎙️ سجل التسميعات (كل يوم على حدة)</h4>';
+  html += '<h4 style="color:var(--primary); margin-bottom:15px;">🎙️ سجل التسميعات (��ل يوم على حدة)</h4>';
   if(sessions.length === 0) {
     html += '<div class="alert alert-info">لا توجد تسميعات مسجلة بعد</div>';
   } else {
@@ -3297,9 +3297,9 @@ function localSmartChatReply(message,role){
   if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
-  return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت الهد�� والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
+  return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت الهد�� والسورة أو ال��تيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
 }
-async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';box.innerHTML+='<div class="ai-msg user">'+escapeHtml(message)+'</div><div id="adminAiTyping" class="ai-msg bot">جاري التحليل...</div>';box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await readApiJson(res,'تعذر رد Gemini وGroq');document.getElementById('adminAiTyping').outerHTML='<div class="ai-msg bot">'+escapeHtml(data.result).replace(/\n/g,'<br>')+'</div>'}catch(e){document.getElementById('adminAiTyping').textContent=localSmartChatReply(message,'admin')}box.scrollTop=box.scrollHeight}
+async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';const typing=document.createElement('div');typing.className='ai-msg bot';typing.textContent='جاري التحليل...';box.append('<div class="ai-msg user">'+escapeHtml(message)+'</div>');box.appendChild(typing);box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await readApiJson(res,'تعذر رد Gemini وGroq');typing.innerHTML=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>')}catch(e){typing.innerHTML=escapeHtml(localSmartChatReply(message,'admin'))}box.scrollTop=box.scrollHeight}
 
 async function callStudentAI(mode, payload, temperature){
   const res = await fetch('/api/ai', {
@@ -3698,7 +3698,7 @@ function renderParentExamResults(s){
   let arr=s.examResults||[];if(!arr.length)return '';
   let h='<div class="page" style="margin-top:15px;border-right:5px solid var(--info)"><h4 style="color:var(--info)">🧪 نتائج الاختبارات</h4>';
   arr.slice().reverse().forEach(ex=>{h+='<div class="history-element"><div class="history-element-name">📅 '+escapeHtml(ex.date||'')+'</div><div class="history-element-details"><div class="history-detail"><strong>الدرجة:</strong> '+ex.score+'/'+ex.maxScore+'</div><div class="history-detail"><strong>الوقت:</strong> '+ex.totalDurationSeconds+' ثانية</div></div>';
-    if(ex.answers&&ex.questions){h+='<details style="margin-top:10px"><summary>👁️ عرض إجابات الطالب</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{},r=a.aiResult||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br><span>إجابة الطالب: '+escapeHtml(a.answer||'—')+'</span><br><span>النتيجة: '+(a.score>=1?'✅ كاملة':a.score===.5?'🟡 نصف درجة':'❌ غير صحيحة')+'</span>'+(r.reason?'<br><span>تقرير AI: '+escapeHtml(r.reason)+'</span>':'');if(q.type==='audio'&&a.audioData&&a.audioShareWithParent!==false){h+='<div style="margin-top:8px">🎙️ التسجيل: <audio controls src="'+a.audioData+'" style="height:38px"></audio></div>'}h+='</div>'});h+='</details>'}h+='</div>'});
+    if(ex.answers&&ex.questions){h+='<details style="margin-top:10px"><summary>👁️ عر�� إجابات الطالب</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{},r=a.aiResult||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br><span>إجابة الطالب: '+escapeHtml(a.answer||'—')+'</span><br><span>النتيجة: '+(a.score>=1?'✅ كاملة':a.score===.5?'🟡 نصف درجة':'❌ غير صحيحة')+'</span>'+(r.reason?'<br><span>تقرير AI: '+escapeHtml(r.reason)+'</span>':'');if(q.type==='audio'&&a.audioData&&a.audioShareWithParent!==false){h+='<div style="margin-top:8px">🎙️ التسجيل: <audio controls src="'+a.audioData+'" style="height:38px"></audio></div>'}h+='</div>'});h+='</details>'}h+='</div>'});
   return h+'</div>';
 }
 
@@ -4192,7 +4192,7 @@ async function deleteGithubFile(){
   }
   }
 
-// ===== مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) =====
+// ===== مساعد تطوير الموقع بالذكاء الاصط��اعي (للمسؤول فقط) =====
 let lastDevPlan = null;
 function openDevAssistant(){
   // حصر الميزة على المسؤول فقط
@@ -4724,7 +4724,7 @@ function editSubject(id) {
   if(newTeacher === null) return;
   const newPhone = prompt('رقم هاتف المدرس:', s.phone || '');
   if(newPhone === null) return;
-  if(newPhone && newPhone.length !== 11) return alert('رقم الهاتف يجب أن يكون 11 رقم');
+  if(newPhone && newPhone.length !== 11) return alert('رقم الهاتف يجب أن ي��ون 11 رقم');
 
   const makeAdmin = confirm('هل تريد تعيين هذا المعلم كمسؤول في النظام؟');
   if(makeAdmin) {
@@ -5644,13 +5644,13 @@ function updateStudentMsgBadge() {
 
 async function sendStudentChat() {
   const input = document.getElementById('studentChatInput'); const text=input.value.trim(); if(!text)return; input.value='';
-  const chatDiv=document.getElementById('studentChatMessages'); chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="studentAiTyping" class="ai-msg bot">⏳ جاري الئفكير...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
+  const chatDiv=document.getElementById('studentChatMessages');const typing=document.createElement('div');typing.className='ai-msg bot';typing.textContent='جاري التفكير...';chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div>';chatDiv.appendChild(typing);chatDiv.scrollTop=chatDiv.scrollHeight;
   const s=currentUser||{}; const last=(s.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
     const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانات الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
     const data=await readApiJson(res,'تعذر رد Gemini وGroq');
-    const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>'); const typing=document.getElementById('studentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
-  }catch(e){const typing=document.getElementById('studentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'student'))+'<br><small>رد محلي محدود بسبب تعذر Gemini وGroq.</small>'}
+    const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');typing.innerHTML=reply;
+  }catch(e){typing.innerHTML=escapeHtml(localSmartChatReply(text,'student'))+'<br><small>رد محلي محدود بسبب تعذر Gemini وGroq.</small>'}
   chatDiv.scrollTop=chatDiv.scrollHeight;
 }
 
@@ -5776,12 +5776,12 @@ function updateParentMsgBadge() {
 
 async function sendParentChat() {
   const input=document.getElementById('parentChatInput');const text=input.value.trim();if(!text)return;input.value='';
-  const chatDiv=document.getElementById('parentChatMessages');chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="parentAiTyping" class="ai-msg bot"> جاري تحليل البيانات...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
+  const chatDiv=document.getElementById('parentChatMessages');const typing=document.createElement('div');typing.className='ai-msg bot';typing.textContent='جاري تحليل البيانات...';chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div>';chatDiv.appendChild(typing);chatDiv.scrollTop=chatDiv.scrollHeight;
   const child=currentUser&&currentUser[0]?currentUser[0]:{}; const last=(child.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
     const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال ولي الأمر: '+text+'\nبانات الابن/الابنة: '+JSON.stringify({name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)})})});
-    const data=await readApiJson(res,'تعذر رد Gemini وGroq');const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');const typing=document.getElementById('parentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
-  }catch(e){const typing=document.getElementById('parentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'parent'))+'<br><small>رد محلي محدود بسبب تعذر Gemini وGroq.</small>'}
+    const data=await readApiJson(res,'تعذر رد Gemini وGroq');const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');typing.innerHTML=reply;
+  }catch(e){typing.innerHTML=escapeHtml(localSmartChatReply(text,'parent'))+'<br><small>رد محلي محدود بسبب تعذر Gemini وGroq.</small>'}
   chatDiv.scrollTop=chatDiv.scrollHeight;
 }
 
@@ -6213,7 +6213,7 @@ function generateAIResponse(text, student) {
   }
   // المهام / الواجب
   if(has('واجب','مهام','مهمة','مطلوب','تسجيل صوتي','راءة')) {
-    if(pending.length === 0) return '🎉 لا توجد مهام معلّقة الآن يا '+name+'. استغل الوقت في مراجعة ما حفظته سابقاً.';
+    if(pending.length === 0) return '🎉 لا توجد مهام معلّقة الآن يا '+name+'. است��ل الوقت في مراجعة ما حفظته سابقاً.';
     let r = ' <strong>مهامك الحالية ('+pending.length+'):</strong><br>';
     pending.forEach(t => {
       const icon = t.type === 'homework' ? '📝 واجب' : t.type === 'voice' ? '🎙️ تسجيل صوتي' : '📖 قراءة';
