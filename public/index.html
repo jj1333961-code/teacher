@@ -504,7 +504,6 @@ tr:hover { background: var(--table-hover); }
 <!-- شاشة القفل الموحدة -->
 <div id="lockScreen" class="page" style="max-width:480px; margin:40px auto;">
   <div class="page-header"><h2>🔒 دخول النظام</h2></div>
-  <p style="color:var(--text-light); margin-bottom:15px;">أدخل اسم المستخدم والرقم السري — سيتم نقلك تلقائياً لصفحتك (مسؤول / طالب / ولي أمر).</p>
   <div id="unifiedLoginAlert"></div>
   <div class="form-group"><label>اسم المستخدم</label><input type="text" id="unifiedUser" placeholder="اسم المستخدم (أو رقم الموبايل للمسؤول)" onkeypress="if(event.key==='Enter')unifiedLogin()"></div>
   <div class="form-group"><label>الرقم السري</label><div style="position:relative;"><input type="password" id="unifiedPass" placeholder="أدخل الرقم السري" style="padding-left:45px;" onkeypress="if(event.key==='Enter')unifiedLogin()"><span onclick="togglePassVisibility('unifiedPass', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span></div></div>
@@ -671,7 +670,7 @@ tr:hover { background: var(--table-hover); }
     <h3 style="margin:0 0 8px; color:#dc3545;">🗑️ حذف ملف من المستودع</h3>
     <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">يُنشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأساسية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
     <div class="form-group"><label>مسر الملف المراد حذفه</label><input id="githubDeletePath" placeholder="مثال: public/old-file.js" /></div>
-    <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أنني أريد حذف هذا الملف نهائياً من المستودع</label>
+    <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أنني أريد ��ذف هذا الملف نهائياً من المستودع</label>
     <button class="btn" style="background:#dc3545; color:#fff;" onclick="deleteGithubFile()">حذف الملف</button>
     <div id="githubDeleteResult" style="margin-top:12px;"></div>
   </div>
@@ -785,7 +784,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم السري لولي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
-    <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
+    <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من ��ادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
     <h4>📖 ��يانات حفظ القرآن الكريم</h4>
@@ -868,7 +867,7 @@ tr:hover { background: var(--table-hover); }
   <div id="recordElementsContainer"></div>
   <div class="page" style="margin:15px 0;border:2px dashed var(--info);">
     <h4 style="color:var(--info)">🖼️ تعديل اللوح/الصورة يدوياً</h4>
-    <p style="color:var(--text-light)">الاختيار التلقائي للسورة والآيات يظل كما هو، ويمكن للمسؤول تعديل اللوح والصورة يدوياً دون تعطيل الاختيار التلقائي.</p>
+    <p style="color:var(--text-light)">الاختيار الت��قائي للسورة والآيات يظل كما هو، ويمكن للمسؤول تعديل اللوح والصورة يدوياً دون تعطيل الاختيار التلقائي.</p>
     <div class="form-row">
       <div class="form-group"><label>نص اللوح/التعديل اليدوي</label><textarea id="manualBoardText" rows="3" placeholder="اكتب التعديل المطلوب..."></textarea></div>
       <div class="form-group"><label>رابط صورة اللوح (اختياري)</label><input id="manualBoardImage" type="url" placeholder="https://..."></div>
@@ -901,7 +900,7 @@ tr:hover { background: var(--table-hover); }
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:15px">
       <span id="examCountBadge" class="score-badge">0 سؤال</span>
       <button class="btn btn-warning" onclick="saveExamDraft()">💾 حفظ الاختبار للطالب (مؤقت)</button>
-      <button class="btn btn-danger" onclick="cancelExamDraft()">إلغاء الاختبار</button>
+      <button class="btn btn-danger" onclick="cancelExamDraft()">إ��غاء الاختبار</button>
     </div>
     <div id="examBuilderAlert"></div>
   </div>
@@ -2321,7 +2320,7 @@ function editAdmin(id) {
 }
 
 function deleteAdmin(id) {
-  if(!confirm('هل أنت متأكد من حذف هذا المسؤول؟')) return;
+  if(!confirm('هل ��نت متأكد من حذف هذا المسؤول؟')) return;
   let admins = getData('admins');
   admins = admins.filter(a => a.id !== id);
   setData('admins', admins); renderAdmins();
@@ -2442,7 +2441,7 @@ function saveAdminSettings() {
   }
   let changed = false;
   if(newMobile) {
-    if(newMobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
+    if(newMobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 ر��م');
     if(admins.find((a, i) => i !== idx && a.mobile === newMobile)) return alert('هذا الرقم مسجل لمسؤول آخر');
     admins[idx].mobile = newMobile; changed = true;
   }
@@ -3384,7 +3383,7 @@ function examQuestionFingerprint(q){return [q.type||'',q.surah||'',parseInt(q.fr
 async function generateExamQuestions(){
   const base=document.getElementById('examBaseSurah')?.value||currentRecordMainSurah||'';
   if(!base){showExamAlert('حدّد آخر سورة محفوظة للطالب أولاً.','danger');return}
-  const topic='اختبار قرآني متنوع من النطاق والخطة المحددين';
+  const topic='اختبا�� قرآني متنوع من النطاق والخطة المحددين';
   const plans=examPlanRows.filter(r=>(parseInt(r.count)||0)>0);
   if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على الأقل.','danger');return}
   const btns=document.querySelectorAll('#examBuilderSection button');btns.forEach(b=>b.disabled=true);
@@ -3603,7 +3602,7 @@ async function recordStudentExamAudio(i){
       let usedTranscript=transcript;
       if(aiResult){ usedTranscript=aiResult.transcript||transcript; }
       else {
-        try{const expected=await fetchAyatText(q.surah,q.from,q.to);aiResult=await callStudentAI('grade_recitation',{surah:q.surah,from:q.from,to:q.to,expectedText:expected,studentTranscript:transcript,studentVoiceMatch:match},0.05)}catch(e){aiResult={accepted:false,score:0,matchedPercent:0,reason:'تعذر الاتصال بالذكاء الاصطناي لتصحيح محتوى التلاوة'};}
+        try{const expected=await fetchAyatText(q.surah,q.from,q.to);aiResult=await callStudentAI('grade_recitation',{surah:q.surah,from:q.from,to:q.to,expectedText:expected,studentTranscript:transcript,studentVoiceMatch:match},0.05)}catch(e){aiResult={accepted:false,score:0,matchedPercent:0,reason:'تعذر الاتصال بالذكاء الاصطن��ي لتصحيح محتوى التلاوة'};}
       }
       studentExamAudioAnswers[i]={dataUrl,transcript:usedTranscript,voiceMatch:match,aiResult};studentExamAnswers[i]=usedTranscript;
       const pct=aiResult.matchedPercent??0;status.textContent='تم استلام التسجيل بنجاح — النتيجة التفصيلية بانتظار مراجعة المسؤول';
@@ -5155,7 +5154,7 @@ async function analyzeRecitationContent(blob, task, transcript) {
   return {pct:Math.max(0,Math.min(100,Math.round(pct))),dur:Math.round(dur),txtPct,expectedSec,reason,transcript:usedTranscript,aiResult};
 }
 
-// التحقق الكامل (بصمة صوتية + محتوى ائتلاوة) ثم الإرسال أو الرفض
+// التح��ق الكامل (بصمة صوتية + محتوى ائتلاوة) ثم الإرسال أو الرفض
 async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiBoxId, statusEl, fileName) {
   const aiBox = document.getElementById(aiBoxId);
   if(aiBox) aiBox.innerHTML = '<div class="alert alert-info">🤖 جاري تحليل التسجيل بالذكاء الاصطناعي...</div>';
@@ -6189,7 +6188,7 @@ function generateAIResponse(text, student) {
   }
   // افتراضي ذكي
   let r = '🤖 أهلاً '+name+'، لم فهم سؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
-  r += '• <strong>مستواي</strong> — تحليل آخر تقييم<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآيات</strong> — كيف تعرض آيات التسميع كصورة<br>• <strong>تحفيز</strong> — كلمة تشدّ همتك';
+  r += '• <strong>مستواي</strong> — تحليل آخر تقييم<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآيات</strong> — كيف تعرض آيات التس��يع كصورة<br>• <strong>تحفيز</strong> — كلمة تشدّ همتك';
   if(pending.length > 0) r += '<br><br>📌 تذكير: لديك '+pending.length+' مهمة لم تُعتمد بعد.';
   return r;
 }
