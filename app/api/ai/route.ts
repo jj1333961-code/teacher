@@ -207,13 +207,14 @@ async function groqTranscribe(audio: { mimeType: string; data: string }): Promis
   return transcript
 }
 
-function json(data: unknown, status = 200) {
+function json(data: unknown, status = 200, requestId?: string) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "strict-origin-when-cross-origin",
+      ...(requestId ? { "X-Request-Id": requestId } : {}),
     },
   })
 }
@@ -448,7 +449,7 @@ const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ
 كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
 احسب matchedPercent (0-100) لمدى مطابقة المعنى والألفاظ للنص المرجعي.
 score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إذا نصت آية واحدة أو خطأ جوهي بسيط، 0 إذا كان مختلفاً أو ناقصاً كثيراً.
-أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":[]}`
+أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختص�� بالعربية","missingAyahs":[]}`
 
 const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة القرآن اعتماداً على تفريغ نصي (transcript) قد يكون غير دقيق بسبب التعرف الآلي.
 قارن ما تلاه الطالب بالنص المتوقع expectedText للمقطع المطلوب (surah ن from إلى to).
@@ -877,7 +878,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt}`,
-        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجملة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من الدقة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
+        "أجب عن أي سؤال مسموح، داخل موضوع المنصة أو خارجه. اجعل طول الإجابة على قدر السؤال فقط: إن كان بسيطاً فأجب بجملة قصيرة، ولا تضف تفصيلاً أو أمثلة إلا إذا طُلبت. استخدم المرجعين المرفقين عند فائدتهما في الأسئلة القرآنية للتحقق من ال��قة، لكن لا تعتبرهما حدوداً لمعرفتك ولا المصدر الوحيد لإجابتك. لا تختلق نصاً قرآنياً. أعد الجواب مباشرة بلا تحية أو مقدمة أو عنوان أو خاتمة أو ذكر للنموذج أو للمرجع.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -1352,10 +1353,12 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
         executedOn: "server",
         provider: AUDIO_MODES.has(mode) ? "automatic-audio" : "automatic",
         keyConfigured: AUDIO_MODES.has(mode) ? (isGeminiConfigured() || isGroqConfigured()) : (isGroqConfigured() || isGeminiConfigured()),
-        stage,
+        stage: AUDIO_MODES.has(mode) ? "audio-analysis" : stage,
+        requestId,
       },
       },
       failure.status,
+      requestId,
     )
   }
 }
