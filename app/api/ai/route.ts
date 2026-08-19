@@ -65,8 +65,8 @@ const GITHUB_TOKEN = pickEnv("GITHUB_TOKEN")
 const GITHUB_OWNER = sanitizeOwner(pickEnv("GITHUB_OWNER"))
 const GITHUB_REPO = sanitizeRepo(pickEnv("GITHUB_REPO"))
 const GITHUB_BRANCH_ENV = pickEnv("GITHUB_BRANCH")
-const AUTO_DEV_ENABLED = pickEnv("DEV_ASSISTANT_AUTO_APPLY") === "true"
-const githubConfigured = !!(GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO)
+const AUTO_DEV_ENABLED = /^(true|1|yes|on)$/i.test(pickEnv("DEV_ASSISTANT_AUTO_APPLY"))
+const githubConfigured = !!(GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO && GITHUB_BRANCH_ENV)
 const GITHUB_API = "https://api.github.com"
 const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
 
@@ -440,7 +440,7 @@ score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو �
 const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة ال����رآن الكريم اعتماداً على تفريغ صوتي عربي.
 مهمتك:
 1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
-2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
+2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآ��ة from إلى الآية to.
 3) تجاهل أخطاء التعرف الآلي والتشكيل والأخطاء الإملائية البسيطة، ولا تعتبرها نقصاً في الآيات.
 4) حدد الآات الناقصة فعلياً فقط.
 قواعد الدرجة:
