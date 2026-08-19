@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises"
 import path from "node:path"
-import { createCanvas, loadImage, type Image } from "@napi-rs/canvas"
+import { createCanvas, loadImage, type Canvas, type Image } from "@napi-rs/canvas"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
@@ -64,7 +64,7 @@ function renderAyahSnippet(image: Image, masked: boolean) {
   return canvas
 }
 
-async function printOnFrame(ayah: ReturnType<typeof createCanvas>) {
+async function printOnFrame(ayah: Canvas) {
   const frame = await loadFrame()
   const canvas = createCanvas(frame.width, frame.height)
   const context = canvas.getContext("2d")

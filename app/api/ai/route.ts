@@ -407,7 +407,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - صور حد البداية وحد النهاية ستُعرض منفصلة وقابلة للتكبير، لذلك لا تنسخ نصهما داخل prompt ولا تكشف الجزء المطلوب إجابته.
 - لا تنشئ أسئلة سطحية من قصار السور، ولا سؤالاً يكتف�� بالتعرف إلى اسم سورة مشهورة من مطلعها. تجنب سورة الفلق والناس وسائر السور القصيرة السهلة المستبعدة من النطاق.
 - level=easy: سؤال واضح لكنه يحتاج استحضاراً حقيقياً، وليس سؤالاً بديهياً من أول السورة.
-- level=medium: اجعله صعبًا فعليًا ويحتاج تفكيرًا واستحضارًا؛ استخدم تمييزًا وربطًا دقيقًا بين مواضع متقاربة ومتشابهات لفظية من وسط السورة، ولا تسمح بسؤال مباشر أو إجابة ظاهرة من مطلع مشهور.
+- level=medium: اجعله صعبًا فعليًا ويحتاج تفكيرًا واستح��ارًا؛ استخدم تمييزًا وربطًا دقيقًا بين مواضع متقاربة ومتشابهات لفظية من وسط السورة، ولا تسمح بسؤال مباشر أو إجابة ظاهرة من مطلع مشهور.
 - level=hard: سؤال شديد الصعوبة من المتشابهات اللفظية الموثقة: فروق الواو والفاء، الزيادة والنقص، اختلاف الضمائر والمفرد والجمع، اختلاف البداية أو الخاتمة، والتمييز بين آيتين متقاربتين. يجب أن يبقى له جواب واحد قطعي.
 - صغ prompt بلغة عربية سليمة ومباشرة تحدد المطلوب دون غموض، وراجع الإملاء قبل الإخراج.
 - في الاختياري اجعل المشتتات من ألفاظ أو سور أو تكملات قرآنية شديدة التقارب، ولا تستخدم مشتتاً واضح البطلان أو بعيداً عن الصحيح.
@@ -438,7 +438,7 @@ const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة الق
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
-const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة القرآن الكريم اعتماداً على تفريغ صوتي عربي.
+const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة ال��رآن الكريم اعتماداً على تفريغ صوتي عربي.
 مهمتك:
 1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
 2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
@@ -746,7 +746,7 @@ async function autoApplyDevRequest(request: string, plan: any) {
   if (selected.length > 12) throw new Error("الطلب يحتاج تعديل عدد كبير من الملفات؛ الحد التلقائي 12 ملفاً")
   for (const path of selected) {
     const action = plan.files.find((f:any) => String(f?.path || "") === path)?.action
-    if (action !== "create" && !repoFiles.has(path)) throw new Error(`الملف ${path} غير موجود في المستودع`)
+    if (action !== "create" && !repoFiles.has(path)) throw new Error(`الم��ف ${path} غير موجود في المستودع`)
   }
   const current = []
   for (const path of selected) {
@@ -872,7 +872,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجت��اعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -896,7 +896,7 @@ export async function POST(req: Request) {
       const allNumbers = Array.from({ length: endSurahNumber - startSurahNumber + 1 }, (_, index) => startSurahNumber + index)
         .filter((number) => payload.excludeEasyShortSurahs === false || !easyShortSurahNumbers.has(number))
       if (!allNumbers.length) return json({ error: "النطاق المحدد لا يحتوي سوراً مناسبة لأسئلة عميقة بعد استبعاد السور القصيرة السهلة. وسّع نطاق السور ثم أعد المحاولة.", diagnostics }, 400)
-      let seed = Array.from(topic).reduce((value, character) => ((value * 31) + character.charCodeAt(0)) >>> 0, 2166136261)
+      let seed: number = Array.from(topic as string).reduce((value: number, character: string) => ((value * 31) + character.charCodeAt(0)) >>> 0, 2166136261)
       const distributedNumbers = allNumbers.map((number) => ({ number, rank: (seed = (seed * 1664525 + 1013904223) >>> 0) })).sort((a, b) => a.rank - b.rank).map((item) => item.number)
       const selectedNumbers = distributedNumbers.slice(0, Math.min(18, Math.max(requestedCount * 2, 8), distributedNumbers.length))
       const sourceSurahs = await Promise.all(selectedNumbers.map(async (number) => {
@@ -913,7 +913,7 @@ export async function POST(req: Request) {
       const sourceFile = payload.sourceMode === "file" && payload.sourceFile && typeof payload.sourceFile === "object"
         ? { id: String(payload.sourceFile.id || "").slice(0, 120), name: String(payload.sourceFile.name || "").slice(0, 180), text: String(payload.sourceFile.text || "").slice(0, 60_000) }
         : null
-      const topicTerms = topic.split(/\s+/).filter((term) => term.length > 2).slice(0, 12)
+      const topicTerms = topic.split(/\s+/).filter((term: string) => term.length > 2).slice(0, 12)
       const representativeVerses = sourceSurahs.flatMap((source) => {
         const length = source.verses.length
         return [source.verses[0], source.verses[Math.floor(length / 2)], source.verses[length - 1]].filter(Boolean).map((verse: { text: string }) => verse.text)
@@ -969,7 +969,7 @@ export async function POST(req: Request) {
           if (correct && !options.includes(correct)) options.unshift(correct)
           const expectedOptions = Math.max(2, Math.min(6, Number(plan[questionIndex]?.optionsCount) || 4))
           options = options.slice(0, expectedOptions)
-          if (options.length !== expectedOptions || !correct || options.filter((option) => option === correct).length !== 1) return null
+          if (options.length !== expectedOptions || !correct || options.filter((option: string) => option === correct).length !== 1) return null
         }
         if (!prompt || from > to || !correct) return null
 
@@ -1041,7 +1041,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
       const audio = { mimeType, data: audioBase64 }
 
       if (mode === "voice_print") {
-        const audioResult = await runAudio("حلّل خصائص صوت المتحدث في هذا التسجيل وأنشئ بصمة صوتية وصفية. تجاهل لغة الكلام. أعد JSON فقط.", SYS_VOICE_PRINT, 0.05, audio)
+        const audioResult = await runAudio("حلّل خصائص صوت المتحدث في هذا التسجيل وأن��ئ بصمة صوتية وصفية. تجاهل لغة الكلام. أعد JSON فقط.", SYS_VOICE_PRINT, 0.05, audio)
         setAudioDiagnostics(audioResult)
         const parsed = extractJson(audioResult.text) || {}
         const speaker = parsed.speaker && typeof parsed.speaker === "object" ? parsed.speaker : {}
