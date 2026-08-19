@@ -544,6 +544,23 @@ tr:hover { background: var(--table-hover); }
   .thimar-welcome-audio { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:18px; color:#72887b; font-size:.82rem; }
   .thimar-welcome-audio button { border:0; background:transparent; color:#2d704c; cursor:pointer; font-weight:700; text-decoration:underline; }
   @media(max-width:520px){ #thimarWelcome { padding:14px; } .thimar-welcome-inner { border-radius:24px; } .thimar-welcome-mark { width:66px; height:66px; font-size:1.5rem; } .thimar-ayah::before,.thimar-ayah::after { margin-inline:4px; } }
+  /* شريط جانبي موحد للوحات الأدوار */
+  .role-menu-toggle { display:none; position:fixed; inset-inline-end:18px; top:18px; z-index:1100; width:48px; height:48px; border:1px solid rgba(255,255,255,.55); border-radius:50%; background:var(--primary); color:#fff; box-shadow:var(--shadow); cursor:pointer; font-size:1.35rem; }
+  .role-sidebar-backdrop { display:none; position:fixed; inset:0; z-index:1090; background:rgba(12,31,24,.42); backdrop-filter:blur(2px); }
+  .role-sidebar { position:fixed; inset-block:0; inset-inline-end:0; z-index:1101; width:min(340px,88vw); padding:24px 18px; background:var(--card-bg); border-inline-start:1px solid var(--border); box-shadow:-18px 0 45px rgba(17,53,37,.18); transform:translateX(105%); transition:transform .25s ease; overflow:auto; }
+  html[dir="ltr"] .role-sidebar { inset-inline-start:0; inset-inline-end:auto; transform:translateX(-105%); border-inline-start:0; border-inline-end:1px solid var(--border); }
+  .role-sidebar.is-open { transform:translateX(0); }
+  .role-sidebar-backdrop.is-open { display:block; }
+  .role-sidebar-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid var(--border); }
+  .role-sidebar-head strong { color:var(--primary); font-size:1.1rem; }
+  .role-sidebar-close { width:36px; height:36px; border:1px solid var(--border); border-radius:50%; background:transparent; color:var(--text); cursor:pointer; font-size:1.3rem; }
+  .role-sidebar-list { display:grid; gap:9px; }
+  .role-sidebar-item { display:flex; align-items:center; gap:12px; width:100%; padding:13px 14px; border:1px solid var(--border); border-radius:14px; background:var(--table-header); color:var(--text); text-align:start; cursor:pointer; font-weight:700; }
+  .role-sidebar-item:hover { border-color:var(--primary); color:var(--primary); background:var(--input-bg); }
+  .role-sidebar-item .role-sidebar-icon { width:28px; text-align:center; font-size:1.1rem; }
+  @media(max-width:900px){ .role-menu-toggle { display:flex; align-items:center; justify-content:center; } }
+  @media(min-width:901px){ body.role-dashboard .role-menu-toggle { display:flex; align-items:center; justify-content:center; } }
+  @media(prefers-reduced-motion:reduce){ .role-sidebar { transition:none; } }
   </style>
 </head>
 <body>
@@ -552,6 +569,12 @@ tr:hover { background: var(--table-hover); }
     <button class="theme-toggle" type="button" onclick="toggleTheme()" title="تبديل الوضع" aria-label="تبديل الوضع">🌙</button>
     <button class="lang-toggle" type="button" id="langToggleBtn" onclick="toggleLang()" title="تغيير اللغة / Change language" aria-label="تغيير اللغة / Change language">EN</button>
   </div>
+  <button id="roleMenuToggle" class="role-menu-toggle" type="button" aria-label="فتح القائمة الجانبية" aria-controls="roleSidebar" aria-expanded="false" onclick="toggleRoleSidebar()">☰</button>
+  <div id="roleSidebarBackdrop" class="role-sidebar-backdrop" onclick="closeRoleSidebar()"></div>
+  <aside id="roleSidebar" class="role-sidebar" aria-label="القائمة الجانبية" aria-hidden="true">
+    <div class="role-sidebar-head"><strong id="roleSidebarTitle">مساحة ثمار</strong><button class="role-sidebar-close" type="button" aria-label="إغلاق القائمة" onclick="closeRoleSidebar()">×</button></div>
+    <nav id="roleSidebarList" class="role-sidebar-list"></nav>
+  </aside>
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
     <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
   </div>
@@ -652,8 +675,6 @@ tr:hover { background: var(--table-hover); }
     <h2>📊 لوحة تحكم المسؤول</h2>
     <div>
       <span id="adminDeviceInfo" style="color:var(--text-light); margin-left:15px; font-size:0.9rem"></span>
-      <button class="btn btn-outline admin-badge" onclick="showPage('messagesPage')">💬 الرسائل <span id="msgBadge" class="msg-count hidden">0</span></button>
-      <button class="btn btn-outline" onclick="showPage('adminSettings')">⚙️ الإعدادات</button>
       <button class="btn btn-outline" onclick="logout()">خروج</button>
     </div>
   </div>
@@ -1055,14 +1076,9 @@ tr:hover { background: var(--table-hover); }
 <div id="studentDashboard" class="page hidden">
   <div class="page-header">
     <h2>👨‍🎓 صفحة الطالب</h2>
-    <div>
-      <button class="btn btn-outline admin-badge" onclick="showPage('studentInbox')">📬 الرسال <span id="studentMsgBadge" class="msg-count hidden">0</span></button>
-      <button class="btn btn-outline" onclick="showPage('studentAIChat')">🤖 مساعد AI</button>
-      <button class="btn btn-outline" onclick="showPage('studentRecordsPage')">📦 صندوق التسجيلات</button>
-      <button class="btn btn-outline" onclick="showPage('studentExamPage')">🧪 الاخ��بارات</button>
-      <button class="btn btn-outline" onclick="showPage('studentFilesPage')">📁 الملفات</button>
-      <button class="btn btn-outline" onclick="logout()">خروج</button>
-    </div>
+  <div>
+  <button class="btn btn-outline" onclick="logout()">خروج</button>
+  </div>
   </div>
   <div id="studentWelcome"></div>
   <div id="studentInfo"></div>
@@ -1139,15 +1155,9 @@ tr:hover { background: var(--table-hover); }
 <div id="parentDashboard" class="page hidden">
   <div class="page-header">
     <h2>👨‍👩‍👧 متابعة الأبناء</h2>
-    <div>
-      <button class="btn btn-outline admin-badge" onclick="showPage('parentInbox')">📬 الرسائل <span id="parentMsgBadge" class="msg-count hidden">0</span></button>
-      <button class="btn btn-outline" onclick="showPage('parentAIChat')">🤖 مساعد AI</button>
-      <button class="btn btn-outline" onclick="showPage('parentRecordsPage')">📋 السجلات</button>
-      <button class="btn btn-outline" onclick="showPage('parentPendingTasksPage')">⏳ المهام اليومية</button>
-      <button class="btn btn-outline" onclick="showPage('parentChartPage')">📊 المخطط</button>
-      <button class="btn btn-outline" onclick="showPage('parentFilesPage')">📁 الملفات</button>
-      <button class="btn btn-outline" onclick="logout()">خروج</button>
-    </div>
+  <div>
+  <button class="btn btn-outline" onclick="logout()">خروج</button>
+  </div>
   </div>
   <div id="parentWelcome"></div>
   <div id="parentInfo"></div>
@@ -2301,7 +2311,7 @@ async function toggleVoiceRecord() {
     status.textContent = 'تم التسجيل ✅'; 
     return;
   }
-  const allowMic = confirm('🔴 يرجى السماح للموقع بالوصول إلى الميكروفون لتسجيل البصمة الصوتية.\n\nاضغط "موافق" ثم اختر "السماح" في نافذة المتصفح.');
+  const allowMic = confirm('🔴 يرجى السماح للموقع بالوصول إلى الميكروفون لتسج��ل البصمة الصوتية.\n\nاضغط "موافق" ثم اختر "السماح" في نافذة المتصفح.');
   if(!allowMic) { status.textContent = 'تم إلغاء التسجيل ❌'; return; }
   try {
     const stream = await safeGetMic();
@@ -3698,7 +3708,7 @@ function renderParentExamResults(s){
   let arr=s.examResults||[];if(!arr.length)return '';
   let h='<div class="page" style="margin-top:15px;border-right:5px solid var(--info)"><h4 style="color:var(--info)">🧪 نتائج الاختبارات</h4>';
   arr.slice().reverse().forEach(ex=>{h+='<div class="history-element"><div class="history-element-name">📅 '+escapeHtml(ex.date||'')+'</div><div class="history-element-details"><div class="history-detail"><strong>الدرجة:</strong> '+ex.score+'/'+ex.maxScore+'</div><div class="history-detail"><strong>الوقت:</strong> '+ex.totalDurationSeconds+' ثانية</div></div>';
-    if(ex.answers&&ex.questions){h+='<details style="margin-top:10px"><summary>👁️ عر�� إجابات الطالب</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{},r=a.aiResult||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br><span>إجابة الطالب: '+escapeHtml(a.answer||'—')+'</span><br><span>النتيجة: '+(a.score>=1?'✅ كاملة':a.score===.5?'🟡 نصف درجة':'❌ غير صحيحة')+'</span>'+(r.reason?'<br><span>تقرير AI: '+escapeHtml(r.reason)+'</span>':'');if(q.type==='audio'&&a.audioData&&a.audioShareWithParent!==false){h+='<div style="margin-top:8px">🎙️ التسجيل: <audio controls src="'+a.audioData+'" style="height:38px"></audio></div>'}h+='</div>'});h+='</details>'}h+='</div>'});
+    if(ex.answers&&ex.questions){h+='<details style="margin-top:10px"><summary>��️ عر�� إجابات الطالب</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{},r=a.aiResult||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br><span>إجابة الطالب: '+escapeHtml(a.answer||'—')+'</span><br><span>النتيجة: '+(a.score>=1?'✅ كاملة':a.score===.5?'🟡 نصف درجة':'❌ غير صحيحة')+'</span>'+(r.reason?'<br><span>تقرير AI: '+escapeHtml(r.reason)+'</span>':'');if(q.type==='audio'&&a.audioData&&a.audioShareWithParent!==false){h+='<div style="margin-top:8px">🎙️ التسجيل: <audio controls src="'+a.audioData+'" style="height:38px"></audio></div>'}h+='</div>'});h+='</details>'}h+='</div>'});
   return h+'</div>';
 }
 
@@ -3882,7 +3892,7 @@ function openHistory(id) {
         });
         html += '<div style="text-align:center; margin-top:15px; padding-top:15px; border-top:2px dashed var(--border);">';
         html += '<span class="score-badge">المجوع: '+sess.totalScore+' درجة</span>';
-        if(sess.finalizedAt) html += '<p style="margin-top:8px; color:var(--success); font-size:0.9rem;">✅ تم الإغلاق النهائي تاريخ: '+sess.finalizedAt+'</p>';
+        if(sess.finalizedAt) html += '<p style="margin-top:8px; color:var(--success); font-size:0.9rem;">✅ تم الإغلاق النهائي ت��ريخ: '+sess.finalizedAt+'</p>';
         if(sess.notes) html += '<p style="margin-top:10px; color:var(--text-light);"><strong>ملاحظات:</strong> '+sess.notes+'</p>';
         html += '</div>';
       });
@@ -6377,6 +6387,44 @@ if(restoreSession()) {
   permission.addEventListener('click',allowAndPlay);
   audio.addEventListener('ended',closeWelcome,{once:true});
 })();
-</script>
-</body>
+  /* شريط الأدوار: يجمع الأدوات الثانوية دون المساس بدوالها الحالية */
+  (function initRoleSidebar(){
+    const sidebar = document.getElementById('roleSidebar');
+    const list = document.getElementById('roleSidebarList');
+    const toggle = document.getElementById('roleMenuToggle');
+    const backdrop = document.getElementById('roleSidebarBackdrop');
+    if(!sidebar || !list || !toggle || !backdrop) return;
+    const common = {
+      messagesPage:['💬','الرسائل'], filesPage:['📁','الملفات المرفوعة'],
+      adminSettings:['⚙️','الإعدادات'], adminAIPage:['✦','المحادثة مع الذكاء الاصطناعي'],
+      devAssistantPage:['🛠️','مساعد تطوير الموقع'], chartPage:['📈','مخطط التقييم']
+    };
+    const roleItems = {
+      admin:[['messagesPage','💬','الرسائل'],['adminSettings','⚙️','الإعدادات'],['filesPage','📁','الملفات المرفوعة'],['devAssistantPage','🛠️','مساعد تطوير الموقع'],['adminAIPage','✦','المحادثة الإدارية مع الذكاء الاصطناعي'],['githubSyncPage','🔗','مزامنة GitHub']],
+      student:[['studentInbox','💬','الرسائل'],['studentFilesPage','📁','الملفات'],['studentAIChat','✦','مساعد الذكاء الاصطناعي'],['studentChartPage','📈','مخطط التقييم'],['studentRecordsPage','🎙️','صندوق التسجيلات']],
+      parent:[['parentInbox','💬','الرسائل'],['parentFilesPage','📁','الملفات'],['parentAIChat','✦','مساعد الذكاء الاصطناعي'],['parentChartPage','📈','المخطط']]
+    };
+    function visibleId(){ const el=document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)'); return el && el.id || ''; }
+    function roleForPage(){ const id=visibleId().toLowerCase(); if(id.includes('admin')) return 'admin'; if(id.includes('parent')) return 'parent'; if(id.includes('student') || id.includes('record') || id.includes('exam') || id.includes('task')) return 'student'; if(typeof currentType !== 'undefined'){ return currentType === 'admin' || currentType === 'teacher' ? 'admin' : currentType === 'parent' ? 'parent' : 'student'; } return ''; }
+    function update(){
+      const role=roleForPage();
+      if(!role){ toggle.style.display='none'; return; }
+      toggle.style.display='flex';
+      document.body.classList.add('role-dashboard');
+      document.getElementById('roleSidebarTitle').textContent = role==='admin' ? 'أدوات المسؤول' : role==='parent' ? 'مساحة ولي الأمر' : 'مساحة الطالب';
+      list.innerHTML='';
+      (roleItems[role]||[]).forEach(([id,icon,label])=>{
+        const btn=document.createElement('button'); btn.type='button'; btn.className='role-sidebar-item'; btn.innerHTML='<span class="role-sidebar-icon" aria-hidden="true">'+icon+'</span><span>'+label+'</span>';
+        btn.onclick=()=>{ if(typeof window[id==='githubSyncPage'?'openGithubSync':'showPage']==='function'){ id==='githubSyncPage' ? window.openGithubSync() : window.showPage(id); } closeRoleSidebar(); };
+        list.appendChild(btn);
+      });
+    }
+    window.toggleRoleSidebar=function(){ const open=!sidebar.classList.contains('is-open'); sidebar.classList.toggle('is-open',open); backdrop.classList.toggle('is-open',open); sidebar.setAttribute('aria-hidden',String(!open)); toggle.setAttribute('aria-expanded',String(open)); update(); };
+    window.closeRoleSidebar=function(){ sidebar.classList.remove('is-open'); backdrop.classList.remove('is-open'); sidebar.setAttribute('aria-hidden','true'); toggle.setAttribute('aria-expanded','false'); };
+    new MutationObserver(update).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeRoleSidebar(); });
+    update();
+  })();
+  </script>
+ </body>
 </html>
