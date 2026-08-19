@@ -293,7 +293,8 @@ tr:hover { background: var(--table-hover); }
   margin-right: 5px;
 }
 
-.voice-record-btn { background:var(--danger); color:#fff; border:none; border-radius:50%; width:60px; height:60px; font-size:1.5rem; cursor:pointer; transition:0.2s; }
+  .voice-record-btn { background:var(--danger); color:#fff; border:none; border-radius:50%; width:60px; height:60px; font-size:1.5rem; cursor:pointer; transition:0.2s; }
+  #studentSpeechBtn[aria-pressed="true"] { animation:pulse 1.2s infinite; border-color:var(--danger); color:var(--danger); }
 .voice-record-btn:hover { transform:scale(1.1); }
 .voice-record-btn.recording { animation: pulse 1s infinite; background:#dc3545; }
 @keyframes pulse { 0% { transform:scale(1); } 50% { transform:scale(1.1); } 100% { transform:scale(1); } }
@@ -743,6 +744,11 @@ tr:hover { background: var(--table-hover); }
     <label style="font-size:1.05rem;">الإملاء الصوتي لبيانات الطالب</label>
     <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البيانات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم القومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، المواد القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ الخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
+      <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
+    </div>
+    <div id="studentSpeechTranscript" class="hidden" aria-live="polite" style="margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:8px;white-space:pre-wrap;"></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;">
       <button type="button" id="studentIntakeRecordBtn" class="btn btn-primary" onclick="toggleStudentIntakeRecord()">بدء التسجيل</button>
       <button type="button" id="studentIntakePauseBtn" class="btn btn-secondary" onclick="toggleAudioPause('student-intake')" disabled>إيقاف مؤقت</button>
       <span id="studentIntakeStatus" aria-live="polite">جاهز للتسجيل</span>
@@ -772,7 +778,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
-    <h4>📖 بيانات حفظ القرآن الكريم</h4>
+    <h4>📖 ��يانات حفظ القرآن الكريم</h4>
     <div class="form-row">
       <div class="form-group"><label>الجزء</label><select id="stJuz" onchange="updateSurahSelect()"><option value="">اختر الجزء...</option></select></div>
       <div class="form-group"><label>السورة</label><select id="stSurah"><option value="">اختر الجزء أولاً...</option></select></div>
@@ -2104,6 +2110,46 @@ function applyStudentVoiceFields(fields){
   return filled;
 }
 let studentIntakeRecorder=null, studentIntakeChunks=[], studentIntakeLastBlob=null;
+let studentSpeechRecognition=null, studentSpeechListening=false;
+const studentSpeechFields={name:'stName',username:'stUsername',national:'stNational',phone:'stPhone',birth:'stBirth',parent:'stParent',notes:'stNotes'};
+function speechLanguage(){return typeof currentLang!=='undefined'&&currentLang==='en'?'en-US':'ar-EG'}
+function cleanSpeechText(value){return String(value||'').replace(/[<>]/g,'').replace(/[\\u0000-\\u001F\\u007F]/g,'').trim().slice(0,2000)}
+function spokenDigits(value){
+  const map={'صفر':'0','واحد':'1','واحدة':'1','اثنان':'2','اثنين':'2','اثنتان':'2','ثلاثة':'3','ثلاث':'3','أربعة':'4','اربعة':'4','أربع':'4','خمسة':'5','خمس':'5','ستة':'6','ست':'6','سبعة':'7','سبع':'7','ثمانية':'8','ثمان':'8','تسعة':'9','تسع':'9'};
+  let text=String(value||'').replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d)});
+  Object.keys(map).sort(function(a,b){return b.length-a.length}).forEach(function(word){text=text.replace(new RegExp('(?:^|\\s)'+word+'(?=\\s|$)','g'),map[word])});
+  return text.replace(/[^0-9]/g,'');
+}
+function parseStudentSpeech(text){
+  const clean=cleanSpeechText(text), result={};
+  const labels={name:['اسم الطالب','الاسم','student name','name'],username:['اسم المستخدم','username','user name'],national:['الرقم القومي','الرقم القومى','national id'],phone:['رقم الهاتف','الهاتف','phone number','phone'],birth:['تاريخ الميلاد','birth date','date of birth'],parent:['اسم ولي الأمر','ولي الأمر','ولي الامر','parent name','guardian name'],notes:['ملاحظات','notes']};
+  const all=Object.keys(labels).reduce(function(a,k){return a.concat(labels[k])},[]).sort(function(a,b){return b.length-a.length});
+  const pattern=all.map(function(x){return x.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')}).join('|');
+  const re=new RegExp('(?:'+pattern+')\\s*[:：-]?\\s*([\\s\\S]*?)(?=\\s+(?:'+pattern+')\\s*[:：-]?|$)','gi'); let match;
+  while((match=re.exec(clean))){const label=match[0].slice(0,match[0].length-match[1].length).replace(/[:：-]?\\s*$/,'').trim();const key=Object.keys(labels).find(function(k){return labels[k].some(function(x){return normalizeArabicMatch(x)===normalizeArabicMatch(label)})});if(key&&!result[key])result[key]=match[1].trim().replace(/[،,؛;]+$/,'')}
+  if(result.national)result.national=spokenDigits(result.national);
+  if(result.phone)result.phone=spokenDigits(result.phone);
+  return {text:clean,fields:result};
+}
+function renderStudentSpeechPreview(parsed,filled){
+  const box=document.getElementById('studentIntakeResult'); if(!box)return;
+  const labels={name:'اسم الطالب',username:'اسم المستخدم',national:'الرقم القومي',phone:'رقم الهاتف',birth:'تاريخ الميلاد',parent:'اسم ولي الأمر',notes:'الملاحظات'};
+  const rows=Object.keys(parsed.fields).map(function(k){return '<div>✓ '+escapeHtml(labels[k]||k)+': <strong>'+escapeHtml(parsed.fields[k])+'</strong></div>'}).join('');
+  box.innerHTML='<div class="alert alert-success">تم التعرف على النص. راجع الخانات قبل الحفظ اليدوي.<br>'+rows+'<small>النص الكامل: '+escapeHtml(parsed.text)+'</small></div>';
+}
+function speechErrorMessage(error){const code=error&&error.error;if(code==='not-allowed'||code==='service-not-allowed')return currentLang==='en'?'Microphone permission was denied.':'تم رفض إذن الميكروفون.';if(code==='no-speech')return currentLang==='en'?'No speech was detected. Try again.':'لم يتم التعرف على الصوت، حاول مرة أخرى.';if(code==='audio-capture')return currentLang==='en'?'No microphone was found.':'لم يتم العثور على ميكروفون.';return currentLang==='en'?'Voice input is unavailable in this browser.':'الإدخال الصوتي غير متاح في هذا المتصفح.'}
+function stopStudentSpeech(){if(studentSpeechRecognition){try{studentSpeechRecognition.stop()}catch(e){}}studentSpeechListening=false;const btn=document.getElementById('studentSpeechBtn');if(btn){btn.disabled=false;btn.setAttribute('aria-pressed','false');btn.textContent='🎤 إدخال البيانات بالصوت'}const status=document.getElementById('studentSpeechStatus');if(status)status.textContent='تم التعرف'}
+function toggleStudentSpeech(){
+  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition, btn=document.getElementById('studentSpeechBtn'), status=document.getElementById('studentSpeechStatus'), transcript=document.getElementById('studentSpeechTranscript');
+  if(studentSpeechListening){stopStudentSpeech();return}
+  if(!Recognition){if(status)status.textContent='الإدخال الصوتي غير مدعوم في هذا المتصفح.';return}
+  const recognition=new Recognition();studentSpeechRecognition=recognition;recognition.lang=speechLanguage();recognition.continuous=false;recognition.interimResults=true;recognition.maxAlternatives=1;
+  let finalText='';studentSpeechListening=true;if(btn){btn.disabled=false;btn.setAttribute('aria-pressed','true');btn.textContent='🔴 إيقاف الاستماع'}if(status)status.textContent='جاري الاستماع...';if(transcript){transcript.classList.remove('hidden');transcript.textContent=''}
+  recognition.onresult=function(event){let interim='';for(let i=event.resultIndex;i<event.results.length;i++){const value=cleanSpeechText(event.results[i][0].transcript);if(event.results[i].isFinal)finalText+=' '+value;else interim+=' '+value}if(transcript)transcript.textContent=(finalText+' '+interim).trim()};
+  recognition.onerror=function(event){if(transcript&&event.error!=='aborted')transcript.textContent=speechErrorMessage(event);if(status)status.textContent=speechErrorMessage(event);studentSpeechListening=false;if(btn){btn.setAttribute('aria-pressed','false');btn.textContent='🎤 إدخال البيانات بالصوت'}};
+  recognition.onend=function(){studentSpeechListening=false;if(btn){btn.setAttribute('aria-pressed','false');btn.textContent='🎤 إدخال البيانات بالصوت'}const parsed=parseStudentSpeech(finalText);if(!parsed.text){if(status)status.textContent='لم يتم التعرف على الصوت، حاول مرة أخرى.';return}const filled=applyStudentVoiceFields(parsed.fields);renderStudentSpeechPreview(parsed,filled);if(status)status.textContent=filled.length?'تم التعرف ومراجعة البيانات':'تم التعرف على النص، راجع الخانات يدوياً'};
+  try{recognition.start()}catch(e){studentSpeechListening=false;if(status)status.textContent='تعذر بدء الإدخال الصوتي.';if(btn){btn.disabled=false;btn.setAttribute('aria-pressed','false')}}
+}
 async function retryStudentIntakeAnalysis(){
   const blob=studentIntakeLastBlob, status=document.getElementById('studentIntakeStatus'), result=document.getElementById('studentIntakeResult');
   if(!blob||!result)return;
@@ -3917,7 +3963,7 @@ function renderVoiceBox(key) {
   h += '<span id="vmStatus_'+key+'" style="color:var(--text-light);">'+(v ? 'رسالة صوتية جاهزة ✅' : 'اضغط لتسجيل رسالة صوتية')+'</span>';
   if(v) {
     h += '<audio controls src="'+v+'" style="height:40px;"></audio>';
-    h += '<button class="btn btn-xs btn-danger" onclick="clearVoiceMsg(\''+key+'\')">🗑️ حذف</button>';
+    h += '<button class="btn btn-xs btn-danger" onclick="clearVoiceMsg(\''+key+'\')">���️ حذف</button>';
   }
   h += '</div>';
   box.innerHTML = h;
@@ -5112,7 +5158,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
 
   // 1) مطابقة البصمة الصوتية
   if(matchPct !== null && matchPct < VOICE_MATCH_THRESHOLD) {
-    showToast('❌ فشل التحقق من البصمة الصوتية (' + matchPct + '%) — لم يتم حفظ أو إرسال التسجيل', 'error');
+    showToast('❌ فشل التحقق من البصمة الصوتية (' + matchPct + '%) — لم يتم حفظ أو إرسال الت��جيل', 'error');
     if(statusEl) statusEl.textContent = 'غير مطابق — أعد التسجيل ❌';
     if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 التحقق الأمني:</strong><br>البصمة الصوتية غير مطابقة لصوت الطال (' + matchPct + '%).<br>لم يتم حفظ التسجيل أو إرساله للمسؤول أو ولي الأمر.</div>';
     return false;
@@ -6119,7 +6165,7 @@ function generateAIResponse(text, student) {
   }
   // التواصل مع المسؤو
   if(has('مسؤول','معلم','شيخ','ابلاغ','إبلاغ','رساله','رسالة','تواصل','شكوى')) {
-    return '📨 يمكنك مراسلة المسؤول مباشرة من <strong>صندوق الرسائل</strong> في صفحتك، وسيصلك الرد هناك مع إشعار. إن كان الأمر عاجلاً اذكر كلمة "عاجل" في بداية رسالتك.';
+    return '📨 يمكنك مراسلة المسؤول مباشرة من <strong>صندوق الرسائل</strong> في صفحتك، وسيصلك الرد هناك مع إشعار. إن كان الأمر عاجلاً اذكر كلمة "عا��ل" في بداية رسالتك.';
   }
   // ديني عام
   if(has('دئن','اسلام','إسلام','الله','نبي','رسول','دعاء','صلاة')) {
