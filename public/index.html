@@ -626,7 +626,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الها������ف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الها��������ف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -667,7 +667,7 @@ tr:hover { background: var(--table-hover); }
   <div class="menu-grid">
     <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات لمرفوعة</button>
     <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
-<button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة OpenRouter الإدارية</button>
+<button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini وGroq الإدارية</button>
     <button class="menu-btn" style="background:#24292e" onclick="openGithubSync()">🔗 مزامنة GitHub</button>
   </div>
 </div>
@@ -683,7 +683,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا OpenRouter وGitHub يبقيان على الخادم فقط.
+    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
@@ -817,7 +817,7 @@ tr:hover { background: var(--table-hover); }
     <div id="studentSpeechTranscript" class="hidden" aria-live="polite" style="margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:8px;white-space:pre-wrap;"></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;">
       <button type="button" id="studentIntakeRecordBtn" class="btn btn-primary" onclick="toggleStudentIntakeRecord()">بدء التسجيل</button>
-      <button type="button" id="studentIntakePauseBtn" class="btn btn-secondary" onclick="toggleAudioPause('student-intake')" disabled>إيقاف مؤقت</button>
+      <button type="button" id="studentIntakePauseBtn" class="btn btn-secondary" onclick="toggleAudioPause('student-intake')" disabled>إيقا�� مؤقت</button>
       <span id="studentIntakeStatus" aria-live="polite">جاهز للتسجيل</span>
       <span id="studentIntakeTimer" style="font-variant-numeric:tabular-nums;">00:00</span>
     </div>
@@ -899,7 +899,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-group" style="border:1px dashed var(--primary);padding:12px;border-radius:10px;">
     <label>🎙️ البصمة الصوتية</label>
-    <div id="editVoiceStatus" style="margin:6px 0;color:var(--text-light)">يمكن استبدال البصمة الصوتية الحالية بتسجيل جديد.</div>
+    <div id="editVoiceStatus" style="margin:6px 0;color:var(--text-light)">يم��ن استبدال البصمة الصوتية الحالية بتسجيل جديد.</div>
     <button type="button" class="voice-record-btn" id="editVoiceBtn" onclick="toggleEditVoiceRecord()">🎙️</button>
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
@@ -1208,7 +1208,7 @@ tr:hover { background: var(--table-hover); }
   <div id="filesAlert"></div>
   <section style="background:var(--table-header);border:2px solid var(--primary);border-radius:15px;padding:20px;margin-bottom:20px;">
     <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
-    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها محلياً دون إرساله إلى OpenRouter.</p>
+    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها محلياً دون إرساله إلى Gemini وGroq.</p>
     <input id="examFileUpload" type="file" accept=".pdf,.docx,.txt" onchange="uploadExamFile(this)">
     <div id="examFileUploadStatus" style="margin-top:10px;"></div>
     <div id="examFilesList" style="margin-top:15px;"></div>
@@ -1273,8 +1273,8 @@ tr:hover { background: var(--table-hover); }
 </div>
   
   <script>
-function getSelectedAIModel(){return 'openrouter';}
-function getAIModelLabel(){return 'OpenRouter';}
+function getSelectedAIModel(){return 'gemini-2.5-flash';}
+function getAIModelLabel(){return 'Gemini / Groq';}
 
 function showToast(msg, type){
   if(!type){
@@ -1324,7 +1324,7 @@ const quranData = {
   27: ["الذاريات", "الطور", "النجم", "القمر", "الحمن", "الواقعة", "الحديد"],
   28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "المعة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
   29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزل", "المدثر", "القيا��ة", "الإنسان", "المرسلات"],
-  30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "لضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص", "المسد", "الإخلاص", "الفلق", "الناس"]
+  30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "لضحى", "الشرح", "التين", "العلق", "ال��در", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص", "المسد", "الإخلاص", "الفلق", "الناس"]
 };
 
 const ALL_SURAHS_ORDERED = [
@@ -1430,7 +1430,7 @@ const LANG_DICT = {
   '💬 الرسائل': '💬 Messages',
   '📥 الرسائل الواردة': '📥 Inbox',
   '✉️ التواصل': '✉️ Compose',
-  '⚙️ إعدادات الم��ؤول': '⚙️ Admin Settings',
+  '⚙�� إعدادات الم��ؤول': '⚙️ Admin Settings',
   'الاختبارات': 'Exams', 'المهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل الصوتي': 'Audio recording',
   'مكافحة الغش': 'Anti-cheat', 'تحليل التسجيل': 'Analyze recording', 'جاري التحليل...': 'Analyzing...',
   'تعذر تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
@@ -1441,7 +1441,7 @@ const LANG_DICT = {
   'الوقت المتبقي': 'Time remaining', 'حالة الجلسة': 'Session status', 'النتيجة': 'Result',
   'تحديث': 'Refresh', 'تسجيل الدخول': 'Log in', 'تسجيل الخروج': 'Log out',
   'مساعد Gemini / Groq الإداري': 'Gemini / Groq Admin Assistant',
-  'محادثة OpenRouter ا��إدا��ية': 'OpenRouter Admin Chat', 'مزامنة GitHub': 'GitHub Sync',
+  'محادثة Gemini وGroq ا��إدا��ية': 'Gemini وGroq Admin Chat', 'مزامنة GitHub': 'GitHub Sync',
   '📁 الملفات لمرفوعة': '📁 Uploaded files', 'ف الموقع': 'to the site', 'بيانات الموقع': 'site data'
 };
 let currentLang = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
@@ -3294,7 +3294,7 @@ function localSmartChatReply(message,role){
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت الهد�� والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
 }
-async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';box.innerHTML+='<div class="ai-msg user">'+escapeHtml(message)+'</div><div id="adminAiTyping" class="ai-msg bot">جاري التحليل...</div>';box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await readApiJson(res,'تعذر رد OpenRouter');document.getElementById('adminAiTyping').outerHTML='<div class="ai-msg bot">'+escapeHtml(data.result).replace(/\n/g,'<br>')+'</div>'}catch(e){document.getElementById('adminAiTyping').textContent=localSmartChatReply(message,'admin')}box.scrollTop=box.scrollHeight}
+async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';box.innerHTML+='<div class="ai-msg user">'+escapeHtml(message)+'</div><div id="adminAiTyping" class="ai-msg bot">جاري التحليل...</div>';box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await readApiJson(res,'تعذر رد Gemini وGroq');document.getElementById('adminAiTyping').outerHTML='<div class="ai-msg bot">'+escapeHtml(data.result).replace(/\n/g,'<br>')+'</div>'}catch(e){document.getElementById('adminAiTyping').textContent=localSmartChatReply(message,'admin')}box.scrollTop=box.scrollHeight}
 
 async function callStudentAI(mode, payload, temperature){
   const res = await fetch('/api/ai', {
@@ -4992,7 +4992,7 @@ function renderStudentTasks() {
       html += status;
 
       if(isProctorCancelled) {
-        html += '<div class="task-rejected-alert">لا يمكن إعادة هذه ��لمهمة بعد إلغ��ئها. تواصل مع الم��ؤول لإسنا�� مهمة جديدة.</div>';
+        html += '<div class="task-rejected-alert">ل�� يمكن إعادة هذه ��لمهمة بعد إلغ��ئها. تواصل مع الم��ؤول لإسنا�� مهمة جديدة.</div>';
       } else if(isRejected) {
         html += '<div class="task-rejected-alert">⚠️ تم رفض التسيل السابق. يرجى إرسال تسجيل جديد.</div>';
         html += studentVoiceRecorderHTML(originalIdx);
@@ -5299,7 +5299,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   return true;
 }
 
-// رفع ملف تسجيل صوتي جاهز من جهاز ال��الب (يمر بنفس التحقق)
+// رفع ملف تسجيل صوتي جاهز من جهاز ال����الب (يمر بنفس التحقق)
 async function uploadVoiceTaskFile(taskIdx, input) {
   const file = input.files[0];
   if(!file) return;
@@ -5379,7 +5379,7 @@ function _fft(re, im) {
 
 async function computeVoicePrint(blob) {
   // بصة محلية متعددة السمات: طيف صوتي + مركز الطيف + عبور الصفر + إحصاءات زمنية.
-  // لا نرفع البصمة الخام إلى OpenRouter؛ تبقى المقارنة على جهاز المستخدم.
+  // لا نرفع البصمة الخام إلى Gemini وGroq؛ تبقى المقارنة على جهاز المستخدم.
   try{
     const buf=await blob.arrayBuffer(),AC=window.AudioContext||window.webkitAudioContext,ctx=new AC(),audio=await ctx.decodeAudioData(buf.slice(0)),ch=audio.getChannelData(0);
     const N=1024,hop=512,bands=48,bandSum=new Float64Array(bands),bandSq=new Float64Array(bands),cent=[] ,zcr=[],ener=[];let frames=0;
@@ -5451,7 +5451,7 @@ function blobToDataURL(blob) {
   return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(blob); });
 }
 // ====== تحويل الصوت المسجّل (webm/ogg) إلى WAV ======
-// OpenRouter يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصية webm.
+// Gemini وGroq يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصية webm.
 // نفكّ الترميز عبر Web Audio ثم نعيد ترميزه PCM 16-bit أحادي القناة بمعدل 12kHz.
 // يحافظ المعدل على وضوح الكلام ويُبقي تسجيل الدقيقة والنصف دون حد طلبات Vercel بعد Base64.
 async function blobToWav(blob) {
@@ -5643,9 +5643,9 @@ async function sendStudentChat() {
   const s=currentUser||{}; const last=(s.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
     const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانات الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
-    const data=await readApiJson(res,'تعذر رد OpenRouter');
+    const data=await readApiJson(res,'تعذر رد Gemini وGroq');
     const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>'); const typing=document.getElementById('studentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
-  }catch(e){const typing=document.getElementById('studentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'student'))+'<br><small>رد محلي محدود بسبب تعذر OpenRouter.</small>'}
+  }catch(e){const typing=document.getElementById('studentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'student'))+'<br><small>رد محلي محدود بسبب تعذر Gemini وGroq.</small>'}
   chatDiv.scrollTop=chatDiv.scrollHeight;
 }
 
@@ -5775,8 +5775,8 @@ async function sendParentChat() {
   const child=currentUser&&currentUser[0]?currentUser[0]:{}; const last=(child.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
     const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال ولي الأمر: '+text+'\nبانات الابن/الابنة: '+JSON.stringify({name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)})})});
-    const data=await readApiJson(res,'تعذر رد OpenRouter');const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');const typing=document.getElementById('parentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
-  }catch(e){const typing=document.getElementById('parentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'parent'))+'<br><small>رد محلي محدود بسبب تعذر OpenRouter.</small>'}
+    const data=await readApiJson(res,'تعذر رد Gemini وGroq');const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');const typing=document.getElementById('parentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
+  }catch(e){const typing=document.getElementById('parentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'parent'))+'<br><small>رد محلي محدود بسبب تعذر Gemini وGroq.</small>'}
   chatDiv.scrollTop=chatDiv.scrollHeight;
 }
 
@@ -6179,7 +6179,7 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلام','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مها��</em> — لعرض الواجبات والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مها��</em> — لعرض الواجب��ت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
@@ -6220,7 +6220,7 @@ function generateAIResponse(text, student) {
   }
   // الآيات والصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>��لآيات تُعرض بارم العثماني المشكَّل كصورة مطابقة تماماً لمصحف.';
+    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوضح حجم لعينيك.<br><br>��لآيات تُعرض بارم العثمان�� المشكَّل كصورة مطابقة تماماً لمصحف.';
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','ص��ت','ميكروفون','تحق')) {
