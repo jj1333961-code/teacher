@@ -864,7 +864,7 @@ tr:hover { background: var(--table-hover); }
       <h4 style="color:var(--primary);margin:0">🧪 اختبار مستقل بعد السورة الأساسية</h4>
       <span class="badge badge-primary">لا يختلط بعناصر التسميع</span>
     </div>
-<p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. اختر نطا�� السور والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
+<p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. اخت�� نطا�� السور والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الناس.</small></div>
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
@@ -1178,7 +1178,7 @@ tr:hover { background: var(--table-hover); }
 
 <div id="proctorGate" class="proctor-gate hidden" role="dialog" aria-modal="true" aria-labelledby="proctorTitle">
   <div class="proctor-panel">
-    <h2 id="proctorTitle">التحقق قبل بدء المه��ة</h2>
+    <h2 id="proctorTitle">التحقق قبل بدء المه����ة</h2>
     <p>لن ت����حفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
     <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص للسماح بالكاميرا</div></div>
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
@@ -1466,7 +1466,7 @@ function proctorStop(closeCamera=true){proctor.active=false;proctor.holding=fals
 function proctorLeaveStart(reason){if(!proctor.active||proctor.leaveAt)return;proctor.leaveAt=Date.now();proctorShowWarning(reason,proctor.leaveAt);const grace=getProctorSettings().leaveGraceMs;setTimeout(function(){if(proctor.active&&proctor.leaveAt&&Date.now()-proctor.leaveAt>=grace)cancelProctoredTask(reason)},grace+50)}
 function proctorLeaveEnd(){proctor.leaveAt=0;document.getElementById('proctorWarning')?.classList.add('hidden')}
 document.addEventListener('visibilitychange',()=>{if(!proctor.active)return;if(document.hidden)proctorLeaveStart('تمت مغادرة صفحة المهمة');else proctorLeaveEnd()});window.addEventListener('blur',()=>{if(proctor.active)proctorLeaveStart('تم ترك نافذة المهمة')});window.addEventListener('focus',()=>{if(proctor.active)proctorLeaveEnd()});document.addEventListener('fullscreenchange',()=>{if(proctor.active&&getProctorSettings().fullscreen&&!document.fullscreenElement)proctorLeaveStart('تم الخروج من ملء الشاشة')});window.addEventListener('pagehide',()=>{if(proctor.active){recordProctorIncident('تم الخروج المفاجئ من الموقع');cancelProctoredTask('تم الخروج المفاجئ من الموقع')}});window.addEventListener('resize',()=>{if(proctor.active&&((screen.width&&screen.width<proctor.screenWidth*.72)||(window.innerWidth<screen.availWidth*.62)))proctorLeaveStart('تم اكتشاف تقسيم الشاشة أو تصغير نافذة المهمة')});
-document.addEventListener('DOMContentLoaded',()=>{setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('تعذر قراءة جلسة Google');signupState.method='google';signupState.email=data.user.email;signupState.name=data.user.name||'';signupState.whats='';signupState.verified=true;const note=document.getElementById('signupVerifiedNote');if(note)note.innerHTML='✅ تم التحقق من هويتك عبر جوجل — '+escapeHtml(data.user.email);const name=document.getElementById('signupName');if(name&&!name.value)name.value=data.user.name||'';initSignupJuzSelect();showPage('signupStep2');history.replaceState({},'',location.pathname)}).catch(()=>{const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر إكمال تسجيل Google. أعد المحاولة.</div>'})}});
+document.addEventListener('DOMContentLoaded',()=>{setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('تعذر قراءة جلسة Google');signupState.method='google';signupState.email=data.user.email;signupState.name=data.user.name||'';signupState.whats='';signupState.verified=true;const note=document.getElementById('signupVerifiedNote');if(note)note.innerHTML='✅ تم التحقق من هويتك عبر جوجل — '+escapeHtml(data.user.email);const name=document.getElementById('signupName');if(name&&!name.value)name.value=data.user.name||'';initSignupJuzSelect();showPage('signupStep2');history.replaceState({},'',location.pathname)}).catch(()=>{const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">هناك خطأ</div>'})}});
 
 // ====== SESSION PERSISTENCE ======
 function saveSessionState() {
@@ -1655,7 +1655,7 @@ function renderTaskArchiveHtml(s) {
       const ok = t.status === 'approved';
       const typeLabel = t.type === 'homework' ? 'واجب' : t.type === 'reading' ? 'قراءة' : t.type === 'voice' ? 'تسجيل صوتي' : 'مهمة';
       html += '<div class="history-element" style="border-right-color:' + (ok ? 'var(--success)' : 'var(--danger)') + ';">';
-      html += '<div class="history-element-name">' + (ok ? '✅ الحالة النهائية: مقبولة' : '❌ الحالة النهائية: مرفوضة') + ' — ' + typeLabel + ': ' + (t.name || '-') + '</div>';
+      html += '<div class="history-element-name">' + (ok ? '✅ الحالة النها��ية: مقبولة' : '❌ الحالة النهائية: مرفوضة') + ' — ' + typeLabel + ': ' + (t.name || '-') + '</div>';
       if(t.surah) html += '<div class="history-element-details"><div class="history-detail"><strong>السورة:</strong> ' + t.surah + '</div><div class="history-detail"><strong>من آية:</strong> ' + (t.from || '-') + '</div><div class="history-detail"><strong>إلى آية:</strong> ' + (t.to || '-') + '</div></div>';
       if(t.at) html += '<div class="history-detail" style="color:var(--text-light);">🕐 ' + t.at + '</div>';
       html += '</div>';
@@ -1856,13 +1856,13 @@ async function renderGoogleButton() {
   const box = document.getElementById('signupStep1Alert');
   if(!container) return;
   container.innerHTML = '<button class="btn btn-primary" type="button" style="width:100%" onclick="window.location.href=\'/api/auth/google\'">🔵 المتابعة باستخدام Google</button>';
-  if(box) box.innerHTML = '<div class="alert alert-info">سيتم فتح Google في نافذة آمنة، ولن تُرسل أسرار OAuth إلى المتصفح.</div>';
+  if(box) box.innerHTML = '';
 }
 
 function handleGoogleCredential(resp) {
   const box = document.getElementById('signupStep1Alert');
   const payload = decodeJwt(resp && resp.credential);
-  if(!payload || !payload.email) { box.innerHTML = '<div class="alert alert-danger">❌ تعذّر قراءة بيانات حساب جوجل، حاول مرة أخرى</div>'; return; }
+  if(!payload || !payload.email) { box.innerHTML = '<div class="alert alert-danger">هناك خطأ</div>'; return; }
   // حساب جوجل يُثبت الهوية → لا حاجة لرقم واتساب ولا كود تحقق
   signupState.method = 'google';
   signupState.email = payload.email;
@@ -2582,7 +2582,7 @@ async function toggleEditVoiceRecord(){
     editVoiceRecorder.ondataavailable=e=>{if(e.data.size)editVoiceChunks.push(e.data)};
     editVoiceRecorder.onstop=async()=>{
       editVoiceBlob=new Blob(editVoiceChunks,{type:'audio/webm'}); stream.getTracks().forEach(t=>t.stop());
-      preview.src=URL.createObjectURL(editVoiceBlob);preview.style.display='block';status.textContent='🤖 جاري تحليل البصمة الجديدة...';
+      preview.src=URL.createObjectURL(editVoiceBlob);preview.style.display='block';status.textContent='🤖 جاري تحليل البصمة ا��جديدة...';
       try{
         editVoiceProfileGemini=await geminiVoiceProfile(editVoiceBlob);
         editVoiceFingerprint=null;editVoiceDataUrl=await blobToDataURL(editVoiceBlob);
@@ -3486,7 +3486,7 @@ async function submitStudentExam(auto){
   }
   const hasAudio=ex.questions.some(q=>q.type==='audio');ex.status=hasAudio?'pending_audio_review':'graded';ex.submittedAt=Date.now();ex.answers=answers;ex.score=score;ex.maxScore=ex.questions.reduce((n,q)=>n+(Number(q.points)||1),0);ex.totalDurationSeconds=Math.round((Date.now()-(ex.createdAt||Date.now()))/1000);ex.autoSubmitted=!!auto;ex.reviewedAt=hasAudio?null:Date.now();
   let students=getData('students');const idx=students.findIndex(x=>x.id===s.id);if(idx<0)return;students[idx].activeExam=null;students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].completedTasks=students[idx].completedTasks||[];students[idx].completedTasks.push({type:'exam',name:'اختبار '+ex.date,date:ex.date,completedAt:new Date().toLocaleString('ar-EG'),score,maxScore:ex.maxScore});setData('students',students);currentUser=students[idx];
-  let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوي  النتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
+  let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوي  النتيجة معلقة حتى مراج��ة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة التسجيل الصوتي':'نتيجة اختبار '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبار وإرساله للمسؤول وولي الأمر','success');
 }
@@ -4825,7 +4825,7 @@ function renderStudentTasks() {
 
     } else if(task.type === 'voice') {
       html += '<div class="task-card" data-task-category="recitation" style="border-right-color:var(--success);"><h5>🎙️ تسجيل صوتي: '+(task.name || '')+'</h5>';
-      if(task.surah) html += '<p>السورة: '+(task.surah || '-')+' | من آية '+(task.from || '-')+' إلى آية '+(task.to || '-')+'</p>';
+      if(task.surah) html += '<p>ا��سورة: '+(task.surah || '-')+' | من آية '+(task.from || '-')+' إلى آية '+(task.to || '-')+'</p>';
       html += studentAyatBlock(task, 'vc'+originalIdx);
       html += status;
 
@@ -5480,7 +5480,7 @@ async function sendStudentChat() {
   const chatDiv=document.getElementById('studentChatMessages'); chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div><div id="studentAiTyping" class="ai-msg bot">⏳ جاري الئفكير...</div>';chatDiv.scrollTop=chatDiv.scrollHeight;
   const s=currentUser||{}; const last=(s.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
-    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانات الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
+    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانات الط��لب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
     const data=await readApiJson(res,'تعذر رد OpenRouter');
     const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>'); const typing=document.getElementById('studentAiTyping');if(typing){typing.id='';typing.innerHTML=reply}else chatDiv.innerHTML+='<div class="ai-msg bot">'+reply+'</div>';
   }catch(e){const typing=document.getElementById('studentAiTyping');if(typing)typing.innerHTML=escapeHtml(localSmartChatReply(text,'student'))+'<br><small>رد محلي محدود بسبب تعذر OpenRouter.</small>'}
