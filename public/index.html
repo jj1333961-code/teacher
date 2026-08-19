@@ -1052,7 +1052,7 @@ tr:hover { background: var(--table-hover); }
   <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
 </div>
 
-<!-- دخول ولي ال��مر -->
+<!-- دخ��ل ولي ال��مر -->
 <div id="parentLogin" class="page hidden" style="max-width:500px; margin:40px auto;">
   <div class="page-header"><h2>👨‍👩‍👧 دخول ولي الأمر</h2></div>
   <div id="parentLoginAlert"></div>
@@ -1833,6 +1833,15 @@ function googleClientIdReady() {
   return !!serverGoogleClientId && serverGoogleClientId.indexOf('.apps.googleusercontent.com') !== -1;
 }
 
+async function waitForGoogleGsi(timeoutMs) {
+  const deadline = Date.now() + (timeoutMs || 8000);
+  while(Date.now() < deadline) {
+    if(window.google && window.google.accounts && window.google.accounts.id) return true;
+    await new Promise(function(resolve){ setTimeout(resolve, 100); });
+  }
+  return !!(window.google && window.google.accounts && window.google.accounts.id);
+}
+
 function initGoogleGsi() {
   const id = getGoogleClientId();
   if(!id || id.indexOf('.apps.googleusercontent.com') === -1) return false;
@@ -1858,14 +1867,14 @@ async function renderGoogleButton() {
   container.innerHTML = '';
   box.innerHTML = '<div class="alert alert-info">جارٍ تحميل تسجيل الدخول بحساب Google...</div>';
   await loadGoogleClientId();
+  await waitForGoogleGsi(10000);
   if(!initGoogleGsi()) {
     box.innerHTML = '<div class="alert alert-danger">تعذر تفعيل تسجيل الدخول بحساب Google من الخادم. يرجى مراجعة إعداد GOOGLE_CLIENT_ID في Vercel.</div>';
     return;
   }
   box.innerHTML = '';
   google.accounts.id.renderButton(container, { theme: 'filled_blue', size: 'large', type: 'standard', shape: 'pill', text: 'signup_with', locale: 'ar' });
-  // إظهار نافذة اختيار حسابات جوجل الموجودة على الجهاز تلقائياً
-  google.accounts.id.prompt();
+  // يعتمد التسجيل على زر Google الظاهر لتفادي فشل FedCM داخل المعاينة المضمّنة.
 }
 
 function handleGoogleCredential(resp) {
@@ -2127,7 +2136,7 @@ async function toggleStudentIntakeRecord(){
       }catch(e){result.innerHTML='<div class="alert alert-danger">تعذر تحليل التسجيل: '+escapeHtml(e.message||'خطأ غير معروف')+'<br><button type="button" class="btn btn-sm btn-primary" onclick="toggleStudentIntakeRecord()">إعادة التسجيل</button></div>';status.textContent='فشل التحليل';}
       finally{btn.disabled=false;btn.textContent='إعادة التسجيل';studentIntakeRecorder=null;}
     };
-    recorder.start(1000);registerAudioRecorder('student-intake',recorder,stream,{statusId:'studentIntakeStatus',pauseBtnId:'studentIntakePauseBtn',timerId:'studentIntakeTimer',maxMs:120000});btn.textContent='إنهاء وتحليئ';status.textContent='جاري التسجيل... تحدث بوضوح واذكر اسم كل خانة قبل قيمتها.';
+    recorder.start(1000);registerAudioRecorder('student-intake',recorder,stream,{statusId:'studentIntakeStatus',pauseBtnId:'studentIntakePauseBtn',timerId:'studentIntakeTimer',maxMs:120000});btn.textContent='إنهاء وتحليئ';status.textContent='جاري ا��تسجيل... تحدث بوضوح واذكر اسم كل خانة قبل قيمتها.';
   }catch(e){btn.disabled=false;studentIntakeRecorder=null;status.textContent=microphoneErrorMessage(e)}
 }
 
@@ -2188,7 +2197,7 @@ function saveAdminWhatsapp() {
   if(num.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح بصيغة الدولة (مثال: 201554542019)</div>'; return; }
   setData('adminWhatsapp', num);
   input.value = num;
-  box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب ا��مسؤول: ' + num + '</div>';
+  box.innerHTML = '<div class="alert alert-success">✅ تم حف�� رقم واتساب ا��مسؤول: ' + num + '</div>';
 }
 
 
@@ -2596,7 +2605,7 @@ async function toggleEditVoiceRecord(){
         editVoiceProfileGemini=await geminiVoiceProfile(editVoiceBlob);
         editVoiceFingerprint=null;editVoiceDataUrl=await blobToDataURL(editVoiceBlob);
         status.textContent='تم إنشاء بصمة جديد�� بواسطة Gemini — اضغط حفظ التعديلات';
-      }catch(e){editVoiceProfileGemini=null;editVoiceFingerprint=null;editVoiceDataUrl=null;status.textContent=(e&&e.message)||'تعذر تحليل الصوت ��واسطة Gemini';}
+      }catch(e){editVoiceProfileGemini=null;editVoiceFingerprint=null;editVoiceDataUrl=null;status.textContent=(e&&e.message)||'تعذر تحليل ا��صوت ��واسطة Gemini';}
       btn.classList.remove('recording');
     };
     editVoiceRecorder.start();registerAudioRecorder('edit-fingerprint',editVoiceRecorder,stream,{statusId:'editVoiceStatus',buttonId:'editVoiceBtn',maxMs:20000});btn.classList.add('recording');status.textContent='جاري التسجيل... (20 ثانية فعلية)';
@@ -6079,7 +6088,7 @@ function generateAIResponse(text, student) {
   }
   // نصائح
   if(has('نص��حة','نصائح','ساعدني','مساعدة','انسى','أنسى','نسيت','صعب')) {
-    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتقل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي وال��راجعة علاجه.';
+    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتقل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم ر��جع — النسيان طبيعي وال��راجعة علاجه.';
   }
   // تحفيز
   if(has('تحفيز','همة','ملل','تعبان','زهقان','احبت','أحبطت')) {

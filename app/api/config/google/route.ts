@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim() ?? ''
 
-  if (!clientId || !clientId.endsWith('.apps.googleusercontent.com')) {
+  if (!clientId) {
     return NextResponse.json(
-      { configured: false, clientId: '' },
+      { configured: false, clientId: '', message: 'GOOGLE_CLIENT_ID is not set' },
       { status: 503, headers: { 'Cache-Control': 'no-store' } },
     )
   }
