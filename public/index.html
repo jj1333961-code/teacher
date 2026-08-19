@@ -626,7 +626,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الها����ف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الها������ف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -2074,7 +2074,7 @@ function verifySignupCode() {
 }
 function initSignupJuzSelect() {
   const select = document.getElementById('signupJuz');
-  let html = '<option value="">اختر الجزء...</option>';
+  let html = '<option value="">اختر ال��زء...</option>';
   for(let i = 1; i <= 30; i++) html += '<option value="' + i + '">الجزء ' + i + '</option>';
   select.innerHTML = html;
   document.getElementById('signupSurah').innerHTML = '<option value="">اختر الجزء أولاً...</option>';
@@ -2472,7 +2472,7 @@ function unifiedLogin() {
   showToast('❌ بيانات الدخول غير صحيحة', 'error');
 }
 
-// نسخ الرقم الري لولي الأمر إلى الطالب (تطابق الرقم السري)
+// نسخ ا��رقم الري لولي الأمر إلى الطالب (تطابق الرقم السري)
 function syncStudentPass(prefix) {
   const cb = document.getElementById(prefix === 'st' ? 'stSamePass' : 'editSamePass');
   const sp = document.getElementById(prefix === 'st' ? 'stStudentPass' : 'editStudentPass');
@@ -3318,7 +3318,7 @@ function initExamBuilder(){
 }
 function getExamPastRange(){
   const base=document.getElementById('examBaseSurah')?.value||currentRecordMainSurah||'',baseIndex=ALL_SURAHS_ORDERED.indexOf(base);
-  const requestedLast=document.getElementById('examLastSurah')?.value||'الناس',lastIndex=ALL_SURAHS_ORDERED.indexOf(requestedLast);
+  const requestedLast=document.getElementById('examLastSurah')?.value||'النا��',lastIndex=ALL_SURAHS_ORDERED.indexOf(requestedLast);
   if(baseIndex<0||lastIndex<baseIndex)throw new Error('نطاق الماضي غير صالح.');
   const previousSurahs=ALL_SURAHS_ORDERED.slice(baseIndex+1,lastIndex+1),all=previousSurahs.length?previousSurahs:[ALL_SURAHS_ORDERED[baseIndex]],middle=Math.ceil(all.length/2),near=all.slice(0,middle),far=all.slice(middle),scope=document.getElementById('examPastScope')?.value||'both';
   const selected=scope==='near'?near:scope==='far'?(far.length?far:near):all;
@@ -3442,7 +3442,7 @@ function startExamGenerationProgress(questionCount){
   const overlay=document.getElementById('examGenerationOverlay'),stage=document.getElementById('examGenerationStage'),bar=document.getElementById('examGenerationBar'),eta=document.getElementById('examGenerationEta');
   let elapsed=0,total=Math.max(45,Math.min(180,35+(Math.max(1,questionCount||1)*7)));overlay?.classList.remove('hidden');
   clearInterval(examGenerationTimer);
-  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينتقئ الذكاء الاصطناع�� أسئلة المتشابهات ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
+  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ين��قئ الذكاء الاصطناع�� أسئلة المتشابهات ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
   update();examGenerationTimer=setInterval(update,1000);
 }
 function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'اكتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
@@ -3708,7 +3708,7 @@ function saveSession(isFinal) {
   if(!students[idx].sessions) students[idx].sessions = [];
 
   const activeElements = recordElements.filter(e => !e.deleted);
-  if(activeElements.length === 0) { showToast('🚫 لم يتم الحفظ — لا يوجد ��نصر تسم��ع', 'error'); return; }
+  if(activeElements.length === 0) { showToast('���� لم يتم الحفظ — لا يوجد ��نصر تسم��ع', 'error'); return; }
   const totalScore = activeElements.reduce((sum, e) => sum + (parseInt(e.rating) || 0), 0);
   const nowText = new Date().toLocaleString('ar-EG');
   const previousTasks = JSON.parse(JSON.stringify(students[idx].tasks || []));
@@ -4874,7 +4874,7 @@ function renderStudentCompletedTasks() {
     html += '<div class="task-card" style="border-right-color:var(--success); background:linear-gradient(135deg, rgba(40,167,69,0.05), rgba(32,201,151,0.05));">';
     html += '<h5 style="color:var(--success);">✅ '+(task.type === 'homework' ? 'واجب' : task.type === 'reading' ? 'قراءة' : 'تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
     if(task.surah) html += '<p><strong>السورة:</strong> '+task.surah+' | <strong>من آية:</strong> '+(task.from || '-')+' | <strong>إلى آية:</strong> '+(task.to || '-')+'</p>';
-    html += '<p style="color:var(--text-light); font-size:0.9rem;">🕐 تمت الموافقة: '+task.approvedAt+'</p>';
+    html += '<p style="color:var(--text-light); font-size:0.9rem;">🕐 تمت المو��فقة: '+task.approvedAt+'</p>';
     html += '</div>';
   });
   html += '</div>';
@@ -4992,7 +4992,7 @@ function renderStudentTasks() {
       html += status;
 
       if(isProctorCancelled) {
-        html += '<div class="task-rejected-alert">لا يمكن إعادة هذه المهمة بعد إلغ��ئها. تواصل مع الم��ؤول لإسنا�� مهمة جديدة.</div>';
+        html += '<div class="task-rejected-alert">لا يمكن إعادة هذه ��لمهمة بعد إلغ��ئها. تواصل مع الم��ؤول لإسنا�� مهمة جديدة.</div>';
       } else if(isRejected) {
         html += '<div class="task-rejected-alert">⚠️ تم رفض التسيل السابق. يرجى إرسال تسجيل جديد.</div>';
         html += studentVoiceRecorderHTML(originalIdx);
@@ -6253,7 +6253,7 @@ function generateAIResponse(text, student) {
   }
   // ديني عام
   if(has('دئن','اسلام','إسلام','الله','نبي','رسول','دعاء','صلاة')) {
-    return 'الحمد لله رب العالمين 🌿<br><br>القرآن كتائ الله المعجز، زل هداية للناس. ومن الأدعية النافعة للحفظ: «اللهم اجعل القرآن ربيع قلبي ونور صدري وجلاء حزني وذهاب همّي».';
+    return 'الحمد لله رب العالمين 🌿<br><br>القرآن كتائ الله المعجز، زل هداية للناس. ومن الأدعية النافعة للحفظ: «اللهم اجعل القرآن ربيع قلبي ونور صدري وجلا�� حزني وذهاب همّي».';
   }
   // افتراضي ذكي
   let r = '🤖 أهلاً '+name+'، لم فهم ��ؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
@@ -6330,7 +6330,7 @@ if(restoreSession()) {
   <div class="thimar-welcome-actions">
     <button id="thimarWelcomeStart" class="btn btn-primary" type="button">الدخول إلى المنصة</button>
   </div>
-  <p class="thimar-welcome-audio" id="thimarAudioStatus">يريد هذا الموقع تشغيل الصوت. اضغط «الدخول إلى المنصة» للسماح بالتشغيل.</p>
+  <p class="thimar-welcome-audio" id="thimarAudioStatus">يريد هذا الموقع تشغيل الصوت. <button id="thimarAudioPermission" type="button">تشغيل الصوت</button></p>
       <audio id="thimarWelcomeAudio" preload="auto" autoplay playsinline src="/audio/ibrahim-ayah-24-minshawi.mp3"></audio>
     </div>
   </section>
@@ -6339,6 +6339,7 @@ if(restoreSession()) {
   const welcome=document.getElementById('thimarWelcome');
   const audio=document.getElementById('thimarWelcomeAudio');
   const start=document.getElementById('thimarWelcomeStart');
+  const permission=document.getElementById('thimarAudioPermission');
   const status=document.getElementById('thimarAudioStatus');
   if(!welcome||!audio)return;
   let closed=false;
@@ -6357,10 +6358,12 @@ if(restoreSession()) {
   }
   // محاولة تلقائية؛ ويظهر التنبيه المخصص داخل شاشة الترحيب بدل نافذة confirm.
   startAudio();
-  start.addEventListener('click',function(){
-    status.textContent='تمت الموافقة على التشغيل، جارٍ تشغيل التلاوة';
+  function allowAndPlay(){
+    status.textContent='تم السماح بتشغيل الصوت، جارٍ تشغيل التلاوة';
     startAudio();
-  });
+  }
+  start.addEventListener('click',allowAndPlay);
+  permission.addEventListener('click',allowAndPlay);
   audio.addEventListener('ended',closeWelcome,{once:true});
 })();
 </script>
