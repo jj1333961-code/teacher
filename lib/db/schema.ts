@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, text, integer, timestamp, jsonb, boolean, primaryKey } from 'drizzle-orm/pg-core'
 
 export const quizzes = pgTable('quizzes', {
   id: text('id').primaryKey(),
@@ -36,7 +36,7 @@ export const antiCheatGlobalConfig = pgTable('anti_cheat_global_config', {
 
 export const antiCheatItemConfigs = pgTable('anti_cheat_item_configs', {
   itemId: text('item_id').notNull(), itemType: text('item_type').notNull(), enabled: boolean('enabled').default(false).notNull(), isOverride: boolean('is_override').default(true).notNull(), config: jsonb('config').default({}).notNull(), createdAt: timestamp('created_at').defaultNow().notNull(), updatedAt: timestamp('updated_at').defaultNow().notNull(),
-})
+}, (table) => [primaryKey({ columns: [table.itemId, table.itemType] })])
 
 export const antiCheatSessions = pgTable('anti_cheat_sessions', {
   id: text('id').primaryKey(), studentId: text('student_id').notNull(), itemId: text('item_id').notNull(), itemType: text('item_type').notNull(), status: text('status').default('active').notNull(), riskScore: integer('risk_score').default(0).notNull(), severity: text('severity').default('NORMAL').notNull(), currentQuestion: integer('current_question'), attemptId: text('attempt_id'), startedAt: timestamp('started_at').defaultNow().notNull(), endedAt: timestamp('ended_at'), updatedAt: timestamp('updated_at').defaultNow().notNull(),

@@ -2,12 +2,12 @@ import { NextResponse } from 'next/server'
 import { and, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { antiCheatEvents, antiCheatGlobalConfig, antiCheatItemConfigs, antiCheatSessions } from '@/lib/db/schema'
-import { defaultAntiCheatConfig, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
+import { calculateRiskScore, defaultAntiCheatConfig, normalizeServerConfig, severityFor, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
 
 const id = () => crypto.randomUUID()
 const clamp = (value: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(value) || 0))
 const validType = (value: unknown) => value === 'recitation' || value === 'exam' || value === 'task'
-const safeConfig = (value: unknown): AntiCheatConfig => ({ ...defaultAntiCheatConfig, ...(value && typeof value === 'object' ? value : {}) })
+const safeConfig = (value: unknown): AntiCheatConfig => normalizeServerConfig(value)
 
 async function resolveConfig(itemId: string, itemType: string) {
   const item = await db.select().from(antiCheatItemConfigs).where(and(eq(antiCheatItemConfigs.itemId, itemId), eq(antiCheatItemConfigs.itemType, itemType))).limit(1)
@@ -22,6 +22,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const itemId = searchParams.get('itemId')
     const itemType = searchParams.get('itemType')
+    const sessionId = searchParams.get('sessionId')
+    if (sessionId) {
+      const sessions = await db.select().from(antiCheatSessions).where(eq(antiCheatSessions.id, sessionId)).limit(1)
+      if (!sessions[0]) return NextResponse.json({ error: 'جلسة المراقبة غير موجودة' }, { status: 404 })
+      const events = await db.select().from(antiCheatEvents).where(eq(antiCheatEvents.sessionId, sessionId)).orderBy(desc(antiCheatEvents.timestamp))
+      return NextResponse.json({ session: sessions[0], events })
+    }
     if (itemId && itemType && validType(itemType)) return NextResponse.json(await resolveConfig(itemId, itemType))
     const [global, items] = await Promise.all([
       db.select().from(antiCheatGlobalConfig).where(eq(antiCheatGlobalConfig.id, true)).limit(1),
@@ -37,7 +44,9 @@ export async function POST(request: Request) {
     const { action } = body ?? {}
     if (action === 'save-global') {
       const enabled = Boolean(body.enabled)
-      await db.insert(antiCheatGlobalConfig).values({ id: true, enabled, config: body.config ?? {} }).onConflictDoUpdate({ target: antiCheatGlobalConfig.id, set: { enabled, config: body.config ?? {}, updatedAt: new Date() } })
+      const existingGlobal = await db.select().from(antiCheatGlobalConfig).where(eq(antiCheatGlobalConfig.id, true)).limit(1)
+      const config = body.config && typeof body.config === 'object' ? body.config : existingGlobal[0]?.config ?? {}
+      await db.insert(antiCheatGlobalConfig).values({ id: true, enabled, config }).onConflictDoUpdate({ target: antiCheatGlobalConfig.id, set: { enabled, config, updatedAt: new Date() } })
       const saved = await db.select().from(antiCheatGlobalConfig).where(eq(antiCheatGlobalConfig.id, true)).limit(1)
       return NextResponse.json({ ok: true, global: saved[0] })
     }
@@ -65,9 +74,16 @@ export async function POST(request: Request) {
     if (action === 'event') {
       const event = body.event ?? {}
       if (!event.sessionId || !event.studentId || !event.itemId || !validType(event.itemType) || !event.eventType) return NextResponse.json({ error: 'بيانات الحدث غير مكتملة' }, { status: 400 })
-      const riskScore = clamp(event.riskScore), riskDelta = clamp(event.riskDelta, -100, 100), severity = String(event.severity || 'NORMAL')
-      await db.insert(antiCheatEvents).values({ id: id(), sessionId: String(event.sessionId), studentId: String(event.studentId), itemId: String(event.itemId), itemType: String(event.itemType), eventType: String(event.eventType), riskScore, riskDelta, severity, decision: String(event.decision || severity), reason: String(event.reason || ''), durationMs: clamp(event.durationMs, 0, 86400000), metadata: event.metadata && typeof event.metadata === 'object' ? event.metadata : {} })
-      await db.update(antiCheatSessions).set({ riskScore, severity, updatedAt: new Date() }).where(eq(antiCheatSessions.id, String(event.sessionId)))
+      const sessionRows = await db.select().from(antiCheatSessions).where(eq(antiCheatSessions.id, String(event.sessionId))).limit(1)
+      const session = sessionRows[0]
+      if (!session || session.status !== 'active' || session.studentId !== String(event.studentId) || session.itemId !== String(event.itemId) || session.itemType !== String(event.itemType)) return NextResponse.json({ error: 'جلسة المراقبة غير صالحة' }, { status: 403 })
+      const resolved = await resolveConfig(session.itemId, session.itemType)
+      const rawSignals = Array.isArray(event.signals) ? event.signals.filter((signal: unknown) => signal && typeof signal === 'object').slice(0, 20) : []
+      const signals = rawSignals.map((signal: Record<string, unknown>) => ({ type: String(signal.type || 'unknown').slice(0, 64), active: Boolean(signal.active), durationMs: clamp(signal.durationMs, 0, 86400000), frequency: clamp(signal.frequency, 0, 100) }))
+      const riskScore = clamp(calculateRiskScore(signals, session.riskScore)), severity = severityFor(riskScore, resolved.config)
+      const riskDelta = riskScore - session.riskScore
+      await db.insert(antiCheatEvents).values({ id: id(), sessionId: session.id, studentId: session.studentId, itemId: session.itemId, itemType: session.itemType, eventType: String(event.eventType).slice(0, 64), riskScore, riskDelta, severity, decision: severity, reason: '', durationMs: clamp(event.durationMs, 0, 86400000), metadata: {} })
+      await db.update(antiCheatSessions).set({ riskScore, severity, updatedAt: new Date() }).where(eq(antiCheatSessions.id, session.id))
       return NextResponse.json({ ok: true, riskScore, severity })
     }
     if (action === 'end' && body.session?.id) { await db.update(antiCheatSessions).set({ status: 'completed', endedAt: new Date(), updatedAt: new Date(), riskScore: clamp(body.session.riskScore), severity: String(body.session.severity || 'NORMAL') }).where(eq(antiCheatSessions.id, String(body.session.id))); return NextResponse.json({ ok: true }) }
