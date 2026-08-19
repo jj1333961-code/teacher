@@ -772,7 +772,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
-    <h4>📖 ��يانات حفظ القرآن الكريم</h4>
+    <h4>📖 بيانات حفظ القرآن الكريم</h4>
     <div class="form-row">
       <div class="form-group"><label>الجزء</label><select id="stJuz" onchange="updateSurahSelect()"><option value="">اختر الجزء...</option></select></div>
       <div class="form-group"><label>السورة</label><select id="stSurah"><option value="">اختر الجزء أولاً...</option></select></div>
@@ -1082,7 +1082,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ملفات المسؤول لولي الأمر -->
 <div id="parentFilesPage" class="page hidden">
-  <div class="page-header"><h2>��� الملفات المرسلة</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>الملفات المرسلة</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="parentFilesContent"></div>
 </div>
 
@@ -1179,7 +1179,7 @@ tr:hover { background: var(--table-hover); }
 <div id="proctorGate" class="proctor-gate hidden" role="dialog" aria-modal="true" aria-labelledby="proctorTitle">
   <div class="proctor-panel">
     <h2 id="proctorTitle">التحقق قبل بدء الجلسة</h2>
-    <p>لن لن تُحفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
+    <p>لن تُحفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
     <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص للسماح بالكاميرا</div></div>
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
     <div class="proctor-checks" aria-live="polite">
@@ -3159,7 +3159,7 @@ function localSmartChatReply(message,role){
     }
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر المواضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
-  if(/وقت|تنظيم|خطه|خطة|جدول|فكره|��كرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
+  if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت الهدف والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
@@ -5046,7 +5046,7 @@ function startArabicASR() {
   } catch(e) { return null; }
 }
 
-// إرسال الصوت إلى Gemini على ا��خادم للتفريغ وتصحيح التلاوة.
+// إرسال الصوت إلى Gemini على الخادم للتفريغ وتصحيح التلاوة.
 async function serverRecitationAnalysis(blob, task) {
   try {
     const audio=await voiceAudioPayload(blob);
@@ -6085,7 +6085,7 @@ function generateAIResponse(text, student) {
       const state = t.approved ? 'معتمد' : t.rejected ? 'مرفوض — أعد الإرسال' : t.submitted ? 'قيد المراجعة' : 'لم يُرسل بعد';
       r += '• '+icon+': '+(t.name || t.text || (t.surah ? 'سورة '+t.surah : ''))+(t.surah ? ' ('+t.surah+' من '+(t.from||'-')+' إلى '+(t.to||'-')+')' : '')+' — <em>'+state+'</em><br>';
     });
-    r += '<br>💡 المهام التي عليها علائة 👁️ يمكنك عرض آياتها كصورة واضحة مع ��مكانية التكبير.';
+    r += '<br>💡 المهام التي عليها علامة 👁️ يمكنك عرض آياتها كصورة واضحة مع إمكانية التكبير.';
     return r;
   }
   // الآيات والصور
@@ -6119,7 +6119,7 @@ function generateAIResponse(text, student) {
   }
   // التواصل مع المسؤو
   if(has('مسؤول','معلم','شيخ','ابلاغ','إبلاغ','رساله','رسالة','تواصل','شكوى')) {
-    return '📨 يمكنك مراسلة المسؤول مباشرة من <strong>صندوق الرسائل</strong> في صفحتك، وسيصلك الرد هناك مع إشعار. إن كان الأمر عاجل��ً اذكر كلمة "عاجل" في بداية رسالتك.';
+    return '📨 يمكنك مراسلة المسؤول مباشرة من <strong>صندوق الرسائل</strong> في صفحتك، وسيصلك الرد هناك مع إشعار. إن كان الأمر عاجلاً اذكر كلمة "عاجل" في بداية رسالتك.';
   }
   // ديني عام
   if(has('دئن','اسلام','إسلام','الله','نبي','رسول','دعاء','صلاة')) {
