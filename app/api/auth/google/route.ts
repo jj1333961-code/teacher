@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from "next/server"
 export const dynamic = "force-dynamic"
 const COOKIE = "teacher_google_state"
 const SESSION = "teacher_google_session"
-const DOMAIN = "https://teacher.vercel.app"
+const DOMAIN = "https://teacher-three-ashen.vercel.app"
+const CALLBACK = `${DOMAIN}/api/auth/google`
 
 function config() {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim()
@@ -29,12 +30,18 @@ function verify(value: string, secret: string) {
     return typeof parsed.email === "string" ? parsed : null
   } catch { return null }
 }
-function redirectUri() { return `${DOMAIN}/api/auth/google` }
+function redirectUri() { return CALLBACK }
 
 export async function GET(request: NextRequest) {
   try {
     const { clientId, clientSecret } = config()
     const url = new URL(request.url)
+    // Older bookmarks may still start OAuth on teacher.vercel.app. Move the
+    // browser to the canonical production origin before creating state/cookies.
+    if (url.hostname === "teacher.vercel.app") {
+      const canonical = new URL(`${CALLBACK}${url.search}`)
+      return NextResponse.redirect(canonical)
+    }
     const code = url.searchParams.get("code")
     const error = url.searchParams.get("error")
     if (!code) {
@@ -45,9 +52,9 @@ export async function GET(request: NextRequest) {
       auth.searchParams.set("response_type", "code")
       auth.searchParams.set("scope", "openid email profile")
       auth.searchParams.set("state", state)
-      if (error) return NextResponse.redirect(`${DOMAIN}/?google_error=cancelled`)
+      if (error) { const response = NextResponse.redirect(`${DOMAIN}/?google_error=cancelled`); response.cookies.delete(COOKIE); return response }
       const response = NextResponse.redirect(auth)
-      response.cookies.set(COOKIE, state, { httpOnly: true, secure: true, sameSite: "lax", path: "/api/auth/google", maxAge: 600 })
+      response.cookies.set(COOKIE, state, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 })
       return response
     }
     const state = request.cookies.get(COOKIE)?.value
