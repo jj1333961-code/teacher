@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from "next/server"
 export const dynamic = "force-dynamic"
 const COOKIE = "teacher_google_state"
 const SESSION = "teacher_google_session"
-const DOMAIN = "https://teacher.vercel.app"
+// This must match the production URL registered in Google Cloud Console.
+const DOMAIN = "https://teacher-three-ashen.vercel.app"
 
 function config() {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim()
