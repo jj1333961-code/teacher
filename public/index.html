@@ -864,10 +864,10 @@ tr:hover { background: var(--table-hover); }
       <h4 style="color:var(--primary);margin:0">🧪 اختبار مستقل بعد السورة الأساسية</h4>
       <span class="badge badge-primary">لا يختلط بعناصر التسميع</span>
     </div>
-<p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. اخت�� نطا�� السور والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
+<p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. اخت���� نطا�� السور والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الناس.</small></div>
- <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
+ <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعي��</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة الناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدوياً قبل تقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
  <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.</small></div>
@@ -1178,7 +1178,7 @@ tr:hover { background: var(--table-hover); }
 
 <div id="proctorGate" class="proctor-gate hidden" role="dialog" aria-modal="true" aria-labelledby="proctorTitle">
   <div class="proctor-panel">
-    <h2 id="proctorTitle">التحقق قبل بدء المه����ة</h2>
+    <h2 id="proctorTitle">التحقق قبل بدء ال��ه����ة</h2>
     <p>لن ت����حفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
     <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص للسماح بالكاميرا</div></div>
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
@@ -1655,7 +1655,7 @@ function renderTaskArchiveHtml(s) {
       const ok = t.status === 'approved';
       const typeLabel = t.type === 'homework' ? 'واجب' : t.type === 'reading' ? 'قراءة' : t.type === 'voice' ? 'تسجيل صوتي' : 'مهمة';
       html += '<div class="history-element" style="border-right-color:' + (ok ? 'var(--success)' : 'var(--danger)') + ';">';
-      html += '<div class="history-element-name">' + (ok ? '✅ الحالة النها��ية: مقبولة' : '❌ الحالة النهائية: مرفوضة') + ' — ' + typeLabel + ': ' + (t.name || '-') + '</div>';
+      html += '<div class="history-element-name">' + (ok ? '✅ الحالة النها��ية: مقبولة' : '❌ الحا��ة النهائية: مرفوضة') + ' — ' + typeLabel + ': ' + (t.name || '-') + '</div>';
       if(t.surah) html += '<div class="history-element-details"><div class="history-detail"><strong>السورة:</strong> ' + t.surah + '</div><div class="history-detail"><strong>من آية:</strong> ' + (t.from || '-') + '</div><div class="history-detail"><strong>إلى آية:</strong> ' + (t.to || '-') + '</div></div>';
       if(t.at) html += '<div class="history-detail" style="color:var(--text-light);">🕐 ' + t.at + '</div>';
       html += '</div>';
@@ -2082,7 +2082,18 @@ function applyStudentVoiceFields(fields){
   if(fields.surah){const select=document.getElementById('stSurah'),wanted=normalizeArabicMatch(fields.surah),option=Array.from(select.options).find(function(o){return normalizeArabicMatch(o.textContent)===wanted||normalizeArabicMatch(o.textContent).includes(wanted)});if(option){select.value=option.value;filled.push('surah')}}
   return filled;
 }
-let studentIntakeRecorder=null, studentIntakeChunks=[];
+let studentIntakeRecorder=null, studentIntakeChunks=[], studentIntakeLastBlob=null;
+async function retryStudentIntakeAnalysis(){
+  const blob=studentIntakeLastBlob, status=document.getElementById('studentIntakeStatus'), result=document.getElementById('studentIntakeResult');
+  if(!blob||!result)return;
+  if(status)status.textContent='جاري إعادة تحليل التسجيل المحفوظ...';
+  try{
+    const audio=await voiceAudioPayload(blob),data=await callStudentAI('student_voice_intake',{role:'admin',audioBase64:audio.audioBase64,mimeType:audio.mimeType},0.05),filled=applyStudentVoiceFields(data.fields||{});
+    if(!filled.length)throw new Error('لم أتعرف على بيانات واضحة من التسجيل المحفوظ.');
+    result.innerHTML='<div class="alert alert-success">تم ملء '+filled.length+' خانة من التسجيل المحفوظ.<br><small>النص المسموع: '+escapeHtml(data.transcript||'لم يُرجع تفريغاً')+'</small></div>';
+    if(status)status.textContent='اكتمل التحليل';
+  }catch(e){result.innerHTML='<div class="alert alert-danger">تعذر إعادة تحليل التسجيل: '+escapeHtml(e.message||'خطأ غير معروف')+'<br><button type="button" class="btn btn-sm btn-primary" onclick="retryStudentIntakeAnalysis()">إعادة تحليل نفس التسجيل</button></div>';if(status)status.textContent='فشل التحليل';}
+}
 function preferredRecorderMimeType(){
   if(typeof MediaRecorder==='undefined')return '';
   const types=['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4','audio/webm'];
@@ -2106,7 +2117,7 @@ async function toggleStudentIntakeRecord(){
     recorder.ondataavailable=function(e){if(e.data.size)studentIntakeChunks.push(e.data)};
     recorder.onerror=function(){status.textContent='حدث خطأ أثناء التسجيل. أعد المحاولة.'};
     recorder.onstop=async function(){
-      const blob=new Blob(studentIntakeChunks,{type:recorder.mimeType||mimeType||'audio/webm'});studentIntakeChunks=[];
+      const blob=new Blob(studentIntakeChunks,{type:recorder.mimeType||mimeType||'audio/webm'});studentIntakeLastBlob=blob;studentIntakeChunks=[];
       try{
         if(blob.size<1500)throw new Error('التسجيل قصير أو فارغ. تحدث بوضوح لعدة ثوانٍ ثم أعد المحاولة.');
         if(blob.size>2800000)throw new Error('حجم التسجيل كبير جداً للإرسال الآمن. اجعله أقصر من دقيقة ونصف ثم أعد المحاولة.');
@@ -2115,7 +2126,7 @@ async function toggleStudentIntakeRecord(){
         const audio=await voiceAudioPayload(blob),data=await callStudentAI('student_voice_intake',{role:'admin',audioBase64:audio.audioBase64,mimeType:audio.mimeType},0.05),filled=applyStudentVoiceFields(data.fields||{});
         if(!filled.length)throw new Error('لم أتعرف على بيانات واضحة. اذكر اسم كل خانة ثم قيمتها ببطء.');
         result.innerHTML='<div class="alert alert-success">تم ملء '+filled.length+' خانة. راجع جميع البيانات قبل الحفظ.<br><small>النص المسموع: '+escapeHtml(data.transcript||'لم يُرجع تفريغاً')+'</small></div>';status.textContent='اكتمل التحليل';
-      }catch(e){result.innerHTML='<div class="alert alert-danger">تعذر تحليل التسجيل: '+escapeHtml(e.message||'خطأ غير معروف')+'<br><button type="button" class="btn btn-sm btn-primary" onclick="toggleStudentIntakeRecord()">إعادة التسجيل</button></div>';status.textContent='فشل التحليل';}
+      }catch(e){result.innerHTML='<div class="alert alert-danger">تعذر تحليل التسجيل: '+escapeHtml(e.message||'خطأ غير معروف')+'<br><button type="button" class="btn btn-sm btn-primary" onclick="retryStudentIntakeAnalysis()">إعادة تحليل نفس التسجيل</button><button type="button" class="btn btn-sm btn-secondary" onclick="toggleStudentIntakeRecord()">تسجيل جديد</button></div>';status.textContent='فشل التحليل';}
       finally{btn.disabled=false;btn.textContent='إعادة التسجيل';studentIntakeRecorder=null;}
     };
     recorder.start(1000);registerAudioRecorder('student-intake',recorder,stream,{statusId:'studentIntakeStatus',pauseBtnId:'studentIntakePauseBtn',timerId:'studentIntakeTimer',maxMs:120000});btn.textContent='إنهاء وتحليئ';status.textContent='جاري التسجيل... تحدث بوضوح واذكر اسم كل خانة قبل قيمتها.';
@@ -2586,7 +2597,7 @@ async function toggleEditVoiceRecord(){
       try{
         editVoiceProfileGemini=await geminiVoiceProfile(editVoiceBlob);
         editVoiceFingerprint=null;editVoiceDataUrl=await blobToDataURL(editVoiceBlob);
-        status.textContent='تم إنشاء بصمة جديد�� بواسطة Gemini — اضغط حفظ التعديلات';
+        status.textContent='تم إنشاء بصمة ��ديد�� بواسطة Gemini — اضغط حفظ التعديلات';
       }catch(e){editVoiceProfileGemini=null;editVoiceFingerprint=null;editVoiceDataUrl=null;status.textContent=(e&&e.message)||'تعذر تحليل الصوت بواسطة Gemini';}
       btn.classList.remove('recording');
     };
@@ -3249,7 +3260,7 @@ function renderExamPlanRows(){
       (r.type==='mcq'?'<div class="form-group"><label>عدد الاختيارات</label><input type="number" min="2" max="6" value="'+(r.optionsCount||4)+'" onchange="examPlanRows['+i+'].optionsCount=Math.max(2,Math.min(6,parseInt(this.value)||4))"></div>':'')+
       (r.type==='complete'?'<div class="form-group"><label>عدد الآيات المراد إكمالها</label><input type="number" min="1" max="20" value="'+(r.completeAyahs||1)+'" onchange="examPlanRows['+i+'].completeAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">يحدد عدد الآيات التي سيكملها الطالب بعد بداية السؤال</small></div>':'')+
       (r.type==='audio'?'<div class="form-group"><label>عدد الآات المطلوب تسجيلها</label><input type="number" min="1" max="20" value="'+(r.reciteAyahs||1)+'" onchange="examPlanRows['+i+'].reciteAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">عدد الآيات التي سيقرأها الطالب</small></div>':'')+
-      (r.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="examPlanRows['+i+'].audioShareWithParent=this.value===\'true\'"><option value="true" '+(r.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(r.audioShareWithParent===false?'selected':'')+'>إخفاء عن ولي الأمر</option></select></div>':'')+
+      (r.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="examPlanRows['+i+'].audioShareWithParent=this.value===\'true\'"><option value="true" '+(r.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(r.audioShareWithParent===false?'selected':'')+'>إخفاء عن ول�� الأمر</option></select></div>':'')+
       '<div class="form-group"><label>فحص الغش</label><select onchange="examPlanRows['+i+'].proctorEnabled=this.value===\'true\'"><option value="true" '+(r.proctorEnabled!==false?'selected':'')+'>مفعّل لهذا السؤال</option><option value="false" '+(r.proctorEnabled===false?'selected':'')+'>غير مفعّل</option></select></div>'+
       '<div class="form-group" style="display:flex;align-items:flex-end"><button class="btn btn-xs btn-danger" onclick="deleteExamPlanRow('+i+')">حذف الخانة</button></div>'+
       '</div></div>';
@@ -5968,7 +5979,7 @@ function generateWelcomeMessages(student) {
   const last = finalizedSessions.length > 0 ? finalizedSessions[finalizedSessions.length - 1] : null;
   const dayOfWeek = new Date().getDay();
   const templates = [
-    {title: 'هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من يشء.'},
+    {title: 'هلاً بك ي�� '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من يشء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر أن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
     {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية وسترى الفرق في حياتك.'},
     {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
@@ -5991,7 +6002,7 @@ function generateParentWelcome(student) {
   const last = finalizedSessions.length > 0 ? finalizedSessions[finalizedSessions.length - 1] : null;
   const templates = [
     {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطوات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
-    {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
+    {title: 'تقرير يومي! ��', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
     {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر لمن يتب في سبيله.'}
   ];
   const base = templates[Math.floor(Math.random() * templates.length)];
