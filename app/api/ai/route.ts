@@ -1,6 +1,15 @@
 import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
 
+export const runtime = "nodejs"
 export const maxDuration = 300
+
+const AUDIO_MAX_BYTES = 2_500_000
+const AUDIO_MAX_REQUEST_BYTES = 4_200_000
+
+function safeAudioLog(event: string, details: Record<string, unknown> = {}) {
+  const safe = Object.fromEntries(Object.entries(details).filter(([key]) => !/key|token|authorization|base64|audio|data|prompt|transcript|email|phone|password/i.test(key)))
+  console.info(`[AUDIO_AI] ${event}`, safe)
+}
 
 // ===== مزوّدا الذكاء الاصطناعي (الخادم فقط) =====
 // Gemini هو الأساسي لكل النصوص والصوت، وGroq هو البديل التلقائي.
@@ -75,7 +84,12 @@ let resolvedBranch: string | null = null
 
 function isRetryableProviderError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "")
-  return /408|409|429|5\d\d|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|AbortError|aborted|رد فارغ|empty/i.test(message)
+  return /408|409|429|500|502|503|504|fetch failed|ENOTFOUND|ECONNRESET|ECONNREFUSED|ETIMEDOUT|network|TimeoutError|AbortError|aborted|رد فارغ|empty/i.test(message)
+}
+
+function shouldFallbackAudio(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "")
+  return !/(401|403|402|quota|billing|credit|api key|unauthorized|forbidden|invalid.*key|model.*(?:not found|unavailable)|unsupported.*(?:audio|mime)|400)/i.test(message)
 }
 
 function classifyAiFailure(error: unknown) {
@@ -107,11 +121,14 @@ function classifyAiFailure(error: unknown) {
   if (/GROQ_API_KEY.*(?:غير موجود|missing|not set)/i.test(raw)) {
     return { status: 503, code: "GROQ_KEY_MISSING", retryable: false, message: "مفتاح Groq غير متاح على الخادم.", raw }
   }
-  if (/401|403|API key|unauthorized|forbidden/i.test(raw)) {
-    return { status: 503, code: "AI_PROVIDER_UNAUTHORIZED", retryable: false, message: "رفض مزوّد الذكاء الاصطناعي بيانات الاعتماد على الخادم.", raw }
+  if (/401|invalid.*key|API key|unauthorized/i.test(raw)) {
+    return { status: 502, code: /missing|غير موجود|not set/i.test(raw) ? "AI_KEY_MISSING" : "AI_AUTH_FAILED", retryable: false, message: "تعذر اعتماد مزوّد الذكاء الاصطناعي على الخادم.", raw }
   }
-  if (/402|insufficient credits|payment required|credit card|free credits/i.test(raw)) {
-    return { status: 402, code: "AI_CREDITS_REQUIRED", retryable: false, message: "مزوّد الذكاء الاصطناعي يحتاج رصيداً أو تفعيل فوترة.", raw }
+  if (/403|forbidden/i.test(raw)) {
+    return { status: 502, code: "AI_UNAUTHORIZED", retryable: false, message: "رفض مزوّد الذكاء الاصطناعي الطلب.", raw }
+  }
+  if (/402|insufficient credits|payment required|credit card|free credits|billing/i.test(raw)) {
+    return { status: 502, code: "AI_QUOTA_BILLING", retryable: false, message: "حساب مزوّد الذكاء الاصطناعي يحتاج تفعيل الفوترة أو رصيداً.", raw }
   }
   if (/429|rate.?limit|quota/i.test(raw)) {
     return { status: 429, code: "AI_RATE_LIMITED", retryable: true, message: "بلغ مزوّد الذكاء الاصطناعي حد الطلبات مؤقتاً. انتظر قليلاً ثم أعد المحاولة.", raw }
@@ -171,7 +188,7 @@ async function groqTranscribe(audio: { mimeType: string; data: string }): Promis
   if (!GROQ.key) throw new Error("GROQ_API_KEY غير موجود على الخادم")
   const bytes = Buffer.from(audio.data, "base64")
   if (!bytes.length) throw new Error("AUDIO_TRANSCRIPTION_EMPTY")
-  if (bytes.length > 25_000_000) throw new Error("AUDIO_PAYLOAD_TOO_LARGE")
+  if (bytes.length > AUDIO_MAX_BYTES) throw new Error("AUDIO_PAYLOAD_TOO_LARGE")
   const form = new FormData()
   form.append("model", GROQ.transcriptionModel)
   form.append("response_format", "json")
@@ -312,7 +329,7 @@ function normalizeAudioData(raw: unknown) {
   if (!/^[A-Za-z0-9+/]*={0,2}$/.test(value)) throw new Error("AUDIO_INVALID_BASE64")
   const bytes = Buffer.from(value, "base64")
   if (!bytes.length) throw new Error("AUDIO_EMPTY_PAYLOAD")
-  if (bytes.length > 25_000_000) throw new Error("AUDIO_PAYLOAD_TOO_LARGE")
+  if (bytes.length > AUDIO_MAX_BYTES) throw new Error("AUDIO_PAYLOAD_TOO_LARGE")
   return value
 }
 
@@ -338,11 +355,13 @@ async function runAudio(prompt: string, system: string, temperature: number, aud
         return { text, provider: "google-gemini", providerLabel: GEMINI.label, model: GEMINI.model }
       } catch (error) {
         lastGeminiError = error
+        safeAudioLog("provider failure", { provider: "gemini", status: classifyAiFailure(error).status, code: classifyAiFailure(error).code, retryable: isRetryableProviderError(error) })
         if (!isRetryableProviderError(error) || attempt === 2) break
         await new Promise(resolve => setTimeout(resolve, 800 * (2 ** attempt)))
       }
     }
     errors.push(`Gemini: ${audioErrorMessage(lastGeminiError)}`)
+    if (!shouldFallbackAudio(lastGeminiError)) throw lastGeminiError
   } else {
     errors.push("Gemini: GEMINI_API_KEY غير موجود على الخادم")
   }
@@ -707,7 +726,7 @@ function safeProjectPath(path: string) {
 
 async function buildDevPatches(request: string, plan: any, files: Array<{path:string,content:string}>) {
   const source = files.map(f => `\n===== FILE: ${f.path} =====\n${f.content}\n===== END FILE =====`).join("\n")
-  const system = `أنت مبرمج ومطوّر ويب محترف (Senior Software Engineer) خبير في HTML وCSS وJavaScript وTypeScript وNext.js وReact و��اجهات API. أنت مسؤول عن تعديل مشروع ويب موجود بشكل مباشر. سيُبّق ناتجك تلقائياً على مستودع GitHub بعد التحقق منه، لذا يجب أن يكون الكود كاملاً وصحيحاً وجاهزاً للتشغيل فوراً.
+  const system = `أنت مبرمج ومطوّر ويب محترف (Senior Software Engineer) خبير في HTML وCSS وJavaScript وTypeScript وNext.js وReact و��اجهات API. أنت مسؤول عن تعديل مشروع ويب موجود بشكل مباشر. سيُ��ّق ناتجك تلقائياً على مستودع GitHub بعد التحقق منه، لذا يجب أن يكون الكود كاملاً وصحيحاً وجاهزاً للتشغيل فوراً.
 
 منهجية العمل الإلزامية قبل الكتابة:
 1) ارأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
@@ -813,9 +832,11 @@ async function autoApplyDevRequest(request: string, plan: any) {
 
 export async function POST(req: Request) {
   let body: any = {}
+  const requestId = crypto.randomUUID()
+  safeAudioLog("request started", { requestId })
   try {
     const contentLength = Number(req.headers.get("content-length") || 0)
-    if (contentLength > 4_200_000) {
+    if (contentLength > AUDIO_MAX_REQUEST_BYTES) {
       return json({
         error: "حجم التسجيل كبير جداً للإرسال. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.",
         code: "AUDIO_PAYLOAD_TOO_LARGE",
@@ -873,7 +894,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات ا��اجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيا��ات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات ا��اجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -999,7 +1020,7 @@ export async function POST(req: Request) {
       if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
   let audioBase64: string
   let mimeType: string
-  try { audioBase64 = normalizeAudioData(payload.audioBase64); mimeType = normalizeAudioMimeType(payload.mimeType) } catch (error) { const failure = classifyAiFailure(error); return json({ error: failure.message, code: failure.code, diagnostics }, failure.status) }
+  try { audioBase64 = normalizeAudioData(payload.audioBase64); mimeType = normalizeAudioMimeType(payload.mimeType); safeAudioLog("audio received", { requestId, mimeType, sizeBytes: Math.floor(audioBase64.length * 0.75) }) } catch (error) { const failure = classifyAiFailure(error); safeAudioLog("audio rejected", { requestId, code: failure.code, status: failure.status }); return json({ success: false, error: failure.code, message: failure.message, provider: "automatic-audio", retryable: failure.retryable }, failure.status) }
 
       const system = `أنت تستخرج بيانات طالب من إملاء عربي أو إنجليزي أو مختلط لمسؤول مدرسة. اكتشف اللغة تلقائياً، وانسخ الكلام بلغته الأصلية دون ترجمة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
 transcript,detectedLanguage,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
@@ -1320,19 +1341,19 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
   } catch (err: any) {
     const failure = classifyAiFailure(err)
     const mode = typeof body?.mode === "string" ? body.mode : "prompt"
+    safeAudioLog("request failed", { requestId, mode, status: failure.status, code: failure.code, retryable: failure.retryable })
     const stage = mode === "dev_assistant" ? "analysis" : mode === "generate_exam" ? "exam-generation" : "response"
     return json(
       {
         error: failure.message,
         code: failure.code,
         retryable: failure.retryable,
-        diagnostics: {
-          executedOn: "server",
-          provider: AUDIO_MODES.has(mode) ? "automatic-audio" : "automatic",
-          keyConfigured: AUDIO_MODES.has(mode) ? (isGeminiConfigured() || isGroqConfigured()) : (isGroqConfigured() || isGeminiConfigured()),
-          stage,
-          reason: failure.raw.slice(0, 300),
-        },
+      diagnostics: {
+        executedOn: "server",
+        provider: AUDIO_MODES.has(mode) ? "automatic-audio" : "automatic",
+        keyConfigured: AUDIO_MODES.has(mode) ? (isGeminiConfigured() || isGroqConfigured()) : (isGroqConfigured() || isGeminiConfigured()),
+        stage,
+      },
       },
       failure.status,
     )
