@@ -486,7 +486,46 @@ tr:hover { background: var(--table-hover); }
 .student-work-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.student-work-card{margin:0!important;min-width:0;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}.student-work-card:hover,.student-work-card:focus-within{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--primary)}.student-work-card>h4{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.student-work-card .work-card-action{width:100%;margin-top:12px}.student-work-modal{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(8,15,28,.82);backdrop-filter:blur(4px)}.student-work-modal.hidden{display:none}.student-work-dialog{width:min(100%,820px);max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border);border-radius:18px;background:var(--card-bg);box-shadow:0 24px 70px rgba(0,0,0,.4)}.student-work-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}.student-work-dialog-header h3{margin:0;color:var(--primary)}.student-work-dialog-body{overflow:auto;padding:18px;overscroll-behavior:contain}.student-work-dialog-body .task-card{margin-bottom:12px}.proctor-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px;margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--table-header)}
 @media(max-width:800px){.student-work-grid{grid-template-columns:1fr}.proctor-settings-grid{grid-template-columns:1fr}}
 @media(max-width:480px){.proctor-panel{padding:14px}.proctor-checks{grid-template-columns:1fr}.proctor-camera{aspect-ratio:16/11}.proctor-bar{align-items:stretch;flex-direction:column}.proctor-live-hold{width:100%}.student-work-dialog-body{padding:12px}}
-</style>
+  /* Thimar visual system — presentation only; existing IDs and actions remain untouched. */
+  :root { --bg: #f7faf7; --card-bg: #ffffff; --text: #18352b; --text-light: #62766d; --border: #dce9df; --primary: #28734f; --primary-hover: #1d5c3e; --success: #4f9467; --warning: #bc9450; --info: #4c7e83; --secondary: #718179; --input-bg: #fcfffc; --table-header: #f1f7f2; --table-hover: #f5faf6; --shadow: 0 18px 55px rgba(33, 86, 57, .10); }
+  [data-theme="dark"] { --bg:#12251d; --card-bg:#1b3328; --text:#edf7ef; --text-light:#b7cbbd; --border:#315344; --primary:#8fbd82; --primary-hover:#a6ce99; --success:#72aa7e; --warning:#d6b568; --info:#80b5b1; --secondary:#8ca49a; --input-bg:#213b2f; --table-header:#234336; --table-hover:#294c3d; --shadow:0 18px 55px rgba(0,0,0,.25); }
+  body { background:var(--bg); background-image:radial-gradient(circle at 10% 18%, rgba(40,115,79,.08) 0 1px, transparent 1px), linear-gradient(135deg, transparent 0 48%, rgba(188,148,80,.035) 48% 52%, transparent 52%); background-size:30px 30px, 96px 96px; }
+  body::after { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.35; background-image:linear-gradient(30deg, transparent 0 46%, rgba(40,115,79,.045) 46% 54%, transparent 54%), linear-gradient(150deg, transparent 0 46%, rgba(188,148,80,.035) 46% 54%, transparent 54%); background-size:160px 160px; }
+  .container { max-width:1440px; padding:24px clamp(16px, 3vw, 48px) 100px; }
+  .display-controls { top:18px; left:18px; }
+  .theme-toggle,.lang-toggle { width:42px; height:42px; min-width:42px; min-height:42px; border:1px solid var(--border); box-shadow:0 8px 24px rgba(33,86,57,.12); }
+  .page { border-radius:24px; padding:clamp(20px, 3vw, 34px); box-shadow:var(--shadow); }
+  .page-header { border-bottom:1px solid var(--border); padding-bottom:18px; margin-bottom:24px; }
+  .page-header h2 { font-size:clamp(1.25rem, 2vw, 1.75rem); letter-spacing:-.02em; }
+  .btn { min-height:44px; border-radius:12px; padding:10px 18px; font-weight:700; box-shadow:none; }
+  .btn-primary { background:var(--primary); } .btn-primary:hover { background:var(--primary-hover); }
+  .btn-outline { border:1px solid var(--primary); }
+  .form-group input,.form-group select,.form-group textarea,.search-box input { border:1px solid var(--border); border-radius:12px; min-height:44px; }
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus,.search-box input:focus { box-shadow:0 0 0 4px rgba(40,115,79,.12); }
+  .home-page { position:relative; overflow:hidden; padding:clamp(18px, 4vw, 56px) 0 30px; text-align:initial; }
+  .home-page::before { content:'ثمار'; display:block; color:var(--primary); font-size:clamp(2.6rem, 7vw, 5.5rem); font-weight:900; line-height:1; letter-spacing:-.06em; margin-bottom:10px; }
+  .home-page::after { content:'منصة قرآنية للتعلّم، التسميع، والنمو بثبات'; display:block; max-width:560px; color:var(--text-light); font-size:clamp(1rem, 2vw, 1.25rem); line-height:1.8; margin-bottom:34px; }
+  .home-page h1 { color:var(--text); text-shadow:none; font-size:clamp(1.6rem, 4vw, 3rem); margin-bottom:10px; }
+  .home-page > p { color:var(--text-light); font-size:1rem; margin-bottom:30px; }
+  .home-page .cards { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px; justify-content:stretch; }
+  .home-page .card { width:auto; min-height:190px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; text-align:right; padding:24px; border:1px solid var(--border); border-radius:20px; box-shadow:0 10px 32px rgba(33,86,57,.07); }
+  .home-page .card:hover { transform:translateY(-5px); box-shadow:var(--shadow); border-color:var(--primary); }
+  .home-page .card .icon { font-size:2.7rem; margin-bottom:18px; } .home-page .card h3 { font-size:1.25rem; } .home-page .card p { line-height:1.7; }
+  #adminDashboard .page-header, #studentDashboard .page-header, #parentDashboard .page-header { background:linear-gradient(135deg, rgba(40,115,79,.08), transparent); border:1px solid var(--border); border-radius:20px; padding:20px; }
+  .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+  .stat-box { min-width:0; border-radius:18px; padding:22px; background:var(--primary); box-shadow:0 10px 28px rgba(33,86,57,.12); }
+  .stat-box:nth-child(2) { background:#4f9467; } .stat-box:nth-child(3) { background:#4c7e83; } .stat-box:nth-child(4) { background:#bc9450 !important; }
+  .menu-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+  .menu-btn { min-height:110px; border-radius:18px; background:var(--card-bg) !important; border:1px solid var(--border); color:var(--text); box-shadow:0 8px 24px rgba(33,86,57,.06); }
+  .menu-btn:hover { transform:translateY(-4px); border-color:var(--primary); color:var(--primary); }
+  .student-work-grid { gap:16px; } .student-work-card { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:20px; }
+  .record-element,.homework-section,.reading-section { border:1px solid var(--border); border-radius:18px; box-shadow:0 8px 24px rgba(33,86,57,.05); }
+  .record-element { background:var(--card-bg); } .homework-section { background:rgba(79,148,103,.07); } .reading-section { background:rgba(188,148,80,.08); }
+  .msg-item { border-right:3px solid var(--primary); border-radius:14px; background:var(--table-header); }
+  @media(max-width:1000px){ .home-page .cards,.menu-grid,.stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media(max-width:620px){ .container { padding-inline:12px; } .home-page .cards,.menu-grid,.stats { grid-template-columns:1fr; } .home-page .card { min-height:150px; } .page { padding:18px; border-radius:18px; } .display-controls { top:10px; left:10px; } }
+  @media(prefers-reduced-motion:reduce){ *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+  </style>
 </head>
 <body>
 
@@ -670,7 +709,7 @@ tr:hover { background: var(--table-hover); }
     <h3 style="margin:0 0 8px; color:#dc3545;">🗑️ حذف ملف من المستودع</h3>
     <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">يُنشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأساسية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
     <div class="form-group"><label>مسر الملف المراد حذفه</label><input id="githubDeletePath" placeholder="مثال: public/old-file.js" /></div>
-    <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أنني أريد ��ذف هذا الملف نهائياً من المستودع</label>
+    <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أنني أريد حذف هذا الملف نهائياً من المستودع</label>
     <button class="btn" style="background:#dc3545; color:#fff;" onclick="deleteGithubFile()">حذف الملف</button>
     <div id="githubDeleteResult" style="margin-top:12px;"></div>
   </div>
@@ -784,10 +823,10 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم السري لولي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
-    <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من ��ادة</small></div>
+    <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
-    <h4>📖 ��يانات حفظ القرآن الكريم</h4>
+    <h4>📖 بيانات حفظ القرآن الكريم</h4>
     <div class="form-row">
       <div class="form-group"><label>الجزء</label><select id="stJuz" onchange="updateSurahSelect()"><option value="">اختر الجزء...</option></select></div>
       <div class="form-group"><label>السورة</label><select id="stSurah"><option value="">اختر الجزء أولاً...</option></select></div>
@@ -800,7 +839,7 @@ tr:hover { background: var(--table-hover); }
         <span id="voiceRecordStatus">اضغط للتسجيل (20 ثانية)</span>
         <audio id="voicePreview" controls style="display:none; height:40px;"></audio>
       </div>
-      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصو����ية، ومكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتحق من هوية الطالب.</small>
+      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، ومكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتحق من هوية الطالب.</small>
     </div>
   </div>
   <div class="form-group"><label>ملاحظات إضافية</label><textarea id="stNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea></div>
@@ -821,7 +860,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>رقم الهاتف (11 رقم)</label><input type="text" id="editPhone" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>تاري الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>
+    <div class="form-group"><label>تاريخ الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>
     <div class="form-group"><label>السن</label><input type="number" id="editAge" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="form-row">
@@ -862,12 +901,12 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div></div><div class="form-row"><div class="form-group"><label>عدد المخالفات المسموحة</label><input id="globalMaxViolations" type="number" min="1" max="10" value="1"></div><div class="form-group"><label><input id="globalFullscreen" type="checkbox" checked> طلب ملء الشاشة وإنهاء المهمة عند الخروج</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
+  <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div></div><div class="form-row"><div class="form-group"><label>عدد المخالفات المسموحة</label><input id="globalMaxViolations" type="number" min="1" max="10" value="1"></div><div class="form-group"><label><input id="globalFullscreen" type="checkbox" checked> ��لب ملء الشاشة وإنهاء المهمة عند الخروج</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
   <div class="page" style="margin:15px 0;border:2px dashed var(--info);">
     <h4 style="color:var(--info)">🖼️ تعديل اللوح/الصورة يدوياً</h4>
-    <p style="color:var(--text-light)">الاختيار الت��قائي للسورة والآيات يظل كما هو، ويمكن للمسؤول تعديل اللوح والصورة يدوياً دون تعطيل الاختيار التلقائي.</p>
+    <p style="color:var(--text-light)">الاختيار التلقائي للسورة والآيات يظل كما هو، ويمكن للمسؤول تعديل اللوح والصورة يدوياً دون تعطيل الاختيار التلقائي.</p>
     <div class="form-row">
       <div class="form-group"><label>نص اللوح/التعديل اليدوي</label><textarea id="manualBoardText" rows="3" placeholder="اكتب التعديل المطلوب..."></textarea></div>
       <div class="form-group"><label>رابط صورة اللوح (اختياري)</label><input id="manualBoardImage" type="url" placeholder="https://..."></div>
@@ -900,7 +939,7 @@ tr:hover { background: var(--table-hover); }
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:15px">
       <span id="examCountBadge" class="score-badge">0 سؤال</span>
       <button class="btn btn-warning" onclick="saveExamDraft()">💾 حفظ الاختبار للطالب (مؤقت)</button>
-      <button class="btn btn-danger" onclick="cancelExamDraft()">إ��غاء الاختبار</button>
+      <button class="btn btn-danger" onclick="cancelExamDraft()">إلغاء الاختبار</button>
     </div>
     <div id="examBuilderAlert"></div>
   </div>
@@ -2319,7 +2358,7 @@ function editAdmin(id) {
 }
 
 function deleteAdmin(id) {
-  if(!confirm('هل ��نت متأكد من حذف هذا المسؤول؟')) return;
+  if(!confirm('هل أنت متأكد من حذف هذا المسؤول؟')) return;
   let admins = getData('admins');
   admins = admins.filter(a => a.id !== id);
   setData('admins', admins); renderAdmins();
@@ -2895,7 +2934,7 @@ function renderRecordElementHTML(el, i, num) {
   html += '<div class="record-element-header">';
   html += '<span class="record-element-title">'+num+'. '+el.name+'</span>';
   html += '<div style="display:flex; gap:6px; flex-wrap:wrap;">';
-  html += '<button class="btn btn-xs btn-info" onclick="duplicateRecordElement('+i+')" title="تضعيف (إنشاء نسخة أخرى)">📑 تضعيف</button>';
+  html += '<button class="btn btn-xs btn-info" onclick="duplicateRecordElement('+i+')" title="تض��يف (إنشاء نسخة أخرى)">📑 تضعيف</button>';
   html += '<button class="btn btn-xs btn-danger" onclick="removeRecordElement('+i+')" title="حذف ها العنصر">🗑️ حذف</button>';
   html += '<button class="btn btn-xs btn-secondary" onclick="restoreRecordElement('+i+')" title="استرجاع بعد الحذف" disabled style="opacity:0.5;">↩️ استرجاع</button>';
   html += '</div>';
@@ -3210,7 +3249,7 @@ function generateLocalFileQuestions(file,plans){const sentences=String(file.text
 
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
-  const roleLabel=role==='admin'?'المس��ول':role==='parent'?'ولي الأمر':'الطئلب';
+  const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الطالب';
   if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|مرحبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنني مساعدتك؟';
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
@@ -3272,7 +3311,7 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
 function quranQuestionMediaHtml(q,index){
   const from=Math.max(1,parseInt(q.from)||1),to=Math.max(from,parseInt(q.to)||from);
   const primary=q.questionImage||quranQuestionImageUrl(q,from,q.type==='complete'?'masked':'anchor');
-  const images=primary?[{src:primary,label:q.type==='complete'?'جزء من آية السؤال':'آية البداية'}]:[];
+  const images=primary?[{src:primary,label:q.type==='complete'?'جزء من آية السؤال':'آية ال��داية'}]:[];
   if(to!==from){const ending=quranQuestionImageUrl(q,to,'anchor');if(ending)images.push({src:ending,label:'آية النهاية'})}
   if(!images.length)return '';
   return '<div class="quran-question-media quran-image-grid">'+images.map(function(item){return '<button type="button" class="quran-image-button" onclick="openQuranImage(\''+escapeHtml(item.src)+'\')" aria-label="تكبير '+item.label+'"><img class="quran-question-image" src="'+escapeHtml(item.src)+'" alt="'+item.label+' للسؤال '+(index+1)+'" loading="eager" onerror="showQuranQuestionImageError(this)"></button>'}).join('')+'</div>';
@@ -3578,7 +3617,7 @@ async function submitStudentExam(auto){
   }
   const hasAudio=ex.questions.some(q=>q.type==='audio');ex.status=hasAudio?'pending_audio_review':'graded';ex.submittedAt=Date.now();ex.answers=answers;ex.score=score;ex.maxScore=ex.questions.reduce((n,q)=>n+(Number(q.points)||1),0);ex.totalDurationSeconds=Math.round((Date.now()-(ex.createdAt||Date.now()))/1000);ex.autoSubmitted=!!auto;ex.reviewedAt=hasAudio?null:Date.now();
   let students=getData('students');const idx=students.findIndex(x=>x.id===s.id);if(idx<0)return;students[idx].activeExam=null;students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].completedTasks=students[idx].completedTasks||[];students[idx].completedTasks.push({type:'exam',name:'اختبار '+ex.date,date:ex.date,completedAt:new Date().toLocaleString('ar-EG'),score,maxScore:ex.maxScore});setData('students',students);currentUser=students[idx];
-  let msgs=getData('messages');const resultText=hasAudio?'تم تسلي�� الاختبار الصوي  النتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
+  let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوتي والنتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة التسجيل الصوتي':'نتيجة اختبار '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبار وإرساله للمسؤول وولي الأمر','success');
 }
@@ -3605,7 +3644,7 @@ async function recordStudentExamAudio(i){
       }
       studentExamAudioAnswers[i]={dataUrl,transcript:usedTranscript,voiceMatch:match,aiResult};studentExamAnswers[i]=usedTranscript;
       const pct=aiResult.matchedPercent??0;status.textContent='تم استلام التسجيل بنجاح — النتيجة التفصيلية بانتظار مراجعة المسؤول';
-      aiBox.innerHTML='<div class="alert alert-info">🔒 تم حفظ إجابة التسجيل ونتيجة التحليل داخلياً. لن تظهر نتيجة الذكاء الاصطناعي للطالب حتى يقرر المسؤول نشرها.</div>';
+      aiBox.innerHTML='<div class="alert alert-info">🔒 تم حفظ إجا��ة التسجيل ونتيجة التحليل داخلياً. لن تظهر نتيجة الذكاء الاصطناعي للطالب حتى يقرر المسؤول نشرها.</div>';
       btn.dataset.recording='false';btn.classList.remove('recording');
     };
     recorder.start();registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});btn.onclick=()=>{if(recorder.state!=='inactive')recorder.stop()};
@@ -5370,7 +5409,7 @@ async function geminiVoiceProfile(blob){
 }
 async function verifyVoiceIdentity(blob,student){
   const profile=(student&&student.voiceProfile)?student.voiceProfile:null;
-  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية محفوظة لهذا الطالب');
+  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية محفوظة لهذا الطال��');
   const audio=await voiceAudioPayload(blob);
   const data=await callStudentAI('voice_match',Object.assign({referenceProfile:profile},audio),0.05);
   if(!data||typeof data.matchPercent!=='number')throw new Error('لم يُرجع Gemini نتيجة مطابقة صالحة');
@@ -6089,7 +6128,7 @@ function generateParentWelcome(student) {
   const base = templates[Math.floor(Math.random() * templates.length)];
   if(last) {
     base.body += '<br><br>📊 آخر تسميع نهائي لـ '+student.name+' كان بتاريخ '+last.date+' بمجموع <strong>'+last.totalScore+' درجة</strong>. ';
-    if(last.totalScore >= 14) base.body += 'أداء ممتاز! ابنك يُظهر تفوقاً واضحاً. استمر في تشجيعه. 🌟';
+    if(last.totalScore >= 14) base.body += 'أداء م��تاز! ابنك يُظهر تفوقاً واضحاً. استمر في تشجيعه. 🌟';
     else if(last.totalScore >= 10) base.body += 'مستوى جي جداً. مع دعمك المستمر سيصل للتميز. 👍';
     else base.body += 'يحتاج لبعض الدعم والمراجعة. جالسه يومياً وشاركه الحفظ. 💪';
   }
