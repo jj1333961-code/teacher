@@ -1,6 +1,8 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { LanguageRuntime } from '@/components/language-runtime'
+import { LanguageToggle } from '@/components/language-toggle'
 
 export const metadata: Metadata = {
   title: 'منصة المعلّم الذكية',
@@ -42,6 +44,8 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" className="bg-background">
       <body className="antialiased">
         {children}
+        <div className="fixed left-4 top-4 z-50"><LanguageToggle /></div>
+        <LanguageRuntime />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
