@@ -59,6 +59,29 @@
 })();
 </script>
 <style>
+/* Thimar student workspace */
+#studentDashboard { max-width: 1180px; margin-inline: auto; }
+#studentDashboard .page-header { position: relative; padding: 22px 24px; border: 1px solid var(--border); border-radius: 22px; background: color-mix(in srgb, var(--card-bg) 92%, transparent); box-shadow: var(--shadow); }
+#studentDashboard .page-header > div { display:flex; flex-wrap:wrap; gap:8px; }
+#studentDashboard .page-header > div .btn { display:none; }
+#studentDashboard .page-header > div .admin-badge { display:inline-flex; }
+#studentDashboard > div:not(.page-header) { margin-top: 16px; }
+#studentDashboard .cards, #studentDashboard .stats, #studentDashboard .menu-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; }
+#studentDashboard .card, #studentDashboard .stat-box, #studentDashboard .menu-btn { border:1px solid var(--border); border-radius:20px; box-shadow:0 12px 28px rgba(39,76,59,.08); }
+#studentDashboard .card:hover, #studentDashboard .stat-box:hover { border-color:var(--primary); }
+#studentDashboard .student-dashboard-card { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:18px; }
+#studentWorkspaceRail { position:fixed; inset-block:0; inset-inline-end:0; width:0; z-index:8000; pointer-events:none; }
+#studentWorkspaceRail.open { width:min(330px, 86vw); pointer-events:auto; }
+#studentWorkspaceRailPanel { position:absolute; inset-block:14px; inset-inline-end:14px; width:calc(100% - 14px); padding:18px; transform:translateX(110%); transition:transform .25s ease; border:1px solid var(--border); border-radius:24px 0 0 24px; background:color-mix(in srgb, var(--card-bg) 96%, transparent); box-shadow:0 20px 50px rgba(22,55,42,.22); }
+#studentWorkspaceRail.open #studentWorkspaceRailPanel { transform:translateX(0); }
+#studentWorkspaceToggle { position:fixed; inset-inline-end:12px; inset-block-start:50%; z-index:8001; width:46px; height:46px; border:1px solid var(--border); border-radius:50%; background:var(--primary); color:var(--primary-foreground); cursor:grab; box-shadow:var(--shadow); }
+#studentWorkspaceRail.open #studentWorkspaceToggle { inset-inline-end:calc(min(330px, 86vw) + 24px); }
+#studentWorkspaceRailPanel nav { display:grid; gap:10px; margin-top:18px; }
+#studentWorkspaceRailPanel nav button { width:100%; justify-content:flex-start; text-align:start; }
+#studentMessagesFab { position:fixed; inset-inline-start:18px; inset-block-end:18px; z-index:7900; width:56px; height:56px; border:0; border-radius:50%; background:var(--primary); color:var(--primary-foreground); box-shadow:0 14px 30px rgba(39,76,59,.28); cursor:pointer; }
+#studentMessagesFab .msg-count { position:absolute; inset-inline-end:-3px; inset-block-start:-3px; }
+@media (max-width:650px) { #studentWorkspaceToggle { inset-block-start:auto; inset-block-end:88px; } #studentWorkspaceRail.open #studentWorkspaceToggle { inset-inline-end:calc(min(330px, 86vw) + 8px); } #studentDashboard .page-header { padding:18px; } }
+@media (prefers-reduced-motion:reduce) { #studentWorkspaceRailPanel { transition:none; } }
 :root {
   --bg: linear-gradient(135deg, #eaf1e8 0%, #d7e7dc 100%);
   --card-bg: #fffdf7; --text: #263c34; --text-light: #6c7d74; --border: #d7e1d8;
@@ -862,7 +885,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div></div><div class="form-row"><div class="form-group"><label>عدد المخالفات المسموحة</label><input id="globalMaxViolations" type="number" min="1" max="10" value="1"></div><div class="form-group"><label><input id="globalFullscreen" type="checkbox" checked> طلب ملء الشاشة وإنهاء المهمة عند الخروج</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
+  <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div></div><div class="form-row"><div class="form-group"><label>عدد المخالفات المسموحة</label><input id="globalMaxViolations" type="number" min="1" max="10" value="1"></div><div class="form-group"><label><input id="globalFullscreen" type="checkbox" checked> ��لب ملء الشاشة وإنهاء المهمة عند الخروج</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
   <div class="page" style="margin:15px 0;border:2px dashed var(--info);">
@@ -1022,7 +1045,7 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="studentRecordsPage" class="page hidden">
-  <div class="page-header"><h2>📦 صنوق التسجيلات</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📦 صندوق التسجيلات</h2><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary" onclick="showPage('studentExamPage')">🧪 تسجيل الاختبارات</button><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div></div>
   <div id="studentRecordsContent"></div>
 </div>
 
@@ -1195,7 +1218,7 @@ tr:hover { background: var(--table-hover); }
   <div class="proctor-panel">
     <h2 id="proctorTitle">التحقق قبل بدء الجلسة</h2>
     <p>لن تُحفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
-    <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص للسماح بالكاميرا</div></div>
+    <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغ�� تشغيل الفحص للسماح بالكاميرا</div></div>
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
     <div class="proctor-checks" aria-live="polite">
       <div id="proctorTouchCheck" class="proctor-check bad">شاشة لمس مطلوبة</div><div id="proctorLightCheck" class="proctor-check bad">الإضاءة غير مفحوصة</div>
@@ -3272,7 +3295,7 @@ document.addEventListener('keydown',function(event){if(event.key==='Escape')clos
 function quranQuestionMediaHtml(q,index){
   const from=Math.max(1,parseInt(q.from)||1),to=Math.max(from,parseInt(q.to)||from);
   const primary=q.questionImage||quranQuestionImageUrl(q,from,q.type==='complete'?'masked':'anchor');
-  const images=primary?[{src:primary,label:q.type==='complete'?'جزء من آية السؤال':'آية البداية'}]:[];
+  const images=primary?[{src:primary,label:q.type==='complete'?'جزء من آية السؤال':'آية ال��داية'}]:[];
   if(to!==from){const ending=quranQuestionImageUrl(q,to,'anchor');if(ending)images.push({src:ending,label:'آية النهاية'})}
   if(!images.length)return '';
   return '<div class="quran-question-media quran-image-grid">'+images.map(function(item){return '<button type="button" class="quran-image-button" onclick="openQuranImage(\''+escapeHtml(item.src)+'\')" aria-label="تكبير '+item.label+'"><img class="quran-question-image" src="'+escapeHtml(item.src)+'" alt="'+item.label+' للسؤال '+(index+1)+'" loading="eager" onerror="showQuranQuestionImageError(this)"></button>'}).join('')+'</div>';
@@ -3605,7 +3628,7 @@ async function recordStudentExamAudio(i){
       }
       studentExamAudioAnswers[i]={dataUrl,transcript:usedTranscript,voiceMatch:match,aiResult};studentExamAnswers[i]=usedTranscript;
       const pct=aiResult.matchedPercent??0;status.textContent='تم استلام التسجيل بنجاح — النتيجة التفصيلية بانتظار مراجعة المسؤول';
-      aiBox.innerHTML='<div class="alert alert-info">🔒 تم حفظ إجابة التسجيل ونتيجة التحليل داخلياً. لن تظهر نتيجة الذكاء الاصطناعي للطالب حتى يقرر المسؤول نشرها.</div>';
+      aiBox.innerHTML='<div class="alert alert-info">🔒 تم حفظ إجا��ة التسجيل ونتيجة التحليل داخلياً. لن تظهر نتيجة الذكاء الاصطناعي للطالب حتى يقرر المسؤول نشرها.</div>';
       btn.dataset.recording='false';btn.classList.remove('recording');
     };
     recorder.start();registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});btn.onclick=()=>{if(recorder.state!=='inactive')recorder.stop()};
@@ -5370,7 +5393,7 @@ async function geminiVoiceProfile(blob){
 }
 async function verifyVoiceIdentity(blob,student){
   const profile=(student&&student.voiceProfile)?student.voiceProfile:null;
-  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية محفوظة لهذا الطالب');
+  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية محفوظة لهذا الطال��');
   const audio=await voiceAudioPayload(blob);
   const data=await callStudentAI('voice_match',Object.assign({referenceProfile:profile},audio),0.05);
   if(!data||typeof data.matchPercent!=='number')throw new Error('لم يُرجع Gemini نتيجة مطابقة صالحة');
@@ -6089,7 +6112,7 @@ function generateParentWelcome(student) {
   const base = templates[Math.floor(Math.random() * templates.length)];
   if(last) {
     base.body += '<br><br>📊 آخر تسميع نهائي لـ '+student.name+' كان بتاريخ '+last.date+' بمجموع <strong>'+last.totalScore+' درجة</strong>. ';
-    if(last.totalScore >= 14) base.body += 'أداء ممتاز! ابنك يُظهر تفوقاً واضحاً. استمر في تشجيعه. 🌟';
+    if(last.totalScore >= 14) base.body += 'أداء م��تاز! ابنك يُظهر تفوقاً واضحاً. استمر في تشجيعه. 🌟';
     else if(last.totalScore >= 10) base.body += 'مستوى جي جداً. مع دعمك المستمر سيصل للتميز. 👍';
     else base.body += 'يحتاج لبعض الدعم والمراجعة. جالسه يومياً وشاركه الحفظ. 💪';
   }
@@ -6248,6 +6271,32 @@ if(restoreSession()) {
     try { const st = await window.safeGetMic(); st.getTracks().forEach(t=>t.stop()); return true; } catch(e) { return false; }
   };
 })();
+</script>
+<!-- أدوات مساحة الطالب العائمة: لا تغيّر الصفحات الأصلية، بل تعيد ترتيب الوصول إليها. -->
+<div id="studentWorkspaceRail" aria-label="أدوات الطالب الثانوية">
+  <button id="studentWorkspaceToggle" type="button" aria-label="فتح أدوات الطالب" aria-expanded="false" onclick="toggleStudentWorkspaceRail()">⋮</button>
+  <aside id="studentWorkspaceRailPanel" aria-label="الرسائل ومساعد الذكاء والملفات">
+    <div class="page-header" style="padding:0;border:0;box-shadow:none;background:transparent;"><div><strong>مساحة الطالب</strong><span style="display:block;color:var(--text-light);font-size:.82rem;margin-top:4px;">كل الأدوات الثانوية في مكان واحد</span></div><button class="btn btn-secondary" type="button" onclick="toggleStudentWorkspaceRail()">إغلاق</button></div>
+    <nav>
+      <button class="btn btn-outline" type="button" onclick="showPage('studentInbox');toggleStudentWorkspaceRail()">📬 الرسائل <span id="studentRailMsgBadge" class="msg-count hidden">0</span></button>
+      <button class="btn btn-outline" type="button" onclick="showPage('studentAIChat');toggleStudentWorkspaceRail()">🤖 مساعد AI</button>
+      <button class="btn btn-outline" type="button" onclick="showPage('studentFilesPage');toggleStudentWorkspaceRail()">📁 الملفات</button>
+      <button class="btn btn-outline" type="button" onclick="showPage('studentRecordsPage');toggleStudentWorkspaceRail()">🎙️ صندوق التسجيلات</button>
+      <button class="btn btn-primary" type="button" onclick="showPage('studentExamPage');toggleStudentWorkspaceRail()">🧪 تسجيل الاختبارات</button>
+    </nav>
+  </aside>
+</div>
+<button id="studentMessagesFab" type="button" aria-label="فتح الرسائل" onclick="showPage('studentInbox')">✉ <span id="studentFabMsgBadge" class="msg-count hidden">0</span></button>
+<script>
+function toggleStudentWorkspaceRail(){
+  const rail=document.getElementById('studentWorkspaceRail'); const button=document.getElementById('studentWorkspaceToggle'); if(!rail)return;
+  const open=rail.classList.toggle('open'); if(button){button.setAttribute('aria-expanded',String(open));button.setAttribute('aria-label',open?'إغلاق أدوات الطالب':'فتح أدوات الطالب');}
+}
+function syncStudentWorkspaceBadges(){
+  const source=document.getElementById('studentMsgBadge'); ['studentRailMsgBadge','studentFabMsgBadge'].forEach(id=>{const target=document.getElementById(id); if(!target||!source)return; target.textContent=source.textContent; target.classList.toggle('hidden',source.classList.contains('hidden'));});
+}
+new MutationObserver(syncStudentWorkspaceBadges).observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
+syncStudentWorkspaceBadges();
 </script>
 </body>
 </html>
