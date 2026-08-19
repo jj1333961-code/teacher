@@ -1332,7 +1332,7 @@ const ALL_SURAHS_ORDERED = [
   "الإسراء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
   "الذاريات", "الطور", "النجم", "القمر", "الرحمن", "الواقعة", "الحديد", "المجادلة", "الحشر", "الممتحنة", "الصف", "الجمعة", "المنافقون", "التغابن", "الطلاق", "التحريم",
-  "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "المرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الانفطار",
+  "الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزمل", "المدثر", "القيامة", "الإنسان", "ا��مرسلات", "النبأ", "النازعات", "عبس", "التكوير", "الانفطار",
   "المطففين", "الانشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "الضحى", "الشرح", "التين", "العلق", "القدر", "الب��نة",
   "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس"
 ];
@@ -5011,7 +5011,7 @@ function renderStudentTasks() {
   const extraTasks=Array.from(temp.querySelectorAll('[data-task-category="extra"]')).map(el=>el.outerHTML).join('');
   const exam=s.activeExam&&s.activeExam.status==='pending'?s.activeExam:null;
   const examHtml=exam?'<p>لديك اختبار نشط من '+(exam.questions?.length||0)+' سؤال.</p><button class="btn btn-primary" onclick="showPage(\'studentExamPage\')">فتح الاختبار</button>':'<p style="color:var(--text-light)">لا يوجد اختبار نشط حاليًا.</p>';
-  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المهمات ا��إضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمات إضافية حالية.</p>')+'</section></div>';
+  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المهمات ا��إضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمات ��ضافية حالية.</p>')+'</section></div>';
   if(proctor.active)bindLiveProctorHold();
 }
 
@@ -6256,7 +6256,7 @@ function generateAIResponse(text, student) {
     return 'الحمد لله رب العالمين 🌿<br><br>القرآن كتائ الله المعجز، زل هداية للناس. ومن الأدعية النافعة للحفظ: «اللهم اجعل القرآن ربيع قلبي ونور صدري وجلاء حزني وذهاب همّي».';
   }
   // افتراضي ذكي
-  let r = '🤖 أهلاً '+name+'، لم فهم سؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
+  let r = '🤖 أهلاً '+name+'، لم فهم ��ؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
   r += '• <strong>مستواي</strong> — تحليل آخر تقييم<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآيات</strong> — كيف تعرض آيات التس��يع كصورة<br>• <strong>تحفيز</strong> — كلمة تشدّ همتك';
   if(pending.length > 0) r += '<br><br>📌 تذكير: لديك '+pending.length+' مهمة لم تُعتمد بعد.';
   return r;
@@ -6326,8 +6326,11 @@ if(restoreSession()) {
       <p class="thimar-ayah" lang="ar">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ<br>أَلَمْ تَرَ كَيْفَ ضَرَبَ اللَّهُ مَثَلًا كَلِمَةً طَيِّبَةً كَشَجَرَةٍ طَيِّبَةٍ أَصْلُهَا ثَابِتٌ وَفَرْعُهَا فِي السَّمَاءِ</p>
       <p class="thimar-description">منصة كاملة لطالب القرآن</p>
       <p class="thimar-intention">هذا العمل ابتغاء وجه الله تعالى</p>
-      <p class="thimar-prayer">صَلِّ على النبي ﷺ</p>
-      <p class="thimar-welcome-audio" id="thimarAudioStatus">تبدأ التلاوة تلقائيًا، ثم تُفتح المنصة</p>
+  <p class="thimar-prayer">صَلِّ على النبي ﷺ</p>
+  <div class="thimar-welcome-actions">
+    <button id="thimarWelcomeStart" class="btn btn-primary" type="button">الدخول إلى المنصة</button>
+  </div>
+  <p class="thimar-welcome-audio" id="thimarAudioStatus">سيطلب المتصفح السماح بتشغيل التلاوة تلقائيًا</p>
       <audio id="thimarWelcomeAudio" preload="auto" autoplay playsinline src="/audio/ibrahim-ayah-24-minshawi.mp3"></audio>
     </div>
   </section>
@@ -6335,6 +6338,7 @@ if(restoreSession()) {
 (function(){
   const welcome=document.getElementById('thimarWelcome');
   const audio=document.getElementById('thimarWelcomeAudio');
+  const start=document.getElementById('thimarWelcomeStart');
   const status=document.getElementById('thimarAudioStatus');
   if(!welcome||!audio)return;
   let closed=false;
@@ -6349,9 +6353,16 @@ if(restoreSession()) {
     const result=audio.play();
     if(result&&typeof result.catch==='function')result.catch(function(){
       status.textContent='سيبدأ الصوت تلقائيًا عند السماح بتشغيل الوسائط في المتصفح';
+      window.setTimeout(function(){
+        alert('للاستماع إلى تلاوة المنشاوي، اسمح بتشغيل الوسائط في المتصفح ثم اضغط «الدخول إلى المنصة».');
+      },120);
     });
   }
   startAudio();
+  start.addEventListener('click',function(){
+    status.textContent='تم السماح بالتشغيل، جارٍ تشغيل التلاوة';
+    startAudio();
+  });
   audio.addEventListener('ended',closeWelcome,{once:true});
 })();
 </script>
