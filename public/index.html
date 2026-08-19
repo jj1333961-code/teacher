@@ -1178,7 +1178,7 @@ tr:hover { background: var(--table-hover); }
 
 <div id="proctorGate" class="proctor-gate hidden" role="dialog" aria-modal="true" aria-labelledby="proctorTitle">
   <div class="proctor-panel">
-    <h2 id="proctorTitle">التحقق قبل بدء المهمة</h2>
+    <h2 id="proctorTitle">التحقق قبل بدء المه��ة</h2>
     <p>لن ت����حفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
     <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص للسماح بالكاميرا</div></div>
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
@@ -1466,7 +1466,7 @@ function proctorStop(closeCamera=true){proctor.active=false;proctor.holding=fals
 function proctorLeaveStart(reason){if(!proctor.active||proctor.leaveAt)return;proctor.leaveAt=Date.now();proctorShowWarning(reason,proctor.leaveAt);const grace=getProctorSettings().leaveGraceMs;setTimeout(function(){if(proctor.active&&proctor.leaveAt&&Date.now()-proctor.leaveAt>=grace)cancelProctoredTask(reason)},grace+50)}
 function proctorLeaveEnd(){proctor.leaveAt=0;document.getElementById('proctorWarning')?.classList.add('hidden')}
 document.addEventListener('visibilitychange',()=>{if(!proctor.active)return;if(document.hidden)proctorLeaveStart('تمت مغادرة صفحة المهمة');else proctorLeaveEnd()});window.addEventListener('blur',()=>{if(proctor.active)proctorLeaveStart('تم ترك نافذة المهمة')});window.addEventListener('focus',()=>{if(proctor.active)proctorLeaveEnd()});document.addEventListener('fullscreenchange',()=>{if(proctor.active&&getProctorSettings().fullscreen&&!document.fullscreenElement)proctorLeaveStart('تم الخروج من ملء الشاشة')});window.addEventListener('pagehide',()=>{if(proctor.active){recordProctorIncident('تم الخروج المفاجئ من الموقع');cancelProctoredTask('تم الخروج المفاجئ من الموقع')}});window.addEventListener('resize',()=>{if(proctor.active&&((screen.width&&screen.width<proctor.screenWidth*.72)||(window.innerWidth<screen.availWidth*.62)))proctorLeaveStart('تم اكتشاف تقسيم الشاشة أو تصغير نافذة المهمة')});
-document.addEventListener('DOMContentLoaded',()=>setupProctorHold(document.getElementById('proctorGateHold'),true));
+document.addEventListener('DOMContentLoaded',()=>{setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('تعذر قراءة جلسة Google');signupState.method='google';signupState.email=data.user.email;signupState.name=data.user.name||'';signupState.whats='';signupState.verified=true;const note=document.getElementById('signupVerifiedNote');if(note)note.innerHTML='✅ تم التحقق من هويتك عبر جوجل — '+escapeHtml(data.user.email);const name=document.getElementById('signupName');if(name&&!name.value)name.value=data.user.name||'';initSignupJuzSelect();showPage('signupStep2');history.replaceState({},'',location.pathname)}).catch(()=>{const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر إكمال تسجيل Google. أعد المحاولة.</div>'})}});
 
 // ====== SESSION PERSISTENCE ======
 function saveSessionState() {
@@ -1855,17 +1855,8 @@ async function renderGoogleButton() {
   const container = document.getElementById('googleBtnContainer');
   const box = document.getElementById('signupStep1Alert');
   if(!container) return;
-  container.innerHTML = '';
-  box.innerHTML = '<div class="alert alert-info">جارٍ تحميل تسجيل الدخول بحساب Google...</div>';
-  await loadGoogleClientId();
-  if(!initGoogleGsi()) {
-    box.innerHTML = '<div class="alert alert-danger">تعذر تفعيل تسجيل الدخول بحساب Google من الخادم. يرجى مراجعة إعداد GOOGLE_CLIENT_ID في Vercel.</div>';
-    return;
-  }
-  box.innerHTML = '';
-  google.accounts.id.renderButton(container, { theme: 'filled_blue', size: 'large', type: 'standard', shape: 'pill', text: 'signup_with', locale: 'ar' });
-  // إظهار نافذة اختيار حسابات جوجل الموجودة على الجهاز تلقائياً
-  google.accounts.id.prompt();
+  container.innerHTML = '<button class="btn btn-primary" type="button" style="width:100%" onclick="window.location.href=\'/api/auth/google\'">🔵 المتابعة باستخدام Google</button>';
+  if(box) box.innerHTML = '<div class="alert alert-info">سيتم فتح Google في نافذة آمنة، ولن تُرسل أسرار OAuth إلى المتصفح.</div>';
 }
 
 function handleGoogleCredential(resp) {

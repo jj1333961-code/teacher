@@ -62,11 +62,10 @@ function sanitizeRepo(raw: string): string {
 }
 
 const GITHUB_TOKEN = pickEnv("GITHUB_TOKEN")
-const GITHUB_OWNER = "jj1333961-code"
-const GITHUB_REPO = "teacher"
-// إن لم يُضبط GITHUB_BRANCH نستخدم الفرع الافتراضي الفعلي للمستودع (يُحلّ وقت التشغيل)، لا نفترض "main".
-const GITHUB_BRANCH_ENV = pickEnv("GITHUB_BRANCH_3", "GITHUB_BRANCH_2", "GITHUB_BRANCH")
-const AUTO_DEV_ENABLED = true
+const GITHUB_OWNER = sanitizeOwner(pickEnv("GITHUB_OWNER"))
+const GITHUB_REPO = sanitizeRepo(pickEnv("GITHUB_REPO"))
+const GITHUB_BRANCH_ENV = pickEnv("GITHUB_BRANCH")
+const AUTO_DEV_ENABLED = pickEnv("DEV_ASSISTANT_AUTO_APPLY") === "true"
 const githubConfigured = !!(GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO)
 const GITHUB_API = "https://api.github.com"
 const VERCEL_DEPLOY_HOOK_URL = process.env.VERCEL_DEPLOY_HOOK_URL
@@ -407,7 +406,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - صور حد البداية وحد النهاية ستُعرض منفصلة وقابلة للتكبير، لذلك لا تنسخ نصهما داخل prompt ولا تكشف الجزء المطلوب إجابته.
 - لا تنشئ أسئلة سطحية من قصار السور، ولا سؤالاً يكتف�� بالتعرف إلى اسم سورة مشهورة من مطلعها. تجنب سورة الفلق والناس وسائر السور القصيرة السهلة المستبعدة من النطاق.
 - level=easy: سؤال واضح لكنه يحتاج استحضاراً حقيقياً، وليس سؤالاً بديهياً من أول السورة.
-- level=medium: اجعله صعبًا فعليًا ويحتاج تفكيرًا واستحضارًا؛ استخدم تمييزًا وربطًا دقيقًا بين مواضع متقاربة ومتشابهات لفظية من وسط السورة، ولا تسمح بسؤال مباشر أو إجابة ظاهرة من مطلع مشهور.
+- level=medium: اجعله صعبًا فعليًا ويحتاج تفكيرًا واستح��ارًا؛ استخدم تمييزًا وربطًا دقيقًا بين مواضع متقاربة ومتشابهات لفظية من وسط السورة، ولا تسمح بسؤال مباشر أو إجابة ظاهرة من مطلع مشهور.
 - level=hard: سؤال شديد الصعوبة من المتشابهات اللفظية الموثقة: فروق الواو والفاء، الزيادة والنقص، اختلاف الضمائر والمفرد والجمع، اختلاف البداية أو الخاتمة، والتمييز بين آيتين متقاربتين. يجب أن يبقى له جواب واحد قطعي.
 - صغ prompt بلغة عربية سليمة ومباشرة تحدد المطلوب دون غموض، وراجع الإملاء قبل الإخراج.
 - في الاختياري اجعل المشتتات من ألفاظ أو سور أو تكملات قرآنية شديدة التقارب، ولا تستخدم مشتتاً واضح البطلان أو بعيداً عن الصحيح.
@@ -438,7 +437,7 @@ const SYS_GRADE_RECITATION = `أنت مصحّح متسامح لتلاوة الق
 score: 1 إذا تلا المقطع المطلوب بشكل مقبول (ولو بأخطاء)، 0.5 إذا نسي آية واحدة فقط، 0 إذا نسي أكثر من آية أو تلا مقطعاً مختلفاً تماماً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":["أرقام أو نصوص الآيات الناقصة"]}`
 
-const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة ال��رآن الكريم اعتماداً على تفريغ صوتي عربي.
+const SYS_TRANSCRIBE = `أنت خبير في تصحيح تلاوة ال����رآن الكريم اعتماداً على تفريغ صوتي عربي.
 مهمتك:
 1) افحص transcript الناتج عن التعرف الصوتي وحدد هل هو تلاوة قرآن أم كلام/صوت غير مناسب.
 2) قارن transcript بالنص المتوقع expectedText للمقطع: سورة surah من الآية from إلى الآية to.
@@ -507,7 +506,7 @@ async function githubGetRepo() {
   if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
   const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}`
   const res = await fetch(url, { headers: githubHeaders(), cache: "no-store" })
-  if (res.status === 404) throw new Error(`المسودع ${GITHUB_OWNER}/${GITHUB_REPO} غير موجود أو لا يملك الرمز صلاحية الوصول إليه`)
+  if (res.status === 404) throw new Error(`المسودع ${GITHUB_OWNER}/${GITHUB_REPO} غير موجود أو لا يملك الرم�� صلاحية الوصول إليه`)
   if (res.status === 401) throw new Error("GITHUB_TOKEN غير صالح (401 Unauthorized)")
   if (res.status === 403) throw new Error("الرمز GITHUB_TOKEN ممنوع من الوصول (403) — تحقق من صلاحياته")
   if (!res.ok) throw new Error(`GitHub ${res.status}: تذر قراءة بيانات المستودع`)
@@ -602,6 +601,7 @@ async function getGithubSyncStatus() {
   if (!GITHUB_TOKEN) missing.push("GITHUB_TOKEN")
   if (!GITHUB_OWNER) missing.push("GITHUB_OWNER")
   if (!GITHUB_REPO) missing.push("GITHUB_REPO")
+  if (!GITHUB_BRANCH_ENV) missing.push("GITHUB_BRANCH")
   if (missing.length) {
     return { connected: false, reason: `متغيرات البيئة التالية غير مهيأة على الخادم: ${missing.join("، ")}`, missing }
   }
@@ -658,6 +658,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
   if (!GITHUB_TOKEN) missing.push("GITHUB_TOKEN")
   if (!GITHUB_OWNER) missing.push("GITHUB_OWNER")
   if (!GITHUB_REPO) missing.push("GITHUB_REPO")
+  if (!GITHUB_BRANCH_ENV) missing.push("GITHUB_BRANCH")
   if (missing.length) {
     return {
       ok: false,
@@ -711,7 +712,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 منهجية العمل الإلزامية قبل الكتابة:
 1) ارأ محتوى كل ملف مُعطى وافهم بنيته وأسلوبه ووظائفه الحالية قبل أي تعديل.
 2) حدد بدقة أصغر جز يجب تغييره لتحقيق الطلب، دون المساس ببقية الكود.
-3) اكتب التعديل بنفس أسلوب بنية المشروع (نفس التسمية، نس المسافات البادئة، نفس نمط الدوال، اتجاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
+3) اكتب التعديل بنفس أسلوب بنية المشروع (نفس التسمية، نس المسافات البادئة، نفس نمط الدوال، ا��جاه RTL العربي، ومتغيرات الأنماط الموجودة مثل var(--primary)).
 4) بعد الكتابة راجع الكود ذهنياً وتأكد من خلوه من أخطاء ناء الجملة (syntax)، وأن الأقواس {} () [] والوسوم <tag></tag> والاقتباسات متوازنة ومغلقة، وأن أي دالة أ معرّف استُخدم معرّف فعلاً.
 
 قواعد صرمة:
@@ -872,7 +873,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات ا��اجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
