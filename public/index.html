@@ -1458,7 +1458,7 @@ function proctorLiveBar(){return ''}
 function bindLiveProctorHold(){}
 function proctorShowWarning(reason,startedAt){const grace=Math.ceil(getProctorSettings().gazeGraceMs/1000),left=Math.max(0,grace-Math.floor((Date.now()-startedAt)/1000)),w=document.getElementById('proctorWarning');if(w){w.textContent='تنبيه: '+reason+' — صحح الوضع خلال '+left+' ثانية';w.classList.remove('hidden')}}
 function proctorHandleLiveState(ok,reason){if(ok){proctor.warningAt=0;if(!proctor.touchWarningAt)document.getElementById('proctorWarning')?.classList.add('hidden');return}if(!proctor.warningAt)proctor.warningAt=Date.now();proctorShowWarning(reason,proctor.warningAt);if(Date.now()-proctor.warningAt>=getProctorSettings().gazeGraceMs)cancelProctoredTask(reason)}
-function proctorHandleTouches(e){if(!proctor.active)return;const touches=e&&e.touches?Array.from(e.touches):[];proctor.touches=new Set(touches.map(t=>t.identifier));const count=proctor.touches.size,tooMany=count>1,status=document.getElementById('proctorTouchStatus');proctor.holding=count===1;if(!tooMany){proctor.touchWarningAt=0;if(status){status.textContent=count===1?'إصبع واحد':'جاهز للمسة واحدة';status.className='badge badge-success'}return}if(!proctor.touchWarningAt)proctor.touchWarningAt=Date.now();const reason='استخدم إصبعًا واحدًا فقط';if(status){status.textContent='أزل اللمسات الإضافية';status.className='badge badge-warning'}proctorShowWarning(reason,proctor.touchWarningAt);if(Date.now()-proctor.touchWarningAt>=getProctorSettings().touchGraceMs)cancelProctoredTask(reason)
+function proctorHandleTouches(e){if(!proctor.active)return;const touches=e&&e.touches?Array.from(e.touches):[];proctor.touches=new Set(touches.map(t=>t.identifier));const count=proctor.touches.size,tooMany=count>1,status=document.getElementById('proctorTouchStatus');proctor.holding=count===1;if(!tooMany){proctor.touchWarningAt=0;if(status){status.textContent=count===1?'إصبع واحد':'جاهز للمسة واحدة';status.className='badge badge-success'}return}if(!proctor.touchWarningAt)proctor.touchWarningAt=Date.now();const reason='استخدم إصبعًا واحدًا فقط';if(status){status.textContent='أزل اللمسات الإضافية';status.className='badge badge-warning'}proctorShowWarning(reason,proctor.touchWarningAt);if(Date.now()-proctor.touchWarningAt>=getProctorSettings().touchGraceMs)cancelProctoredTask(reason)}
 ['touchstart','touchmove','touchend','touchcancel'].forEach(type=>document.addEventListener(type,proctorHandleTouches,{passive:true,capture:true}));
 function recordProctorIncident(reason){if(!currentUser)return;const incident={id:'pi_'+Date.now(),studentId:currentUser.id,studentName:currentUser.name,taskType:proctor.context?.type||'unknown',taskId:proctor.context?.id||'',reason,time:new Date().toLocaleString('ar-EG'),timestamp:Date.now(),status:'cancelled'};const incidents=getData('proctoringIncidents',[]);incidents.unshift(incident);setData('proctoringIncidents',incidents.slice(0,500));const messages=getData('messages',[]);messages.push({type:'system',sender:'نظام المراقبة',senderId:0,receiverType:'admin',text:'تنبيه مخالفة مراقبة: '+currentUser.name+' — '+proctorTaskLabel(proctor.context)+' — '+reason+' — '+incident.time,time:incident.time,approved:true,read:false,proctorIncidentId:incident.id});setData('messages',messages);return incident}
 function cancelProctoredTask(reason){if(!proctor.active||proctor.cancelled)return;proctor.cancelled=true;recordProctorIncident(reason);clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);Object.keys(typeof activeAudioRecorders==='object'?activeAudioRecorders:{}).forEach(function(key){const state=activeAudioRecorders[key];try{if(state.recorder&&state.recorder.state!=='inactive')state.recorder.stop()}catch(e){}try{state.stream?.getTracks().forEach(t=>t.stop())}catch(e){}});const ctx=proctor.context;if(ctx?.type==='exam'){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].activeExam){const ex=students[idx].activeExam;ex.status='cancelled_proctoring';ex.cancelReason=reason;ex.cancelledAt=Date.now();students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].activeExam=null;setData('students',students);currentUser=students[idx];document.getElementById('studentExamContent').innerHTML='<div class="alert alert-danger"><h3>أُلغي الاختبار بسبب مخالفة المراقبة</h3><p>'+escapeHtml(reason)+'</p></div>'}}else if(Number.isInteger(ctx?.taskIndex)){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].tasks[ctx.taskIndex]){students[idx].tasks[ctx.taskIndex].proctorCancelled=true;students[idx].tasks[ctx.taskIndex].cancelReason=reason;setData('students',students);currentUser=students[idx];renderStudentTasks()}}proctorStop(true);showToast('أُلغيت المهمة وتم إرسال تنبيه للمسؤول','error')}
@@ -1726,7 +1726,7 @@ function checkAndFinalizeDrafts() {
           sess.finalizedAt = new Date().toLocaleString('ar-EG');
           changed = true;
           let messages = getData('messages');
-          const msgText = 'تم إغلاق تسميع '+s.name+' بتاريخ '+sess.date+' بشكل نهائي. المجموع: '+sess.totalScore+' درجات من 16. لا يمكن التعديل بعد الآن.';
+          const msgText = 'تم إغلاق تسميع '+s.name+' بتاريخ '+sess.date+' بشكل نهائي. المجموع: '+sess.totalScore+' درجات من 16. لا يمكن ��لتعديل بعد الآن.';
           messages.push({type:'system', sender:'النظام', senderId:0, receiverType:'student', receiverId:s.id, text:msgText, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
           messages.push({type:'system', sender:'النظام', senderId:0, receiverType:'parent', receiverName:s.parent, text:msgText, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
           setData('messages', messages);
@@ -1981,7 +1981,7 @@ function initSignupJuzSelect() {
   let html = '<option value="">اختر الجزء...</option>';
   for(let i = 1; i <= 30; i++) html += '<option value="' + i + '">الجزء ' + i + '</option>';
   select.innerHTML = html;
-  document.getElementById('signupSurah').innerHTML = '<option value="">اختر الجزء أولاً...</option>';
+  document.getElementById('signupSurah').innerHTML = '<option value="">اختر الج��ء أولاً...</option>';
 }
 function updateSignupSurahSelect() {
   const juz = document.getElementById('signupJuz').value;
@@ -2596,7 +2596,7 @@ async function toggleEditVoiceRecord(){
         editVoiceProfileGemini=await geminiVoiceProfile(editVoiceBlob);
         editVoiceFingerprint=null;editVoiceDataUrl=await blobToDataURL(editVoiceBlob);
         status.textContent='تم إنشاء بصمة جديد�� بواسطة Gemini — اضغط حفظ التعديلات';
-      }catch(e){editVoiceProfileGemini=null;editVoiceFingerprint=null;editVoiceDataUrl=null;status.textContent=(e&&e.message)||'تعذر تحليل الصوت بواسطة Gemini';}
+      }catch(e){editVoiceProfileGemini=null;editVoiceFingerprint=null;editVoiceDataUrl=null;status.textContent=(e&&e.message)||'تعذر تحليل الصوت ��واسطة Gemini';}
       btn.classList.remove('recording');
     };
     editVoiceRecorder.start();registerAudioRecorder('edit-fingerprint',editVoiceRecorder,stream,{statusId:'editVoiceStatus',buttonId:'editVoiceBtn',maxMs:20000});btn.classList.add('recording');status.textContent='جاري التسجيل... (20 ثانية فعلية)';
@@ -3496,7 +3496,7 @@ async function submitStudentExam(auto){
   const hasAudio=ex.questions.some(q=>q.type==='audio');ex.status=hasAudio?'pending_audio_review':'graded';ex.submittedAt=Date.now();ex.answers=answers;ex.score=score;ex.maxScore=ex.questions.reduce((n,q)=>n+(Number(q.points)||1),0);ex.totalDurationSeconds=Math.round((Date.now()-(ex.createdAt||Date.now()))/1000);ex.autoSubmitted=!!auto;ex.reviewedAt=hasAudio?null:Date.now();
   let students=getData('students');const idx=students.findIndex(x=>x.id===s.id);if(idx<0)return;students[idx].activeExam=null;students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].completedTasks=students[idx].completedTasks||[];students[idx].completedTasks.push({type:'exam',name:'اختبار '+ex.date,date:ex.date,completedAt:new Date().toLocaleString('ar-EG'),score,maxScore:ex.maxScore});setData('students',students);currentUser=students[idx];
   let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوي  النتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
-  msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة التسجيل الصوتي':'نتيجة اختبار '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
+  msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة ال��سجيل الصوتي':'نتيجة اختبار '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبا�� وإرساله للمسؤول وولي الأمر','success');
 }
 
@@ -4145,7 +4145,7 @@ async function runDevAssistant(){
     const plan = await callStudentAI('dev_assistant', { request, role:'admin', adminId: currentAdminId || null, autoApply:true }, 0.2);
     lastDevPlan = plan;
     renderDevPlan(plan);
-    // تسجيل العملية في سجل التدقيق.
+    // تسجيل ا��عملية في سجل التدقيق.
     recordDevAudit({
       status: plan && plan.applied ? 'applied' : (plan && plan.feasible === false ? 'blocked' : 'analyzed'),
       request,
@@ -4293,7 +4293,7 @@ function sendComposeMessage() {
   const person = document.getElementById('composePerson').value;
   const text = document.getElementById('composeText').value.trim();
   const voice = voiceMsgStore['compose'] || '';
-  if(!person || (!text && !voice)) return showToast(' اختر المستلم واكتب رسالة أو سجّل رسالة صوتية', 'error');
+  if(!person || (!text && !voice)) return showToast(' اختر الم��تلم واكتب رسالة أو سجّل رسالة صوتية', 'error');
   let messages = getData('messages');
   const parts = person.split('_');
   const type = parts[0];
@@ -5112,7 +5112,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
 
   if(aiBox) aiBox.innerHTML = '<div class="alert alert-success"><strong>✅ تقرير الذكاء الاصطنعي:</strong><br>' +
     (matchPct !== null ? 'مطابقة البصمة الصوية: <strong>' + matchPct + '%</strong><br>' : '') +
-    'مطابقة التلاوة مع ' + targetTxt + ': <strong>' + rec.pct + '%</strong>' + (rec.txtPct !== null && rec.txtPct !== undefined ? ' (تطابق النص ' + rec.txtPct + '%)' : '') + ' | مدة التسجيل: ' + rec.dur + ' ثانية<br>تم إرسال التسجيل للمسؤول.</div>';
+    'مطابقة التلاوة مع ' + targetTxt + ': <strong>' + rec.pct + '%</strong>' + (rec.txtPct !== null && rec.txtPct !== undefined ? ' (��طابق النص ' + rec.txtPct + '%)' : '') + ' | مدة التسجيل: ' + rec.dur + ' ثانية<br>تم إرسال التسجيل للمسؤول.</div>';
 
   let messages = getData('messages');
   if(!task.originalTaskIndex && task.originalTaskIndex !== 0) task.originalTaskIndex = taskIdx;
@@ -5977,7 +5977,7 @@ function generateWelcomeMessages(student) {
   const last = finalizedSessions.length > 0 ? finalizedSessions[finalizedSessions.length - 1] : null;
   const dayOfWeek = new Date().getDay();
   const templates = [
-    {title: 'هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من يشء.'},
+    {title: 'هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به ��لله من يشء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر أن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
     {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية وسترى الفرق في حياتك.'},
     {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
@@ -6001,7 +6001,7 @@ function generateParentWelcome(student) {
   const templates = [
     {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطوات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
     {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
-    {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر ��من يتب في سبيله.'}
+    {title: 'مساء الخير! ����', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر ��من يتب في سبيله.'}
   ];
   const base = templates[Math.floor(Math.random() * templates.length)];
   if(last) {
@@ -6079,7 +6079,7 @@ function generateAIResponse(text, student) {
   }
   // نصائح
   if(has('نص��حة','نصائح','ساعدني','مساعدة','انسى','أنسى','نسيت','صعب')) {
-    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتقل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
+    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتقل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي وال��راجعة علاجه.';
   }
   // تحفيز
   if(has('تحفيز','همة','ملل','تعبان','زهقان','احبت','أحبطت')) {
@@ -6135,15 +6135,6 @@ if(restoreSession()) {
   }
 } else {
   showPage('lockScreen');
-}
-
-// Make handlers available to inline HTML controls after bootstrap initialization.
-Object.assign(window, {
-  showPage, unifiedLogin, startSignup, togglePassVisibility,
-  adminLogin, studentLogin, parentLogin, logout, goBack,
-  sendSignupCode, verifySignupCode, submitSignupRequest,
-  toggleTheme, openDevAssistant, openGithubSync
-});
 }
 </script>
 
