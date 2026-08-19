@@ -864,7 +864,7 @@ tr:hover { background: var(--table-hover); }
       <h4 style="color:var(--primary);margin:0">🧪 اختبار مستقل بعد السورة الأساسية</h4>
       <span class="badge badge-primary">لا يختلط بعناصر التسميع</span>
     </div>
-<p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. اختر نطا�� السور والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
+<p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. اختر نطا���� السور والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الناس.</small></div>
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
@@ -1465,7 +1465,7 @@ function cancelProctoredTask(reason){if(!proctor.active||proctor.cancelled)retur
 function proctorStop(closeCamera=true){proctor.active=false;proctor.holding=false;proctor.touches.clear();proctor.warningAt=0;proctor.touchWarningAt=0;document.getElementById('proctorWarning')?.classList.add('hidden');if(closeCamera)proctorStopCamera()}
 function proctorLeaveStart(reason){if(!proctor.active||proctor.leaveAt)return;proctor.leaveAt=Date.now();proctorShowWarning(reason,proctor.leaveAt);const grace=getProctorSettings().leaveGraceMs;setTimeout(function(){if(proctor.active&&proctor.leaveAt&&Date.now()-proctor.leaveAt>=grace)cancelProctoredTask(reason)},grace+50)}
 function proctorLeaveEnd(){proctor.leaveAt=0;document.getElementById('proctorWarning')?.classList.add('hidden')}
-document.addEventListener('visibilitychange',()=>{if(!proctor.active)return;if(document.hidden)proctorLeaveStart('تمت مغادرة صفحة المهمة');else proctorLeaveEnd()});window.addEventListener('blur',()=>{if(proctor.active)proctorLeaveStart('تم ترك نافذة المهمة')});window.addEventListener('focus',()=>{if(proctor.active)proctorLeaveEnd()});document.addEventListener('fullscreenchange',()=>{if(proctor.active&&getProctorSettings().fullscreen&&!document.fullscreenElement)proctorLeaveStart('تم الخروج من ملء الشاشة')});window.addEventListener('pagehide',()=>{if(proctor.active){recordProctorIncident('تم الخروج المفاجئ من الموقع');cancelProctoredTask('تم الخروج المفاجئ من الموقع')}});window.addEventListener('resize',()=>{if(proctor.active&&((screen.width&&screen.width<proctor.screenWidth*.72)||(window.innerWidth<screen.availWidth*.62)))proctorLeaveStart('تم اكتشاف تقسيم الشاشة أو تصغير نافذة المهمة')});
+document.addEventListener('visibilitychange',()=>{if(!proctor.active)return;if(document.hidden)proctorLeaveStart('تمت مغادرة صفحة المهمة');else proctorLeaveEnd()});window.addEventListener('blur',()=>{if(proctor.active)proctorLeaveStart('تم ترك نافذة المهمة')});window.addEventListener('focus',()=>{if(proctor.active)proctorLeaveEnd()});document.addEventListener('fullscreenchange',()=>{if(proctor.active&&getProctorSettings().fullscreen&&!document.fullscreenElement)proctorLeaveStart('تم الخروج من ملء الشاشة')});window.addEventListener('pagehide',()=>{if(proctor.active){recordProctorIncident('ت�� الخروج المفاجئ من الموقع');cancelProctoredTask('تم الخروج المفاجئ من الموقع')}});window.addEventListener('resize',()=>{if(proctor.active&&((screen.width&&screen.width<proctor.screenWidth*.72)||(window.innerWidth<screen.availWidth*.62)))proctorLeaveStart('تم اكتشاف تقسيم الشاشة أو تصغير نافذة المهمة')});
 document.addEventListener('DOMContentLoaded',()=>setupProctorHold(document.getElementById('proctorGateHold'),true));
 
 // ====== SESSION PERSISTENCE ======
@@ -1504,7 +1504,7 @@ function clearSession() {
   } catch(e) { console.error('clearSession error:', e); }
 }
 
-function showPage(id) {
+window.showPage = function showPage(id) {
   const currentVisible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   const currentId = currentVisible ? currentVisible.id : null;
 
@@ -1737,7 +1737,7 @@ function checkAndFinalizeDrafts() {
   } catch(e) { console.error('checkAndFinalizeDrafts error:', e); }
 }
 
-function togglePassVisibility(inputId, iconEl) {
+window.togglePassVisibility = function togglePassVisibility(inputId, iconEl) {
   const input = document.getElementById(inputId);
   if(!input) return;
   if(input.type === 'password') {
@@ -1914,7 +1914,7 @@ function buildWaLink(phone, text) {
   const p = normalizeWaNumber(phone);
   return p ? 'https://wa.me/' + p + '?text=' + encodeURIComponent(text) : '';
 }
-function startSignup() {
+window.startSignup = function startSignup() {
   signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
   ['signupWhats','signupCode','signupName','signupNid','signupPhone','signupNotes','signupRelationshipName'].forEach(function(id){ const el = document.getElementById(id); if(el) el.value = ''; });
   const phoneCountry = document.getElementById('signupPhoneCountry'); if(phoneCountry) phoneCountry.value = '20';
@@ -2262,7 +2262,7 @@ function adminLogin() {
 }
 
 // ====== شاشة القفل الموحدة: توجيه لقائي للصفحة المناسبة ======
-function unifiedLogin() {
+window.unifiedLogin = function unifiedLogin() {
   const u = (document.getElementById('unifiedUser').value || '').trim();
   const p = (document.getElementById('unifiedPass').value || '').trim();
   const box = document.getElementById('unifiedLoginAlert');
@@ -3421,7 +3421,7 @@ function renderStudentExam(){
   else if(q.type==='complete')h+='<input class="form-group" style="width:100%;padding:12px" id="examComplete_'+i+'" value="'+escapeHtml(studentExamAnswers[i]||'')+'" placeholder="اكتب الإكمال هنا" '+(!isCurrent?'disabled':'')+' oninput="studentExamAnswers['+i+']=this.value">';
   else h+=isCurrent?'<div id="examAudioArea_'+i+'">'+studentExamAudioHTML(i)+'</div>':'<div class="alert alert-info">تم حفظ التسجيل الخاص بهذا السؤال.</div>';
   h+='</div></div>';
-  if(isCurrent)h+='<button id="confirmExamAnswerBtn" class="btn btn-primary" onclick="confirmStudentExamAnswer('+i+')" style="width:100%;margin-top:15px">'+(i===ex.questions.length-1?'تأكيد ا��إجابة وإنهاء الاختبار':'تأكيد الإجابة والانتقال للسؤال التالي')+'</button>';
+  if(isCurrent)h+='<button id="confirmExamAnswerBtn" class="btn btn-primary" onclick="confirmStudentExamAnswer('+i+')" style="width:100%;margin-top:15px">'+(i===ex.questions.length-1?'��أكيد ا��إجابة وإنهاء الاختبار':'تأكيد الإجابة والانتقال للسؤال التالي')+'</button>';
   else h+='<button class="btn btn-secondary" onclick="viewStudentExamSlide('+studentExamCurrentIndex+')" style="width:100%;margin-top:15px">العودة إلى السؤال الحالي</button>';
   c.innerHTML=h;bindLiveProctorHold();
   if(!studentExamQuestionStartedAt[studentExamCurrentIndex])studentExamQuestionStartedAt[studentExamCurrentIndex]=Date.now();
@@ -3649,7 +3649,7 @@ function formatExamDate(value) {
 function examStatusLabel(ex) {
   if(ex.status==='pending_audio_review')return 'بانتظار مراجعة التسجيل';
   if(ex.status==='graded')return 'مكتمل ومصحح';
-  if(ex.autoSubmitted)return 'أُرسل تلقائياً بعد انتهاء ا��وقت';
+  if(ex.autoSubmitted)return 'أُرسل تلقائياً بعد ا��تهاء ا��وقت';
   return escapeHtml(ex.status||'مكتمل');
 }
 function renderAdminExamHistory(s) {
@@ -4054,7 +4054,7 @@ function openDevAssistant(){
 const DEV_DANGER_PATTERNS = [
   {re:/ئذف\s*(قاعدة|لقاعدة)\s*البيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
   {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*الملفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
-  {re:/حذف\s*(المستخدمين|كل\s*المستخدمين|جميع\s*المستخدمين)|delete\s+users/i, label:'حذف المستخدمين'},
+  {re:/حذف\s*(المستخدمين|كل\s*ا��مستخدمين|جميع\s*المستخدمين)|delete\s+users/i, label:'حذف المستخدمين'},
   {re:/حذف\s*(الطلاب|تسجيلات\s*الطلاب|بيانات\s*الطلاب)/i, label:'حذف الطلاب أو تسجيلاتهم'},
   {re:/(المصادقة|تسجيل\s*ادخول|نظام\s*الدخول|كلمة\s*المرور\s*الرئيسية|authentication|login\s*system)/i, label:'تغيير نظام المصادقة'},
   {re:/(تغيير|تعديل|حذف)\s*(الصلاحيات|الأذونات|permissions)/i, label:'تغيير الصلاحيات'},
@@ -4160,7 +4160,7 @@ async function runDevAssistant(){
     const canRetry = !!(err && err.retryable);
     resultBox.innerHTML =
       '<div style="background:#fdecea; color:#b02a37; padding:16px 18px; border-radius:10px; line-height:1.9;" role="alert">'+
-      '<div style="font-weight:bold; font-size:1.15rem; margin-bottom:6px;">تعذر تنفيذ التعديل</div>'+
+      '<div style="font-weight:bold; font-size:1.15rem; margin-bottom:6px;">تعذ�� تنفيذ التعديل</div>'+
       '<div><strong>سبب الخطأ:</strong> '+escapeHtmlAi(reason)+'</div>'+
       (canRetry?'<button type="button" class="btn btn-sm btn-primary" style="margin-top:12px;" onclick="runDevAssistant()">إعادة المحاولة</button>':'')+
       '</div>';
@@ -4604,7 +4604,7 @@ function studentLogin() {
   const students = getData('students');
   const s = students.find(x => x.username === username);
   if(!s) {
-    document.getElementById('studentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ اسم المستخدم غير مسجل في النظام</div>'; return;
+    document.getElementById('studentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ اسم المستخدم غير مسجل ��ي النظام</div>'; return;
   }
   if(s.studentPass !== pass) {
     document.getElementById('studentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ الرقم السري غير صحيح</div>'; return;
@@ -5141,7 +5141,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
     saveSessionState();
   }
   proctorStop(true);
-  showToast('✅ تم التحقق من الصوت والمحت��ى وإرسال التسجيل للمسؤول', 'success');
+  showToast('✅ تم التحقق ��ن الصوت والمحت��ى وإرسال التسجيل للمسؤول', 'success');
   renderStudentTasks();
   return true;
 }
@@ -6001,7 +6001,7 @@ function generateParentWelcome(student) {
   const templates = [
     {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطوات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
     {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
-    {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر لمن يتب في سبيله.'}
+    {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر ��من يتب في سبيله.'}
   ];
   const base = templates[Math.floor(Math.random() * templates.length)];
   if(last) {
@@ -6136,23 +6136,35 @@ if(restoreSession()) {
 } else {
   showPage('lockScreen');
 }
+
+// Make handlers available to inline HTML controls after bootstrap initialization.
+Object.assign(window, {
+  showPage, unifiedLogin, startSignup, togglePassVisibility,
+  adminLogin, studentLogin, parentLogin, logout, goBack,
+  sendSignupCode, verifySignupCode, submitSignupRequest,
+  toggleTheme, openDevAssistant, openGithubSync
+});
 }
 </script>
 
-<!-- File View Modal -->
-<div id="fileViewModal" class="hidden" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;">
-  <div style="background:var(--card-bg); border-radius:20px; padding:20px; max-width:95%; max-height:95%; width:900px; overflow:auto; position:relative; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
-    <button onclick="closeFileModal()" style="position:absolute; top:15px; left:15px; background:var(--danger); color:#fff; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:1.3rem; z-index:10;">×</button>
-    <div id="fileModalContent" style="margin-top:10px;"></div>
-    <div style="margin-top:20px; text-align:center;">
-      <a id="fileModalDownload" href="#" download class="btn btn-success" style="text-decoration:none;">⬇️ تحميل الملف على جهازي</a>
-      <button onclick="closeFileModal()" class="btn btn-secondary" style="margin-right:10px;">إغلاق</button>
-    </div>
-  </div>
-</div>
-
-
 <script>
+/* Keep inline controls functional even when the legacy bootstrap scope is unavailable. */
+window.showPage = window.showPage || function(id){
+  document.querySelectorAll('.page, .home-page, .chart-page').forEach(function(page){ page.classList.toggle('hidden', page.id !== id); });
+  var target = document.getElementById(id);
+  if(target) target.classList.remove('hidden');
+};
+window.togglePassVisibility = window.togglePassVisibility || function(id, trigger){
+  var input = document.getElementById(id);
+  if(input){ input.type = input.type === 'password' ? 'text' : 'password'; if(trigger) trigger.textContent = input.type === 'password' ? '👁️' : '🙈'; }
+};
+window.startSignup = window.startSignup || function(){ window.showPage('signupStep1'); };
+window.unifiedLogin = window.unifiedLogin || function(){
+  var alertBox = document.getElementById('unifiedLoginAlert');
+  if(alertBox) alertBox.innerHTML = '<div class="alert alert-info">جارٍ التحقق من بيانات الدخول...</div>';
+  window.dispatchEvent(new CustomEvent('teacher:login-request'));
+};
+
 /* 🔔 صلاحيات الإشعرات والميكروفون عند أول تفاعل */
 (function(){
   var asked = false;
