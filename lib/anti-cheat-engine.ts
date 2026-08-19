@@ -28,7 +28,31 @@ export const defaultAntiCheatConfig: AntiCheatConfig = {
   blockMs: 8000, autoRestore: true, analysisIntervalMs: 150, sensitivity: 'medium',
 }
 
-export type Signal = { type: string; active: boolean; durationMs?: number; weight?: number }
+export type Signal = { type: string; active: boolean; durationMs?: number; weight?: number; frequency?: number }
+
+const signalWeights: Record<string, number> = {
+  'face-missing': 24, 'multiple-faces': 38, 'gaze-away': 18, 'head-turn': 16,
+  'eyes-closed': 14, 'page-hidden': 12, 'window-blur': 8, 'fullscreen-exit': 10,
+  'touch-missing': 18, 'multiple-touch': 16,
+}
+
+export function normalizeServerConfig(value: unknown): AntiCheatConfig {
+  const input = value && typeof value === 'object' ? value as Record<string, unknown> : {}
+  const sensitivity = input.sensitivity === 'low' || input.sensitivity === 'high' ? input.sensitivity : defaultAntiCheatConfig.sensitivity
+  return {
+    ...defaultAntiCheatConfig,
+    ...input,
+    enabled: Boolean(input.enabled),
+    sensitivity,
+    warningThreshold: Math.max(1, Math.min(100, Number(input.warningThreshold) || defaultAntiCheatConfig.warningThreshold)),
+    suspiciousThreshold: Math.max(1, Math.min(100, Number(input.suspiciousThreshold) || defaultAntiCheatConfig.suspiciousThreshold)),
+    cheatingThreshold: Math.max(1, Math.min(100, Number(input.cheatingThreshold) || defaultAntiCheatConfig.cheatingThreshold)),
+    graceMs: Math.max(500, Math.min(60_000, Number(input.graceMs) || defaultAntiCheatConfig.graceMs)),
+    blockMs: Math.max(1_000, Math.min(120_000, Number(input.blockMs) || defaultAntiCheatConfig.blockMs)),
+    analysisIntervalMs: Math.max(100, Math.min(2_000, Number(input.analysisIntervalMs) || defaultAntiCheatConfig.analysisIntervalMs)),
+  }
+}
+
 export function severityFor(score: number, config: AntiCheatConfig): AntiCheatSeverity {
   if (score >= config.cheatingThreshold) return 'CHEATING_DETECTED'
   if (score >= config.suspiciousThreshold) return 'SUSPICIOUS'
@@ -37,10 +61,16 @@ export function severityFor(score: number, config: AntiCheatConfig): AntiCheatSe
 }
 export function calculateRiskScore(signals: Signal[], previous = 0) {
   const active = signals.filter((signal) => signal.active)
-  const base = active.reduce((sum, signal) => sum + (signal.weight ?? 10) * Math.min(2, 1 + (signal.durationMs ?? 0) / 10000), 0)
+  const base = active.reduce((sum, signal) => {
+    const weight = signal.weight ?? signalWeights[signal.type] ?? 10
+    const durationFactor = Math.min(2.5, 1 + (signal.durationMs ?? 0) / 12_000)
+    const frequencyFactor = Math.min(1.5, 1 + (signal.frequency ?? 0) / 5)
+    return sum + weight * durationFactor * frequencyFactor
+  }, 0)
   const distinct = new Set(active.map((signal) => signal.type)).size
-  const combinationBonus = distinct >= 3 ? 20 : distinct >= 2 ? 8 : 0
-  return Math.max(0, Math.min(100, Math.round(previous * 0.82 + base + combinationBonus)))
+  const compound = active.some((signal) => signal.type === 'face-missing') && active.some((signal) => signal.type === 'gaze-away' || signal.type === 'head-turn')
+  const combinationBonus = compound ? 28 : distinct >= 3 ? 20 : distinct >= 2 ? 8 : 0
+  return Math.max(0, Math.min(100, Math.round(previous * 0.72 + base + combinationBonus)))
 }
 export function shouldRecord(signal: Signal, config: AntiCheatConfig) {
   return signal.active && (signal.durationMs ?? 0) >= config.graceMs
