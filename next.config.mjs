@@ -10,7 +10,7 @@ const nextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // النسخة القديمة: الجذر يعرض صفحة الترحيب (التطبيق الكامل) من public/index.html
+        // الجذر يعرض شاشة ترحيب خفيفة ومستقلة؛ التطبيق الكامل يُحمّل فقط بعد انتهاء التلاوة.
         { source: '/', destination: '/index.html' },
       ],
     }
