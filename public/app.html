@@ -10,8 +10,9 @@
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap"></noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap"></noscript>
+  <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
 <!-- الخدمات الثقيلة تُحمّل خارج مسار العرض الأول، وتُستدعى عند الحاجة فقط -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
@@ -551,8 +552,8 @@ tr:hover { background: var(--table-hover); }
   /* شريط جانبي موحد للوحات الأدوار */
   .role-menu-toggle { display:none; position:fixed; inset-inline-end:18px; top:18px; z-index:1100; width:48px; height:48px; border:1px solid rgba(255,255,255,.55); border-radius:50%; background:var(--primary); color:#fff; box-shadow:var(--shadow); cursor:pointer; font-size:1.35rem; }
   .role-sidebar-backdrop { display:none; position:fixed; inset:0; z-index:1090; background:rgba(12,31,24,.42); backdrop-filter:blur(2px); }
-  .role-sidebar { position:fixed; inset-block:0; inset-inline-end:0; z-index:1101; width:min(340px,88vw); padding:24px 18px; background:var(--card-bg); border-inline-start:1px solid var(--border); box-shadow:-18px 0 45px rgba(17,53,37,.18); transform:translateX(105%); transition:transform .25s ease; overflow:auto; }
-  html[dir="ltr"] .role-sidebar { inset-inline-start:0; inset-inline-end:auto; transform:translateX(-105%); border-inline-start:0; border-inline-end:1px solid var(--border); }
+  .role-sidebar { position:fixed; inset-block:0; inset-inline-end:0; z-index:1101; width:min(340px,88vw); padding:24px 18px; background:var(--card-bg); box-shadow:-18px 0 45px rgba(17,53,37,.18); transform:translateX(105%); transition:transform .25s ease; overflow:auto; }
+  html[dir="ltr"] .role-sidebar { inset-inline-start:0; inset-inline-end:auto; transform:translateX(-105%); }
   .role-sidebar.is-open { transform:translateX(0); }
   .role-sidebar-backdrop.is-open { display:block; }
   .role-sidebar-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid var(--border); }
@@ -586,7 +587,7 @@ tr:hover { background: var(--table-hover); }
     <nav id="roleSidebarList" class="role-sidebar-list"></nav>
   </aside>
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
-    <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
+    <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت الم��بقي التقريبي: 01:30</span></div>
   </div>
   <div id="quranImageLightbox" class="quran-lightbox hidden" role="dialog" aria-modal="true" aria-label="تكبير صورة السؤال" onclick="if(event.target===this)closeQuranImage()"><button class="btn btn-secondary quran-lightbox-close" onclick="closeQuranImage()">إغلاق</button><img id="quranImageLightboxImg" alt="صورة السؤال القرآني بحجم كبير"></div>
 
@@ -630,7 +631,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group" id="signupGoogleBox" style="display:none;">
     <label>اختر حساب جوجل لإكمال التسجيل *</label>
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
-    <p style="color:var(--text-light); font-size:0.9rem; margin-top:5px;">اضغط لعرض حسابات جوجل الموجودة على جهازك واختيار أحدها. لن يُطلب منك رقم هاتف أو كود تحقق.</p>
+    <p style="color:var(--text-light); font-size:0.9rem; margin-top:5px;">اضغط لعرض حسابات جوجل الم��جودة على جهازك واختيار أحدها. لن يُطلب منك رقم هاتف أو كود تحقق.</p>
   </div>
   <!-- منطقة التسجيل برقم ا����هاتف: تظهر خانة الواتساب وكود التحقق فقط -->
   <div id="signupPhoneBox" style="display:none;">
@@ -1216,7 +1217,7 @@ tr:hover { background: var(--table-hover); }
 <!-- صفحة المهام قيد الانتظار لولي الأمر -->
 <div id="parentPendingTasksPage" class="page hidden">
   <div class="page-header">
-    <h2>⏳ المهام اليومية</h2>
+    <h2>⏳ المه��م اليومية</h2>
     <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
   </div>
   <div id="parentPendingTasksContent"></div>
@@ -1332,10 +1333,12 @@ window.alert = function(m){ showToast(m); };
     });
     return corePromise;
   };
-})();
-</script>
-<script>
-/* تحميل تدريجي: تبقى شاشة الدخول خفيفة، ويُحمّل النظام الكامل عند أول وظيفة تحتاجه. */
+  })();
+  // تحميل النواة فور اكتمال هيكل الصفحة حتى تعمل الأزرار والأوامر مباشرة دون انتظار أول نقرة.
+  window.addEventListener('DOMContentLoaded', function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core failed to load', err); }); }, {once:true});
+  </script>
+  <script>
+  /* تحميل تدريجي: تبقى شاشة الدخول خفيفة، ويُحمّل النظام الكامل عند أول وظيفة تحتاجه. */
 (function(){
   var wrappers = {};
   function runWhenCoreReady(name, args, button){
