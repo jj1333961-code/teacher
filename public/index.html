@@ -628,7 +628,7 @@ tr:hover { background: var(--table-hover); }
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
     <p style="color:var(--text-light); font-size:0.9rem; margin-top:5px;">اضغط لعرض حسابات جوجل الموجودة على جهازك واختيار أحدها. لن يُطلب منك رقم هاتف أو كود تحقق.</p>
   </div>
-  <!-- منطقة التسجيل برقم الهاتف: تظهر خانة الواتساب وكود التحقق فقط -->
+  <!-- منطقة التسجيل برقم ا��هاتف: تظهر خانة الواتساب وكود التحقق فقط -->
   <div id="signupPhoneBox" style="display:none;">
     <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupWhatsCountry" aria-label="كود دولة الواتساب" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupWhats" placeholder="رقم واتساب بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,''); updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational')" style="flex:1; direction:ltr;"></div><small id="signupWhatsInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
     <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
@@ -806,7 +806,7 @@ tr:hover { background: var(--table-hover); }
     </div>
   </div>
   <div class="form-group">
-    <label>الرقم السري الحالي (للتأكيد)</label>
+    <label>الرقم السري ال��الي (للتأكيد)</label>
     <div style="position:relative;">
       <input type="password" id="confirmPass" placeholder="أدخل الرقم السري الحالي للتأكيد" style="padding-left:45px;">
       <span onclick="togglePassVisibility('confirmPass', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span>
@@ -885,7 +885,7 @@ tr:hover { background: var(--table-hover); }
         <span id="voiceRecordStatus">اضغط للتسجيل (20 ثانية)</span>
         <audio id="voicePreview" controls style="display:none; height:40px;"></audio>
       </div>
-      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، ومكن إضافتها لاحقاً من تعديل الطالب. عند وجودها تُستخدم للتحق من هوية الطالب.</small>
+      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، ومكن إضافتها لاحقاً من ت��ديل الطالب. عند وجودها تُستخدم للتحق من هوية الطالب.</small>
     </div>
   </div>
   <div class="form-group"><label>ملاحظات إضافية</label><textarea id="stNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea></div>
@@ -2717,7 +2717,7 @@ async function saveStudent() {
   document.getElementById('stSurah').innerHTML = '<option value="">اختر الجزء أولاً...</option>';
   const prev = document.getElementById('voicePreview');
   prev.style.display = 'none'; prev.removeAttribute('src');
-  document.getElementById('voiceRecordStatus').textContent = 'اضغط للتسجيا (20 ثانية)';
+  document.getElementById('voiceRecordStatus').textContent = 'ا��غط للتسجيا (20 ثانية)';
   document.getElementById('quranFields').classList.add('hidden');
 }
 
@@ -4162,7 +4162,7 @@ async function refreshGithubSync(){
     html += '<div>📦 المستودع: <b>'+escapeHtmlAi(st.repo)+'</b></div>';
     html += '<div>🌿 الفرع: <b>'+escapeHtmlAi(st.branch)+'</b></div>';
     html += '<div>✍️ صلاحية الكتابة (Push): <b>'+(st.canWrite ? 'متاحة ✅' : 'غير متاحة ❌')+'</b></div>';
-    html += '<div>⚡ الدفع التلقائي عند التعديل: <b>'+(st.autoSync ? 'مفعّل ✅' : 'غير مفعّل (اضبط DEV_ASSISTANT_AUTO_APPLY=true)')+'</b></div>';
+    html += '<div>⚡ الدفع التلقائي عند التعديل: <b>'+(st.autoSync ? 'مفعّ�� ✅' : 'غير مفعّل (اضبط DEV_ASSISTANT_AUTO_APPLY=true)')+'</b></div>';
     if(lc){
       html += '<div style="margin-top:6px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.15);">آخر Commit:</div>';
       html += '<div>🔖 <code>'+escapeHtmlAi(lc.sha)+'</code> — '+escapeHtmlAi((lc.message||'').split('\n')[0])+'</div>';
@@ -4691,7 +4691,7 @@ function replyMessage(idx) {
   msgs[idx].reply = replyText || '🎙️ رد صوتي';
   msgs[idx].replyVoice = voice;
   clearVoiceMsg('reply' + idx);
-  showToast('✅ تم إرسال الر', 'success');
+  showToast('✅ تم ��رسال الر', 'success');
   setData('messages', msgs);
   renderMessages();
 }
@@ -4840,7 +4840,7 @@ function renderStudentDashboard() {
   document.getElementById('studentInfo').innerHTML = html;
 
   if(s.activeExam && s.activeExam.status==='pending'){
-    document.getElementById('studentInfo').innerHTML += '<div class="alert alert-warning" style="margin-top:15px;border:2px solid var(--warning);font-size:1.05rem"><strong>🔔 لديك اختبار جديد!</strong><br>أرسله المسؤئل ويجب حله. <button class="btn btn-warning" style="margin-top:8px" onclick="showPage(\'studentExamPage\')">🧪 فتح الاختبار الآن</button></div>';
+    document.getElementById('studentInfo').innerHTML += '<div class="alert alert-warning" style="margin-top:15px;border:2px solid var(--warning);font-size:1.05rem"><strong>🔔 لديك اختبار جديد!</strong><br>أرس��ه المسؤئل ويجب حله. <button class="btn btn-warning" style="margin-top:8px" onclick="showPage(\'studentExamPage\')">🧪 فتح الاختبار الآن</button></div>';
     notifyStudentExamOnce(s);
   }
 
@@ -6202,11 +6202,11 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلام','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مها��</em> — لعرض الواجب��ت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مها��</em> — لعرض الواجب���ت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
-    return 'وإياك '+name+' 🌸 دائماً في خدمتك. استمر، فكل حرف تحفظه لك به حسنة والحسنة بعشر أمثالها.';
+    return 'وإياك '+name+' 🌸 دائماً في خدمتك. استمر، فكل حرف تح��ظه لك به حسنة والحسنة بعشر أمثالها.';
   }
   // المستوى / التقييم
   if(has('مستوى','مستواي','تقييم','درجات','درجة','نتيجة','نتيجتي')) {
@@ -6255,7 +6255,7 @@ function generateAIResponse(text, student) {
   }
   // نصائح
   if(has('نصفحة','نصائح','ساعدني','مساعدة','انسى','أنسى','نسيت','صعب')) {
-    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتقل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
+    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنت��ل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
   }
   // تحفيز
   if(has('تحفيز','همة','ملل','تعبان','زهق��ن','احبت','أحبطت')) {
@@ -6381,19 +6381,24 @@ if(restoreSession()) {
     }
   }catch(e){}
   function startAudio(){
-    const result=audio.play();
-    if(result&&typeof result.catch==='function')result.catch(function(){
-      status.textContent='يريد هذا الموقع تشغيل الصوت. اضغط «الدخول إلى المنصة» للسماح بالتشغيل.';
-    });
+    try {
+      const result=audio.play();
+      if(result&&typeof result.catch==='function')result.catch(function(){
+        status.textContent='يريد هذا الموقع تشغيل الصوت. اضغط «الدخول إلى المنصة» للسماح بالتشغيل.';
+      });
+    } catch(e) {
+      status.textContent='يمكنك الدخول إلى المنصة بدون تشغيل الصوت.';
+    }
   }
   // لا نطلب الصوت ولا نحمل ملفه قبل تفاعل المستخدم.
   function allowAndPlay(){
     status.textContent='تم السماح بتشغيل الصوت، جارٍ تشغيل التلاوة';
     startAudio();
   }
-  start.addEventListener('click',function(){
-    allowAndPlay();
+  start.addEventListener('click',function(event){
+    event.preventDefault();
     closeWelcome();
+    window.setTimeout(allowAndPlay,0);
   });
   permission.addEventListener('click',allowAndPlay);
   audio.addEventListener('ended',closeWelcome,{once:true});
