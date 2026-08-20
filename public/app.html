@@ -1153,7 +1153,7 @@ tr:hover { background: var(--table-hover); }
   <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
 </div>
 
-<!-- دخول ولي الأمر -->
+<!-- ��خول ولي الأمر -->
 <div id="parentLogin" class="page hidden" style="max-width:500px; margin:40px auto;">
   <div class="page-header"><h2>👨‍👩‍👧 دخول ولي الأمر</h2></div>
   <div id="parentLoginAlert"></div>
@@ -1333,8 +1333,10 @@ window.alert = function(m){ showToast(m); };
 
   // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواجهة.
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core warmup failed', err); }); };
-  if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
-  else setTimeout(warm, 350);
+  if (!/[?&]nocore/.test(location.search)) {
+    if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
+    else setTimeout(warm, 350);
+  }
 })();
 </script>
 <script>
