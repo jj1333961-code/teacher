@@ -66,7 +66,7 @@ function toggleTheme() {
 }
 if(localStorage.getItem('theme') === 'dark') {
   document.documentElement.setAttribute('data-theme', 'dark');
-  document.querySelector('.theme-toggle').textContent = '☀️';
+  const savedThemeButton = document.querySelector('.theme-toggle'); if(savedThemeButton) savedThemeButton.textContent = '☀️';
 }
 
 // ====== تبديل اللغة (عربي / إنجليزي) ======

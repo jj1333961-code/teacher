@@ -566,6 +566,11 @@ tr:hover { background: var(--table-hover); }
   @media(max-width:900px){ body.role-dashboard .role-menu-toggle { display:flex; align-items:center; justify-content:center; } }
   @media(min-width:901px){ body.role-dashboard .role-menu-toggle { display:flex; align-items:center; justify-content:center; } }
   @media(prefers-reduced-motion:reduce){ .role-sidebar { transition:none; } }
+  /* إخفاء الخط الجانبي (شريط التمرير) مع الإبقاء على إمكانية التمرير. */
+  html { scrollbar-width:none; }
+  body::-webkit-scrollbar { width:0; height:0; }
+  body { -ms-overflow-style:none; }
+  #lockScreen .btn:disabled { opacity:.75; cursor:wait; }
   </style>
 </head>
 <body>
@@ -1330,9 +1335,57 @@ window.alert = function(m){ showToast(m); };
 })();
 </script>
 <script>
-// يتم تحميل منطق التطبيق فقط بعد الانتقال من شاشة الترحيب إلى التطبيق.
-// لا يوجد تحميل لـ app-core.js في صفحة الترحيب.
-window.loadThimarAppCore().catch(function(err){ console.error('App core failed to load', err); });
+/* تحميل تدريجي: تبقى شاشة الدخول خفيفة، ويُحمّل النظام الكامل عند أول وظيفة تحتاجه. */
+(function(){
+  var wrappers = {};
+  function runWhenCoreReady(name, args, button){
+    if (button) button.disabled = true;
+    if (name === 'unifiedLogin') {
+      var box = document.getElementById('unifiedLoginAlert');
+      if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
+    }
+    return window.loadThimarAppCore().then(function(){
+      if (button) button.disabled = false;
+      var fn = window[name];
+      if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
+      return fn.apply(window, Array.prototype.slice.call(args || []));
+    }).catch(function(err){
+      if (button) button.disabled = false;
+      var message = '❌ تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
+      var box = document.getElementById('unifiedLoginAlert');
+      if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
+      console.error('App core failed to load', err);
+      if (typeof showToast === 'function') showToast(message, 'error');
+    });
+  }
+
+  ['unifiedLogin','startSignup','togglePassVisibility'].forEach(function(name){
+    wrappers[name] = function(){
+      var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : null;
+      return runWhenCoreReady(name, arguments, btn);
+    };
+    window[name] = wrappers[name];
+  });
+
+  window.toggleTheme = function(){
+    var html = document.documentElement;
+    var btn = document.querySelector('.theme-toggle');
+    var dark = html.getAttribute('data-theme') === 'dark';
+    if (dark) { html.removeAttribute('data-theme'); localStorage.setItem('theme','light'); if(btn) btn.textContent='🌙'; }
+    else { html.setAttribute('data-theme','dark'); localStorage.setItem('theme','dark'); if(btn) btn.textContent='☀️'; }
+  };
+
+  wrappers.toggleLang = function(){
+    var next = localStorage.getItem('lang') === 'en' ? 'ar' : 'en';
+    localStorage.setItem('lang', next);
+    document.documentElement.lang = next;
+    document.documentElement.dir = next === 'en' ? 'ltr' : 'rtl';
+    var btn = document.getElementById('langToggleBtn');
+    if (btn) btn.textContent = next === 'en' ? 'ع' : 'EN';
+    return window.loadThimarAppCore().catch(function(err){ console.error('App core failed to load', err); });
+  };
+  window.toggleLang = wrappers.toggleLang;
+})();
 </script>
 
 <!-- File View Modal -->
