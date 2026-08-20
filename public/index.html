@@ -628,7 +628,7 @@ tr:hover { background: var(--table-hover); }
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
     <p style="color:var(--text-light); font-size:0.9rem; margin-top:5px;">اضغط لعرض حسابات جوجل الموجودة على جهازك واختيار أحدها. لن يُطلب منك رقم هاتف أو كود تحقق.</p>
   </div>
-  <!-- منطقة التسجيل برقم ا��هاتف: تظهر خانة الواتساب وكود التحقق فقط -->
+  <!-- منطقة التسجيل برقم ا����هاتف: تظهر خانة الواتساب وكود التحقق فقط -->
   <div id="signupPhoneBox" style="display:none;">
     <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupWhatsCountry" aria-label="كود دولة الواتساب" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupWhats" placeholder="رقم واتساب بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,''); updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational')" style="flex:1; direction:ltr;"></div><small id="signupWhatsInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
     <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
@@ -1572,7 +1572,7 @@ function proctorHandleLiveState(ok,reason){if(ok){proctor.warningAt=0;if(!procto
 function proctorHandleTouches(e){if(!proctor.active)return;const touches=e&&e.touches?Array.from(e.touches):[];proctor.touches=new Set(touches.map(t=>t.identifier));const count=proctor.touches.size,tooMany=count>1,status=document.getElementById('proctorTouchStatus');proctor.holding=count===1;if(!tooMany){proctor.touchWarningAt=0;if(status){status.textContent=count===1?'إصبع واحد':'جاهز للمسة واحدة';status.className='badge badge-success'}return}if(!proctor.touchWarningAt)proctor.touchWarningAt=Date.now();const reason='استخدم إصبعًا واحدًا فقط';if(status){status.textContent='أزل اللمسات الإضافية';status.className='badge badge-warning'}proctorShowWarning(reason,proctor.touchWarningAt);if(Date.now()-proctor.touchWarningAt>=getProctorSettings().touchGraceMs)cancelProctoredTask(reason)}
 ['touchstart','touchmove','touchend','touchcancel'].forEach(type=>document.addEventListener(type,proctorHandleTouches,{passive:true,capture:true}));
 function recordProctorIncident(reason){if(!currentUser)return;const incident={id:'pi_'+Date.now(),studentId:currentUser.id,studentName:currentUser.name,taskType:proctor.context?.type||'unknown',taskId:proctor.context?.id||'',reason,time:new Date().toLocaleString('ar-EG'),timestamp:Date.now(),status:'cancelled'};const incidents=getData('proctoringIncidents',[]);incidents.unshift(incident);setData('proctoringIncidents',incidents.slice(0,500));const messages=getData('messages',[]);messages.push({type:'system',sender:'نظام المراقبة',senderId:0,receiverType:'admin',text:'تنبيه مخالفة مراقبة: '+currentUser.name+' — '+proctorTaskLabel(proctor.context)+' — '+reason+' — '+incident.time,time:incident.time,approved:true,read:false,proctorIncidentId:incident.id});setData('messages',messages);return incident}
-function cancelProctoredTask(reason){if(!proctor.active||proctor.cancelled)return;proctor.cancelled=true;recordProctorIncident(reason);clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);Object.keys(typeof activeAudioRecorders==='object'?activeAudioRecorders:{}).forEach(function(key){const state=activeAudioRecorders[key];try{if(state.recorder&&state.recorder.state!=='inactive')state.recorder.stop()}catch(e){}try{state.stream?.getTracks().forEach(t=>t.stop())}catch(e){}});const ctx=proctor.context;if(ctx?.type==='exam'){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].activeExam){const ex=students[idx].activeExam;ex.status='cancelled_proctoring';ex.cancelReason=reason;ex.cancelledAt=Date.now();students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].activeExam=null;setData('students',students);currentUser=students[idx];document.getElementById('studentExamContent').innerHTML='<div class="alert alert-danger"><h3>أُلغي الاختبار بسبب مخالفة المراقبة</h3><p>'+escapeHtml(reason)+'</p></div>'}}else if(Number.isInteger(ctx?.taskIndex)){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].tasks[ctx.taskIndex]){students[idx].tasks[ctx.taskIndex].proctorCancelled=true;students[idx].tasks[ctx.taskIndex].cancelReason=reason;setData('students',students);currentUser=students[idx];renderStudentTasks()}}proctorStop(true);showToast('أُلغيت المهمة وتم إرسال تنبيه للمسؤول','error')}
+function cancelProctoredTask(reason){if(!proctor.active||proctor.cancelled)return;proctor.cancelled=true;recordProctorIncident(reason);clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);Object.keys(typeof activeAudioRecorders==='object'?activeAudioRecorders:{}).forEach(function(key){const state=activeAudioRecorders[key];try{if(state.recorder&&state.recorder.state!=='inactive')state.recorder.stop()}catch(e){}try{state.stream?.getTracks().forEach(t=>t.stop())}catch(e){}});const ctx=proctor.context;if(ctx?.type==='exam'){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].activeExam){const ex=students[idx].activeExam;ex.status='cancelled_proctoring';ex.cancelReason=reason;ex.cancelledAt=Date.now();students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].activeExam=null;setData('students',students);currentUser=students[idx];document.getElementById('studentExamContent').innerHTML='<div class="alert alert-danger"><h3>أُلغي الاختبار بسبب مخا��فة المراقبة</h3><p>'+escapeHtml(reason)+'</p></div>'}}else if(Number.isInteger(ctx?.taskIndex)){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].tasks[ctx.taskIndex]){students[idx].tasks[ctx.taskIndex].proctorCancelled=true;students[idx].tasks[ctx.taskIndex].cancelReason=reason;setData('students',students);currentUser=students[idx];renderStudentTasks()}}proctorStop(true);showToast('أُلغيت المهمة وتم إرسال تنبيه للمسؤول','error')}
 function proctorStop(closeCamera=true){proctor.active=false;proctor.holding=false;proctor.touches.clear();proctor.warningAt=0;proctor.touchWarningAt=0;document.getElementById('proctorWarning')?.classList.add('hidden');if(closeCamera)proctorStopCamera()}
 function proctorLeaveStart(reason){if(!proctor.active||proctor.leaveAt)return;proctor.leaveAt=Date.now();proctorShowWarning(reason,proctor.leaveAt);const grace=getProctorSettings().leaveGraceMs;setTimeout(function(){if(proctor.active&&proctor.leaveAt&&Date.now()-proctor.leaveAt>=grace)cancelProctoredTask(reason)},grace+50)}
 function proctorLeaveEnd(){proctor.leaveAt=0;document.getElementById('proctorWarning')?.classList.add('hidden')}
@@ -3704,7 +3704,7 @@ async function recordStudentExamAudio(i){
     recorder.start();registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});btn.onclick=()=>{if(recorder.state!=='inactive')recorder.stop()};
   }catch(e){status.textContent='تعذر الوصول إلى الميكروفون';btn.dataset.recording='false';btn.classList.remove('recording')}
 }
-function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختئار</h3><p>النتيجة معلّقة لحين مراجعة المئؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيج�� النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>التقييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
+function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختئار</h3><p>النتيجة معلّقة لحين مراجعة المئؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيج�� النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>ال��قييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
 function renderStudentExamResult(ex){const c=document.getElementById('studentExamContent');if(c)c.innerHTML=renderStudentResultHtml(ex)}
 function notifyExamExpired(student,ex){if(ex.expiryNotified)return;ex.expiryNotified=true;const text='انتهى الوقت المحدد لاختبار '+student.name+' بتاريخ '+(ex.date||'');let msgs=getData('messages');msgs.push({type:'system',sender:'النظام',receiverType:'student',receiverId:student.id,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'parent',receiverName:student.parent,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'admin',text,studentId:student.id,parentPhone:student.parentPhone||student.parentMobile||'',time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});setData('messages',msgs)}
 function examWhatsAppLink(phone,text){const p=String(phone||'').replace(/\D/g,'').replace(/^0/,'20');return p?'https://wa.me/'+p+'?text='+encodeURIComponent(text):''}
@@ -3775,7 +3775,7 @@ function saveSession(isFinal) {
   students[idx].nextTaskDate = nextDateStr;
   setData('students',students);
 
-  let report = '📋 تقرير اليوم '+date+' للطالب '+students[idx].name+'\nالمجموع: '+totalScore+' درجات.\nتم إنهاء مهام اليوم وأرشفتها، والمهام ائحالية فارغة. اليوم التالي: '+nextDateStr+'.';
+  let report = '📋 تقرير اليوم '+date+' للطالب '+students[idx].name+'\nالمجموع: '+totalScore+' درجات.\nتم إنهاء مهام اليوم وأرشفت��ا، والمهام ائحالية فارغة. اليوم التالي: '+nextDateStr+'.';
   if(previousTasks.length) report += '\nتم أرشفة '+previousTasks.length+' مهمة من مهام اليوم.';
   let messages=getData('messages');
   messages.push({type:'system',sender:'النظام',senderId:0,receiverType:'student',receiverId:id,text:report,reply:'',time:nowText,approved:true,read:false});
@@ -4840,7 +4840,7 @@ function renderStudentDashboard() {
   document.getElementById('studentInfo').innerHTML = html;
 
   if(s.activeExam && s.activeExam.status==='pending'){
-    document.getElementById('studentInfo').innerHTML += '<div class="alert alert-warning" style="margin-top:15px;border:2px solid var(--warning);font-size:1.05rem"><strong>🔔 لديك اختبار جديد!</strong><br>أرس��ه المسؤئل ويجب حله. <button class="btn btn-warning" style="margin-top:8px" onclick="showPage(\'studentExamPage\')">🧪 فتح الاختبار الآن</button></div>';
+    document.getElementById('studentInfo').innerHTML += '<div class="alert alert-warning" style="margin-top:15px;border:2px solid var(--warning);font-size:1.05rem"><strong>🔔 لديك اختبار ج��يد!</strong><br>أرس��ه المسؤئل ويجب حله. <button class="btn btn-warning" style="margin-top:8px" onclick="showPage(\'studentExamPage\')">🧪 فتح الاختبار الآن</button></div>';
     notifyStudentExamOnce(s);
   }
 
@@ -4982,7 +4982,7 @@ function renderStudentTasks() {
         html += '<div style="margin-top:10px;"><div class="file-upload" onclick="document.getElementById(&quot;hwFile_'+originalIdx+'&quot;).click()"><div>📷 اضغط لرفع ص��رة الواجب الجديدة</div></div>';
         html += '<input type="file" id="hwFile_'+originalIdx+'" accept="image/*" style="display:none" onchange="uploadTaskFile('+originalIdx+', this, &quot;homework&quot;)"></div>';
       } else if(!isSubmitted) {
-        html += '<div style="margin-top:10px;"><div class="file-upload" onclick="document.getElementById(&quot;hwFile_'+originalIdx+'&quot;).click()"><div>📷 اضغط لرفع صورة ال��اجب</div></div>';
+        html += '<div style="margin-top:10px;"><div class="file-upload" onclick="document.getElementById(&quot;hwFile_'+originalIdx+'&quot;).click()"><div>📷 اضغط لر��ع صورة ال��اجب</div></div>';
         html += '<input type="file" id="hwFile_'+originalIdx+'" accept="image/*" style="display:none" onchange="uploadTaskFile('+originalIdx+', this, &quot;homework&quot;)"></div>';
       } else {
         html += '<div class="task-pending-box">📤 تم إرسال الملف للمسؤول - انتظر الموافقة</div>';
@@ -5879,7 +5879,7 @@ function renderParentPendingTasks() {
       html += '<h4 style="color:var(--warning); margin-bottom:10px;">⏳ عدد المهام المعلقة: '+pendingTasks.length+'</h4>';
       html += '</div>';
       pendingTasks.forEach((task, i) => {
-        const sentTime = task.sentAt ? new Date(task.sentAt).toLocaleString('ar-EG') : 'غير محدد';
+        const sentTime = task.sentAt ? new Date(task.sentAt).toLocaleString('ar-EG') : 'غير محد��';
         const hoursPassed = task.sentAt ? Math.floor((Date.now() - task.sentAt) / (1000 * 60 * 60)) : 0;
         const urgency = hoursPassed > 12 ? '<span class="badge badge-danger">🔴 عاجل</span>' : (hoursPassed > 6 ? '<span class="badge badge-warning">🟠 قريب</span>' : '<span class="badge badge-info">🟢 حديث</span>');
         html += '<div class="task-card" style="border-right-color:var(--warning);">';
@@ -6241,7 +6241,7 @@ function generateAIResponse(text, student) {
     r += '<br>💡 المهام التي عليها علامة 👁️ يمكنك عرض آياتها كصورة واضحة مع إمكانية التكبير.';
     return r;
   }
-  // الآيات والصور
+  // الآيات ��الصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
     return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأو��ح حجم لعينيك.<br><br>��لآيات تُعرض بارم العثمان�� المشكَّل كصورة مطابقة تماماً لمصحف.';
   }
@@ -6345,13 +6345,13 @@ if(restoreSession()) {
   <section id="thimarWelcome" aria-label="شاشة ترحيب منصة ثمار" aria-live="polite">
     <div class="thimar-welcome-inner">
       <h1 class="thimar-welcome-title">ثمار</h1>
-      <p class="thimar-welcome-subtitle">منصة ثمار ترحب بكم</p>
+      <p class="thimar-welcome-subtitle">منصة ثمار ترحب ب��م</p>
       <p class="thimar-ayah" lang="ar">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ<br>أَلَمْ تَرَ كَيْفَ ضَرَبَ اللَّهُ مَثَلًا كَلِمَةً طَيِّبَةً كَشَجَرَةٍ طَيِّبَةٍ أَصْلُهَا ثَابِتٌ وَفَرْعُهَا فِي السَّمَاءِ</p>
       <p class="thimar-description">منصة كاملة لطالب القرآن</p>
       <p class="thimar-intention">هذا العمل ابتغاء وجه الله تعالى</p>
   <p class="thimar-prayer">صَلِّ على النبي ﷺ</p>
   <div class="thimar-welcome-actions">
-    <button id="thimarWelcomeStart" class="btn btn-primary" type="button">الدخول إلى المنصة</button>
+    <button id="thimarWelcomeStart" class="btn btn-primary" type="button" onclick="window.closeThimarWelcome && window.closeThimarWelcome()">الدخول إلى المنصة</button>
   </div>
   <p class="thimar-welcome-audio" id="thimarAudioStatus">يريد هذا الموقع تشغيل الصوت. <button id="thimarAudioPermission" type="button">تشغيل الصوت</button></p>
       <audio id="thimarWelcomeAudio" preload="none" playsinline src="/audio/ibrahim-ayah-24-minshawi.mp3"></audio>
@@ -6369,6 +6369,8 @@ if(restoreSession()) {
   function closeWelcome(){
     if(closed)return; closed=true;
     audio.pause();
+    // افتح شاشة الدخول مباشرةً حتى لا تبقى الواجهة خلف طبقة الترحيب.
+    try { if(typeof window.showPage === 'function') window.showPage('lockScreen'); } catch(e) {}
     welcome.classList.add('is-hidden');
     // إزالة الطبقة بعد انتهاء انتقال opacity بدل إبقائها فوق التطبيق وحجب النقرات.
     window.setTimeout(function(){welcome.remove();},220);
@@ -6395,10 +6397,13 @@ if(restoreSession()) {
     status.textContent='تم السماح بتشغيل الصوت، جارٍ تشغيل التلاوة';
     startAudio();
   }
-  start.addEventListener('click',function(event){
-    event.preventDefault();
+  window.closeThimarWelcome=function(){
     closeWelcome();
     window.setTimeout(allowAndPlay,0);
+  };
+  start.addEventListener('click',function(event){
+    event.preventDefault();
+    window.closeThimarWelcome();
   });
   permission.addEventListener('click',allowAndPlay);
   audio.addEventListener('ended',closeWelcome,{once:true});
