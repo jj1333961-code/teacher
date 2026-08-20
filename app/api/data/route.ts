@@ -20,8 +20,9 @@ export async function GET() {
       [SNAPSHOT_ID],
     )
     return response({ data: result.rows[0]?.data ?? null, updatedAt: result.rows[0]?.updated_at ?? null })
-  } catch {
-    return response({ error: 'تعذر تحميل بيانات الموقع من Neon' }, 500)
+  } catch (error) {
+    console.error('[v0] GET /api/data failed:', error instanceof Error ? error.message : error)
+    return response({ error: 'تعذر تحميل بيانات الموقع من Neon', code: 'SNAPSHOT_READ_FAILED' }, 500)
   }
 }
 
@@ -43,7 +44,8 @@ export async function PUT(request: Request) {
       [SNAPSHOT_ID, serialized],
     )
     return response({ saved: true, updatedAt: result.rows[0].updated_at })
-  } catch {
-    return response({ error: 'تعذر حفظ بيانات الموقع في Neon' }, 500)
+  } catch (error) {
+    console.error('[v0] PUT /api/data failed:', error instanceof Error ? error.message : error)
+    return response({ error: 'تعذر حفظ بيانات الموقع في Neon', code: 'SNAPSHOT_WRITE_FAILED' }, 500)
   }
 }
