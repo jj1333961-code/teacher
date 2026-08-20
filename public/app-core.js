@@ -943,7 +943,7 @@ function toggleStudentSpeech(){
   let finalText='';studentSpeechListening=true;if(btn){btn.disabled=false;btn.setAttribute('aria-pressed','true');btn.textContent='🔴 إيقاف الاستماع'}if(status)status.textContent='جاري الاستماع...';if(transcript){transcript.classList.remove('hidden');transcript.textContent=''}
   recognition.onresult=function(event){let interim='';for(let i=event.resultIndex;i<event.results.length;i++){const value=cleanSpeechText(event.results[i][0].transcript);if(event.results[i].isFinal)finalText+=' '+value;else interim+=' '+value}if(transcript)transcript.textContent=(finalText+' '+interim).trim()};
   recognition.onerror=function(event){if(transcript&&event.error!=='aborted')transcript.textContent=speechErrorMessage(event);if(status)status.textContent=speechErrorMessage(event);studentSpeechListening=false;if(btn){btn.setAttribute('aria-pressed','false');btn.textContent='🎤 إدخال البيانات بالصوت'}};
-  recognition.onend=function(){studentSpeechListening=false;if(btn){btn.setAttribute('aria-pressed','false');btn.textContent='🎤 إدخال البيانات بالصوت'}const parsed=parseStudentSpeech(finalText);if(!parsed.text){if(status)status.textContent='لم يتم التعرف على الصوت، حاول مرة أخرى.';return}const filled=applyStudentVoiceFields(parsed.fields);renderStudentSpeechPreview(parsed,filled);if(status)status.textContent=filled.length?'تم التعرف ومراجعة البيانات':'تم التعرف على النص، راجع الخانات يدوياً'};
+  recognition.onend=function(){studentSpeechListening=false;if(btn){btn.setAttribute('aria-pressed','false');btn.textContent='🎤 إدخال البي��نات بالصوت'}const parsed=parseStudentSpeech(finalText);if(!parsed.text){if(status)status.textContent='لم يتم التعرف على الصوت، حاول مرة أخرى.';return}const filled=applyStudentVoiceFields(parsed.fields);renderStudentSpeechPreview(parsed,filled);if(status)status.textContent=filled.length?'تم التعرف ومراجعة البيانات':'تم التعرف على النص، راجع الخانات يدوياً'};
   try{recognition.start()}catch(e){studentSpeechListening=false;if(status)status.textContent='تعذر بدء الإدخال الصوتي.';if(btn){btn.disabled=false;btn.setAttribute('aria-pressed','false')}}
 }
 async function retryStudentIntakeAnalysis(){
@@ -2273,7 +2273,7 @@ function renderStudentExam(){
   if(typeof studentExamCurrentIndex!=='number'||studentExamCurrentIndex<0)studentExamCurrentIndex=0;
   const requiredQuestion=ex.questions[studentExamCurrentIndex],questionNeedsProctor=requiredQuestion&&requiredQuestion.proctorEnabled!==false,questionAuthId=ex.id+':'+studentExamCurrentIndex;
   if(!questionNeedsProctor&&proctor.active){proctorStop(true);proctorExamAuthorizedId=''}
-  if(questionNeedsProctor&&(proctorExamAuthorizedId!==questionAuthId||!proctor.active)){c.innerHTML='<div class="alert alert-info"><h3>التحقق الأمني مطلوب لهذا السؤال</h3><p>يبدأ وقت السؤال فقط بعد ن��اح فحص العين والوجه ووضع إصبع واحد على الشاشة. يمكن تحريكهما بحرية، وتوجد مهلة 12 ثانية لإعادتهما.</p><button class="btn btn-primary" onclick="openProctorGate({type:\'exam\',id:\''+escapeHtml(ex.id)+'\',questionIndex:'+studentExamCurrentIndex+'},function(){proctorExamAuthorizedId=\''+escapeHtml(questionAuthId)+'\';renderStudentExam()})">بدء فحص السؤال</button></div>';return}
+  if(questionNeedsProctor&&(proctorExamAuthorizedId!==questionAuthId||!proctor.active)){c.innerHTML='<div class="alert alert-info"><h3>التحقق الأمني مطلوب لهذا السؤال</h3><p>يبدأ وقت السؤال فقط بعد ن��اح فحص العين والوجه ووضع إصبع واحد ��لى الشاشة. يمكن تحريكهما بحرية، وتوجد مهلة 12 ثانية لإعادتهما.</p><button class="btn btn-primary" onclick="openProctorGate({type:\'exam\',id:\''+escapeHtml(ex.id)+'\',questionIndex:'+studentExamCurrentIndex+'},function(){proctorExamAuthorizedId=\''+escapeHtml(questionAuthId)+'\';renderStudentExam()})">بدء فحص السؤال</button></div>';return}
   if(studentExamCurrentIndex>=ex.questions.length){submitStudentExam(true);return}
   studentExamViewIndex=Math.max(0,Math.min(studentExamViewIndex,studentExamCurrentIndex));
   const i=studentExamViewIndex,q=ex.questions[i],isCurrent=i===studentExamCurrentIndex;
@@ -3509,7 +3509,13 @@ function renderStudentDashboard() {
   checkExpiredTasks(s.id);
 
   const welcomeMsgs = generateWelcomeMessages(s);
-  document.getElementById('studentWelcome').innerHTML = '<div class="welcome-msg"><h4>🌟 '+welcomeMsgs.title+'</h4><p>'+welcomeMsgs.body+'</p></div>';
+  document.getElementById('studentWelcome').innerHTML = '<div class="welcome-msg"><h4>🌟 '+welcomeMsgs.title+'</h4><p>'+welcomeMsgs.body+'</p></div>'
+    + '<div class="menu-grid" style="margin-top:16px;">'
+    + '<button class="menu-btn" style="background:#0d9488" onclick="showPage(\'studentInbox\')">💬 الرسائل</button>'
+    + '<button class="menu-btn" style="background:#e83e8c" onclick="showPage(\'studentFilesPage\')">📁 الملفات</button>'
+    + '<button class="menu-btn" style="background:#6366f1" onclick="showPage(\'studentAIChat\')">✦ مساعد الذكاء الاصطناعي</button>'
+    + '<button class="menu-btn" style="background:#f59e0b" onclick="showPage(\'studentRecordsPage\')">🎙️ صندوق التسجيلات</button>'
+    + '</div>';
 
   let html = '<div class="stats">';
   html += '<div class="stat-box"><div class="num">'+s.name+'</div><div class="label">اسم الطالب</div></div>';
@@ -4165,7 +4171,7 @@ function blobToDataURL(blob) {
 // ====== تحويل الصوت المسجّل (webm/ogg) إلى WAV ======
 // Gemini وGroq يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصية webm.
 // نفكّ الترميز عبر Web Audio ثم نعيد ترميزه PCM 16-bit أحادي القناة بمعدل 12kHz.
-// يحافظ المعدل على وضوح الكلام ويُبقي تسجيل الدقيقة والنصف دون حد طلبات Vercel بعد Base64.
+// يحافظ المعدل على وضوح الكل��م ويُبقي تسجيل الدقيقة والنصف دون حد طلبات Vercel بعد Base64.
 async function blobToWav(blob) {
   try {
   const buf = await blob.arrayBuffer();
@@ -4381,7 +4387,13 @@ function renderParentDashboard() {
   checkAndFinalizeDrafts();
   const children = currentUser;
   const welcomeMsgs = generateParentWelcome(children[0]);
-  document.getElementById('parentWelcome').innerHTML = '<div class="welcome-msg"><h4>🌟 '+welcomeMsgs.title+'</h4><p>'+welcomeMsgs.body+'</p></div>';
+  document.getElementById('parentWelcome').innerHTML = '<div class="welcome-msg"><h4>🌟 '+welcomeMsgs.title+'</h4><p>'+welcomeMsgs.body+'</p></div>'
+    + '<div class="menu-grid" style="margin-top:16px;">'
+    + '<button class="menu-btn" style="background:#0d9488" onclick="showPage(\'parentInbox\')">💬 الرسائل</button>'
+    + '<button class="menu-btn" style="background:#e83e8c" onclick="showPage(\'parentFilesPage\')">📁 الملفات</button>'
+    + '<button class="menu-btn" style="background:#6366f1" onclick="showPage(\'parentAIChat\')">✦ مساعد الذكاء الاصطناعي</button>'
+    + '<button class="menu-btn" style="background:#8b5cf6" onclick="showPage(\'parentChartPage\')">📈 المخطط</button>'
+    + '</div>';
 
   let html = '<div style="display:flex; gap:20px; flex-wrap:wrap;">';
   children.forEach(s => {
@@ -4891,7 +4903,7 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلام','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! 🌟<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مها��</em> — لعرض الواجب���ت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ���<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مها��</em> — لعرض الواجب���ت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
