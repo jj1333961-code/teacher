@@ -1462,7 +1462,7 @@ window.alert = function(m){ showToast(m); };
     }
     window.toggleRoleSidebar=function(){ const open=!sidebar.classList.contains('is-open'); sidebar.classList.toggle('is-open',open); backdrop.classList.toggle('is-open',open); sidebar.setAttribute('aria-hidden',String(!open)); toggle.setAttribute('aria-expanded',String(open)); update(); };
     window.closeRoleSidebar=function(){ sidebar.classList.remove('is-open'); backdrop.classList.remove('is-open'); sidebar.setAttribute('aria-hidden','true'); toggle.setAttribute('aria-expanded','false'); };
-    new MutationObserver(update).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+    /* DIAG: observer temporarily disabled to isolate freeze */
     document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeRoleSidebar(); });
     update();
   })();
