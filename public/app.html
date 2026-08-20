@@ -7,7 +7,8 @@
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
 <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
-<link rel="stylesheet" href="https://www.fontstatic.com/f=diwanltr">
+  <script src="/app-core.js" defer></script>
+  <link rel="stylesheet" href="https://www.fontstatic.com/f=diwanltr">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -632,7 +633,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><button class="btn btn-outline" id="signupMethodGoogleBtn" onclick="setSignupMethod('google')" style="width:100%">🔵 التسجيل بحساب جوجل</button></div>
     <div class="form-group"><button class="btn btn-outline" id="signupMethodPhoneBtn" onclick="setSignupMethod('phone')" style="width:100%">🟢 التسجيل برقم الهاتف (واتساب)</button></div>
   </div>
-  <!-- منطقة التسجيل بحساب جوجل: تظهر حسابات جوجل الموجودة على الجهاز للاختيار مباشرةً بدون تحقق واتساب -->
+  <!-- منطقة التسجيل ب��ساب جوجل: تظهر حسابات جوجل الموجودة على الجهاز للاختيار مباشرةً بدون تحقق واتساب -->
   <div class="form-group" id="signupGoogleBox" style="display:none;">
     <label>اختر حساب جوجل لإكمال التسجيل *</label>
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
@@ -889,7 +890,7 @@ tr:hover { background: var(--table-hover); }
     </div>
     <small id="juzBoundaryHint" style="display:block;color:var(--text-light);margin-top:6px">سيظهر هنا نطاق الآيات الحقيقي للجزء.</small>
     <div class="form-group">
-      <label>البصمة الصوتية للطالب (اختياري — تسجيل صوتي للتحقق من الهوية - 20 ثانية)</label>
+      <label>ا��بصمة الصوتية للطالب (اختياري — تسجيل صوتي للتحقق من الهوية - 20 ثانية)</label>
       <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
         <button id="voiceRecordBtn" class="voice-record-btn" onclick="toggleVoiceRecord()">🎙️</button>
         <span id="voiceRecordStatus">اضغط للتسجيل (20 ثانية)</span>
@@ -1325,6 +1326,13 @@ window.alert = function(m){ showToast(m); };
     if (window.__thimarAppCoreLoaded) return Promise.resolve();
     if (corePromise) return corePromise;
     corePromise = new Promise(function(resolve, reject){
+      const existing = document.querySelector('script[src="/app-core.js"]');
+      if (existing) {
+        existing.addEventListener('load', function(){ window.__thimarAppCoreLoaded = true; resolve(); }, { once: true });
+        existing.addEventListener('error', function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); }, { once: true });
+        if (existing.readyState === 'complete') { window.__thimarAppCoreLoaded = true; resolve(); }
+        return;
+      }
       const s = document.createElement('script');
       s.src = '/app-core.js';
       s.async = false;
@@ -1446,7 +1454,7 @@ window.alert = function(m){ showToast(m); };
     const roleItems = {
       admin:[['messagesPage','💬','الرسائل'],['adminSettings','⚙️','الإعدادات'],['filesPage','📁','الملفات المرفوعة'],['devAssistantPage','🛠️','مساعد تطوير الموقع'],['adminAIPage','✦','المحادثة الإدارية مع الذكاء الاصطناعي'],['githubSyncPage','🔗','مزامنة GitHub']],
       student:[['studentInbox','💬','الرسائل'],['studentFilesPage','📁','الملفات'],['studentAIChat','✦','مساعد الذكاء الاصطناعي'],['studentChartPage','📈','مخطط التقييم'],['studentRecordsPage','🎙️','صندوق التسجيلات']],
-      parent:[['parentInbox','💬','الرسائل'],['parentFilesPage','📁','الملفات'],['parentAIChat','✦','مساعد الذكاء الاصطناعي'],['parentChartPage','📈','المخطط']]
+      parent:[['parentInbox','💬','الرسائل'],['parentFilesPage','📁','الملفات'],['parentAIChat','✦','مساعد الذكاء الاصط��اعي'],['parentChartPage','📈','المخطط']]
     };
     function visibleId(){ const el=document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)'); return el && el.id || ''; }
     function roleForPage(){ const id=visibleId(); const dashboards={adminDashboard:'admin',studentDashboard:'student',parentDashboard:'parent'}; return dashboards[id] || ''; }
