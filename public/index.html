@@ -8,7 +8,12 @@
 <meta name="referrer" content="no-referrer-when-downgrade">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap"></noscript>
+<!-- الخدمات الثقيلة تُحمّل خارج مسار العرض الأول، وتُستدعى عند الحاجة فقط -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js" crossorigin="anonymous" async defer></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 /* 🔐 تشغيل آمن على أي استضافة HTTPS (Netlify / Vercel / GitHub Pages) */
@@ -59,7 +64,7 @@
 })();
 </script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
+/* الخطوط الخارجية غير حرجة: الخط النظامي يظهر فورًا، ثم تُحسّن الخطوط العربية العرض لاحقًا. */
 :root {
   --bg: linear-gradient(135deg, #eaf1e8 0%, #d7e7dc 100%);
   --card-bg: #fffdf7; --text: #263c34; --text-light: #6c7d74; --border: #d7e1d8;
@@ -650,7 +655,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الها������������ف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الها������������ف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإم��رات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -715,7 +720,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
-    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;"><strong id="devProgressLabel">تحليل الطلب</strong><span id="devEta">الوقت المتبقي: 02:00</span></div>
+    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;"><strong id="devProgressLabel">تحليل الطلب</strong><span id="devEta">ال��قت المتبقي: 02:00</span></div>
     <div style="height:9px;background:var(--border);border-radius:999px;overflow:hidden;"><div id="devProgressBar" style="height:100%;width:8%;background:var(--primary);transition:width .5s;"></div></div>
   </div>
   <div id="devAssistantResult" style="margin-top:20px;"></div>
@@ -1510,13 +1515,15 @@ async function saveAllDataToNeon(){
   try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})}); if(!res.ok)throw new Error(); if(status)status.textContent='محفو في Neon'; }
   catch(e){ if(status)status.textContent='تعذر الحفظ في Neon'; }
 }
-function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
+function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); if(sessionStorage.getItem('neon_unavailable_v1')==='1') return; clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
 async function hydrateDataFromNeon(){
   if(sessionStorage.getItem('neon_hydrated_v1'))return;
-  try{ const res=await fetch('/api/data',{cache:'no-store'}); const body=await res.json(); if(res.ok&&body.data){ Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); }); sessionStorage.setItem('neon_hydrated_v1','1'); location.reload(); } else { sessionStorage.setItem('neon_hydrated_v1','1'); await saveAllDataToNeon(); } }
+  try{ const res=await fetch('/api/data',{cache:'no-store'}); const body=await res.json(); if(res.ok&&body.data){ const before=JSON.stringify(collectCloudData()); Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); }); sessionStorage.setItem('neon_hydrated_v1','1'); const changed=before!==JSON.stringify(collectCloudData()); if(changed && !sessionStorage.getItem('neon_reload_done_v1')){ sessionStorage.setItem('neon_reload_done_v1','1'); location.reload(); } } else if(body.unavailable){ sessionStorage.setItem('neon_hydrated_v1','1'); sessionStorage.setItem('neon_unavailable_v1','1'); } else { sessionStorage.setItem('neon_hydrated_v1','1'); await saveAllDataToNeon(); } }
   catch(e){ sessionStorage.setItem('neon_hydrated_v1','1'); }
 }
-hydrateDataFromNeon();
+  // لا نؤخر شاشة الترحيب بسبب الشبكة؛ تتم المزامنة بعد أول رسم وفي وقت خمول المتصفح.
+  const scheduleHydration = window.requestIdleCallback || function(cb){ window.setTimeout(cb, 1200); };
+  scheduleHydration(function(){ hydrateDataFromNeon(); });
 
 if(!localStorage.getItem('initialized_v7')) {
   setData('subjects', [
@@ -2732,7 +2739,7 @@ function openEdit(id) {
   document.getElementById('editNotes').value = s.notes || '';
   editVoiceBlob=null; editVoiceFingerprint=null; editVoiceDataUrl=null; editVoiceProfileGemini=null;
   const evp=document.getElementById('editVoicePreview'); if(evp){evp.style.display='none';evp.removeAttribute('src');}
-  const evs=document.getElementById('editVoiceStatus'); if(evs)evs.textContent=(s.voiceProfile||s.voicePrintVec)?('البصمة الصوتية موجودئ'+(s.voiceProfile?' (جميناي)':'')+'. يمكنك استبدالها بتسجيل جديد.'):'لا توجد بصمة صوتية محفوظة حالياً.';
+  const evs=document.getElementById('editVoiceStatus'); if(evs)evs.textContent=(s.voiceProfile||s.voicePrintVec)?('البصمة الصوتية موجودئ'+(s.voiceProfile?' (جميناي)':'')+'. يمكنك استبدالها بتس��يل جديد.'):'لا توجد بصمة صوتية محفوظة حالياً.';
   renderEditSubjectSelect(s.subjectIds);
   initEditJuzSelect(s.juz);
   const isQuran = s.subjects && s.subjects.some(sub => sub.name.includes('ق��آن'));
@@ -3308,7 +3315,7 @@ function localSmartChatReply(message,role){
   if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
-  return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت الهد�� والسورة أو ال��تيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
+  return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت ا��هد�� والسورة أو ال��تيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
 }
 async function sendAdminChat(){const input=document.getElementById('adminChatInput'),box=document.getElementById('adminChatMessages'),message=input.value.trim();if(!message||currentType!=='admin')return;input.value='';const typing=document.createElement('div');typing.className='ai-msg bot';typing.textContent='جاري التحليل...';box.append('<div class="ai-msg user">'+escapeHtml(message)+'</div>');box.appendChild(typing);box.scrollTop=box.scrollHeight;try{const students=getData('students',[]).map(s=>({id:s.id,name:s.name,parent:s.parent,juz:s.juz,surah:s.surah,examResults:(s.examResults||[]).slice(-5),activeExam:s.activeExam?{status:s.activeExam.status,date:s.activeExam.date}:null}));const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'admin_assistant',payload:{role:'admin',message,context:{students,studentCount:students.length,messageCount:getData('messages',[]).length}}})});const data=await readApiJson(res,'تعذر رد Gemini وGroq');typing.innerHTML=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>')}catch(e){typing.innerHTML=escapeHtml(localSmartChatReply(message,'admin'))}box.scrollTop=box.scrollHeight}
 
@@ -3785,7 +3792,7 @@ function sendSystemSessionMessage(student,text){
   setData('messages',messages);
 }
 
-// إعادة الصفحة لحالتها الأصلية بعد الحفظ النهائي
+// إعا��ة الصفحة لحالتها الأصلية بعد الحفظ النهائي
 function resetRecordForm() {
   const mainSurah = currentRecordMainSurah || '';
   recordElements = FIXED_ELEMENTS.map(name => ({
@@ -4170,7 +4177,7 @@ async function refreshGithubSync(){
     if(box) box.innerHTML = '<div style="background:rgba(220,53,69,0.1); border:1px solid #dc3545; border-radius:10px; padding:14px 16px; color:var(--text);">'
       + '<b style="color:#dc3545;">❌ فشل التحقق</b><br><span style="color:var(--text-light); font-size:0.9rem;">'+escapeHtmlAi(e.message || 'خطأ غير معروف')+'</span></div>';
   } finally {
-    if(btn){ btn.disabled = false; btn.textContent = '🔄 تحقق من حالة المزامنة'; }
+    if(btn){ btn.disabled = false; btn.textContent = '🔄 تحقق من ��الة المزامنة'; }
   }
 }
 
@@ -4971,7 +4978,7 @@ function renderStudentTasks() {
       html += status;
 
       if(isRejected) {
-        html += '<div class="task-rejected-alert">⚠️ تم رفض الملف السابق. يرجى إرسال ملف جديد.</div>';
+        html += '<div class="task-rejected-alert">⚠️ تم رفض ��لملف السابق. يرجى إرسال ملف جديد.</div>';
         html += '<div style="margin-top:10px;"><div class="file-upload" onclick="document.getElementById(&quot;hwFile_'+originalIdx+'&quot;).click()"><div>📷 اضغط لرفع ص��رة الواجب الجديدة</div></div>';
         html += '<input type="file" id="hwFile_'+originalIdx+'" accept="image/*" style="display:none" onchange="uploadTaskFile('+originalIdx+', this, &quot;homework&quot;)"></div>';
       } else if(!isSubmitted) {
@@ -6264,7 +6271,7 @@ function generateAIResponse(text, student) {
     return '📖 <strong>بيانات حفظك:</strong><br>• الجزء: '+(student.juz || 'غير محدد')+'<br>• السورة الحالية: '+(student.surah || 'غير محددة')+'<br>• عدد التسميعات النهائية: '+finalizedSessions.length+'<br><br>حافظ على المراجعة اليومية لتثبيت ما حفظت.';
   }
   // التواصل مع المسؤو
-  if(has('مسؤول','معلم','شيخ','ابلاغ','إبلاغ','رساله','رسالة','تواصل','شكوى')) {
+  if(has('مسؤول','معلم','شيخ','ابلاغ','إبلاغ','رسال��','رسالة','تواصل','شكوى')) {
     return '�� يمكنك مراسلة المسؤول مباشرة من <strong>صندوق الرسائل</strong> في صفحتك، وسيصلك الرد هناك مع إشعار. إن كان الأمر عاجلاً اذكر كلمة "عا��ل" في بداية رسالتك.';
   }
   // ديني عام
@@ -6347,7 +6354,7 @@ if(restoreSession()) {
     <button id="thimarWelcomeStart" class="btn btn-primary" type="button">الدخول إلى المنصة</button>
   </div>
   <p class="thimar-welcome-audio" id="thimarAudioStatus">يريد هذا الموقع تشغيل الصوت. <button id="thimarAudioPermission" type="button">تشغيل الصوت</button></p>
-      <audio id="thimarWelcomeAudio" preload="auto" autoplay playsinline src="/audio/ibrahim-ayah-24-minshawi.mp3"></audio>
+      <audio id="thimarWelcomeAudio" preload="none" playsinline src="/audio/ibrahim-ayah-24-minshawi.mp3"></audio>
     </div>
   </section>
 <script>
@@ -6363,7 +6370,8 @@ if(restoreSession()) {
     if(closed)return; closed=true;
     audio.pause();
     welcome.classList.add('is-hidden');
-    window.setTimeout(function(){welcome.remove();},700);
+    // إزالة الطبقة بعد انتهاء انتقال opacity بدل إبقائها فوق التطبيق وحجب النقرات.
+    window.setTimeout(function(){welcome.remove();},220);
     try{sessionStorage.setItem('thimar_welcome_seen_v1','1');}catch(e){}
   }
   try{
@@ -6378,13 +6386,15 @@ if(restoreSession()) {
       status.textContent='يريد هذا الموقع تشغيل الصوت. اضغط «الدخول إلى المنصة» للسماح بالتشغيل.';
     });
   }
-  // محاولة تلقائية؛ ويظهر التنبيه المخصص داخل شاشة الترحيب بدل نافذة confirm.
-  startAudio();
+  // لا نطلب الصوت ولا نحمل ملفه قبل تفاعل المستخدم.
   function allowAndPlay(){
     status.textContent='تم السماح بتشغيل الصوت، جارٍ تشغيل التلاوة';
     startAudio();
   }
-  start.addEventListener('click',allowAndPlay);
+  start.addEventListener('click',function(){
+    allowAndPlay();
+    closeWelcome();
+  });
   permission.addEventListener('click',allowAndPlay);
   audio.addEventListener('ended',closeWelcome,{once:true});
 })();

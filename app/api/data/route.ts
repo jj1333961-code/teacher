@@ -21,8 +21,11 @@ export async function GET() {
     )
     return response({ data: result.rows[0]?.data ?? null, updatedAt: result.rows[0]?.updated_at ?? null })
   } catch (error) {
-    console.error('[v0] GET /api/data failed:', error instanceof Error ? error.message : error)
-    return response({ error: 'تعذر تحميل بيانات الموقع من Neon', code: 'SNAPSHOT_READ_FAILED' }, 500)
+    // التخزين السحابي اختياري؛ لا نحول تعذر Neon إلى خطأ يعطل الواجهة.
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[v0] GET /api/data unavailable; continuing with local data')
+    }
+    return response({ data: null, unavailable: true })
   }
 }
 
@@ -45,7 +48,10 @@ export async function PUT(request: Request) {
     )
     return response({ saved: true, updatedAt: result.rows[0].updated_at })
   } catch (error) {
-    console.error('[v0] PUT /api/data failed:', error instanceof Error ? error.message : error)
-    return response({ error: 'تعذر حفظ بيانات الموقع في Neon', code: 'SNAPSHOT_WRITE_FAILED' }, 500)
+    // تبقى البيانات المحلية هي المصدر الاحتياطي عند غياب قاعدة البيانات.
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[v0] PUT /api/data unavailable; local data was retained')
+    }
+    return response({ saved: false, unavailable: true }, 200)
   }
 }
