@@ -6,13 +6,14 @@
 <meta name="theme-color" content="#315c4b">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
+<link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
+<link rel="stylesheet" href="https://www.fontstatic.com/f=diwanltr">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap"></noscript>
-  <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap"></noscript>
 <!-- الخدمات الثقيلة تُحمّل خارج مسار العرض الأول، وتُستدعى عند الحاجة فقط -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
@@ -538,7 +539,7 @@ tr:hover { background: var(--table-hover); }
   #thimarWelcome::before { top:-100px; inset-inline-start:-100px; box-shadow:0 0 0 18px rgba(45,112,76,.035),0 0 0 36px rgba(191,153,74,.035); }
   #thimarWelcome::after { bottom:-110px; inset-inline-end:-110px; box-shadow:0 0 0 18px rgba(45,112,76,.035),0 0 0 36px rgba(191,153,74,.035); }
   .thimar-welcome-inner { width:min(760px,100%); text-align:center; padding:clamp(28px,6vw,68px) clamp(20px,6vw,72px); border:1px solid rgba(45,112,76,.18); border-radius:32px; background:rgba(255,255,255,.72); box-shadow:0 28px 80px rgba(35,88,54,.14); backdrop-filter:blur(12px); position:relative; }
-  .thimar-welcome-title { margin:0; color:#1d5038; font-family:'Diwan Kufi','Diwani Letter','Noto Kufi Arabic','Traditional Arabic',serif; font-size:clamp(2.8rem,9vw,6rem); font-weight:900; letter-spacing:-.08em; line-height:1.1; text-shadow:0 2px 0 rgba(191,153,74,.25),0 10px 26px rgba(45,112,76,.13); }
+  .thimar-welcome-title { margin:0; color:#1d5038; font-family:'diwanltr','Diwani Letter','Traditional Arabic',serif; font-size:clamp(2.8rem,9vw,6rem); font-weight:900; letter-spacing:-.08em; line-height:1.1; text-shadow:0 2px 0 rgba(191,153,74,.25),0 10px 26px rgba(45,112,76,.13); }
   .thimar-welcome-subtitle { margin:12px 0 26px; color:#587264; font-size:clamp(1.1rem,3vw,1.55rem); font-weight:700; }
   .thimar-ayah { margin:0 auto 24px; max-width:650px; color:#254d3a; font-family:'Amiri','Traditional Arabic','Segoe UI',serif; font-size:clamp(1.45rem,4vw,2.45rem); line-height:2.05; text-shadow:0 0 18px rgba(191,153,74,.26); }
   .thimar-ayah::before,.thimar-ayah::after { content:'۞'; color:#bf994a; font-family:serif; font-size:.8em; margin-inline:12px; }
@@ -552,8 +553,8 @@ tr:hover { background: var(--table-hover); }
   /* شريط جانبي موحد للوحات الأدوار */
   .role-menu-toggle { display:none; position:fixed; inset-inline-end:18px; top:18px; z-index:1100; width:48px; height:48px; border:1px solid rgba(255,255,255,.55); border-radius:50%; background:var(--primary); color:#fff; box-shadow:var(--shadow); cursor:pointer; font-size:1.35rem; }
   .role-sidebar-backdrop { display:none; position:fixed; inset:0; z-index:1090; background:rgba(12,31,24,.42); backdrop-filter:blur(2px); }
-  .role-sidebar { position:fixed; inset-block:0; inset-inline-end:0; z-index:1101; width:min(340px,88vw); padding:24px 18px; background:var(--card-bg); box-shadow:-18px 0 45px rgba(17,53,37,.18); transform:translateX(105%); transition:transform .25s ease; overflow:auto; }
-  html[dir="ltr"] .role-sidebar { inset-inline-start:0; inset-inline-end:auto; transform:translateX(-105%); }
+  .role-sidebar { position:fixed; inset-block:0; inset-inline-end:0; z-index:1101; width:min(340px,88vw); padding:24px 18px; background:var(--card-bg); border-inline-start:1px solid var(--border); box-shadow:-18px 0 45px rgba(17,53,37,.18); transform:translateX(105%); transition:transform .25s ease; overflow:auto; }
+  html[dir="ltr"] .role-sidebar { inset-inline-start:0; inset-inline-end:auto; transform:translateX(-105%); border-inline-start:0; border-inline-end:1px solid var(--border); }
   .role-sidebar.is-open { transform:translateX(0); }
   .role-sidebar-backdrop.is-open { display:block; }
   .role-sidebar-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid var(--border); }
@@ -568,8 +569,8 @@ tr:hover { background: var(--table-hover); }
   @media(min-width:901px){ body.role-dashboard .role-menu-toggle { display:flex; align-items:center; justify-content:center; } }
   @media(prefers-reduced-motion:reduce){ .role-sidebar { transition:none; } }
   /* إخفاء الخط الجانبي (شريط التمرير) مع الإبقاء على إمكانية التمرير. */
-  html { scrollbar-width:none; }
-  body::-webkit-scrollbar { width:0; height:0; }
+  html { scrollbar-width:none; -ms-overflow-style:none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar { width:0; height:0; display:none; }
   body { -ms-overflow-style:none; }
   #lockScreen .btn:disabled { opacity:.75; cursor:wait; }
   </style>
@@ -587,7 +588,7 @@ tr:hover { background: var(--table-hover); }
     <nav id="roleSidebarList" class="role-sidebar-list"></nav>
   </aside>
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
-    <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت الم��بقي التقريبي: 01:30</span></div>
+    <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
   </div>
   <div id="quranImageLightbox" class="quran-lightbox hidden" role="dialog" aria-modal="true" aria-label="تكبير صورة السؤال" onclick="if(event.target===this)closeQuranImage()"><button class="btn btn-secondary quran-lightbox-close" onclick="closeQuranImage()">إغلاق</button><img id="quranImageLightboxImg" alt="صورة السؤال القرآني بحجم كبير"></div>
 
@@ -631,7 +632,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group" id="signupGoogleBox" style="display:none;">
     <label>اختر حساب جوجل لإكمال التسجيل *</label>
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
-    <p style="color:var(--text-light); font-size:0.9rem; margin-top:5px;">اضغط لعرض حسابات جوجل الم��جودة على جهازك واختيار أحدها. لن يُطلب منك رقم هاتف أو كود تحقق.</p>
+    <p style="color:var(--text-light); font-size:0.9rem; margin-top:5px;">اضغط لعرض حسابات جوجل الموجودة على جهازك واختيار أحدها. لن يُطلب منك رقم هاتف أو كود تحقق.</p>
   </div>
   <!-- منطقة التسجيل برقم ا����هاتف: تظهر خانة الواتساب وكود التحقق فقط -->
   <div id="signupPhoneBox" style="display:none;">
@@ -1217,7 +1218,7 @@ tr:hover { background: var(--table-hover); }
 <!-- صفحة المهام قيد الانتظار لولي الأمر -->
 <div id="parentPendingTasksPage" class="page hidden">
   <div class="page-header">
-    <h2>⏳ المه��م اليومية</h2>
+    <h2>⏳ المهام اليومية</h2>
     <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
   </div>
   <div id="parentPendingTasksContent"></div>
@@ -1317,28 +1318,27 @@ window.alert = function(m){ showToast(m); };
 (function(){
   let corePromise = null;
   window.loadThimarAppCore = function(){
+    if (window.__thimarAppCoreLoaded) return Promise.resolve();
     if (corePromise) return corePromise;
     corePromise = new Promise(function(resolve, reject){
-      function append(){
-        if (window.__thimarAppCoreLoaded) return resolve();
-        const s = document.createElement('script');
-        s.src = '/app-core.js';
-        s.async = false;
-        s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
-        s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
-        document.body.appendChild(s);
-      }
-      if (document.body) append();
-      else document.addEventListener('DOMContentLoaded', append, {once:true});
+      const s = document.createElement('script');
+      s.src = '/app-core.js';
+      s.async = false;
+      s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
+      s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
+      document.head.appendChild(s);
     });
     return corePromise;
   };
-  })();
-  // تحميل النواة فور اكتمال هيكل الصفحة حتى تعمل الأزرار والأوامر مباشرة دون انتظار أول نقرة.
-  window.addEventListener('DOMContentLoaded', function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core failed to load', err); }); }, {once:true});
-  </script>
-  <script>
-  /* تحميل تدريجي: تبقى شاشة الدخول خفيفة، ويُحمّل النظام الكامل عند أول وظيفة تحتاجه. */
+
+  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواجهة.
+  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core warmup failed', err); }); };
+  if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
+  else setTimeout(warm, 350);
+})();
+</script>
+<script>
+/* واجهة الدخول تعمل فوراً، والنظام الكامل جاهز مسبقاً أو يُحمّل عند الحاجة. */
 (function(){
   var wrappers = {};
   function runWhenCoreReady(name, args, button){
@@ -1362,13 +1362,21 @@ window.alert = function(m){ showToast(m); };
     });
   }
 
-  ['unifiedLogin','startSignup','togglePassVisibility'].forEach(function(name){
+  ['unifiedLogin','startSignup'].forEach(function(name){
     wrappers[name] = function(){
       var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : null;
       return runWhenCoreReady(name, arguments, btn);
     };
     window[name] = wrappers[name];
   });
+
+  // هذه الوظائف تخص الواجهة فقط ولا تحتاج إلى انتظار تحميل النظام الكامل.
+  window.togglePassVisibility = function(id, icon){
+    var input = document.getElementById(id);
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+    if (icon) icon.textContent = input.type === 'password' ? '👁️' : '🙈';
+  };
 
   window.toggleTheme = function(){
     var html = document.documentElement;
@@ -1379,13 +1387,13 @@ window.alert = function(m){ showToast(m); };
   };
 
   wrappers.toggleLang = function(){
-    var next = localStorage.getItem('lang') === 'en' ? 'ar' : 'en';
+    var next = document.documentElement.lang === 'en' ? 'ar' : 'en';
     localStorage.setItem('lang', next);
     document.documentElement.lang = next;
     document.documentElement.dir = next === 'en' ? 'ltr' : 'rtl';
     var btn = document.getElementById('langToggleBtn');
     if (btn) btn.textContent = next === 'en' ? 'ع' : 'EN';
-    return window.loadThimarAppCore().catch(function(err){ console.error('App core failed to load', err); });
+    window.loadThimarAppCore().catch(function(err){ console.error('App core failed to load', err); });
   };
   window.toggleLang = wrappers.toggleLang;
 })();
