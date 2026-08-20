@@ -4999,5 +4999,6 @@ if(restoreSession()) {
     showPage('lockScreen');
   }
 } else {
+  // الصفحة الرئيسية الأصلية هي شاشة الدخول الموحدة؛ لا نعرض بطاقات اختيار المسؤول/الطالب/ولي الأمر.
   showPage('lockScreen');
 }
