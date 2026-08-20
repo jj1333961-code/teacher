@@ -564,6 +564,10 @@ tr:hover { background: var(--table-hover); }
   .role-sidebar-item { display:flex; align-items:center; gap:12px; width:100%; padding:13px 14px; border:1px solid var(--border); border-radius:14px; background:var(--table-header); color:var(--text); text-align:start; cursor:pointer; font-weight:700; }
   .role-sidebar-item:hover { border-color:var(--primary); color:var(--primary); background:var(--input-bg); }
   .role-sidebar-item .role-sidebar-icon { width:28px; text-align:center; font-size:1.1rem; }
+  /* القائمة الجانبية تخص لوحات الأدوار فقط ولا تُعرض في الصفحة الرئيسية أو صفحات الدخول. */
+  body:not(.role-dashboard) .role-menu-toggle,
+  body:not(.role-dashboard) .role-sidebar,
+  body:not(.role-dashboard) .role-sidebar-backdrop { display:none !important; }
   /* يظهر زر القائمة فقط داخل لوحات المسؤول والطالب وولي الأمر، وليس في الرئيسية أو صفحات الدخول */
   @media(max-width:900px){ body.role-dashboard .role-menu-toggle { display:flex; align-items:center; justify-content:center; } }
   @media(min-width:901px){ body.role-dashboard .role-menu-toggle { display:flex; align-items:center; justify-content:center; } }
@@ -1331,10 +1335,9 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواجهة.
+  // تحميل النظام فورًا بعد إنشاء الصفحة حتى تعمل الأوامر والتنقل دون انتظار تفاعل المستخدم.
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core warmup failed', err); }); };
-  if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
-  else setTimeout(warm, 350);
+  warm();
 })();
 </script>
 <script>
