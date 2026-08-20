@@ -584,7 +584,7 @@ tr:hover { background: var(--table-hover); }
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
     <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
   </div>
-  <div id="quranImageLightbox" class="quran-lightbox hidden" role="dialog" aria-modal="true" aria-label="تكبير صورة السؤال" onclick="if(event.target===this)closeQuranImage()"><button class="btn btn-secondary quran-lightbox-close" onclick="closeQuranImage()">إغلاق</button><img id="quranImageLightboxImg" alt="صورة السؤال القرآني بحجم كبير"></div>
+  <div id="quranImageLightbox" class="quran-lightbox hidden" role="dialog" aria-modal="true" aria-label="تكبير صورة السؤال" onclick="if(event.target===this)closeQuranImage()"><button class="btn btn-secondary quran-lightbox-close" onclick="closeQuranImage()">إغلاق</button><img id="quranImageLightboxImg" alt="صور�� السؤال القرآني بحجم كبير"></div>
 
 <div class="container">
 
@@ -628,7 +628,7 @@ tr:hover { background: var(--table-hover); }
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
     <p style="color:var(--text-light); font-size:0.9rem; margin-top:5px;">اضغط لعرض حسابات جوجل الموجودة على جهازك واختيار أحدها. لن يُطلب منك رقم هاتف أو كود تحقق.</p>
   </div>
-  <!-- منطقة التسجيل برقم ا����هاتف: تظهر خانة الواتساب وكود التحقق فقط -->
+  <!-- منطقة التسجيل برقم ا������هاتف: تظهر خانة الواتساب وكود التحقق فقط -->
   <div id="signupPhoneBox" style="display:none;">
     <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupWhatsCountry" aria-label="كود دولة الواتساب" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupWhats" placeholder="رقم واتساب بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,''); updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational')" style="flex:1; direction:ltr;"></div><small id="signupWhatsInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
     <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
@@ -885,7 +885,7 @@ tr:hover { background: var(--table-hover); }
         <span id="voiceRecordStatus">اضغط للتسجيل (20 ثانية)</span>
         <audio id="voicePreview" controls style="display:none; height:40px;"></audio>
       </div>
-      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، ومكن إضافتها لاحقاً من ت��ديل الطالب. عند وجودها تُستخدم للتحق من هوية الطالب.</small>
+      <small style="color:var(--text-light)">اختياري: يمكن حفظ بيانات الطالب بدون تسجيل البصمة الصوتية، ومكن إضافتها لاح��اً من ت��ديل الطالب. عند وجودها تُستخدم للتحق من هوية الطالب.</small>
     </div>
   </div>
   <div class="form-group"><label>ملاحظات إضافية</label><textarea id="stNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea></div>
@@ -1218,7 +1218,7 @@ tr:hover { background: var(--table-hover); }
   <div id="parentPendingTasksContent"></div>
 </div>
 
-<!-- صفحة الملفات المرفوعة -->
+<!-- صف��ة الملفات المرفوعة -->
 <div id="filesPage" class="page hidden">
   <div class="page-header"><h2>📁 الملفات المرفوعة</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="filesAlert"></div>
@@ -1337,7 +1337,7 @@ const quranData = {
   24: ["الزمر", "غافر", "فصلت"],
   25: ["فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقا"],
   26: ["الأحقاف", "محمد", "الفتح", "الحجرات", "ق", "الذاريات"],
-  27: ["الذاريات", "الطور", "النجم", "القمر", "الحمن", "الواقعة", "الحديد"],
+  27: ["الذاريات", "الطور", "النج��", "القمر", "الحمن", "الواقعة", "الحديد"],
   28: ["المجادلة", "الحشر", "الممتحنة", "الصف", "المعة", "المنافقون", "التغابن", "الطلاق", "التحريم"],
   29: ["الملك", "القلم", "الحاقة", "المعارج", "نوح", "الجن", "المزل", "المدثر", "القيا��ة", "الإنسان", "المرسلات"],
   30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "لضحى", "الشرح", "ال��ين", "العلق", "ال��در", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاث��", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص", "المسد", "الإخلاص", "الفلق", "الناس"]
@@ -1572,7 +1572,7 @@ function proctorHandleLiveState(ok,reason){if(ok){proctor.warningAt=0;if(!procto
 function proctorHandleTouches(e){if(!proctor.active)return;const touches=e&&e.touches?Array.from(e.touches):[];proctor.touches=new Set(touches.map(t=>t.identifier));const count=proctor.touches.size,tooMany=count>1,status=document.getElementById('proctorTouchStatus');proctor.holding=count===1;if(!tooMany){proctor.touchWarningAt=0;if(status){status.textContent=count===1?'إصبع واحد':'جاهز للمسة واحدة';status.className='badge badge-success'}return}if(!proctor.touchWarningAt)proctor.touchWarningAt=Date.now();const reason='استخدم إصبعًا واحدًا فقط';if(status){status.textContent='أزل اللمسات الإضافية';status.className='badge badge-warning'}proctorShowWarning(reason,proctor.touchWarningAt);if(Date.now()-proctor.touchWarningAt>=getProctorSettings().touchGraceMs)cancelProctoredTask(reason)}
 ['touchstart','touchmove','touchend','touchcancel'].forEach(type=>document.addEventListener(type,proctorHandleTouches,{passive:true,capture:true}));
 function recordProctorIncident(reason){if(!currentUser)return;const incident={id:'pi_'+Date.now(),studentId:currentUser.id,studentName:currentUser.name,taskType:proctor.context?.type||'unknown',taskId:proctor.context?.id||'',reason,time:new Date().toLocaleString('ar-EG'),timestamp:Date.now(),status:'cancelled'};const incidents=getData('proctoringIncidents',[]);incidents.unshift(incident);setData('proctoringIncidents',incidents.slice(0,500));const messages=getData('messages',[]);messages.push({type:'system',sender:'نظام المراقبة',senderId:0,receiverType:'admin',text:'تنبيه مخالفة مراقبة: '+currentUser.name+' — '+proctorTaskLabel(proctor.context)+' — '+reason+' — '+incident.time,time:incident.time,approved:true,read:false,proctorIncidentId:incident.id});setData('messages',messages);return incident}
-function cancelProctoredTask(reason){if(!proctor.active||proctor.cancelled)return;proctor.cancelled=true;recordProctorIncident(reason);clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);Object.keys(typeof activeAudioRecorders==='object'?activeAudioRecorders:{}).forEach(function(key){const state=activeAudioRecorders[key];try{if(state.recorder&&state.recorder.state!=='inactive')state.recorder.stop()}catch(e){}try{state.stream?.getTracks().forEach(t=>t.stop())}catch(e){}});const ctx=proctor.context;if(ctx?.type==='exam'){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].activeExam){const ex=students[idx].activeExam;ex.status='cancelled_proctoring';ex.cancelReason=reason;ex.cancelledAt=Date.now();students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].activeExam=null;setData('students',students);currentUser=students[idx];document.getElementById('studentExamContent').innerHTML='<div class="alert alert-danger"><h3>أُلغي الاختبار بسبب مخا��فة المراقبة</h3><p>'+escapeHtml(reason)+'</p></div>'}}else if(Number.isInteger(ctx?.taskIndex)){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].tasks[ctx.taskIndex]){students[idx].tasks[ctx.taskIndex].proctorCancelled=true;students[idx].tasks[ctx.taskIndex].cancelReason=reason;setData('students',students);currentUser=students[idx];renderStudentTasks()}}proctorStop(true);showToast('أُلغيت المهمة وتم إرسال تنبيه للمسؤول','error')}
+function cancelProctoredTask(reason){if(!proctor.active||proctor.cancelled)return;proctor.cancelled=true;recordProctorIncident(reason);clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);Object.keys(typeof activeAudioRecorders==='object'?activeAudioRecorders:{}).forEach(function(key){const state=activeAudioRecorders[key];try{if(state.recorder&&state.recorder.state!=='inactive')state.recorder.stop()}catch(e){}try{state.stream?.getTracks().forEach(t=>t.stop())}catch(e){}});const ctx=proctor.context;if(ctx?.type==='exam'){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].activeExam){const ex=students[idx].activeExam;ex.status='cancelled_proctoring';ex.cancelReason=reason;ex.cancelledAt=Date.now();students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].activeExam=null;setData('students',students);currentUser=students[idx];document.getElementById('studentExamContent').innerHTML='<div class="alert alert-danger"><h3>أُلغي الاختبار بسبب ��خا��فة المراقبة</h3><p>'+escapeHtml(reason)+'</p></div>'}}else if(Number.isInteger(ctx?.taskIndex)){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].tasks[ctx.taskIndex]){students[idx].tasks[ctx.taskIndex].proctorCancelled=true;students[idx].tasks[ctx.taskIndex].cancelReason=reason;setData('students',students);currentUser=students[idx];renderStudentTasks()}}proctorStop(true);showToast('أُلغيت المهمة وتم إرسال تنبيه للمسؤول','error')}
 function proctorStop(closeCamera=true){proctor.active=false;proctor.holding=false;proctor.touches.clear();proctor.warningAt=0;proctor.touchWarningAt=0;document.getElementById('proctorWarning')?.classList.add('hidden');if(closeCamera)proctorStopCamera()}
 function proctorLeaveStart(reason){if(!proctor.active||proctor.leaveAt)return;proctor.leaveAt=Date.now();proctorShowWarning(reason,proctor.leaveAt);const grace=getProctorSettings().leaveGraceMs;setTimeout(function(){if(proctor.active&&proctor.leaveAt&&Date.now()-proctor.leaveAt>=grace)cancelProctoredTask(reason)},grace+50)}
 function proctorLeaveEnd(){proctor.leaveAt=0;document.getElementById('proctorWarning')?.classList.add('hidden')}
@@ -2245,7 +2245,7 @@ function toggleStudentSpeech(){
   if(studentSpeechListening){stopStudentSpeech();return}
   if(!Recognition){
     if(status)status.textContent=currentLang==='en'?'Browser speech recognition is unavailable; recording fallback is ready.':'التعرف المباشر غير متاح؛ سيتم استخدام التسجيل الصوتي كبديل آمن.';
-    if(transcript){transcript.classList.remove('hidden');transcript.textContent=currentLang==='en'?'Press the recording button below, then analyze the same recording.':'اضغط زر التسجيل بالأسفل، ثم حلّل التسجيل نفسه.'}
+    if(transcript){transcript.classList.remove('hidden');transcript.textContent=currentLang==='en'?'Press the recording button below, then analyze the same recording.':'اضغط زر التسجيل بالأ��فل، ثم حلّل التسجيل نفسه.'}
     const recorderBtn=document.getElementById('studentIntakeRecordBtn');
     if(recorderBtn){recorderBtn.focus();}
     return;
@@ -3376,7 +3376,7 @@ function showQuranQuestionImageError(image){
 }
 function retryQuranQuestionImage(button,src){
   const box=button&&button.closest('.quran-question-media');if(!box)return;const separator=src.includes('?')?'&':'?';
-  box.innerHTML='<div class="quran-question-loading" role="status">جاري إعادة تحميل صورة السؤال...</div><img class="quran-question-image" src="'+src+separator+'retry='+Date.now()+'" alt="المقطع القرآني الخاص بالسؤال" loading="eager" onload="this.previousElementSibling.style.display=\'none\'" onerror="showQuranQuestionImageError(this)">';
+  box.innerHTML='<div class="quran-question-loading" role="status">جا��ي إعادة تحميل صورة السؤال...</div><img class="quran-question-image" src="'+src+separator+'retry='+Date.now()+'" alt="المقطع القرآني الخاص بالسؤال" loading="eager" onload="this.previousElementSibling.style.display=\'none\'" onerror="showQuranQuestionImageError(this)">';
 }
 function cleanExamQuestion(q){
   q=Object.assign({},q);q.prompt=String(q.prompt||'').replace(/(?:الإجابة|الجواب)\s*(?:الصحيحة)?\s*[:：].*$/gi,'').trim();
@@ -3524,7 +3524,7 @@ function renderExamQuestions(){
     '<div class="form-group"><label>لمستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>��عب</option></select></div>'+
     '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
     (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
-    (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
+    (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسمو��</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
     '<div class="form-group"><label>فحص الغش لهذا السؤال</label><select onchange="updateExamQuestion('+i+',\'proctorEnabled\',this.value===\'true\')"><option value="true" '+(q.proctorEnabled!==false?'selected':'')+'>مفعّل</option><option value="false" '+(q.proctorEnabled===false?'selected':'')+'>غير مفعّل</option></select></div></div>'+
     '<div class="form-group"><label>تعليمات السؤال (ئن دون الإجابة)</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+ 
     '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآيات محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
@@ -3538,7 +3538,7 @@ function saveExamDraft(){
   const id=parseInt(document.getElementById('recordStudentId').value);let students=getData('students');const i=students.findIndex(s=>s.id===id);const qs=examQuestions.filter(q=>!q.rejected).map(cleanExamQuestion);
   if(i<0||!qs.length){showExamAlert('أضف سؤالاً واحداً على الأقل قبل الحفظ.','danger');return}
   const totalSeconds=qs.reduce((n,q)=>n+Math.max(5,parseInt(q.timeLimit)||60),0);
-  const deadlineValue=document.getElementById('examDeadline')?.value||'';const deadlineAt=deadlineValue?new Date(deadlineValue).getTime():Date.now()+24*60*60*1000;if(!Number.isFinite(deadlineAt)||deadlineAt<=Date.now()){showExamAlert('حدد موعد انتهاء لاحقاً للوقت الحالي.','danger');return}
+  const deadlineValue=document.getElementById('examDeadline')?.value||'';const deadlineAt=deadlineValue?new Date(deadlineValue).getTime():Date.now()+24*60*60*1000;if(!Number.isFinite(deadlineAt)||deadlineAt<=Date.now()){showExamAlert('ح��د موعد انتهاء لاحقاً للوقت الحالي.','danger');return}
   const lastSurah=document.getElementById('examLastSurah')?.value||currentRecordMainSurah;
   students[i].activeExam={id:'exam_'+Date.now(),date:document.getElementById('recordDate').value||new Date().toISOString().split('T')[0],questions:JSON.parse(JSON.stringify(qs)),totalSeconds,status:'pending',createdAt:Date.now(),deadlineAt,baseSurah:currentRecordMainSurah,lastSurah};
   setData('students',students);
@@ -3704,7 +3704,7 @@ async function recordStudentExamAudio(i){
     recorder.start();registerAudioRecorder('exam-'+i,recorder,stream,{statusId:'examAudioStatus_'+i,buttonId:'examVoiceBtn_'+i});btn.onclick=()=>{if(recorder.state!=='inactive')recorder.stop()};
   }catch(e){status.textContent='تعذر الوصول إلى الميكروفون';btn.dataset.recording='false';btn.classList.remove('recording')}
 }
-function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختئار</h3><p>النتيجة معلّقة لحين مراجعة المئؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيج�� النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>ال��قييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
+function renderStudentResultHtml(ex){if(ex.status==='pending_audio_review')return '<div class="alert alert-warning"><h3>تم استلام الاختئار</h3><p>النتي��ة معلّقة لحين مراجعة المئؤول للتسجيل الصوتي.</p></div>';let h='<div class="alert alert-success"><h3>النتيج�� النهائية: '+ex.score+' / '+ex.maxScore+'</h3><p>تم حفظ جميع إجاباتك وإرسالها للمسؤول.</p></div>';if(ex.questions&&ex.answers){h+='<details open><summary>مراجعة إجاباتك</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br>إجابتك: '+escapeHtml(a.answer||'—')+'<br>ال��قييم: '+(a.score>=1?'صحيحة':'غير صحيحة')+'</div>'});h+='</details>'}return h}
 function renderStudentExamResult(ex){const c=document.getElementById('studentExamContent');if(c)c.innerHTML=renderStudentResultHtml(ex)}
 function notifyExamExpired(student,ex){if(ex.expiryNotified)return;ex.expiryNotified=true;const text='انتهى الوقت المحدد لاختبار '+student.name+' بتاريخ '+(ex.date||'');let msgs=getData('messages');msgs.push({type:'system',sender:'النظام',receiverType:'student',receiverId:student.id,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'parent',receiverName:student.parent,text,time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});msgs.push({type:'system',sender:'النظام',receiverType:'admin',text,studentId:student.id,parentPhone:student.parentPhone||student.parentMobile||'',time:new Date().toLocaleString('ar-EG'),approved:true,read:false,expiryKey:ex.id});setData('messages',msgs)}
 function examWhatsAppLink(phone,text){const p=String(phone||'').replace(/\D/g,'').replace(/^0/,'20');return p?'https://wa.me/'+p+'?text='+encodeURIComponent(text):''}
@@ -4027,7 +4027,7 @@ function drawTotalOnlyChart(canvasId, sessions) {
   }
 
   ctx.fillStyle = textColor; ctx.font = 'bold 22px Segoe UI'; ctx.textAlign = 'center';
-  ctx.fillText('التاريخ', w / 2, h - 25);
+  ctx.fillText('الت��ريخ', w / 2, h - 25);
   ctx.save(); ctx.translate(35, h / 2); ctx.rotate(-Math.PI / 2);
   ctx.fillText('المجموع (0-16)', 0, 0); ctx.restore();
 
@@ -4840,7 +4840,7 @@ function renderStudentDashboard() {
   document.getElementById('studentInfo').innerHTML = html;
 
   if(s.activeExam && s.activeExam.status==='pending'){
-    document.getElementById('studentInfo').innerHTML += '<div class="alert alert-warning" style="margin-top:15px;border:2px solid var(--warning);font-size:1.05rem"><strong>🔔 لديك اختبار ج��يد!</strong><br>أرس��ه المسؤئل ويجب حله. <button class="btn btn-warning" style="margin-top:8px" onclick="showPage(\'studentExamPage\')">🧪 فتح الاختبار الآن</button></div>';
+    document.getElementById('studentInfo').innerHTML += '<div class="alert alert-warning" style="margin-top:15px;border:2px solid var(--warning);font-size:1.05rem"><strong>🔔 لديك اخت��ار ج��يد!</strong><br>أرس��ه المسؤئل ويجب حله. <button class="btn btn-warning" style="margin-top:8px" onclick="showPage(\'studentExamPage\')">🧪 فتح الاختبار الآن</button></div>';
     notifyStudentExamOnce(s);
   }
 
@@ -4958,7 +4958,7 @@ function renderStudentTasks() {
     let cardStyle = '';
 
     if(isProctorCancelled) {
-      status = '<span class="task-status" style="background:var(--danger); color:#fff;">أُلغيت بسبب مخالفة المراقبة: '+escapeHtml(task.cancelReason||'مخالفة الشروط')+'</span>';
+      status = '<span class="task-status" style="background:var(--danger); color:#fff;">أُلغيت بسبب مخالفة المراقبة: '+escapeHtml(task.cancelReason||'مخال��ة الشروط')+'</span>';
       cardStyle = 'style="border-right-color:var(--danger);"';
     } else if(isSubmitted && !isRejected) {
       status = '<span class="task-status" style="background:var(--warning); color:#000;">⏳ قيد الانتظار</span>';
@@ -5234,7 +5234,7 @@ async function analyzeRecitationContent(blob, task, transcript) {
   let aiResult=await serverRecitationAnalysis(blob, task);
   const serverError=aiResult&&aiResult.analysisError?aiResult.analysisError:'';
   if(serverError||!aiResult){
-    return {pct:0,dur:Math.round(dur),txtPct:null,expectedSec:expectedSecondsFromText(expectedText)||expectedAyahSeconds(task),reason:serverError||'تعذّر تحليل التسجيل بواسطة Gemini. أعد المحاولة وتأكد من الاتصال بالإنترنت.'};
+    return {pct:0,dur:Math.round(dur),txtPct:null,expectedSec:expectedSecondsFromText(expectedText)||expectedAyahSeconds(task),reason:serverError||'تعذّر تحليل التسجيل بواسطة Gemini. ��عد المحاولة وتأكد من الاتصال بالإنترنت.'};
   }
   const usedTranscript=aiResult.transcript||'';
   const txtPct=typeof aiResult.matchedPercent==='number'?aiResult.matchedPercent:null;
@@ -6225,7 +6225,7 @@ function generateAIResponse(text, student) {
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
-    let r = '📈 <strong>تحليل تقدمك:</strong><br>• عدد التسميعات النهائية: '+scores.length+'<br>• المتوسط العام: '+avg+' من 16<br>• أعلى درجة: '+Math.max.apply(null,scores)+'<br>• أقل درجة: '+Math.min.apply(null,scores)+'<br>';
+    let r = '📈 <strong>تحل��ل تقدمك:</strong><br>• عدد التسميعات النهائية: '+scores.length+'<br>• المتوسط العام: '+avg+' من 16<br>• أعلى درجة: '+Math.max.apply(null,scores)+'<br>• أقل درجة: '+Math.min.apply(null,scores)+'<br>';
     r += '• آخ تغيّر: '+(diff>0?('ارتفاع بمقدار '+diff+' درجة 🎉'):(diff<0?('انخفاض بمقدار '+Math.abs(diff)+' درجة — لا بأس، عوّضها بمراجعة إضافية 💪'):'ثبات في المستوى '));
     return r;
   }
@@ -6421,7 +6421,7 @@ if(restoreSession()) {
       devAssistantPage:['🛠️','مساعد تطوير الموقع'], chartPage:['📈','مخطط التقييم']
     };
     const roleItems = {
-      admin:[['messagesPage','💬','الرسائل'],['adminSettings','⚙️','الإعدادات'],['filesPage','📁','الملفات المرفوعة'],['devAssistantPage','🛠️','مساعد تطوير الموقع'],['adminAIPage','✦','المحادثة الإدارية مع الذكاء الاصطناعي'],['githubSyncPage','🔗','مزامنة GitHub']],
+      admin:[['messagesPage','💬','الرسائ��'],['adminSettings','⚙️','الإعدادات'],['filesPage','📁','الملفات المرفوعة'],['devAssistantPage','🛠️','مساعد تطوير الموقع'],['adminAIPage','✦','المحادثة الإدارية مع الذكاء الاصطناعي'],['githubSyncPage','🔗','مزامنة GitHub']],
       student:[['studentInbox','💬','الرسائل'],['studentFilesPage','📁','الملفات'],['studentAIChat','✦','مساعد الذكاء الاصطناعي'],['studentChartPage','📈','مخطط التقييم'],['studentRecordsPage','🎙️','صندوق التسجيلات']],
       parent:[['parentInbox','💬','الرسائل'],['parentFilesPage','📁','الملفات'],['parentAIChat','✦','مساعد الذكاء الاصطناعي'],['parentChartPage','📈','المخطط']]
     };
