@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       db.select().from(antiCheatItemConfigs).orderBy(desc(antiCheatItemConfigs.updatedAt)),
     ])
     return NextResponse.json({ global: global[0] ?? { id: true, enabled: false, config: {} }, items })
-  } catch { return NextResponse.json({ error: 'تعذر تحميل إعدادات مكافحة الغش' }, { status: 500 }) }
+  } catch (error) { console.error('[v0] GET /api/anti-cheat failed:', error instanceof Error ? error.message : error); return NextResponse.json({ error: 'تعذر تحميل إعدادات مكافحة الغش', code: 'ANTI_CHEAT_READ_FAILED' }, { status: 500 }) }
 }
 
 export async function POST(request: Request) {
@@ -88,5 +88,5 @@ export async function POST(request: Request) {
     }
     if (action === 'end' && body.session?.id) { await db.update(antiCheatSessions).set({ status: 'completed', endedAt: new Date(), updatedAt: new Date(), riskScore: clamp(body.session.riskScore), severity: String(body.session.severity || 'NORMAL') }).where(eq(antiCheatSessions.id, String(body.session.id))); return NextResponse.json({ ok: true }) }
     return NextResponse.json({ error: 'إجراء غير معروف' }, { status: 400 })
-  } catch { return NextResponse.json({ error: 'تعذر حفظ بيانات المراقبة' }, { status: 500 }) }
+  } catch (error) { console.error('[v0] POST /api/anti-cheat failed:', error instanceof Error ? error.message : error); return NextResponse.json({ error: 'تعذر حفظ بيانات المراقبة', code: 'ANTI_CHEAT_WRITE_FAILED' }, { status: 500 }) }
 }
