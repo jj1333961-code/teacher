@@ -1,7 +1,5 @@
-import { redirect } from 'next/navigation'
+import WelcomeScreen from '@/components/welcome-screen'
 
-// النسخة القديمة: الجذر يبدأ بصفحة الترحيب في public/index.html.
-// هذه صفحة احتياطية في حال لم يُطبَّق الـ rewrite في next.config.mjs.
 export default function Page() {
-  redirect('/index.html')
+  return <WelcomeScreen />
 }

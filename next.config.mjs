@@ -10,8 +10,8 @@ const nextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // النسخة القديمة: الجذر يعرض صفحة الترحيب (التطبيق الكامل) من public/index.html
-        { source: '/', destination: '/index.html' },
+        // توافق مرحلي: لا تُحمّل المنصة القديمة إلا عند طلب هذا المسار صراحة.
+        { source: '/legacy', destination: '/index.html' },
       ],
     }
   },
