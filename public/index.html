@@ -26,7 +26,7 @@
 <p class="prayer">صَلِّ على النبي ﷺ</p>
 <p id="status" class="status">اضغط للدخول إلى المنصة، ثم استمع إلى التلاوة.</p>
 <button id="enterPlatform" class="fallback" type="button">الدخول إلى المنصة</button>
-<audio id="welcomeAudio" preload="auto" playsinline src="/audio/ibrahim-ayah-24-minshawi.mp3"></audio>
+<audio id="welcomeAudio" preload="auto" autoplay playsinline src="/audio/ibrahim-ayah-24-minshawi.mp3"></audio>
 </main>
 <script>
 (function(){
@@ -48,6 +48,20 @@
     });
   }
   warmMainPage();
+
+  function startWelcomeAudio(){
+    if(started || moving) return;
+    started = true;
+    const playPromise = audio.play();
+    if(playPromise && playPromise.catch){
+      playPromise.catch(function(){
+        started = false;
+        enterButton.disabled = false;
+        status.textContent = 'اضغط للدخول إلى المنصة ثم بدء التلاوة.';
+      });
+    }
+  }
+  startWelcomeAudio();
 
   function enterApp(){
     if(moving) return;
