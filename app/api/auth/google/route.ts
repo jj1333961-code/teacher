@@ -4,17 +4,18 @@ import { NextRequest, NextResponse } from "next/server"
 export const dynamic = "force-dynamic"
 const COOKIE = "teacher_google_state"
 const SESSION = "teacher_google_session"
+// Google OAuth requires the redirect_uri to match, byte-for-byte, an entry
+// registered in Cloud Console's "Authorized redirect URIs" list. Deriving it
+// from request headers is fragile (Vercel's proxy can report an internal
+// http:// origin or a preview hostname that was never registered), so we
+// pin it to the single canonical production domain instead. Only local dev
+// (localhost/127.0.0.1) is allowed to use its own origin, since that's the
+// second URI you register in Cloud Console for testing.
+const CANONICAL_DOMAIN = "https://teacher-three-ashen.vercel.app"
 function appOrigin(request: NextRequest) {
-  // Behind Vercel's proxy, request.url can report an internal http:// origin
-  // (and sometimes an internal hostname) even though the public-facing URL
-  // is https://<the real domain>. Google validates the redirect_uri
-  // byte-for-byte against what's registered in Cloud Console, so trust the
-  // Host/X-Forwarded-Host header the browser actually connected to instead
-  // of request.url, and only fall back to request.url for local dev.
-  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host")
-  const isLocalHost = !host || host.startsWith("localhost") || host.startsWith("127.0.0.1")
-  if (isLocalHost) return new URL(request.url).origin
-  return `https://${host}`
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? new URL(request.url).host
+  const isLocalHost = host.startsWith("localhost") || host.startsWith("127.0.0.1")
+  return isLocalHost ? new URL(request.url).origin : CANONICAL_DOMAIN
 }
 
 function appPage(request: NextRequest) {

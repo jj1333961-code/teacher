@@ -2,18 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
+// Must match the canonical domain in /api/auth/google exactly: Google
+// validates redirect_uri byte-for-byte against what's registered in Cloud
+// Console, so this reported value has to be identical to the one actually
+// sent during the OAuth handshake.
+const CANONICAL_DOMAIN = 'https://teacher-three-ashen.vercel.app'
+
 export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim() ?? ''
-  // Match the origin logic in /api/auth/google: behind Vercel's proxy,
-  // request.url can report an internal http:// origin (and sometimes an
-  // internal hostname) even though the public-facing URL is
-  // https://<the real domain>, which would make this reported redirectUri
-  // disagree with the one actually sent to Google. Trust the Host /
-  // X-Forwarded-Host header instead, falling back to request.url only for
-  // local dev.
-  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host')
-  const isLocalHost = !host || host.startsWith('localhost') || host.startsWith('127.0.0.1')
-  const origin = isLocalHost ? new URL(request.url).origin : `https://${host}`
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? new URL(request.url).host
+  const isLocalHost = host.startsWith('localhost') || host.startsWith('127.0.0.1')
+  const origin = isLocalHost ? new URL(request.url).origin : CANONICAL_DOMAIN
   const redirectUri = `${origin}/api/auth/google`
   const configured = Boolean(clientId && process.env.GOOGLE_CLIENT_SECRET?.trim())
   return NextResponse.json(
