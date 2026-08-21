@@ -139,7 +139,7 @@ const LANG_DICT = {
   'الاختبارات': 'Exams', 'المهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل الصوتي': 'Audio recording',
   'مكافحة الغش': 'Anti-cheat', 'تحليل التسجيل': 'Analyze recording', 'جاري التحليل...': 'Analyzing...',
   'تعذر تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
-  'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا توجد بيانات': 'No data available',
+  'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', '��ا توجد بيانات': 'No data available',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'حذف': 'Delete', 'تعديل': 'Edit', 'إضافة': 'Add',
   'إرسال': 'Send', 'تحميل': 'Loading', 'جار التحميل...': 'Loading...', 'تأكيد': 'Confirm',
   'نجح': 'Succeeded', 'فشل': 'Failed', 'محظور': 'Blocked', 'مفعل': 'Enabled', 'غير مفعل': 'Disabled',
@@ -324,7 +324,22 @@ function clearSession() {
   } catch(e) { console.error('clearSession error:', e); }
 }
 
+function openRoleSidebar() {
+  const nav = document.querySelector('.page:not(.hidden) .role-nav');
+  if (!nav) return;
+  nav.classList.add('open');
+  const bd = document.getElementById('roleSidebarBackdrop');
+  if (bd) bd.classList.add('open');
+}
+
+function closeRoleSidebar() {
+  document.querySelectorAll('.role-nav.open').forEach(function(n) { n.classList.remove('open'); });
+  const bd = document.getElementById('roleSidebarBackdrop');
+  if (bd) bd.classList.remove('open');
+}
+
 function showPage(id) {
+  closeRoleSidebar();
   const currentVisible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   const currentId = currentVisible ? currentVisible.id : null;
 
@@ -366,6 +381,7 @@ function showPage(id) {
 }
 
 function goBack() {
+  closeRoleSidebar();
   if(pageHistory.length > 0) {
     const prevPage = pageHistory.pop();
     document.querySelectorAll('.page, .home-page, .chart-page').forEach(el => el.classList.add('hidden'));
@@ -1989,7 +2005,7 @@ async function loadExamFiles(){
 }
 function updateExamSourceDistribution(){const mode=document.getElementById('examSourceMode')?.value||'ai',group=document.getElementById('examFileSourceGroup'),source=document.getElementById('examFileSource'),label=document.getElementById('examSourceDistribution');if(group)group.style.display=mode==='file'?'block':'none';if(source)source.disabled=mode!=='file';if(label)label.textContent=mode==='file'?'ستُنشأ الدفعة كاملة من الملف المحدد.':'توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.'}
 function getExamSourceMode(){return document.getElementById('examSourceMode')?.value==='file'?'file':'ai'}
-async function uploadExamFile(input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById('examFileUploadStatus');if(status)status.innerHTML='<div class="alert alert-info">جاري رفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);const res=await fetch('/api/exam-files',{method:'POST',body:form});await readApiJson(res,'تعذر رفع الملف');if(status)status.innerHTML='<div class="alert alert-success">تم حفظ اءءملف واستخراج النص.</div>';await loadExamFiles()}catch(e){if(status)status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر رفع الملف')+' <button class="btn btn-sm btn-primary" onclick="document.getElementById(\'examFileInput\')?.click()">اختيار ملف آخر</button></div>'}finally{input.value=''}}
+async function uploadExamFile(input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById('examFileUploadStatus');if(status)status.innerHTML='<div class="alert alert-info">جاري رفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);const res=await fetch('/api/exam-files',{method:'POST',body:form});await readApiJson(res,'تعذر رفع الملف');if(status)status.innerHTML='<div class="alert alert-success">تم حفظ اءءملف واستخراج النص.</div>';await loadExamFiles()}catch(e){if(status)status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر رفع الملف')+' <button class="btn btn-sm btn-primary" onclick="document.getElementById(\'examFileInput\')?.click()">اختيار ��لف آخر</button></div>'}finally{input.value=''}}
 async function deleteExamFile(id){const file=examFilesCache.find(f=>f.id===id);if(!file||!confirm('هل تريد حذف هذا الملف نهائياً؟'))return;try{const res=await fetch('/api/exam-files',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({pathname:file.pathname,metadataPathname:file.metadataPathname})});await readApiJson(res,'تعذر حذف الملف');await loadExamFiles()}catch(e){alert(e.message||'تعذر الحذف')}}
 function toggleExamSource(){loadExamFiles().catch(e=>showExamAlert(e.message,'danger'))}
 function shuffled(values){return values.slice().sort(()=>Math.random()-.5)}
@@ -4145,7 +4161,7 @@ async function voiceAudioPayload(blob){
   const supported=/^audio\/(wav|x-wav|mpeg|mp3|mp4|x-m4a|m4a|ogg)(;|$)/i.test(blob.type||'');
   let audioBlob=blob;
   if(!supported){audioBlob=await blobToWav(blob);}
-  if(!audioBlob) throw new Error('تعذر تجهيز التسجيل بصيغة يدعمها Gemini');
+  if(!audioBlob) throw new Error('تعذر تجهيز التسجي�� بصيغة يدعمها Gemini');
   if(audioBlob.size>2800000) throw new Error('حجم التسجيل كبير جداً للتحليل الصوتي. سجّل مقطعاً أقصر من دقيقة ونصف.');
   return {audioBase64:await audioBlobToBase64(audioBlob),mimeType:audioBlob.type.split(';')[0]||'audio/wav'};
 }
@@ -4179,7 +4195,7 @@ async function blobToWav(blob) {
   const decoded = await ctx.decodeAudioData(buf.slice(0));
   await ctx.close();
   const targetRate = 12000;
-    const srcData = decoded.getChannelData(0); // نأخذ القناة الأوى (أحادي)
+    const srcData = decoded.getChannelData(0); // نأخذ الق��اة الأوى (أحادي)
     const ratio = decoded.sampleRate / targetRate;
     const outLen = Math.floor(srcData.length / ratio);
     const out = new Float32Array(outLen);
@@ -4895,8 +4911,8 @@ function generateAIResponse(text, student) {
   const name = student.name || 'صديقي';
 
   // تحية
-  if(has('السلام','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الواجبءءءت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+  if(has('السلا��','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الواجبءءءت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية م��صصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
