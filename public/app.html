@@ -578,7 +578,9 @@ tr:hover { background: var(--table-hover); }
   html::-webkit-scrollbar, body::-webkit-scrollbar { width:0; height:0; display:none; }
   body { -ms-overflow-style:none; }
   #lockScreen .btn:disabled { opacity:.75; cursor:wait; }
-  </style>
+  .student-utility-bar{display:flex;align-items:center;justify-content:center;gap:clamp(8px,3vw,22px);padding:12px 8px;margin:0 0 18px;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb,var(--card) 92%,var(--primary));box-shadow:0 8px 22px rgba(0,0,0,.07)}
+.student-utility-icon{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:48px;border:0;background:transparent;color:var(--text);cursor:pointer;padding:3px 6px;border-radius:12px;transition:background .2s,transform .2s}.student-utility-icon:hover,.student-utility-icon:focus-visible{background:var(--table-header);transform:translateY(-2px);outline:2px solid var(--primary);outline-offset:2px}.student-utility-icon span{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--primary);color:var(--primary-foreground);font-size:21px;font-weight:700}.student-utility-icon small{font-size:11px;font-weight:700;white-space:nowrap}.student-utility-panel{margin:0 0 18px;padding:18px;border:1px solid var(--border);border-radius:18px;background:var(--card)}.student-utility-panel.hidden{display:none}.student-utility-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}.student-utility-action{border:1px solid var(--border);border-radius:12px;background:var(--table-header);padding:12px;color:var(--text);cursor:pointer;text-align:center}.student-utility-action:hover{border-color:var(--primary)}.student-utility-muted{color:var(--text-light);font-size:13px}.student-utility-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}.student-utility-row:last-child{border-bottom:0}.student-utility-reader{max-height:360px;overflow:auto;line-height:2.1;font-size:19px;text-align:right}.student-utility-reader p{margin:0;padding:8px 0;border-bottom:1px solid var(--border)}@media(max-width:520px){.student-utility-bar{justify-content:space-between;gap:2px}.student-utility-icon{min-width:42px;padding:3px 2px}.student-utility-icon span{width:30px;height:30px;font-size:18px}.student-utility-icon small{font-size:10px}}
+</style>
 </head>
 <body>
 
@@ -734,7 +736,7 @@ tr:hover { background: var(--table-hover); }
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
   <div class="form-group">
     <label>طلب التطوير</label>
-    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر����د إضافته أو تعديله ف الموقع..."></textarea>
+    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر������د إضافته أو تعديله ف الموقع..."></textarea>
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
@@ -1139,6 +1141,15 @@ tr:hover { background: var(--table-hover); }
       </div>
     </aside>
   </div>
+  <div class="student-utility-bar" aria-label="أدوات الطالب الإسلامية">
+    <button type="button" class="student-utility-icon" onclick="studentUtility('prayer')" aria-label="مواقيت الصلاة"><span aria-hidden="true">◷</span><small>الصلاة</small></button>
+    <button type="button" class="student-utility-icon" onclick="studentUtility('quran')" aria-label="القرآن"><span aria-hidden="true">▱</span><small>القرآن</small></button>
+    <button type="button" class="student-utility-icon" onclick="studentUtility('qibla')" aria-label="القبلة"><span aria-hidden="true">⌖</span><small>القبلة</small></button>
+    <button type="button" class="student-utility-icon" onclick="studentUtility('tasbih')" aria-label="التسبيح"><span aria-hidden="true">◉</span><small>تسبيح</small></button>
+    <button type="button" class="student-utility-icon" onclick="studentUtility('adhkar')" aria-label="الأذكار"><span aria-hidden="true">✦</span><small>أذكار</small></button>
+    <button type="button" class="student-utility-icon" onclick="studentUtility('more')" aria-label="المزيد"><span aria-hidden="true">•••</span><small>المزيد</small></button>
+  </div>
+  <div id="studentUtilityPanel" class="student-utility-panel hidden" aria-live="polite"></div>
   <div id="studentWelcome"></div>
   <div id="studentInfo"></div>
   <div id="studentDraftSection"></div>
@@ -1342,7 +1353,7 @@ tr:hover { background: var(--table-hover); }
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
     <div class="proctor-checks" aria-live="polite">
       <div id="proctorTouchCheck" class="proctor-check bad">شاشة لمس مطلوبة</div><div id="proctorLightCheck" class="proctor-check bad">الإضاءة غير مفحوصة</div>
-      <div id="proctorFaceCheck" class="proctor-check bad">الوجه غير مفحوص</div><div id="proctorGazeCheck" class="proctor-check bad">اتجاه النظر غير مفحوص</div>
+      <div id="proctorFaceCheck" class="proctor-check bad">الوجه غير مفحوص</div><div id="proctorGazeCheck" class="proctor-check bad">اتجاه الن��ر غير مفحوص</div>
     </div>
 <p id="proctorHelp">ضع الهاتف أمامك وانظر إلى الشاشة. استخدم الموقع بشكل طبيعي بلمسة واحدة في كل مرة؛ لا يلزم إبقاء الإصبع مضغوطًا أثناء الاختبار.</p>
 <div id="proctorGateHold" class="proctor-touch-zone" aria-disabled="true">بعد نجاح الفحص: ضع إصبع واحد هنا للبدء</div>
@@ -1395,7 +1406,7 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواجهة.
+  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار ال��خول أو إعدادات الواجهة.
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core warmup failed', err); }); };
   if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
   else setTimeout(warm, 350);

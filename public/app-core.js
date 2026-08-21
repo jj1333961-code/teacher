@@ -860,7 +860,7 @@ function submitSignupRequest() {
   const notes = document.getElementById('signupNotes').value.trim();
   if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
   if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هاتف صحيحًا مع اختيار كود الدولة</div>'; return; }
-  if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يكون 14 رقم</div>'; return; }
+  if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يك��ن 14 رقم</div>'; return; }
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
   const time = new Date().toLocaleString('ar-EG');
   const details = '📋 طلب ئنشاء حساب جديد\n'
@@ -1069,7 +1069,7 @@ async function toggleVoiceRecord() {
       preview.src = URL.createObjectURL(voiceBlob); 
       preview.style.display = 'block';
       stream.getTracks().forEach(t => t.stop());
-      status.textContent = '🤖 جميناي يحلل البصمة الصوتية...';
+      status.textContent = '🤖 جميناي ي��لل البصمة الصوتية...';
   try {
   voiceProfileGemini = await geminiVoiceProfile(voiceBlob);
   voiceFingerprint = null;
@@ -2170,7 +2170,7 @@ function renderExamPlanRows(){
       '<option value="easy" '+(r.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(r.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(r.level==='hard'?'selected':'')+'>صعب</option></select></div>'+
       '<div class="form-group"><label>نع السؤال</label><select onchange="examPlanRows['+i+'].type=this.value;renderExamPlanRows()">'+
       '<option value="mcq" '+(r.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(r.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(r.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(r.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+
-      '<div class="form-group"><label>موضع السؤال</label><select onchange="examPlanRows['+i+'].position=this.value"><option value="random" '+((r.position||'random')==='random'?'selected':'')+'>عشوائي ومتنوع</option><option value="start" '+(r.position==='start'?'selected':'')+'>أول السورة</option><option value="middle" '+(r.position==='middle'?'selected':'')+'>وسط السورة</option><option value="end" '+(r.position==='end'?'selected':'')+'>آخر السورة</option></select></div>'+
+      '<div class="form-group"><label>موضع السؤال</label><select onchange="examPlanRows['+i+'].position=this.value"><option value="random" '+((r.position||'random')==='random'?'selected':'')+'>عشوائي ومتنو��</option><option value="start" '+(r.position==='start'?'selected':'')+'>أول السورة</option><option value="middle" '+(r.position==='middle'?'selected':'')+'>وسط السورة</option><option value="end" '+(r.position==='end'?'selected':'')+'>آخر السورة</option></select></div>'+
       '<div class="form-group"><label>وقت السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" title="الساعات" type="number" min="0" max="23" value="'+Math.floor((r.timeLimit||60)/3600)+'" onchange="setExamPlanTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" title="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((r.timeLimit||60)%3600)/60)+'" onchange="setExamPlanTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" title="الثواني" type="number" min="0" max="59" value="'+((r.timeLimit||60)%60)+'" onchange="setExamPlanTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+
       (r.type==='mcq'?'<div class="form-group"><label>عدد الاختيارات</label><input type="number" min="2" max="6" value="'+(r.optionsCount||4)+'" onchange="examPlanRows['+i+'].optionsCount=Math.max(2,Math.min(6,parseInt(this.value)||4))"></div>':'')+
       (r.type==='complete'?'<div class="form-group"><label>عدد الآيات المراد إكمالها</label><input type="number" min="1" max="20" value="'+(r.completeAyahs||1)+'" onchange="examPlanRows['+i+'].completeAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">يحدد عدد الآيات التي سيكملها الطالب بعد بداية السؤال</small></div>':'')+
@@ -2496,7 +2496,7 @@ function saveSession(isFinal) {
     homeworkItems.forEach(h=>students[idx].tasks.push({type:'homework',text:h.text,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++}));
     readingItems.forEach(r=>students[idx].tasks.push({type:'reading',text:r.text,surah:r.surah,from:r.from,to:r.to,showAyat:!!r.showAyat,audio:r.audio||'',approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++}));
     setData('students',students);
-    sendSystemSessionMessage(students[idx], 'تم حفظ تسميع '+students[idx].name+' بتاريخ '+date+' كمسودة. المهام الحالية ما زالت ظاهرة للطالب.');
+    sendSystemSessionMessage(students[idx], 'تم حفظ تسميع '+students[idx].name+' بتاريخ '+date+' كمسودة. المهام الحالية ما زالت ظاهر�� للطالب.');
     showToast('💾 ءءم الحفظ كمسودة والمهام ما زالت متاحة للطالب', 'success');
     return;
   }
@@ -2946,7 +2946,7 @@ async function deleteGithubFile(){
   recordDevAudit({ status:'failed', request:'حذف ملف: '+path, error:'لم يتم الحذف' });
   }
   } catch(e){
-  if(resBox) resBox.innerHTML = '<span style="color:#dc3545;">❌ '+escapeHtmlAi(e.message || 'تعذر الحذف')+'</span>';
+  if(resBox) resBox.innerHTML = '<span style="color:#dc3545;">❌ '+escapeHtmlAi(e.message || 'تعذر الحذ��')+'</span>';
   recordDevAudit({ status:'failed', request:'حذف ملف: '+path, error:(e && e.message) ? e.message : 'تعذر الحذف' });
   }
   }
@@ -5009,7 +5009,7 @@ function generateAIResponse(text, student) {
   }
   // بيانات الحفظ
   if(has('حفظ','قرآن','قران','سورة','جزء','وين وئلت','أين وصلت')) {
-    return '📖 <strong>بيانات حفظك:</strong><br>• الجزء: '+(student.juz || 'غير محدد')+'<br>• السورة الحالية: '+(student.surah || 'غير محددة')+'<br>• عدد التسميعات النهائية: '+finalizedSessions.length+'<br><br>حافظ على المراجعة اليومية لتثبيت ما حفظت.';
+    return '📖 <strong>بيانات حفظك:</strong><br>• الجزء: '+(student.juz || 'غير محدد')+'<br>• السورة الحا��ية: '+(student.surah || 'غير محددة')+'<br>• عدد التسميعات النهائية: '+finalizedSessions.length+'<br><br>حافظ على المراجعة اليومية لتثبيت ما حفظت.';
   }
   // التواصل مع المسؤو
   if(has('مسؤول','معلم','شيخ','ابلاغ','إبلاغ','رسالءء','رسالة','تواصل','شكوى')) {
@@ -5025,6 +5025,24 @@ function generateAIResponse(text, student) {
   if(pending.length > 0) r += '<br><br>📌 تذكير: لديك '+pending.length+' مهمة لم تُعتمد بعد.';
   return r;
 }
+
+const studentUtilityState={lat:30.0444,lon:31.2357,locationFallback:true,prayerDate:'',quranSurahs:[]};
+function studentUtilityEscape(value){return escapeHtml(String(value??''))}
+function studentUtilityPanel(title,body){const panel=document.getElementById('studentUtilityPanel');if(!panel)return;panel.classList.remove('hidden');panel.innerHTML='<div class="student-utility-row"><strong>'+title+'</strong><button type="button" class="btn btn-outline" onclick="closeStudentUtility()">إغلاق</button></div>'+body}
+function closeStudentUtility(){document.getElementById('studentUtilityPanel')?.classList.add('hidden')}
+function studentUtility(type){if(type==='prayer'){renderStudentPrayer();return}if(type==='quran'){renderStudentQuran();return}if(type==='qibla'){renderStudentQibla();return}if(type==='tasbih'){renderStudentTasbih();return}if(type==='adhkar'){studentUtilityPanel('أذكار مختارة','<div class="student-utility-reader"><p>سبحان الله وبحمده، سبحان الله العظيم.</p><p>لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير.</p><p>اللهم أعني على ذكرك وشكرك وحسن عبادتك.</p></div>');return}studentUtilityPanel('المزيد','<div class="student-utility-grid"><button class="student-utility-action" onclick="renderStudentPrayer()">مواقيت الشهر</button><button class="student-utility-action" onclick="renderHijriCalendar()">التقويم الهجري</button><button class="student-utility-action" onclick="studentUtility(\'adhkar\')">أذكار الصباح والمساء</button><button class="student-utility-action" onclick="renderStudentQibla()">اتجاه القبلة</button></div>')}
+function formatStudentTime(minutes){const h=Math.floor(minutes/60)%24,m=Math.round(minutes%60);return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')}
+function studentJulian(date){return date.getTime()/86400000- date.getTimezoneOffset()/1440 + 2440587.5}
+function calculateStudentPrayerTimes(date,lat,lon){const jd=studentJulian(date)-2451545,rad=Math.PI/180;const decl=-23.44*Math.cos(rad*(360/365*(jd-80)));const noon=12-lon/15;const angle=(a)=>Math.acos((Math.sin(rad*-0.833)-Math.sin(rad*lat)*Math.sin(rad*decl))/(Math.cos(rad*lat)*Math.cos(rad*decl)))/rad/15;const sunrise=noon-angle(0),sunset=noon+angle(0);const fajr=noon-angle(18),isha=noon+angle(18),asr=noon+angle(45);return[['الفجر',fajr],['الشروق',sunrise],['الظهر',noon],['العصر',asr],['المغرب',sunset],['العشاء',isha]].map(([name,time])=>({name,time:formatStudentTime((time+24)%24*60)}))}
+function requestStudentLocation(done){if(!navigator.geolocation){done();return}navigator.geolocation.getCurrentPosition(function(pos){studentUtilityState.lat=pos.coords.latitude;studentUtilityState.lon=pos.coords.longitude;studentUtilityState.locationFallback=false;done()},function(){done()},{enableHighAccuracy:false,timeout:7000,maximumAge:3600000})}
+function renderStudentPrayer(){requestStudentLocation(function(){const date=new Date(),times=calculateStudentPrayerTimes(date,studentUtilityState.lat,studentUtilityState.lon);const note=studentUtilityState.locationFallback?'<p class="student-utility-muted">الموقع الافتراضي: القاهرة — الأوقات تقديرية. <button class="btn btn-outline" onclick="renderStudentPrayer()">إعادة طلب الموقع</button></p>':'<p class="student-utility-muted">تم تحديد الأوقات حسب موقعك الجغرافي الحالي.</p>';studentUtilityPanel('مواقيت الصلاة اليوم',note+'<div>'+times.map(function(item){return '<div class="student-utility-row"><span>'+item.name+'</span><strong dir="ltr">'+item.time+'</strong></div>'}).join('')+'</div>')})}
+function renderStudentQibla(){requestStudentLocation(function(){const bearing=(Math.atan2(Math.sin((39.8262-studentUtilityState.lon)*Math.PI/180)*Math.cos(21.4225*Math.PI/180),Math.cos(studentUtilityState.lat*Math.PI/180)*Math.sin(21.4225*Math.PI/180)-Math.sin(studentUtilityState.lat*Math.PI/180)*Math.cos(21.4225*Math.PI/180)*Math.cos((39.8262-studentUtilityState.lon)*Math.PI/180))*180/Math.PI+360)%360;const note=studentUtilityState.locationFallback?'الموقع الافتراضي القاهرة — الاتجاه تقريبي.':'تم الحساب من موقعك الحالي.';studentUtilityPanel('اتجاه القبلة','<p class="student-utility-muted">'+note+'</p><div style="text-align:center;padding:22px"><div style="font-size:64px;transform:rotate('+bearing+'deg);color:var(--primary)">↑</div><strong>اتجه نحو '+Math.round(bearing)+'° من الشمال</strong></div><button class="btn btn-outline" onclick="renderStudentQibla()">إعادة تحديد الموقع</button>')})}
+function renderStudentTasbih(){const key='studentTasbihCount',count=Number(getData(key,0))||0;studentUtilityPanel('التسبيح','<div style="text-align:center"><div id="studentTasbihCount" style="font-size:48px;font-weight:800;color:var(--primary)">'+count+'</div><button class="btn btn-primary" style="min-width:160px" onclick="incrementStudentTasbih()">اضغط للتسبيح</button><button class="btn btn-outline" onclick="resetStudentTasbih()">تصفير</button></div>')}
+function incrementStudentTasbih(){const count=(Number(getData('studentTasbihCount',0))||0)+1;setData('studentTasbihCount',count);const el=document.getElementById('studentTasbihCount');if(el)el.textContent=count}
+function resetStudentTasbih(){setData('studentTasbihCount',0);renderStudentTasbih()}
+function renderHijriCalendar(){const date=new Date(),hijri=new Intl.DateTimeFormat('ar-SA-u-ca-islamic',{dateStyle:'full'}).format(date);studentUtilityPanel('التقويم الهجري','<p style="font-size:20px;text-align:center">'+hijri+'</p><p class="student-utility-muted">التاريخ الميلادي: '+date.toLocaleDateString('ar-EG',{dateStyle:'full'})+'</p>')}
+async function renderStudentQuran(){studentUtilityPanel('متصفح القرآن','<p class="student-utility-muted">جاري تحميل قائمة السور...</p>');try{if(!studentUtilityState.quranSurahs.length){const response=await fetch('https://api.alquran.cloud/v1/surah');if(!response.ok)throw new Error('تعذر تحميل السور');studentUtilityState.quranSurahs=(await response.json()).data}studentUtilityPanel('متصفح القرآن','<div class="student-utility-grid">'+studentUtilityState.quranSurahs.map(function(s){return '<button class="student-utility-action" onclick="openStudentSurah('+s.number+')">'+studentUtilityEscape(s.number)+'. '+studentUtilityEscape(s.name)+'</button>'}).join('')+'</div>')}catch(error){studentUtilityPanel('متصفح القرآن','<p class="student-utility-muted">تعذر تحميل السور. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.</p><button class="btn btn-outline" onclick="renderStudentQuran()">إعادة المحاولة</button>')}}
+async function openStudentSurah(number){studentUtilityPanel('تحميل السورة','<p class="student-utility-muted">جاري التحميل...</p>');try{const response=await fetch('https://api.alquran.cloud/v1/surah/'+number+'/quran-uthmani');if(!response.ok)throw new Error('تعذر تحميل السورة');const data=(await response.json()).data;studentUtilityPanel(studentUtilityEscape(data.name),'<button class="btn btn-outline" onclick="renderStudentQuran()">قائمة السور</button><div class="student-utility-reader">'+data.ayahs.map(function(ayah){return '<p><span class="badge badge-primary">'+ayah.numberInSurah+'</span> '+studentUtilityEscape(ayah.text)+'</p>'}).join('')+'</div>')}catch(error){studentUtilityPanel('تعذر تحميل السورة','<button class="btn btn-outline" onclick="renderStudentQuran()">العودة للسور</button>')}}
 
 function logout() {
   currentUser = null; currentType = null; currentAdminId = null;
