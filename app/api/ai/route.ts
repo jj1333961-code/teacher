@@ -4,7 +4,10 @@ export const runtime = "nodejs"
 export const maxDuration = 300
 
 const AUDIO_MAX_BYTES = 2_500_000
+// Base64 يزيد الحجم تقريباً 33%، لذلك يجب أن يسمح حد الطلب بالحمولة الكاملة
+// مع هامش صغير لرؤوس JSON وبيانات السؤال.
 const AUDIO_MAX_REQUEST_BYTES = 4_200_000
+const AUDIO_MAX_BASE64_LENGTH = Math.ceil((AUDIO_MAX_BYTES * 4) / 3) + 16_384
 
 function safeAudioLog(event: string, details: Record<string, unknown> = {}) {
   const safe = Object.fromEntries(Object.entries(details).filter(([key]) => !/key|token|authorization|base64|audio|data|prompt|transcript|email|phone|password/i.test(key)))
@@ -282,7 +285,9 @@ async function geminiText(prompt: string, system: string, temperature: number, a
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: system }] },
           contents: [{ role: "user", parts }],
-          generationConfig: { temperature },
+          generationConfig: audio
+            ? { temperature, responseMimeType: "application/json" }
+            : { temperature },
         }),
         cache: "no-store",
         signal: AbortSignal.timeout(audio ? 90_000 : 120_000),
@@ -339,7 +344,8 @@ function audioMimeType(audioFormat: string) {
 function normalizeAudioData(raw: unknown) {
   const value = String(raw || "").trim().replace(/^data:[^,]+,/, "").replace(/\s/g, "")
   if (!value || value.length < 32) throw new Error("AUDIO_EMPTY_PAYLOAD")
-  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(value)) throw new Error("AUDIO_INVALID_BASE64")
+  if (value.length > AUDIO_MAX_BASE64_LENGTH) throw new Error("AUDIO_PAYLOAD_TOO_LARGE")
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(value) || value.length % 4 === 1) throw new Error("AUDIO_INVALID_BASE64")
   const bytes = Buffer.from(value, "base64")
   if (!bytes.length) throw new Error("AUDIO_EMPTY_PAYLOAD")
   if (bytes.length > AUDIO_MAX_BYTES) throw new Error("AUDIO_PAYLOAD_TOO_LARGE")
@@ -455,10 +461,10 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 شكل كل عنصر:
 {"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"نص السؤال","stem":"","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
 
-تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs، وأن لكل سؤال إجابة واحدة قطعية.`
+تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs، وأن لكل سؤال إجاب�� واحدة قطعية.`
 
 const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
-كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
+كن متساهلاً مع الأخطاء ال��يسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
 احسب matchedPercent (0-100) لمدى مطابقة المعنى والألفاظ للنص المرجعي.
 score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إذا نصت آية واحدة أو خطأ جوهي بسيط، 0 إذا كان مختلفاً أو ناقصاً كثيراً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":[]}`
@@ -510,12 +516,12 @@ const PROJECT_MANIFEST = `المشروع الحالي: Student System AI — م�
 const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد تطوير تلقائي لمشروع Student System AI. يفهم TypeScript وJavaScript وHTML وCSS وNext.js وواجهات API وGitHub وVercel. المستخدم نا هو المسؤول ويعطيك طلباً بالعربية لتعديل الموقع.
 مهمتك: فهم اللب، فحص قائمة ملفات المشروع الحالية، تحديد الملفات التي يجب تعيلها أو إنشاؤها، ووضع خطة تنفيذ دقيقة. لا تكتب المحتوى الكامل للملفات في مرحلة الخطة؛ مرحلة التطبيق المنفصلة ستقرأ الملفات الحقيقية وتولّد الكود الكامل. يجب أن تكون قادراً على اقتراح تغييرات برمجية حقيقية، وليس مجرد وصف عام.
 احترم دائماً: عدم حذف الملفات، وعدم إعادة بناء المشروع، وعدم وضع أي مفتاح API في المتصفح، والحفاظ على التصميم العربي من اليمين إلى اليسار.
-أعد النتيجة حصراً ككائن JSON صالح بالعربية بالحقول التالية (من دون أي نص خارجه):
+أعد النتيجة حصر��ً ككائن JSON صالح بالعربية بالحقول التالية (من دون أي نص خارجه):
 {
  "understanding": "إعادة صياغة موجزة لفهمك للطلب",
  "feasible": true/false,
  "summary": "ملخص عام للخطة في جملة أو جملتين",
- "files": [ { "path": "مسار الملف", "action": "modify"|"create", "reason": "لماذا يُعدّل هذا الملف", "changes": ["تغيير مقترح 1","تغيير مقترح 2"] } ],
+ "files": [ { "path": "مسار الملف", "action": "modify"|"create", "reason": "ل��اذا يُعدّل هذا الملف", "changes": ["تغيير مقترح 1","تغيير مقترح 2"] } ],
  "steps": ["خطوة تنفيذ 1","خطوة 2"],
  "risks": ["مخاطرة أو أثر جانبي محتمل"],
  "clarifications": ["سؤال توضيحي إن كان الطلب غامضاً"]
@@ -708,7 +714,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
   } catch (e: any) {
     const msg = String(e?.message || "")
     if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|getaddrinfo/i.test(msg)) {
-      return { ok: false, reason: "تعذر الاتصال بخوادم GitHub (مشكلة في الشبكة). يرجى المحاولة مرة أخرى." }
+      return { ok: false, reason: "تعذر الاتصال بخوادم GitHub (مشك��ة في الشبكة). يرجى المحاولة مرة أخرى." }
     }
     return { ok: false, reason: msg }
   }
@@ -717,7 +723,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
   if (perms && perms.push !== true && perms.admin !== true && perms.maintain !== true) {
     return {
       ok: false,
-      reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
+      reason: `��لرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
   // التحقق من أن الفرع المحدد أو الافتراضي قابل للحل.
@@ -751,11 +757,11 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 - لا تحذف ملفات ولا تعيد بناء المشروع من الصفر.
 - عدّل أقل عدد ممكن من الملفات، وحافظ على كل الوظائف والتصميم الحالي وسلوك الصفحات القائمة.
 - لا تضع أي سرّ أو API key أو Token في public أو في أي JavaScript يصل إل المتصفح؛ الأسرار تبقى على الخادم فقط.
-- content يجب أن يكون المحتوى الكامل والنهائي للملف بعد التعديل، وليس diff، ودون اقتطاع أو حذف أجزاء لم تكن مقصودة بالتعديل.
+- content يجب أن يكون المحتوى الكامل والنهائي للملف بعد التعديل، وليس diff، ودون اقتطاع أو حذف أجزاء لم تك�� مقصودة بالتعديل.
 - لا تُرجع ملفاً لم يتغير فعلاً.
 - لا تُرجع أي مسار غير موجود في الملفات المعطاة إلا إذا كانت الخطة تقول create وكان إنشاء الملف ضرورياً.
 - لا تنشئ أو تعل ملفات الأسرار مثل .env.
-- إذا كان الطلب غير آمن أو غير واضح أو يخالف القيود، أعد patches=[] واشرح السبب في summary.
+- إذا كان الطلب غير آمن أو غير واضح أو يخ��لف القيود، أعد patches=[] واشرح السبب في summary.
 
 أعد JSON فقط بالشكل التالي (بدون أي نص خارجه):
 {"summary":"وصف عربي واضح لما تم تعديله فعلياً وكيف","patches":[{"path":"...","content":"المحتوى الكامل الجديد للملف","reason":"سبب التعديل وما تغيّر في هذا الملف بالتحديد"}],"tests":["ملاحظة تحقق أو خطوة اختبار يدوي مقترحة"]}`
@@ -907,7 +913,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية ل��يانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -1035,35 +1041,57 @@ export async function POST(req: Request) {
   let mimeType: string
   try { audioBase64 = normalizeAudioData(payload.audioBase64); mimeType = normalizeAudioMimeType(payload.mimeType); safeAudioLog("audio received", { requestId, mimeType, sizeBytes: Math.floor(audioBase64.length * 0.75) }) } catch (error) { const failure = classifyAiFailure(error); safeAudioLog("audio rejected", { requestId, code: failure.code, status: failure.status }); return json({ success: false, error: failure.code, message: failure.message, provider: "automatic-audio", retryable: failure.retryable }, failure.status) }
 
-      const system = `أنت تستخرج بيانات طالب من إملاء عربي أو إنجليزي أو مختلط لمسؤول مدرسة. اكتشف اللغة تلقائياً، وانسخ الكلام بلغته الأصلية دون ترجمة. أعد JSON فقط بلا markdown بهذه المفاتيح حصراً:
-transcript,detectedLanguage,name,username,national,phone,birth,studentPass,parent,parentPass,subjects,juz,surah,notes.
-detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوفة نصوص، وبقية القيم نصوص. لا تخمّن أي قيمة لم تُذكر بوضوح؛ استخدم نصاً فارغاً أو مصفوفة فارغة. حوّل الأرقام العربية إلى إنجليزية. birth يجب أن يكون YYYY-MM-DD فقط إن أمكن فهم تاريخ كامل. national حدّه 14 رقماً وphone حدّه 11 رقماً. juz رقم من 1 إلى 30 كنص. انسخ الأسماء والأرقام وكلمات المرور بدقة، وكلمات المرور فقط إذا نطقها المسؤول صراحة. transcript هو التفريغ الكامل المسموع بلغته الأصلية.`
-      const audioResult = await runAudio("استمع إلى الإملاء واستخرج بيانات الطالب منه، سواء كان عربياً أو إنجليزياً أو مختلطاً. أعد JSON فقط.", system, 0.05, { mimeType, data: audioBase64 })
+      const system = `أنت تستخرج بيانات طالب من إملاء عربي أو إنجليزي أو مختلط لمسؤول مدرسة. اسمع بتركيز كامل ولا تتسرع.
+
+**التعليمات الحاسمة (اتبعها تماماً):**
+1. أعد فقط JSON صالح بلا markdown وبلا نص إضافي
+2. المفاتيح المقبولة حصراً: transcript, detectedLanguage, name, username, national, phone, birth, studentPass, parent, parentPass, subjects, juz, surah, notes
+3. **لا تخمّن أبداً** — استخدم "" للقيم الناقصة و [] للمصفوفات الفارغة
+4. subjects مصفوفة نصوص فقط (مثلاً: ["علوم", "عربي"])
+5. بقية القيم نصوص
+6. detectedLanguage يجب أن تكون: "ar" (عربي فقط)، "en" (إنجليزي فقط)، أو "mixed" (مختلط)
+7. حوّل الأرقام العربية (٠-٩) والفارسية (۰-۹) إلى إنجليزية (0-9) فوراً في كل الحقول
+8. birth: YYYY-MM-DD (تاريخ كامل فقط، أو "" إن كان غير واضح)
+9. national: إزالة كل غير الأرقام، أقصى 14 رقماً
+10. phone: إزالة كل غير الأرقام، أقصى 11 رقماً
+11. juz: رقم من 1-30 فقط (كنص)
+12. studentPass و parentPass: انسخ كما نُطق (اذكرهما صراحة)
+13. name و parent: الأسماء كاملة، أقصى 120 حرف
+14. notes: أي تعليقات إضافية، أقصى 1000 حرف
+
+transcript: التفريغ الكامل للنص المسموع بلغته الأصلية، وإذا كان مسموعاً ومفهوماً بوضوح فأدرج اسم كل حقل قبل قيمته (مثلاً "الاسم أحمد محمد، رقم الطالب ٢٣٤...")`
+      const audioResult = await runAudio("استمع للإملاء بعناية واستخرج كل البيانات بدقة. اذكر كل حقل وقيمته ببطء في الإملاء. أعد JSON صالح فقط بلا markdown.", system, 0.05, { mimeType, data: audioBase64 })
       setAudioDiagnostics(audioResult)
       const parsed = extractJson(audioResult.text)
       if (!parsed || typeof parsed !== "object") throw new Error("AUDIO_PROVIDERS_FAILED: تعذر فهم بيانات الطالب من التسجيل")
+      // بعض نماذج الصوت تضع الحقول داخل fields رغم طلبها في المستوى الأعلى.
+      // ندعم الشكلين حتى لا تضيع البيانات التي تم تفريغها بنجاح.
+      const parsedObject = parsed as Record<string, unknown>
+      const extracted = parsedObject.fields && typeof parsedObject.fields === "object"
+        ? { ...parsedObject, ...(parsedObject.fields as Record<string, unknown>) }
+        : parsedObject
       const clean = (value: unknown, max = 300) => typeof value === "string" ? value.trim().slice(0, max) : ""
       const latinDigits = (value: unknown) => clean(value, 500)
         .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
         .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
       const digits = (value: unknown, max: number) => latinDigits(value).replace(/[^0-9]/g, "").slice(0, max)
-      const birthCandidate = latinDigits(parsed.birth).slice(0, 10)
+      const birthCandidate = latinDigits(extracted.birth).slice(0, 10)
       const birthDate = /^\d{4}-\d{2}-\d{2}$/.test(birthCandidate) ? new Date(`${birthCandidate}T00:00:00Z`) : null
       const birth = birthDate && !Number.isNaN(birthDate.getTime()) && birthDate.toISOString().slice(0, 10) === birthCandidate ? birthCandidate : ""
-      const juzNumber = Math.min(30, Math.max(0, Number.parseInt(digits(parsed.juz, 2), 10) || 0))
-      const detectedLanguage = parsed.detectedLanguage === "en" || parsed.detectedLanguage === "mixed" ? parsed.detectedLanguage : "ar"
+      const juzNumber = Math.min(30, Math.max(0, Number.parseInt(digits(extracted.juz, 2), 10) || 0))
+      const detectedLanguage = extracted.detectedLanguage === "en" || extracted.detectedLanguage === "mixed" ? extracted.detectedLanguage : "ar"
       return json({ result: {
-        transcript: clean(parsed.transcript, 4000),
+        transcript: clean(extracted.transcript, 4000),
         detectedLanguage,
         audioEngine: audioResult.provider,
         audioModel: audioResult.model,
         fields: {
-          name: clean(parsed.name, 120), username: clean(parsed.username, 80),
-          national: digits(parsed.national, 14), phone: digits(parsed.phone, 11), birth,
-          studentPass: clean(parsed.studentPass, 100), parent: clean(parsed.parent, 120),
-          parentPass: clean(parsed.parentPass, 100),
-          subjects: Array.isArray(parsed.subjects) ? parsed.subjects.map((x: unknown) => clean(x, 80)).filter(Boolean).slice(0, 12) : [],
-          juz: juzNumber ? String(juzNumber) : "", surah: clean(parsed.surah, 80), notes: clean(parsed.notes, 1000),
+          name: clean(extracted.name, 120), username: clean(extracted.username, 80),
+          national: digits(extracted.national, 14), phone: digits(extracted.phone, 11), birth,
+          studentPass: clean(extracted.studentPass, 100), parent: clean(extracted.parent, 120),
+          parentPass: clean(extracted.parentPass, 100),
+          subjects: Array.isArray(extracted.subjects) ? extracted.subjects.map((x: unknown) => clean(x, 80)).filter(Boolean).slice(0, 12) : [],
+          juz: juzNumber ? String(juzNumber) : "", surah: clean(extracted.surah, 80), notes: clean(extracted.notes, 1000),
         },
       }, diagnostics })
     }
@@ -1160,13 +1188,19 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
     if (mode === "transcribe_and_grade") {
       const { audioBase64, mimeType, surah, from, to, expectedText } = payload
       if (!audioBase64) {
-        return json({ error: "لم يصل ملف صوتي للتحليل", diagnostics }, 400)
+        return json({ error: "لم يصل ملف صوتي للتحليل", code: "AUDIO_EMPTY_PAYLOAD", retryable: false, diagnostics }, 400)
       }
       let normalizedMimeType: string
-      try { normalizedMimeType = normalizeAudioMimeType(mimeType) } catch (error) { return json({ error: error instanceof Error ? error.message : "صيغة التسجيل غير مدعومة", diagnostics }, 415) }
-      if (audioBase64.length > 12_000_000) return json({ error: "التسجيل أكبر من الحد المسموح", diagnostics }, 413)
+      let normalizedAudioBase64: string
+      try {
+        normalizedMimeType = normalizeAudioMimeType(mimeType)
+        normalizedAudioBase64 = normalizeAudioData(audioBase64)
+      } catch (error) {
+        const failure = classifyAiFailure(error)
+        return json({ error: failure.message, code: failure.code, retryable: failure.retryable, diagnostics }, failure.status)
+      }
 
-      const audio = { mimeType: normalizedMimeType, data: audioBase64 }
+      const audio = { mimeType: normalizedMimeType, data: normalizedAudioBase64 }
       let audioResult = await runAudio(
         `المقطع المطلوب:\n${JSON.stringify({ surah, from, to, expectedText }).slice(0, 12_000)}\n\nاستمع إلى تلاوة الطالب، فرّغها بالعربية ثم صححها مقابل المقطع المطلوب. أعد JSON فقط.`,
         SYS_TRANSCRIBE,
@@ -1178,7 +1212,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
       let usedTwoStageFallback = false
 
       // قد ينجح المزوّد في فهم الصوت لكنه يعيد نصاً عادياً بدلاً من JSON.
-      // في هذه الحالة نحافظ على التفريغ ثم نصححه بطلب نصي مستقل بدلاً من إرجاع 503.
+      // في هذه ال��الة نحافظ على التفريغ ثم نصححه بطلب نصي مستقل بدلاً من إرجاع 503.
       if (!parsed || typeof parsed !== "object") {
         usedTwoStageFallback = true
         const transcriptResult = await transcribeAudio(audioBase64, normalizedMimeType)

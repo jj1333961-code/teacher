@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { get } from "@vercel/blob"
-import { PDFParse } from "pdf-parse"
+import { DOMMatrix, DOMPoint, DOMRect } from "@napi-rs/canvas"
 
 const QURAN_PATH = "references/quran.pdf"
 const MUTASHABIHAT_PATH = "references/mutashabihat.pdf"
@@ -39,6 +39,11 @@ async function readReference(pathname: string) {
 }
 
 async function extractPdf(data: Uint8Array) {
+  const runtime = globalThis as any
+  runtime.DOMMatrix ??= DOMMatrix
+  runtime.DOMPoint ??= DOMPoint
+  runtime.DOMRect ??= DOMRect
+  const { PDFParse } = await import("pdf-parse")
   const parser = new PDFParse({ data })
   try {
     const result = await parser.getText()

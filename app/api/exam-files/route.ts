@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { del, get, list, put } from "@vercel/blob"
 import mammoth from "mammoth"
+import { DOMMatrix, DOMPoint, DOMRect } from "@napi-rs/canvas"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -61,6 +62,13 @@ function normalizeText(value: string) {
   return value.replace(/\u0000/g, "").replace(/\r\n/g, "\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim().slice(0, MAX_TEXT_LENGTH)
 }
 
+function installPdfRuntimeGlobals() {
+  const runtime = globalThis as any
+  runtime.DOMMatrix ??= DOMMatrix
+  runtime.DOMPoint ??= DOMPoint
+  runtime.DOMRect ??= DOMRect
+}
+
 async function extractText(buffer: Buffer, extension: string) {
   if (extension === "txt") return normalizeText(buffer.toString("utf8"))
   if (extension === "docx") {
@@ -68,7 +76,9 @@ async function extractText(buffer: Buffer, extension: string) {
     return normalizeText(result.value)
   }
 
-  // الاستيراد الكسول يمنع قارئ PDF وعامله من إسقاط GET أو رفع TXT/DOCX أثناء تهيئة المسار.
+  // pdf-parse يعتمد على Web APIs غير موجودة في Node/Vercel افتراضياً.
+  // تثبيت globals قبل الاستيراد يمنع خطأ DOMMatrix أثناء تهيئة pdfjs-dist.
+  installPdfRuntimeGlobals()
   const { PDFParse } = await import("pdf-parse")
   const parser = new PDFParse({ data: new Uint8Array(buffer) })
   try {
