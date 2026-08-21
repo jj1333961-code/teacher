@@ -557,7 +557,7 @@ tr:hover { background: var(--table-hover); }
   .role-nav-item .role-nav-icon { font-size:1.05rem; }
   @media(max-width:520px){ .role-nav-item { flex:1 1 calc(50% - 10px); justify-content:center; } }
   /* شريط جانبي منزلق للأدوات الثانوية داخل لوحات الأدوار فقط */
-  .side-fab { position:fixed; top:18px; inset-inline-end:18px; z-index:1050; width:50px; height:50px; min-width:50px; border-radius:50%; border:1px solid var(--border); background:var(--card-bg); color:var(--primary); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; box-shadow:0 8px 24px rgba(33,86,57,.16); }
+  .side-fab { position:fixed; top:18px; left:18px; z-index:1050; width:50px; height:50px; min-width:50px; border-radius:50%; border:1px solid var(--border); background:var(--card-bg); color:var(--primary); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; box-shadow:0 8px 24px rgba(33,86,57,.16); }
   .side-fab:hover { border-color:var(--primary); transform:translateY(-2px); }
   .side-fab span { display:block; width:20px; height:2px; border-radius:2px; background:currentColor; }
   .side-sidebar-wrap { position:fixed; inset:0; z-index:9500; visibility:hidden; pointer-events:none; }
@@ -714,12 +714,7 @@ tr:hover { background: var(--table-hover); }
     <div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num" id="statDrafts">0</div><div class="label">تسميعات نشطة</div></div>
   </div>
   <div id="activeDraftsSection"></div>
-  <div class="menu-grid">
-    <button class="menu-btn" style="background:#e83e8c" onclick="showPage('filesPage')">📁 الملفات لمرفوعة</button>
-    <button class="menu-btn" style="background:#343a40" onclick="openDevAssistant()">🛠️ مساعد تطوير الموقع</button>
-<button class="menu-btn" style="background:#0f766e" onclick="showPage('adminAIPage')">محادثة Gemini وGroq الإدارية</button>
-    <button class="menu-btn" style="background:#24292e" onclick="openGithubSync()">🔗 مزامنة GitHub</button>
-  </div>
+
 </div>
 
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
@@ -733,7 +728,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
+    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكو�� المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
@@ -926,7 +921,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي (14 رقم)</label><input type="text" id="editNational" maxlength="14" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف (11 رقم)</label><input type="text" id="editPhone" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div class="form-group"><label>رقم ال��اتف (11 رقم)</label><input type="text" id="editPhone" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>
