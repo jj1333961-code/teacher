@@ -557,7 +557,7 @@ tr:hover { background: var(--table-hover); }
   .role-nav-item .role-nav-icon { font-size:1.05rem; }
   @media(max-width:520px){ .role-nav-item { flex:1 1 calc(50% - 10px); justify-content:center; } }
   /* شريط جانبي منزلق للأدوات الثانوية داخل لوحات الأدوار فقط */
-  .side-fab { position:fixed; top:18px; left:18px; z-index:1050; width:50px; height:50px; min-width:50px; border-radius:50%; border:1px solid var(--border); background:var(--card-bg); color:var(--primary); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; box-shadow:0 8px 24px rgba(33,86,57,.16); }
+  .side-fab { position:fixed; top:18px; right:18px; z-index:1050; width:50px; height:50px; min-width:50px; border-radius:50%; border:1px solid var(--border); background:var(--card-bg); color:var(--primary); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; box-shadow:0 8px 24px rgba(33,86,57,.16); }
   .side-fab:hover { border-color:var(--primary); transform:translateY(-2px); }
   .side-fab span { display:block; width:20px; height:2px; border-radius:2px; background:currentColor; }
   .side-sidebar-wrap { position:fixed; inset:0; z-index:9500; visibility:hidden; pointer-events:none; }
@@ -832,7 +832,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <h4 style="color:var(--success); margin:25px 0 15px; border-bottom:2px solid var(--border); padding-bottom:10px;">✏️ البيانات الجديدة</h4>
   <div class="form-group">
-    <label>رقم الموبايل الجديد</label>
+    <label>رقم الموبا��ل الجديد</label>
     <div style="position:relative;">
       <input type="password" id="newMobile" placeholder="أدخل الرقم الجديد" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')" style="padding-left:45px;">
       <span onclick="togglePassVisibility('newMobile', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span>
@@ -1040,7 +1040,7 @@ tr:hover { background: var(--table-hover); }
 <!-- صفحة المخطط الكامل -->
 <div id="fullChartPage" class="chart-page hidden">
   <div class="page-header">
-    <h2>📊 المخطط التفصيلي</h2>
+    <h2>📊 المخطط الت��صيلي</h2>
     <button class="btn btn-secondary" onclick="closeFullChart()">رجوع</button>
   </div>
   <div id="fullChartContainer" style="text-align:center;"></div>
