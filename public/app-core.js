@@ -55,18 +55,31 @@ const RATING_COLORS = {
 // ====== NAVIGATION HISTORY ======
 let pageHistory = [];
 
-function toggleTheme() {
+const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+function systemPrefersDark() { return Boolean(systemThemeQuery && systemThemeQuery.matches); }
+function setTheme(theme) {
   const html = document.documentElement;
+  const isDark = theme === 'dark';
+  if(isDark) html.setAttribute('data-theme', 'dark');
+  else html.removeAttribute('data-theme');
   const btn = document.querySelector('.theme-toggle');
-  if(html.getAttribute('data-theme') === 'dark') {
-    html.removeAttribute('data-theme'); btn.textContent = '🌙'; localStorage.setItem('theme', 'light');
-  } else {
-    html.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; localStorage.setItem('theme', 'dark');
-  }
+  if(btn) btn.textContent = isDark ? '☀️' : '🌙';
 }
-if(localStorage.getItem('theme') === 'dark') {
-  document.documentElement.setAttribute('data-theme', 'dark');
-  const savedThemeButton = document.querySelector('.theme-toggle'); if(savedThemeButton) savedThemeButton.textContent = '☀️';
+function applySystemTheme() {
+  // A manual toggle is remembered; otherwise the phone/browser controls it.
+  if(localStorage.getItem('theme')) return;
+  setTheme(systemPrefersDark() ? 'dark' : 'light');
+}
+function toggleTheme() {
+  const nextTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', nextTheme);
+  setTheme(nextTheme);
+}
+applySystemTheme();
+if(systemThemeQuery) {
+  const onSystemThemeChange = function() { applySystemTheme(); };
+  if(systemThemeQuery.addEventListener) systemThemeQuery.addEventListener('change', onSystemThemeChange);
+  else if(systemThemeQuery.addListener) systemThemeQuery.addListener(onSystemThemeChange);
 }
 
 // ====== تبديل اللغة (عربي / إنجليزي) ======
@@ -162,7 +175,13 @@ const LANG_DICT = {
   'البيانات': 'Data', 'الملاحظات': 'Notes', 'المرفوعة': 'Uploaded', 'المسؤولون': 'Admins',
   'المهام': 'Tasks', 'حالة الجلسة': 'Session status', 'المخطط التفصيلي': 'Detailed chart'
 };
-let currentLang = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
+function systemLanguage() {
+  const languages = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'ar'];
+  return languages.some(function(language) { return String(language).toLowerCase().startsWith('en'); }) ? 'en' : 'ar';
+}
+let currentLang = localStorage.getItem('lang') === 'en' || localStorage.getItem('lang') === 'ar'
+  ? localStorage.getItem('lang')
+  : systemLanguage();
 const LANG_ATTRS = ['placeholder','title','aria-label','alt'];
 function langTextNodes() {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -203,6 +222,24 @@ function applyLangToDom() {
   const btn=document.getElementById('langToggleBtn'); if(btn) btn.textContent=currentLang==='en'?'ع':'EN';
 }
 function toggleLang() { currentLang=currentLang==='ar'?'en':'ar'; localStorage.setItem('lang',currentLang); applyLangToDom(); window.dispatchEvent(new Event('languagechange')); }
+function applySystemLanguage() {
+  if(localStorage.getItem('lang')) return;
+  const nextLanguage = systemLanguage();
+  if(nextLanguage !== currentLang) {
+    currentLang = nextLanguage;
+    applyLangToDom();
+    window.dispatchEvent(new Event('languagechange'));
+  }
+}
+// Browser language can change while the app is open (for example after the
+// phone language is changed). Follow it unless the user explicitly toggled
+// the language in this app.
+window.addEventListener('languagechange', applySystemLanguage);
+window.addEventListener('pageshow', applySystemLanguage);
+window.addEventListener('focus', applySystemLanguage);
+document.addEventListener('visibilitychange', function() {
+  if(document.visibilityState === 'visible') applySystemLanguage();
+});
 let langObserver = new MutationObserver(function(){
   if(currentLang !== 'en' || langObserver._running) return;
   langObserver._running = true;
@@ -228,7 +265,7 @@ async function hydrateDataFromNeon(){
   try{ const res=await fetch('/api/data',{cache:'no-store'}); const body=await res.json(); if(res.ok&&body.data){ const before=JSON.stringify(collectCloudData()); Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); }); sessionStorage.setItem('neon_hydrated_v1','1'); const changed=before!==JSON.stringify(collectCloudData()); if(changed && !sessionStorage.getItem('neon_reload_done_v1')){ sessionStorage.setItem('neon_reload_done_v1','1'); location.reload(); } } else if(body.unavailable){ sessionStorage.setItem('neon_hydrated_v1','1'); sessionStorage.setItem('neon_unavailable_v1','1'); } else { sessionStorage.setItem('neon_hydrated_v1','1'); await saveAllDataToNeon(); } }
   catch(e){ sessionStorage.setItem('neon_hydrated_v1','1'); }
 }
-  // لا نؤخر شاشة الترحيب بسبب الشبكة؛ تتم المزامنة بعد أول رسم وفي وقت خمول المتصفح.
+  // لا نؤخر شاشة الترحيب بسبب الشبكة؛ تتم المزامنة بعد أول رسم وفي وقت خمو�� المتصفح.
   const scheduleHydration = window.requestIdleCallback || function(cb){ window.setTimeout(cb, 1200); };
   scheduleHydration(function(){ hydrateDataFromNeon(); });
 
@@ -625,7 +662,7 @@ function updateSurahSelect() {
   const juz = document.getElementById('stJuz').value;
   const select = document.getElementById('stSurah');
   if(!juz || !quranData[juz]) {
-    select.innerHTML = '<option value="">اختر الجزء أولاً...</option>'; return;
+    select.innerHTML = '<option value="">اختر الجزء أولا��...</option>'; return;
   }
   let html = '<option value="">اختر السورة...</option>';
   quranData[juz].forEach(s => { html += '<option value="'+s+'">'+s+'</option>'; });
@@ -4883,7 +4920,7 @@ function generateParentWelcome(student) {
   const last = finalizedSessions.length > 0 ? finalizedSessions[finalizedSessions.length - 1] : null;
   const templates = [
     {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطوات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
-    {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
+    {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله ع�� حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
     {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر لمن يتب في سبيله.'}
   ];
   const base = templates[Math.floor(Math.random() * templates.length)];
@@ -4962,7 +4999,7 @@ function generateAIResponse(text, student) {
   }
   // نصائح
   if(has('نصفحة','نصائح','ساعدني','مساعدة','انسى','أنسى','نسيت','صعب')) {
-    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتءءل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
+    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتءءل لآ��ة جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
   }
   // تحفيز
   if(has('تحفيز','همة','ملل','تعبان','زهقءءن','احبت','أحبطت')) {

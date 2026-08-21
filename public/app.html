@@ -6,6 +6,18 @@
 <meta name="theme-color" content="#315c4b">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
+<script>
+  (function () {
+    var savedTheme = localStorage.getItem('theme');
+    var dark = savedTheme ? savedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+    var savedLang = localStorage.getItem('lang');
+    var browserLang = (navigator.languages && navigator.languages[0]) || navigator.language || 'ar';
+    var lang = savedLang === 'en' || savedLang === 'ar' ? savedLang : (/^en/i.test(browserLang) ? 'en' : 'ar');
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
+  }());
+</script>
 <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
 <link rel="stylesheet" href="https://www.fontstatic.com/f=diwanltr">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
@@ -714,7 +726,7 @@ tr:hover { background: var(--table-hover); }
     <label>طلب التطوير</label>
     <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تريد إضافته أو تعديله في الموقع..."></textarea>
   </div>
-  <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
+  <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">��نفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
     <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;"><strong id="devProgressLabel">تحليل الطلب</strong><span id="devEta">الوقت المتبقي: 02:00</span></div>
     <div style="height:9px;background:var(--border);border-radius:999px;overflow:hidden;"><div id="devProgressBar" style="height:100%;width:8%;background:var(--primary);transition:width .5s;"></div></div>
