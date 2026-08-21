@@ -2,12 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Eye, Fingerprint, ShieldCheck, SlidersHorizontal, TimerReset } from 'lucide-react'
+import { defaultAntiCheatConfig, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
 
-export type AntiCheatConfig = {
-  enabled: boolean; requireCamera: boolean; eyeTracking: boolean; gaze: boolean; singleTouch: boolean; warnOnAway: boolean; facePresence: boolean; multipleFaces: boolean; headPose: boolean; eyeClosure: boolean; focus: boolean; fullscreen: boolean; warningThreshold: number; suspiciousThreshold: number; cheatingThreshold: number; graceMs: number; blockMs: number; autoRestore: boolean; analysisIntervalMs: number; sensitivity: 'low' | 'medium' | 'high'
-}
-
-export const defaultAntiCheatConfig: AntiCheatConfig = { enabled: false, requireCamera: true, eyeTracking: true, gaze: true, singleTouch: true, warnOnAway: true, facePresence: true, multipleFaces: true, headPose: true, eyeClosure: true, focus: true, fullscreen: false, warningThreshold: 20, suspiciousThreshold: 45, cheatingThreshold: 75, graceMs: 2500, blockMs: 8000, autoRestore: true, analysisIntervalMs: 400, sensitivity: 'medium' }
+export type { AntiCheatConfig }
+export { defaultAntiCheatConfig }
 type Item = { itemId: string; itemType: 'recitation' | 'exam' | 'task'; label: string }
 const defaultItems: Item[] = [{ itemId: 'demo-quiz', itemType: 'recitation', label: 'التسميع الحالي' }, { itemId: 'demo-quiz', itemType: 'exam', label: 'الاختبار الحالي' }, { itemId: 'demo-quiz', itemType: 'task', label: 'المهمة الحالية' }]
 

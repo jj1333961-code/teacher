@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { generateText } from 'ai'
 import { and, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { antiCheatEvents, antiCheatGlobalConfig, antiCheatItemConfigs, antiCheatSessions } from '@/lib/db/schema'
@@ -70,6 +71,14 @@ export async function POST(request: Request) {
       const created = { id: id(), studentId: String(session.studentId), itemId, itemType, status: 'active', riskScore: 0, severity: 'NORMAL', currentQuestion: session.currentQuestion == null ? null : Number(session.currentQuestion), attemptId: session.attemptId ? String(session.attemptId) : null }
       await db.insert(antiCheatSessions).values(created)
       return NextResponse.json({ sessionId: created.id, config: resolved.config, source: resolved.source, reused: false })
+    }
+    if (action === 'ai-review') {
+      const signals = Array.isArray(body.signals) ? body.signals.slice(0, 12) : []
+      const summary = JSON.stringify({ score: clamp(body.riskScore), severity: body.severity, signals })
+      if (!process.env.AI_GATEWAY_API_KEY) return NextResponse.json({ ok: true, available: false, recommendation: 'continue' })
+      const result = await generateText({ model: 'google/gemini-3.7-flash', system: 'أنت مساعد مراقبة اختبارات. حلل إشارات نصية مجهولة فقط، ولا تستخدمها وحدها لإدانة الطالب. أعد كلمة واحدة فقط: continue أو warn أو review أو block. اختر block فقط عند اجتماع إشارتين أو أكثر مستمرتين ومتوافقتين.', prompt: summary })
+      const recommendation = ['continue', 'warn', 'review', 'block'].includes(result.text.trim()) ? result.text.trim() : 'review'
+      return NextResponse.json({ ok: true, available: true, recommendation })
     }
     if (action === 'event') {
       const event = body.event ?? {}
