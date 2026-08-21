@@ -4,9 +4,18 @@ import { NextRequest, NextResponse } from "next/server"
 export const dynamic = "force-dynamic"
 const COOKIE = "teacher_google_state"
 const SESSION = "teacher_google_session"
-const DOMAIN = "https://teacher-three-ashen.vercel.app"
-const APP_PAGE = `${DOMAIN}/app.html`
-const CALLBACK = `${DOMAIN}/api/auth/google`
+function appOrigin(request: NextRequest) {
+  const origin = new URL(request.url).origin
+  return origin === "http://localhost:3000" || origin === "http://127.0.0.1:3000" ? origin : origin
+}
+
+function appPage(request: NextRequest) {
+  return `${appOrigin(request)}/app.html`
+}
+
+function callbackUrl(request: NextRequest) {
+  return `${appOrigin(request)}/api/auth/google`
+}
 
 function config() {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim()
@@ -31,16 +40,18 @@ function verify(value: string, secret: string) {
     return typeof parsed.email === "string" ? parsed : null
   } catch { return null }
 }
-function redirectUri() { return CALLBACK }
+function redirectUri(request: NextRequest) { return callbackUrl(request) }
 
 export async function GET(request: NextRequest) {
   try {
     const { clientId, clientSecret } = config()
+    const page = appPage(request)
+    const redirect = redirectUri(request)
     const url = new URL(request.url)
     // Older bookmarks may still start OAuth on teacher.vercel.app. Move the
     // browser to the canonical production origin before creating state/cookies.
     if (url.hostname === "teacher.vercel.app") {
-      const canonical = new URL(`${CALLBACK}${url.search}`)
+      const canonical = new URL(`${redirect}${url.search}`)
       return NextResponse.redirect(canonical)
     }
     const code = url.searchParams.get("code")
@@ -53,32 +64,32 @@ export async function GET(request: NextRequest) {
       auth.searchParams.set("response_type", "code")
       auth.searchParams.set("scope", "openid email profile")
       auth.searchParams.set("state", state)
-      if (error) { const response = NextResponse.redirect(`${APP_PAGE}?google_error=cancelled`); response.cookies.delete(COOKIE); return response }
+      if (error) { const response = NextResponse.redirect(`${page}?google_error=cancelled`); response.cookies.delete(COOKIE); return response }
       const response = NextResponse.redirect(auth)
       response.cookies.set(COOKIE, state, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 })
       return response
     }
     const state = request.cookies.get(COOKIE)?.value
     const returnedState = url.searchParams.get("state")
-    if (!state || !returnedState || state !== returnedState) return NextResponse.redirect(`${APP_PAGE}?google_error=invalid_state`)
-    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri(), grant_type: "authorization_code" }), cache: "no-store" })
-    if (!tokenResponse.ok) return NextResponse.redirect(`${APP_PAGE}?google_error=token_exchange`)
+    if (!state || !returnedState || state !== returnedState) return NextResponse.redirect(`${page}?google_error=invalid_state`)
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirect, grant_type: "authorization_code" }), cache: "no-store" })
+    if (!tokenResponse.ok) return NextResponse.redirect(`${page}?google_error=token_exchange`)
     const tokens = await tokenResponse.json()
     const userResponse = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${tokens.access_token}` }, cache: "no-store" })
-    if (!userResponse.ok) return NextResponse.redirect(`${APP_PAGE}?google_error=userinfo`)
+    if (!userResponse.ok) return NextResponse.redirect(`${page}?google_error=userinfo`)
     const user = await userResponse.json()
-    if (typeof user.email !== "string" || user.email_verified !== true) return NextResponse.redirect(`${APP_PAGE}?google_error=email_not_verified`)
+    if (typeof user.email !== "string" || user.email_verified !== true) return NextResponse.redirect(`${page}?google_error=email_not_verified`)
     const response = NextResponse.redirect(`${APP_PAGE}?google=success`)
     response.cookies.set(SESSION, sessionValue(user.email, typeof user.name === "string" ? user.name : "", clientSecret), { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 7 })
     response.cookies.delete(COOKIE)
     return response
-  } catch { return NextResponse.redirect(`${APP_PAGE}?google_error=not_configured`) }
+  } catch { return NextResponse.redirect(`${page}?google_error=not_configured`) }
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const { clientId } = config()
-    return NextResponse.json({ configured: Boolean(clientId), redirectUri: redirectUri() }, { headers: { "cache-control": "no-store" } })
+    return NextResponse.json({ configured: Boolean(clientId), redirectUri: redirectUri(request) }, { headers: { "cache-control": "no-store" } })
   } catch { return NextResponse.json({ configured: false }, { status: 503 }) }
 }
 
