@@ -5,8 +5,16 @@ export const dynamic = "force-dynamic"
 const COOKIE = "teacher_google_state"
 const SESSION = "teacher_google_session"
 function appOrigin(request: NextRequest) {
-  const origin = new URL(request.url).origin
-  return origin === "http://localhost:3000" || origin === "http://127.0.0.1:3000" ? origin : origin
+  // Behind Vercel's proxy, request.url can report an internal http:// origin
+  // (and sometimes an internal hostname) even though the public-facing URL
+  // is https://<the real domain>. Google validates the redirect_uri
+  // byte-for-byte against what's registered in Cloud Console, so trust the
+  // Host/X-Forwarded-Host header the browser actually connected to instead
+  // of request.url, and only fall back to request.url for local dev.
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host")
+  const isLocalHost = !host || host.startsWith("localhost") || host.startsWith("127.0.0.1")
+  if (isLocalHost) return new URL(request.url).origin
+  return `https://${host}`
 }
 
 function appPage(request: NextRequest) {
