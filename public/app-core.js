@@ -860,7 +860,7 @@ function submitSignupRequest() {
   const notes = document.getElementById('signupNotes').value.trim();
   if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
   if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هاتف صحيحًا مع اختيار كود الدولة</div>'; return; }
-  if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يك��ن 14 رقم</div>'; return; }
+  if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يك����ن 14 رقم</div>'; return; }
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
   const time = new Date().toLocaleString('ar-EG');
   const details = '📋 طلب ئنشاء حساب جديد\n'
@@ -1099,7 +1099,7 @@ function saveAdminWhatsapp() {
   const input = document.getElementById('adminWhatsInput');
   const num = String(input.value || '').replace(/\D/g, '');
   const box = document.getElementById('adminsAlert');
-  if(num.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح بصيغة الدولة (مثال: 201554542019)</div>'; return; }
+  if(num.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح بصيغة الدولة (��ثال: 201554542019)</div>'; return; }
   setData('adminWhatsapp', num);
   input.value = num;
   box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب المسؤول: ' + num + '</div>';
@@ -1412,7 +1412,7 @@ async function saveStudent() {
   if(students.find(s => s.national === national)) return fail('هذا الرقم القومي مسجل مسبقاً');
   if(students.find(s => s.username === username)) return fail('اسم المستخدم مسجل مسبقاً');
   if(students.find(s => s.username === username)) return fail('اسم المستخدم مسجل مسبقاً');
-  // ✅ مسموح الآن أن يكون الرقم السري للطالب مطابقاً للرقم السري لولي الأمر
+  // ✅ مسموح الآن أن يكون الرقم السري للطالب مطابقاً للرقم الس��ي لولي الأمر
 
   const subjects = getData('subjects');
   const selectedSubData = selectedSubjects.map(id => subjects.find(s => s.id === id)).filter(Boolean);
@@ -2049,7 +2049,7 @@ function localSmartChatReply(message,role){
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
-      return 'ملخص البيانات المحلية: '+students.length+' طالباً، '+completed+' نتي��ة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
+      return 'ملخص البيانات المحلية: '+students.length+' طالباً، '+completed+' نتي����ة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
     }
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
@@ -2263,7 +2263,7 @@ function renderExamQuestions(){
     quranQuestionMediaHtml(q,i)+
     '<div class="form-row"><div class="form-group"><label>النوع</label><select onchange="updateExamQuestion('+i+',\'type\',this.value);renderExamQuestions()"><option value="mcq" '+(q.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(q.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(q.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(q.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+ 
     '<div class="form-group"><label>لمستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>ءءعب</option></select></div>'+
-    '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوان��</small></div>'+ 
+    '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ��وان��</small></div>'+ 
     (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
     (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
     '<div class="form-group"><label>فحص الغش لهذا السؤال</label><select onchange="updateExamQuestion('+i+',\'proctorEnabled\',this.value===\'true\')"><option value="true" '+(q.proctorEnabled!==false?'selected':'')+'>مفعّل</option><option value="false" '+(q.proctorEnabled===false?'selected':'')+'>غير مفعّل</option></select></div></div>'+
@@ -3056,7 +3056,7 @@ async function runDevAssistant(){
   resultBox.innerHTML = '<p style="color:var(--text-light)">جارٍ تحليل المشروع وقراءة الملفات البرمجية اللازمة ثم تطبيق التعديل...</p>';
   const progressPanel=document.getElementById('devProgressPanel'),progressBar=document.getElementById('devProgressBar'),progressLabel=document.getElementById('devProgressLabel'),etaBox=document.getElementById('devEta');
   if(progressPanel)progressPanel.style.display='block'; let elapsed=0,estimate=120;
-  const progressTimer=setInterval(function(){elapsed++;const left=Math.max(0,estimate-elapsed),progress=Math.min(94,8+Math.round(elapsed/estimate*86));if(progressBar)progressBar.style.width=progress+'%';if(etaBox)etaBox.textContent='الوقت المتبقي التقريبي: '+formatExamTime(left);if(progressLabel)progressLabel.textContent=elapsed<25?'تحليل الطلب':elapsed<70?'تعديل ملفات المشروع':elapsed<105?'إرسال التعديل إلى GitHub':'بدء تحديث الموقع';},1000);
+  const progressTimer=setInterval(function(){elapsed++;const left=Math.max(0,estimate-elapsed),progress=Math.min(94,8+Math.round(elapsed/estimate*86));if(progressBar)progressBar.style.width=progress+'%';if(etaBox)etaBox.textContent='الوقت المتبقي التقريبي: '+formatExamTime(left);if(progressLabel)progressLabel.textContent=elapsed<25?'تحليل الطلب':elapsed<70?'تعديل ملفات ا��مشروع':elapsed<105?'إرسال التعديل إلى GitHub':'بدء تحديث الموقع';},1000);
 
   try {
     const plan = await callStudentAI('dev_assistant', { request, role:'admin', adminId: currentAdminId || null, autoApply:true }, 0.2);
@@ -4343,7 +4343,7 @@ function renderStudentChart() {
   const sessions = s.sessions || [];
   const finalizedSessions = sessions.filter(sess => !sess.isDraft);
   if(finalizedSessions.length === 0) {
-    document.getElementById('studentChartSection').innerHTML = '<div class="page" style="margin-top:20px;"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط التقييم</h4><div class="alert alert-info">لا توجد تقييمات نهائية مسجلة بعد. سيتم ظهور المخطط بعد إغلاق ��ول تسميع.</div></div>'; return;
+    document.getElementById('studentChartSection').innerHTML = '<div class="page" style="margin-top:20px;"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط التقييم</h4><div class="alert alert-info">لا توجد تقييمات نهائية مسجلة بعد. سيتم ��هور المخطط بعد إغلاق ��ول تسميع.</div></div>'; return;
   }
   const canvasId = 'chart_' + s.id;
   document.getElementById('studentChartSection').innerHTML = '<div class="chart-container"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط تقييم حفظ القرآن الكريم</h4><canvas id="'+canvasId+'" width="1100" height="550" style="max-width:100%; height:auto;"></canvas><div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:#6f42c1"></div><span>المجموع</span></div></div><div style="margin-top:15px;"><button class="btn btn-info" onclick="showStudentFullChart()">ءءءء عرض المخطط الكامل في صفحة منفصة</button></div></div>';
@@ -5026,24 +5026,9 @@ function generateAIResponse(text, student) {
   return r;
 }
 
-const studentUtilityState={lat:30.0444,lon:31.2357,locationFallback:true,prayerDate:'',quranSurahs:[]};
-function studentUtilityEscape(value){return escapeHtml(String(value??''))}
-function studentUtilityPanel(title,body){const panel=document.getElementById('studentUtilityPanel');if(!panel)return;panel.classList.remove('hidden');panel.innerHTML='<div class="student-utility-row"><strong>'+title+'</strong><button type="button" class="btn btn-outline" onclick="closeStudentUtility()">إغلاق</button></div>'+body}
-function closeStudentUtility(){document.getElementById('studentUtilityPanel')?.classList.add('hidden')}
-function studentUtility(type){if(type==='prayer'){renderStudentPrayer();return}if(type==='quran'){renderStudentQuran();return}if(type==='qibla'){renderStudentQibla();return}if(type==='tasbih'){renderStudentTasbih();return}if(type==='adhkar'){studentUtilityPanel('أذكار مختارة','<div class="student-utility-reader"><p>سبحان الله وبحمده، سبحان الله العظيم.</p><p>لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير.</p><p>اللهم أعني على ذكرك وشكرك وحسن عبادتك.</p></div>');return}studentUtilityPanel('المزيد','<div class="student-utility-grid"><button class="student-utility-action" onclick="renderStudentPrayer()">مواقيت الشهر</button><button class="student-utility-action" onclick="renderHijriCalendar()">التقويم الهجري</button><button class="student-utility-action" onclick="studentUtility(\'adhkar\')">أذكار الصباح والمساء</button><button class="student-utility-action" onclick="renderStudentQibla()">اتجاه القبلة</button></div>')}
-function formatStudentTime(minutes){const h=Math.floor(minutes/60)%24,m=Math.round(minutes%60);return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')}
-function studentJulian(date){return date.getTime()/86400000- date.getTimezoneOffset()/1440 + 2440587.5}
-function calculateStudentPrayerTimes(date,lat,lon){const jd=studentJulian(date)-2451545,rad=Math.PI/180;const decl=-23.44*Math.cos(rad*(360/365*(jd-80)));const noon=12-lon/15;const angle=(a)=>Math.acos((Math.sin(rad*-0.833)-Math.sin(rad*lat)*Math.sin(rad*decl))/(Math.cos(rad*lat)*Math.cos(rad*decl)))/rad/15;const sunrise=noon-angle(0),sunset=noon+angle(0);const fajr=noon-angle(18),isha=noon+angle(18),asr=noon+angle(45);return[['الفجر',fajr],['الشروق',sunrise],['الظهر',noon],['العصر',asr],['المغرب',sunset],['العشاء',isha]].map(([name,time])=>({name,time:formatStudentTime((time+24)%24*60)}))}
-function requestStudentLocation(done){if(!navigator.geolocation){done();return}navigator.geolocation.getCurrentPosition(function(pos){studentUtilityState.lat=pos.coords.latitude;studentUtilityState.lon=pos.coords.longitude;studentUtilityState.locationFallback=false;done()},function(){done()},{enableHighAccuracy:false,timeout:7000,maximumAge:3600000})}
-function renderStudentPrayer(){requestStudentLocation(function(){const date=new Date(),times=calculateStudentPrayerTimes(date,studentUtilityState.lat,studentUtilityState.lon);const note=studentUtilityState.locationFallback?'<p class="student-utility-muted">الموقع الافتراضي: القاهرة — الأوقات تقديرية. <button class="btn btn-outline" onclick="renderStudentPrayer()">إعادة طلب الموقع</button></p>':'<p class="student-utility-muted">تم تحديد الأوقات حسب موقعك الجغرافي الحالي.</p>';studentUtilityPanel('مواقيت الصلاة اليوم',note+'<div>'+times.map(function(item){return '<div class="student-utility-row"><span>'+item.name+'</span><strong dir="ltr">'+item.time+'</strong></div>'}).join('')+'</div>')})}
-function renderStudentQibla(){requestStudentLocation(function(){const bearing=(Math.atan2(Math.sin((39.8262-studentUtilityState.lon)*Math.PI/180)*Math.cos(21.4225*Math.PI/180),Math.cos(studentUtilityState.lat*Math.PI/180)*Math.sin(21.4225*Math.PI/180)-Math.sin(studentUtilityState.lat*Math.PI/180)*Math.cos(21.4225*Math.PI/180)*Math.cos((39.8262-studentUtilityState.lon)*Math.PI/180))*180/Math.PI+360)%360;const note=studentUtilityState.locationFallback?'الموقع الافتراضي القاهرة — الاتجاه تقريبي.':'تم الحساب من موقعك الحالي.';studentUtilityPanel('اتجاه القبلة','<p class="student-utility-muted">'+note+'</p><div style="text-align:center;padding:22px"><div style="font-size:64px;transform:rotate('+bearing+'deg);color:var(--primary)">↑</div><strong>اتجه نحو '+Math.round(bearing)+'° من الشمال</strong></div><button class="btn btn-outline" onclick="renderStudentQibla()">إعادة تحديد الموقع</button>')})}
-function renderStudentTasbih(){const key='studentTasbihCount',count=Number(getData(key,0))||0;studentUtilityPanel('التسبيح','<div style="text-align:center"><div id="studentTasbihCount" style="font-size:48px;font-weight:800;color:var(--primary)">'+count+'</div><button class="btn btn-primary" style="min-width:160px" onclick="incrementStudentTasbih()">اضغط للتسبيح</button><button class="btn btn-outline" onclick="resetStudentTasbih()">تصفير</button></div>')}
-function incrementStudentTasbih(){const count=(Number(getData('studentTasbihCount',0))||0)+1;setData('studentTasbihCount',count);const el=document.getElementById('studentTasbihCount');if(el)el.textContent=count}
-function resetStudentTasbih(){setData('studentTasbihCount',0);renderStudentTasbih()}
-function renderHijriCalendar(){const date=new Date(),hijri=new Intl.DateTimeFormat('ar-SA-u-ca-islamic',{dateStyle:'full'}).format(date);studentUtilityPanel('التقويم الهجري','<p style="font-size:20px;text-align:center">'+hijri+'</p><p class="student-utility-muted">التاريخ الميلادي: '+date.toLocaleDateString('ar-EG',{dateStyle:'full'})+'</p>')}
-function openStudentMushaf(){window.open('https://blobs.vusercontent.net/blob/%D8%A7%D9%84%D9%85%D8%B5%D8%AD%D9%81%20-7jdmzddipym9hvkXY3BznyjTZZH9M8.pdf','_blank','noopener,noreferrer')}
-async function renderStudentQuran(){studentUtilityPanel('متصفح القرآن','<button class="btn btn-primary" onclick="openStudentMushaf()">فتح المصحف الكامل في صفحة مستقلة</button><p class="student-utility-muted">جاري تحميل قائمة السور...</p>');try{if(!studentUtilityState.quranSurahs.length){const response=await fetch('https://api.alquran.cloud/v1/surah');if(!response.ok)throw new Error('تعذر تحميل السور');studentUtilityState.quranSurahs=(await response.json()).data}studentUtilityPanel('متصفح القرآن','<div class="student-utility-grid">'+studentUtilityState.quranSurahs.map(function(s){return '<button class="student-utility-action" onclick="openStudentSurah('+s.number+')">'+studentUtilityEscape(s.number)+'. '+studentUtilityEscape(s.name)+'</button>'}).join('')+'</div>')}catch(error){studentUtilityPanel('متصفح القرآن','<p class="student-utility-muted">تعذر تحميل السور. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.</p><button class="btn btn-outline" onclick="renderStudentQuran()">إعادة المحاولة</button>')}}
-async function openStudentSurah(number){studentUtilityPanel('تحميل السورة','<p class="student-utility-muted">جاري التحميل...</p>');try{const response=await fetch('https://api.alquran.cloud/v1/surah/'+number+'/quran-uthmani');if(!response.ok)throw new Error('تعذر تحميل السورة');const data=(await response.json()).data;studentUtilityPanel(studentUtilityEscape(data.name),'<button class="btn btn-outline" onclick="renderStudentQuran()">قائمة السور</button><div class="student-utility-reader">'+data.ayahs.map(function(ayah){return '<p><span class="badge badge-primary">'+ayah.numberInSurah+'</span> '+studentUtilityEscape(ayah.text)+'</p>'}).join('')+'</div>')}catch(error){studentUtilityPanel('تعذر تحميل السورة','<button class="btn btn-outline" onclick="renderStudentQuran()">العودة للسور</button>')}}
+// أدوات الطالب الإسلامية (الأذكار، الدعاء، التسبيح، القرآن، الصلاة، القبلة، الحديث، المزيد)
+// أصبحت صفحات Next.js مستقلة كاملة تُفتح من الشريط أعلى صفحة الطالب عبر روابط /tools/*
+// راجع مجلد app/tools للتفاصيل. تمت إزالة اللوحات المضمّنة القديمة لصالح صفحات فعلية منفصلة.
 
 function logout() {
   currentUser = null; currentType = null; currentAdminId = null;

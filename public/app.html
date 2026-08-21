@@ -578,8 +578,12 @@ tr:hover { background: var(--table-hover); }
   html::-webkit-scrollbar, body::-webkit-scrollbar { width:0; height:0; display:none; }
   body { -ms-overflow-style:none; }
   #lockScreen .btn:disabled { opacity:.75; cursor:wait; }
-  .student-utility-bar{display:flex;align-items:center;justify-content:center;gap:clamp(8px,3vw,22px);padding:12px 8px;margin:0 0 18px;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb,var(--card) 92%,var(--primary));box-shadow:0 8px 22px rgba(0,0,0,.07)}
-.student-utility-icon{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:48px;border:0;background:transparent;color:var(--text);cursor:pointer;padding:3px 6px;border-radius:12px;transition:background .2s,transform .2s}.student-utility-icon:hover,.student-utility-icon:focus-visible{background:var(--table-header);transform:translateY(-2px);outline:2px solid var(--primary);outline-offset:2px}.student-utility-icon span{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--primary);color:var(--primary-foreground);font-size:21px;font-weight:700}.student-utility-icon small{font-size:11px;font-weight:700;white-space:nowrap}.student-utility-panel{margin:0 0 18px;padding:18px;border:1px solid var(--border);border-radius:18px;background:var(--card)}.student-utility-panel.hidden{display:none}.student-utility-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}.student-utility-action{border:1px solid var(--border);border-radius:12px;background:var(--table-header);padding:12px;color:var(--text);cursor:pointer;text-align:center}.student-utility-action:hover{border-color:var(--primary)}.student-utility-muted{color:var(--text-light);font-size:13px}.student-utility-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}.student-utility-row:last-child{border-bottom:0}.student-utility-reader{max-height:360px;overflow:auto;line-height:2.1;font-size:19px;text-align:right}.student-utility-reader p{margin:0;padding:8px 0;border-bottom:1px solid var(--border)}@media(max-width:520px){.student-utility-bar{justify-content:space-between;gap:2px}.student-utility-icon{min-width:42px;padding:3px 2px}.student-utility-icon span{width:30px;height:30px;font-size:18px}.student-utility-icon small{font-size:10px}}
+  .student-utility-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;padding:18px 10px;margin:0 0 18px;border:1px solid var(--border);border-radius:20px;background:var(--card);box-shadow:0 10px 26px rgba(0,0,0,.08)}
+.student-utility-icon{display:flex;flex-direction:column;align-items:center;gap:7px;border:0;background:transparent;color:var(--text);cursor:pointer;text-decoration:none;padding:4px 2px;border-radius:14px;transition:background .2s,transform .2s}
+.student-utility-icon:hover,.student-utility-icon:focus-visible{background:var(--table-header);transform:translateY(-2px);outline:2px solid var(--primary);outline-offset:2px}
+.student-utility-icon span{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:color-mix(in srgb,var(--primary) 14%,var(--card));color:var(--primary);font-size:26px;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--primary) 30%,transparent)}
+.student-utility-icon small{font-size:13px;font-weight:700;white-space:nowrap;color:var(--text)}
+@media(max-width:420px){.student-utility-bar{gap:10px 4px;padding:14px 6px}.student-utility-icon span{width:44px;height:44px;font-size:22px}.student-utility-icon small{font-size:11.5px}}
 </style>
 </head>
 <body>
@@ -897,7 +901,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>رقم الهاتف (11 رقم)</label><input type="text" id="stPhone" maxlength="11" placeholder="أدخل 11 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>تاريخ الميلاد *</label><input type="date" id="stBirth" onchange="calcAge()"></div>
+    <div class="form-group"><label>تاريخ الميل��د *</label><input type="date" id="stBirth" onchange="calcAge()"></div>
     <div class="form-group"><label>السن (يحسب تلقائياً)</label><input type="number" id="stAge" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="form-row">
@@ -1142,14 +1146,15 @@ tr:hover { background: var(--table-hover); }
     </aside>
   </div>
   <div class="student-utility-bar" aria-label="أدوات الطالب الإسلامية">
-    <button type="button" class="student-utility-icon" onclick="studentUtility('prayer')" aria-label="مواقيت الصلاة"><span aria-hidden="true">◷</span><small>الصلاة</small></button>
-    <button type="button" class="student-utility-icon" onclick="studentUtility('quran')" aria-label="القرآن"><span aria-hidden="true">▱</span><small>القرآن</small></button>
-    <button type="button" class="student-utility-icon" onclick="studentUtility('qibla')" aria-label="القبلة"><span aria-hidden="true">⌖</span><small>القبلة</small></button>
-    <button type="button" class="student-utility-icon" onclick="studentUtility('tasbih')" aria-label="التسبيح"><span aria-hidden="true">◉</span><small>تسبيح</small></button>
-    <button type="button" class="student-utility-icon" onclick="studentUtility('adhkar')" aria-label="الأذكار"><span aria-hidden="true">✦</span><small>أذكار</small></button>
-    <button type="button" class="student-utility-icon" onclick="studentUtility('more')" aria-label="المزيد"><span aria-hidden="true">•••</span><small>المزيد</small></button>
+    <a class="student-utility-icon" href="/tools/azkar" target="_blank" rel="noopener" aria-label="الأذكار"><span aria-hidden="true">✦</span><small>الأذكار</small></a>
+    <a class="student-utility-icon" href="/tools/dua" target="_blank" rel="noopener" aria-label="دعاء"><span aria-hidden="true">🤲</span><small>دعاء</small></a>
+    <a class="student-utility-icon" href="/tools/tasbih" target="_blank" rel="noopener" aria-label="التسبيح"><span aria-hidden="true">◉</span><small>التسبيح</small></a>
+    <a class="student-utility-icon" href="/tools/quran" target="_blank" rel="noopener" aria-label="القرآن"><span aria-hidden="true">▱</span><small>القرآن</small></a>
+    <a class="student-utility-icon" href="/tools/prayer" target="_blank" rel="noopener" aria-label="مواقيت الصلاة"><span aria-hidden="true">◷</span><small>الصلاة</small></a>
+    <a class="student-utility-icon" href="/tools/qibla" target="_blank" rel="noopener" aria-label="القبلة"><span aria-hidden="true">⌖</span><small>القبلة</small></a>
+    <a class="student-utility-icon" href="/tools/hadith" target="_blank" rel="noopener" aria-label="الحديث"><span aria-hidden="true">❝</span><small>الحديث</small></a>
+    <a class="student-utility-icon" href="/tools/more" target="_blank" rel="noopener" aria-label="المزيد"><span aria-hidden="true">•••</span><small>المزيد</small></a>
   </div>
-  <div id="studentUtilityPanel" class="student-utility-panel hidden" aria-live="polite"></div>
   <div id="studentWelcome"></div>
   <div id="studentInfo"></div>
   <div id="studentDraftSection"></div>
@@ -1304,7 +1309,7 @@ tr:hover { background: var(--table-hover); }
   <div id="filesAlert"></div>
   <section style="background:var(--table-header);border:2px solid var(--primary);border-radius:15px;padding:20px;margin-bottom:20px;">
     <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
-    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها محلياً دون إرساله إلى Gemini وGroq.</p>
+    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى ��حذفها المسؤول، ويُستخدم نصها محلياً دون إرساله إلى Gemini وGroq.</p>
     <input id="examFileUpload" type="file" accept=".pdf,.docx,.txt" onchange="uploadExamFile(this)">
     <div id="examFileUploadStatus" style="margin-top:10px;"></div>
     <div id="examFilesList" style="margin-top:15px;"></div>
@@ -1353,7 +1358,7 @@ tr:hover { background: var(--table-hover); }
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
     <div class="proctor-checks" aria-live="polite">
       <div id="proctorTouchCheck" class="proctor-check bad">شاشة لمس مطلوبة</div><div id="proctorLightCheck" class="proctor-check bad">الإضاءة غير مفحوصة</div>
-      <div id="proctorFaceCheck" class="proctor-check bad">الوجه غير مفحوص</div><div id="proctorGazeCheck" class="proctor-check bad">اتجاه الن��ر غير مفحوص</div>
+      <div id="proctorFaceCheck" class="proctor-check bad">الوجه غير مفحوص</div><div id="proctorGazeCheck" class="proctor-check bad">اتجاه الن���ر غير مفحوص</div>
     </div>
 <p id="proctorHelp">ضع الهاتف أمامك وانظر إلى الشاشة. استخدم الموقع بشكل طبيعي بلمسة واحدة في كل مرة؛ لا يلزم إبقاء الإصبع مضغوطًا أثناء الاختبار.</p>
 <div id="proctorGateHold" class="proctor-touch-zone" aria-disabled="true">بعد نجاح الفحص: ضع إصبع واحد هنا للبدء</div>

@@ -1,0 +1,228 @@
+.islamic-tools-scope {
+  --itl-bg: oklch(0.15 0.03 200);
+  --itl-bg-soft: oklch(0.19 0.035 195);
+  --itl-card: oklch(0.985 0.012 90);
+  --itl-ink: oklch(0.2 0.03 195);
+  --itl-gold: oklch(0.74 0.13 78);
+  --itl-gold-ink: oklch(0.24 0.05 78);
+  --itl-line: oklch(0.34 0.045 195 / 45%);
+  background: var(--itl-bg);
+  color: var(--itl-card);
+  font-family: var(--font-kufi), system-ui, sans-serif;
+  direction: rtl;
+  background-image:
+    radial-gradient(circle at 15% 0%, color-mix(in oklab, var(--itl-gold) 14%, transparent) 0%, transparent 45%),
+    repeating-linear-gradient(135deg, color-mix(in oklab, var(--itl-gold) 4%, transparent) 0 2px, transparent 2px 26px);
+}
+
+.islamic-tools-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 14px 18px;
+  background: color-mix(in oklab, var(--itl-bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--itl-line);
+}
+
+.islamic-tools-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--itl-gold);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--itl-line);
+}
+.islamic-tools-back:hover { background: color-mix(in oklab, var(--itl-gold) 12%, transparent); }
+
+.islamic-tools-main { max-width: 880px; margin: 0 auto; padding: 20px 16px 64px; }
+
+.itl-hero {
+  text-align: center;
+  padding: 28px 16px 22px;
+  margin-bottom: 22px;
+  border-radius: 22px;
+  background: linear-gradient(160deg, color-mix(in oklab, var(--itl-gold) 16%, var(--itl-bg-soft)), var(--itl-bg-soft));
+  border: 1px solid var(--itl-line);
+}
+.itl-hero h1 { font-size: clamp(24px, 5vw, 34px); font-weight: 700; color: var(--itl-card); margin: 0 0 8px; }
+.itl-hero p { color: color-mix(in oklab, var(--itl-card) 70%, transparent); font-size: 14px; margin: 0; }
+
+.itl-card {
+  background: var(--itl-card);
+  color: var(--itl-ink);
+  border-radius: 18px;
+  border: 1px solid color-mix(in oklab, var(--itl-ink) 10%, transparent);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.itl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+
+.itl-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--itl-card);
+  color: var(--itl-ink);
+  border: 1px solid color-mix(in oklab, var(--itl-ink) 10%, transparent);
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.itl-tile:hover { transform: translateY(-2px); box-shadow: 0 10px 24px color-mix(in oklab, black 25%, transparent); }
+.itl-tile strong { font-size: 16px; }
+.itl-tile span { font-size: 12px; color: color-mix(in oklab, var(--itl-ink) 60%, transparent); }
+
+.itl-surah-list { display: grid; gap: 8px; }
+.itl-surah-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--itl-card);
+  color: var(--itl-ink);
+  text-decoration: none;
+  border: 1px solid color-mix(in oklab, var(--itl-ink) 8%, transparent);
+}
+.itl-surah-row:hover { border-color: var(--itl-gold); }
+.itl-surah-number {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--itl-gold) 22%, transparent);
+  color: var(--itl-gold-ink);
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.itl-surah-name { font-weight: 700; font-size: 16px; }
+.itl-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+.itl-badge.meccan { background: color-mix(in oklab, var(--itl-gold) 25%, transparent); color: var(--itl-gold-ink); }
+.itl-badge.medinan { background: color-mix(in oklab, oklch(0.4 0.09 195) 20%, transparent); color: oklch(0.28 0.06 195); }
+.itl-surah-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: color-mix(in oklab, var(--itl-ink) 55%, transparent); }
+
+.itl-quran-text {
+  font-family: var(--font-quran), serif;
+  font-size: 24px;
+  line-height: 2.4;
+  text-align: justify;
+  color: var(--itl-ink);
+}
+.itl-ayah { position: relative; }
+.itl-ayah-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 4px;
+  border: 1.5px solid var(--itl-gold);
+  border-radius: 50%;
+  font-size: 13px;
+  font-family: var(--font-kufi), sans-serif;
+  color: var(--itl-gold-ink);
+  vertical-align: middle;
+}
+.itl-surah-heading {
+  text-align: center;
+  padding: 18px 10px;
+  margin: 26px 0 14px;
+  border-top: 2px solid var(--itl-gold);
+  border-bottom: 2px solid var(--itl-gold);
+}
+.itl-surah-heading h2 { font-family: var(--font-quran), serif; font-size: 30px; margin: 0 0 4px; }
+.itl-surah-heading small { font-size: 12px; color: color-mix(in oklab, var(--itl-ink) 55%, transparent); }
+.itl-basmala { text-align: center; font-family: var(--font-quran), serif; font-size: 26px; margin: 6px 0 18px; }
+
+.itl-compass-wrap { display: grid; place-items: center; padding: 20px 0; }
+.itl-compass {
+  position: relative;
+  width: min(78vw, 260px);
+  height: min(78vw, 260px);
+  border-radius: 50%;
+  border: 3px solid var(--itl-gold);
+  background: color-mix(in oklab, var(--itl-gold) 6%, var(--itl-card));
+  display: grid;
+  place-items: center;
+}
+.itl-compass-needle {
+  position: absolute;
+  width: 6px;
+  height: 42%;
+  top: 8%;
+  left: 50%;
+  transform-origin: 50% 92%;
+  background: linear-gradient(to top, transparent, var(--itl-gold-ink));
+  border-radius: 6px;
+}
+.itl-compass-center {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--itl-gold);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--itl-gold-ink);
+  text-align: center;
+}
+
+.itl-prayer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  border-bottom: 1px solid color-mix(in oklab, var(--itl-ink) 10%, transparent);
+}
+.itl-prayer-row:last-child { border-bottom: 0; }
+.itl-prayer-row.active { color: var(--itl-gold-ink); font-weight: 700; }
+
+.itl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--itl-gold);
+  color: var(--itl-gold-ink);
+  font-weight: 700;
+  font-size: 13px;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+.itl-btn.outline { background: transparent; border: 1px solid var(--itl-gold); color: var(--itl-card); }
+.itl-muted { font-size: 13px; color: color-mix(in oklab, var(--itl-card) 65%, transparent); }
+
+.itl-counter-circle {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 4px solid var(--itl-gold);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 18px;
+  font-size: 46px;
+  font-weight: 700;
+  color: var(--itl-ink);
+  background: var(--itl-card);
+}
