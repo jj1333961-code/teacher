@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim() ?? ''
-  const configured = Boolean(clientId && process.env.GOOGLE_CLIENT_SECRET?.trim())
+  const configured = Boolean(clientId)
   return NextResponse.json(
     { configured, clientId, redirectUri: 'https://teacher-three-ashen.vercel.app/api/auth/google' },
     { status: configured ? 200 : 503, headers: { 'Cache-Control': 'no-store' } },

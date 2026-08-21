@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
       auth.searchParams.set("response_type", "code")
       auth.searchParams.set("scope", "openid email profile")
       auth.searchParams.set("state", state)
+      auth.searchParams.set('prompt', url.searchParams.get('prompt') || 'select_account')
       if (error) { const response = NextResponse.redirect(`${APP_PAGE}?google_error=cancelled`); response.cookies.delete(COOKIE); return response }
       const response = NextResponse.redirect(auth)
       response.cookies.set(COOKIE, state, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 })
