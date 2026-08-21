@@ -261,7 +261,7 @@ function proctorTaskLabel(ctx){return ctx&&ctx.type==='exam'?'الاختبار':
 function proctorStopCamera(){clearInterval(proctor.scanTimer);proctor.scanTimer=null;proctor.analyzing=false;proctor.faceMeshResults=null;if(proctor.detectorType==='mediapipe')try{proctor.detector?.close()}catch(e){}proctor.detector=null;proctor.detectorType='';if(proctor.stream){proctor.stream.getTracks().forEach(t=>t.stop());proctor.stream=null}const v=document.getElementById('proctorVideo');if(v)v.srcObject=null;const scan=document.getElementById('proctorScanBtn');if(scan)scan.disabled=false}
 function closeProctorGate(){proctorStopCamera();proctor.onReady=null;proctor.context=null;document.getElementById('proctorGate')?.classList.add('hidden')}
 function openProctorGate(context,onReady){proctorStopCamera();proctor.active=false;proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبع واحد':'هذه المهمة تعمل على هاتف بشاشة لمس فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبع واحد هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اضغط تشغيل الفحص للسماح بالكاميرا'}
-async function startProctorScan(){if(!navigator.mediaDevices?.getUserMedia){document.getElementById('proctorHelp').textContent='الكاميرا تحتاج متصفحاً حديثاً واتصال HTTPS.';return}try{proctor.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:640},height:{ideal:480}},audio:false});const video=document.getElementById('proctorVideo');video.srcObject=proctor.stream;await video.play();if('FaceDetector' in window){proctor.detector=new FaceDetector({fastMode:true,maxDetectedFaces:2});proctor.detectorType='native'}else if(window.FaceMesh){const mesh=new FaceMesh({locateFile:file=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/'+file});mesh.setOptions({maxNumFaces:2,refineLandmarks:true,minDetectionConfidence:.55,minTrackingConfidence:.55});mesh.onResults(results=>{proctor.faceMeshResults=results.multiFaceLandmarks||[]});proctor.detector=mesh;proctor.detectorType='mediapipe'}else{throw new Error('face-model-unavailable')}document.getElementById('proctorScanBtn').disabled=true;document.getElementById('proctorHelp').textContent='يعمل الفحص على Chrome وSafari وFirefox وEdge الحديثة.';proctor.scanTimer=setInterval(proctorAnalyzeFrame,350);proctorAnalyzeFrame()}catch(e){proctorStopCamera();const name=e&&e.name||'';document.getElementById('proctorHelp').textContent=e&&e.message==='face-model-unavailable'?'تعذر تحميل نموذج فحص الوجه. تحقق من اتصال الإنترنت ثم أعد المحاولة.':name==='NotAllowedError'?'تم رفض إذن الكاميرا. اسمح به من إعدادات الموقع ثم أعد المحاولة.':name==='NotFoundError'?'لم يتم العثور على كاميرا متاحة.':name==='NotReadableError'?'الكاميرا مستخدمة في تطبيق آخر. أغلقه ثم أعد المحاولة.':name==='SecurityError'?'افتح الصفحة عبر HTTPS للسماح بالكاميرا.':'تعذر فتح الكاميرا. تحقق من إذن المتصفح ثم أعد المحاو��ة.'}}
+async function startProctorScan(){if(!navigator.mediaDevices?.getUserMedia){document.getElementById('proctorHelp').textContent='الكاميرا تحتاج متصفحاً حديثاً واتصال HTTPS.';return}try{proctor.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:640},height:{ideal:480}},audio:false});const video=document.getElementById('proctorVideo');video.srcObject=proctor.stream;await video.play();if('FaceDetector' in window){proctor.detector=new FaceDetector({fastMode:true,maxDetectedFaces:2});proctor.detectorType='native'}else if(window.FaceMesh){const mesh=new FaceMesh({locateFile:file=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/'+file});mesh.setOptions({maxNumFaces:2,refineLandmarks:true,minDetectionConfidence:.55,minTrackingConfidence:.55});mesh.onResults(results=>{proctor.faceMeshResults=results.multiFaceLandmarks||[]});proctor.detector=mesh;proctor.detectorType='mediapipe'}else{throw new Error('face-model-unavailable')}document.getElementById('proctorScanBtn').disabled=true;document.getElementById('proctorHelp').textContent='يعمل الفحص على Chrome وSafari وFirefox وEdge الحديثة.';proctor.scanTimer=setInterval(proctorAnalyzeFrame,350);proctorAnalyzeFrame()}catch(e){proctorStopCamera();const name=e&&e.name||'';document.getElementById('proctorHelp').textContent=e&&e.message==='face-model-unavailable'?'تعذر تحميل نموذج فحص الوجه. تحقق من اتصال الإنترنت ثم أعد المحاولة.':name==='NotAllowedError'?'تم رفض إذن الكاميرا. اسمح به من إعدادات الموقع ثم أعد المحاولة.':name==='NotFoundError'?'لم يتم العثور على كاميرا متاحة.':name==='NotReadableError'?'الكاميرا مستخدمة في تطبيق آخر. أغلقه ثم أعد المحاولة.':name==='SecurityError'?'افتح الصفحة عبر HTTPS للسماح بالكاميرا.':'تعذر فتح الكاميرا. تحقق من إذن المتصفح ثم أعد المحاو����ة.'}}
 async function proctorDetectFaces(video){if(proctor.detectorType==='native')return await proctor.detector.detect(video);if(proctor.detectorType==='mediapipe'){await proctor.detector.send({image:video});return (proctor.faceMeshResults||[]).map(points=>{let minX=1,minY=1,maxX=0,maxY=0;points.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});return{boundingBox:{x:minX*video.videoWidth,y:minY*video.videoHeight,width:(maxX-minX)*video.videoWidth,height:(maxY-minY)*video.videoHeight},landmarks:points}})}return[]}
 function proctorAverage(list){return list.length?list.reduce((a,b)=>a+b,0)/list.length:0}
 function proctorEyeRatio(points,upper,lower,left,right){if(!points||!points[upper]||!points[lower]||!points[left]||!points[right])return null;const vertical=Math.hypot(points[upper].x-points[lower].x,points[upper].y-points[lower].y),horizontal=Math.max(.001,Math.hypot(points[left].x-points[right].x,points[left].y-points[right].y));return vertical/horizontal}
@@ -479,7 +479,7 @@ function renderTaskArchiveHtml(s) {
   Object.keys(grouped).sort().reverse().forEach(function(day){
     const list = grouped[day];
     const okCount = list.filter(function(x){ return x.status === 'approved'; }).length;
-    html += '<div class="history-day"><div class="history-day-header">📅 ' + day + ' — ' + list.length + ' مهمة (✅ ' + okCount + ' / ❌ ' + (list.length - okCount) + ')</div>';
+    html += '<div class="history-day"><div class="history-day-header">📅 ' + day + ' — ' + list.length + ' م��مة (✅ ' + okCount + ' / ❌ ' + (list.length - okCount) + ')</div>';
     list.forEach(function(t){
       const ok = t.status === 'approved';
       const typeLabel = t.type === 'homework' ? 'واجب' : t.type === 'reading' ? 'قراءة' : t.type === 'voice' ? 'تسجيل صوتي' : 'مهمة';
@@ -1009,7 +1009,7 @@ function preferredRecorderMimeType(){
 function microphoneErrorMessage(error){
   if(!window.isSecureContext)return 'يلزم فتح الموقع عبر اتصال آمن HTTPS لاستخدام الميكروفون.';
   if(error&&['NotAllowedError','SecurityError'].includes(error.name))return 'تم رفض إذن الميكروفون. اسمح بالوصول من إعدادات المتصفح ثم أعد المحاولة.';
-  if(error&&error.name==='NotFoundError')return 'لم يتم العثور على ميكروفون متصل بالجهاز.';
+  if(error&&error.name==='NotFoundError')return 'لم يتم العثور على ميكروفون ��تصل بالجهاز.';
   if(error&&error.name==='NotReadableError')return 'الميكروفون مستخدم في تطبيق آخر أو تعذر تشغيله.';
   return 'تعذر تشغيل الميكروفون. تحقق من الإذن ثم أعد المحاولة.';
 }
@@ -1267,7 +1267,7 @@ function saveAdminSettings() {
   let changed = false;
   if(newMobile) {
     if(newMobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
-    if(admins.find((a, i) => i !== idx && a.mobile === newMobile)) return alert('هذا الرقم مسجل لمسؤول آخر');
+    if(admins.find((a, i) => i !== idx && a.mobile === newMobile)) return alert('هذا الرقم مسجل لم��ؤول آخر');
     admins[idx].mobile = newMobile; changed = true;
   }
   if(newPass) { admins[idx].password = newPass; changed = true; }
@@ -3550,14 +3550,14 @@ function saveStudentPass() {
 
 // ===== ودجة الأدوات الإسلامية في رأس صفحة الطالب =====
 var ISLAMIC_TOOLS = [
-  { key:'azkar',  label:'الأذكار', icon:'/images/icon-azkar.png',  url:'/azkar.html' },
-  { key:'duaa',   label:'دعاء',    icon:'/images/icon-duaa.png',   url:'/duaa.html' },
-  { key:'tasbih', label:'التسبيح', icon:'/images/icon-tasbih.png', url:'/tasbih.html' },
-  { key:'quran',  label:'القرآن',  icon:'/images/icon-quran.png',  url:'/quran.html' },
-  { key:'more',   label:'المزيد',  icon:'/images/icon-more.png',   url:'/more-tools.html' },
-  { key:'exam',   label:'إختبار',  icon:'/images/icon-exam.png',   url:null },
-  { key:'qibla',  label:'القبلة',  icon:'/images/icon-qibla.png',  url:'/qibla.html' },
-  { key:'hadith', label:'الحديث',  icon:'/images/icon-hadith.png', url:'/hadith.html' }
+  { key:'azkar',  label:'الأذكار', icon:'/images/icon-azkar.svg',  url:'/azkar.html' },
+  { key:'duaa',   label:'دعاء',    icon:'/images/icon-duaa.svg',   url:'/duaa.html' },
+  { key:'tasbih', label:'التسبيح', icon:'/images/icon-tasbih.svg', url:'/tasbih.html' },
+  { key:'quran',  label:'القرآن',  icon:'/images/icon-quran.svg',  url:'/quran.html' },
+  { key:'more',   label:'المزيد',  icon:'/images/icon-more.svg',   url:'/more-tools.html' },
+  { key:'exam',   label:'إختبار',  icon:'/images/icon-exam.svg',   url:null },
+  { key:'qibla',  label:'القبلة',  icon:'/images/icon-qibla.svg',  url:'/qibla.html' },
+  { key:'hadith', label:'الحديث',  icon:'/images/icon-hadith.svg', url:'/hadith.html' }
 ];
 
 function renderIslamicWidget(s){
@@ -3844,7 +3844,7 @@ function renderStudentTasks() {
       status = '<span class="task-status" style="background:var(--danger); color:#fff;">أُلغيت بسبب مخالفة المراقبة: '+escapeHtml(task.cancelReason||'مخالفة الشروط')+'</span>';
       cardStyle = 'style="border-right-color:var(--danger);"';
     } else if(isSubmitted && !isRejected) {
-      status = '<span class="task-status" style="background:var(--warning); color:#000;">⏳ قيد الانتظار</span>';
+      status = '<span class="task-status" style="background:var(--warning); color:#000;">⏳ ��يد الانتظار</span>';
       cardStyle = 'style="border-right-color:var(--warning); background:linear-gradient(135deg, rgba(255,193,7,0.05), rgba(255,152,0,0.1));"';
     } else if(isRejected) {
       status = '<span class="task-status" style="background:var(--danger); color:#fff;">❌ ئم الرفض - حاول مرة أخرى</span>';
@@ -4404,13 +4404,13 @@ function dataURLToBlob(dataUrl) {
   } catch (e) { return null; }
 }
 
-// ====== QURAN AYAH IMAGES (صور الآيات ارسم العثماني المُشكَّل) ======
+// ====== QURAN AYAH IMAGES (صور الآيات ارسم العثما��ي المُشكَّل) ======
 function surahNumber(name) {
   const i = ALL_SURAHS_ORDERED.indexOf((name || '').trim());
   return i === -1 ? 0 : i + 1;
 }
 function ayahImageUrl(sNum, ayah) {
-  return 'https://cdn.islamic.network/quran/images/' + sNum + '_' + ayah + '.png';
+  return 'https://cdn.islamic.network/quran/images/' + sNum + '_' + ayah + '.svg';
 }
 function buildAyatImagesHTML(surah, from, to, width) {
   const sNum = surahNumber(surah);
