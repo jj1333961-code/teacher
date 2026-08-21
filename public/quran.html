@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1d5038">
+<meta name="description" content="فهرس سور القرآن الكريم — منصة ثمار">
+<title>القرآن الكريم | ثمار</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap">
+<style>
+:root{--green:#1d5038;--green2:#28734f;--gold:#bf994a;--bg:#f7faf7;--card:#ffffff;--text:#18352b;--text-light:#62766d;--border:#e2ece3}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);padding-bottom:40px}
+a{text-decoration:none;color:inherit}
+.header{position:relative;padding:22px 18px 60px;color:#fff;background:linear-gradient(160deg,rgba(13,38,28,.78),rgba(29,80,56,.62)),url('/images/mosque-header-bg.png') center 30%/cover no-repeat}
+.header-top{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.back-btn{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer}
+.back-btn:hover{background:rgba(255,255,255,.26)}
+.header h1{margin:0;font-size:1.35rem;font-weight:900}
+.header p{margin:4px 0 0;font-size:.85rem;opacity:.85}
+.search-wrap{position:relative;z-index:1;margin-top:18px}
+.search-wrap input{width:100%;padding:14px 46px 14px 16px;border-radius:16px;border:none;font-size:1rem;font-family:inherit;background:rgba(255,255,255,.94);color:var(--text)}
+.search-wrap input:focus{outline:2px solid var(--gold)}
+.search-icon{position:absolute;top:50%;right:16px;transform:translateY(-50%);color:var(--text-light)}
+.content{max-width:760px;margin:-36px auto 0;padding:0 16px}
+.tabs{display:flex;gap:8px;background:var(--card);border-radius:16px;padding:6px;box-shadow:0 10px 30px rgba(33,86,57,.1);margin-bottom:16px}
+.tab-btn{flex:1;padding:10px;border:none;background:transparent;border-radius:12px;font-weight:800;color:var(--text-light);cursor:pointer;font-family:inherit;font-size:.92rem}
+.tab-btn.active{background:var(--green2);color:#fff}
+.surah-list{background:var(--card);border-radius:20px;box-shadow:0 10px 30px rgba(33,86,57,.08);overflow:hidden}
+.surah-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.surah-item:last-child{border-bottom:none}
+.surah-item:hover{background:#f1f7f2}
+.surah-num{flex:none;width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--green2),var(--green));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.95rem}
+.surah-main{flex:1;min-width:0}
+.surah-name{font-size:1.08rem;font-weight:800;color:var(--text)}
+.surah-meta{display:flex;gap:8px;align-items:center;margin-top:3px;font-size:.8rem;color:var(--text-light)}
+.surah-type{padding:1px 8px;border-radius:20px;font-weight:700}
+.surah-type.meccan{background:rgba(191,153,74,.15);color:#8a6a2c}
+.surah-type.medinan{background:rgba(40,115,79,.13);color:var(--green2)}
+.surah-arrow{flex:none;color:var(--text-light);font-size:1.2rem}
+.empty-state{text-align:center;padding:40px 10px;color:var(--text-light)}
+.footnote{text-align:center;font-size:.78rem;color:var(--text-light);margin:20px 0 0;line-height:1.7}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <button type="button" class="back-btn" onclick="window.close();history.length>1?history.back():location.href='/app.html'" aria-label="رجوع">›</button>
+    <div>
+      <h1>القرآن الكريم</h1>
+      <p>114 سورة — اختر سورة لبدء القراءة من المصحف الكامل</p>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <input id="surahSearch" type="text" placeholder="ابحث عن اسم السورة..." autocomplete="off">
+    <span class="search-icon">🔎</span>
+  </div>
+</header>
+
+<main class="content">
+  <div class="tabs">
+    <button type="button" class="tab-btn active" data-filter="all" onclick="setFilter('all',this)">الكل</button>
+    <button type="button" class="tab-btn" data-filter="meccan" onclick="setFilter('meccan',this)">مكية</button>
+    <button type="button" class="tab-btn" data-filter="medinan" onclick="setFilter('medinan',this)">مدنية</button>
+  </div>
+  <div id="surahList" class="surah-list"></div>
+  <p class="footnote">يُفتح المصحف الكامل عبر عارض مستقل يبدأ من السورة المختارة، بالاعتماد على نص القرآن الكريم (رواية حفص) من خدمة AlQuran Cloud.</p>
+</main>
+
+<script>
+var SURAHS = [
+[1,"الفاتحة","meccan",7],[2,"البقرة","medinan",286],[3,"آل عمران","medinan",200],[4,"النساء","medinan",176],
+[5,"المائدة","medinan",120],[6,"الأنعام","meccan",165],[7,"الأعراف","meccan",206],[8,"الأنفال","medinan",75],
+[9,"التوبة","medinan",129],[10,"يونس","meccan",109],[11,"هود","meccan",123],[12,"يوسف","meccan",111],
+[13,"الرعد","medinan",43],[14,"إبراهيم","meccan",52],[15,"الحجر","meccan",99],[16,"النحل","meccan",128],
+[17,"الإسراء","meccan",111],[18,"الكهف","meccan",110],[19,"مريم","meccan",98],[20,"طه","meccan",135],
+[21,"الأنبياء","meccan",112],[22,"الحج","medinan",78],[23,"المؤمنون","meccan",118],[24,"النور","medinan",64],
+[25,"الفرقان","meccan",77],[26,"الشعراء","meccan",227],[27,"النمل","meccan",93],[28,"القصص","meccan",88],
+[29,"العنكبوت","meccan",69],[30,"الروم","meccan",60],[31,"لقمان","meccan",34],[32,"السجدة","meccan",30],
+[33,"الأحزاب","medinan",73],[34,"سبأ","meccan",54],[35,"فاطر","meccan",45],[36,"يس","meccan",83],
+[37,"الصافات","meccan",182],[38,"ص","meccan",88],[39,"الزمر","meccan",75],[40,"غافر","meccan",85],
+[41,"فصلت","meccan",54],[42,"الشورى","meccan",53],[43,"الزخرف","meccan",89],[44,"الدخان","meccan",59],
+[45,"الجاثية","meccan",37],[46,"الأحقاف","meccan",35],[47,"محمد","medinan",38],[48,"الفتح","medinan",29],
+[49,"الحجرات","medinan",18],[50,"ق","meccan",45],[51,"الذاريات","meccan",60],[52,"الطور","meccan",49],
+[53,"النجم","meccan",62],[54,"القمر","meccan",55],[55,"الرحمن","medinan",78],[56,"الواقعة","meccan",96],
+[57,"الحديد","medinan",29],[58,"المجادلة","medinan",22],[59,"الحشر","medinan",24],[60,"الممتحنة","medinan",13],
+[61,"الصف","medinan",14],[62,"الجمعة","medinan",11],[63,"المنافقون","medinan",11],[64,"التغابن","medinan",18],
+[65,"الطلاق","medinan",12],[66,"التحريم","medinan",12],[67,"الملك","meccan",30],[68,"القلم","meccan",52],
+[69,"الحاقة","meccan",52],[70,"المعارج","meccan",44],[71,"نوح","meccan",28],[72,"الجن","meccan",28],
+[73,"المزمل","meccan",20],[74,"المدثر","meccan",56],[75,"القيامة","meccan",40],[76,"الإنسان","medinan",31],
+[77,"المرسلات","meccan",50],[78,"النبأ","meccan",40],[79,"النازعات","meccan",46],[80,"عبس","meccan",42],
+[81,"التكوير","meccan",29],[82,"الإنفطار","meccan",19],[83,"المطففين","meccan",36],[84,"الإنشقاق","meccan",25],
+[85,"البروج","meccan",22],[86,"الطارق","meccan",17],[87,"الأعلى","meccan",19],[88,"الغاشية","meccan",26],
+[89,"الفجر","meccan",30],[90,"البلد","meccan",20],[91,"الشمس","meccan",15],[92,"الليل","meccan",21],
+[93,"الضحى","meccan",11],[94,"الشرح","meccan",8],[95,"التين","meccan",8],[96,"العلق","meccan",19],
+[97,"القدر","meccan",5],[98,"البينة","medinan",8],[99,"الزلزلة","medinan",8],[100,"العاديات","meccan",11],
+[101,"القارعة","meccan",11],[102,"التكاثر","meccan",8],[103,"العصر","meccan",3],[104,"الهمزة","meccan",9],
+[105,"الفيل","meccan",5],[106,"قريش","meccan",4],[107,"الماعون","meccan",7],[108,"الكوثر","meccan",3],
+[109,"الكافرون","meccan",6],[110,"النصر","medinan",3],[111,"المسد","meccan",5],[112,"الإخلاص","meccan",4],
+[113,"الفلق","meccan",5],[114,"الناس","meccan",6]
+];
+
+var currentFilter = 'all';
+
+function typeLabel(t){ return t === 'meccan' ? 'مكية' : 'مدنية'; }
+
+function renderList(){
+  var q = (document.getElementById('surahSearch').value || '').trim();
+  var box = document.getElementById('surahList');
+  var items = SURAHS.filter(function(s){
+    if(currentFilter !== 'all' && s[2] !== currentFilter) return false;
+    if(q && s[1].indexOf(q) === -1) return false;
+    return true;
+  });
+  if(items.length === 0){
+    box.innerHTML = '<div class="empty-state">لا توجد نتائج مطابقة</div>';
+    return;
+  }
+  box.innerHTML = items.map(function(s){
+    return '<div class="surah-item" onclick="openSurah('+s[0]+')">'
+      + '<div class="surah-num">'+s[0]+'</div>'
+      + '<div class="surah-main"><div class="surah-name">'+s[1]+'</div>'
+      + '<div class="surah-meta"><span class="surah-type '+s[2]+'">'+typeLabel(s[2])+'</span><span>'+s[3]+' آية</span></div></div>'
+      + '<div class="surah-arrow">‹</div>'
+      + '</div>';
+  }).join('');
+}
+
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderList();
+}
+
+function openSurah(n){
+  window.location.href = '/quran-reader.html?surah=' + n;
+}
+
+document.getElementById('surahSearch').addEventListener('input', renderList);
+renderList();
+</script>
+</body>
+</html>
