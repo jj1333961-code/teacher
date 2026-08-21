@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="إختبار">
+  <circle cx="32" cy="32" r="30" fill="#fff8e1"/>
+  <path d="M28 10 C20 10 15 16 15 23 C15 28 17 31 20 34 L20 39 L36 39 L36 34 C39 31 41 28 41 23 C41 16 36 10 28 10 Z" fill="#ffd54a" stroke="#e0a400" stroke-width="1.4"/>
+  <rect x="22" y="41" width="12" height="5" rx="1.5" fill="#e0a400"/>
+  <rect x="23" y="47" width="10" height="3" rx="1.5" fill="#c98f00"/>
+  <g stroke="#e0a400" stroke-width="1.6" stroke-linecap="round">
+    <line x1="28" y1="2" x2="28" y2="6"/>
+    <line x1="8" y1="12" x2="11" y2="15"/>
+    <line x1="48" y1="12" x2="45" y2="15"/>
+  </g>
+  <g transform="translate(38,38) rotate(35)">
+    <rect x="0" y="0" width="8" height="24" rx="1.5" fill="#f2c14e" stroke="#c98f00" stroke-width="1"/>
+    <polygon points="0,24 8,24 4,32" fill="#8a5a2b"/>
+    <rect x="0" y="0" width="8" height="5" fill="#e8e8e8"/>
+  </g>
+</svg>

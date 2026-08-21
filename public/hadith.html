@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>الحديث | ثمار</title>
+<link rel="icon" href="/images/icon-hadith.png">
+<style>
+  :root{ --primary:#7a1f2b; --bg:#f6f4f1; --card:#ffffff; --text:#241a1c; --muted:#7a6a6c; --gold:#c9a227; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Tahoma','Segoe UI',sans-serif;background:var(--bg);color:var(--text);}
+  header{background:linear-gradient(135deg,var(--primary),#9c2c3a);color:#fff;padding:18px 16px 22px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(0,0,0,.12);}
+  header img{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));}
+  header h1{margin:0;font-size:1.15rem;}
+  .back-btn{margin-inline-start:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:8px 14px;font-size:.85rem;cursor:pointer;}
+  .container{max-width:780px;margin:0 auto;padding:18px 14px 40px;}
+  .hadith-card{background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid #eee2d8;position:relative;}
+  .hadith-card::before{content:'';position:absolute;top:0;right:0;bottom:0;width:4px;background:var(--gold);border-radius:0 16px 16px 0;}
+  .hadith-text{font-size:1.15rem;line-height:2.1;text-align:right;margin-bottom:10px;}
+  .hadith-source{font-size:.85rem;color:var(--muted);font-weight:700;text-align:left;}
+</style>
+</head>
+<body>
+<header>
+  <img src="/images/icon-hadith.png" alt="الحديث">
+  <h1>الحديث</h1>
+  <button class="back-btn" onclick="window.close(); if(!window.closed){history.back();}">إغلاق</button>
+</header>
+<div class="container" id="list"></div>
+<script>
+var HADITHS = [
+  { t:'إنما الأعمال بالنيات، وإنما لكل امرئ ما نوى', s:'رواه البخاري ومسلم' },
+  { t:'من حسن إسلام المرء تركه ما لا يعنيه', s:'رواه الترمذي' },
+  { t:'الطهور شطر الإيمان', s:'رواه مسلم' },
+  { t:'لا يؤمن أحدكم حتى يحب لأخيه ما يحب لنفسه', s:'رواه البخاري ومسلم' },
+  { t:'من كان يؤمن بالله واليوم الآخر فليقل خيرًا أو ليصمت', s:'رواه البخاري ومسلم' },
+  { t:'خيركم من تعلّم القرآن وعلّمه', s:'رواه البخاري' },
+  { t:'المسلم من سلم المسلمون من لسانه ويده', s:'رواه البخاري' },
+  { t:'من يرد الله به خيرًا يفقهه في الدين', s:'رواه البخاري ومسلم' }
+];
+document.getElementById('list').innerHTML = HADITHS.map(function(h){
+  return '<div class="hadith-card"><div class="hadith-text">«'+h.t+'»</div><div class="hadith-source">'+h.s+'</div></div>';
+}).join('');
+</script>
+</body>
+</html>

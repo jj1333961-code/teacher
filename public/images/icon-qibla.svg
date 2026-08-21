@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="القبلة">
+  <circle cx="32" cy="32" r="30" fill="#f3f0ea"/>
+  <rect x="14" y="16" width="28" height="28" rx="1" fill="#161616" stroke="#0a0a0a" stroke-width="1"/>
+  <rect x="14" y="24" width="28" height="6" fill="#d4af37"/>
+  <rect x="14" y="16" width="28" height="4" fill="#3a3a3a"/>
+  <circle cx="44" cy="42" r="13" fill="#fff" stroke="#d4af37" stroke-width="2"/>
+  <g stroke="#e08a2c" stroke-width="1.2">
+    <line x1="44" y1="31" x2="44" y2="34"/>
+    <line x1="44" y1="50" x2="44" y2="53"/>
+    <line x1="33" y1="42" x2="36" y2="42"/>
+    <line x1="52" y1="42" x2="55" y2="42"/>
+  </g>
+  <polygon points="44,36 47,42 44,48 41,42" fill="#e08a2c"/>
+</svg>

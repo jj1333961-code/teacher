@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="المزيد">
+  <circle cx="32" cy="32" r="30" fill="#eef7ee"/>
+  <g fill="#4caf72">
+    <path d="M32 32 C32 20 22 14 16 20 C10 26 16 36 28 34 Z"/>
+    <path d="M32 32 C44 32 50 22 44 16 C38 10 28 16 30 28 Z"/>
+    <path d="M32 32 C32 44 42 50 48 44 C54 38 48 28 36 30 Z"/>
+    <path d="M32 32 C20 32 14 42 20 48 C26 54 36 48 34 36 Z"/>
+  </g>
+  <circle cx="32" cy="32" r="4" fill="#2f7d4a"/>
+</svg>
