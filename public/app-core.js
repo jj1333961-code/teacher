@@ -1949,7 +1949,7 @@ async function recordReadingAudio(idx) {
       stream.getTracks().forEach(t => t.stop());
       readingItems[idx].audio = await blobToDataURL(blob);
       renderReadingItems();
-      showToast('🎙️ تم حفظ التسجيل الصوتي للقراءة الإضافية', 'success');
+      showToast('🎙️ تم حفظ التسجيل الصوتي للق��اءة الإضافية', 'success');
     };
     recorder.start();
     registerAudioRecorder('reading-'+idx,recorder,stream,{statusId:'readAudioStatus_'+idx,buttonId:'readAudioBtn_'+idx,maxMs:120000});
@@ -2266,7 +2266,7 @@ function renderExamQuestions(){
     '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآيات محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
   if(q.type==='mcq'||q.type==='truefalse')h+='<div class="form-group"><label>الاختيارات (كل اختيار في سطر)</label><textarea rows="4" onchange="updateExamQuestion('+i+',\'options\',this.value.split(/\\n/).map(x=>x.trim()).filter(Boolean))">'+escapeHtml((q.options||[]).join('\n'))+'</textarea></div><div class="form-group"><label>الإجابة الصحيحة — لا تظهر للطالب</label><input value="'+escapeHtml(q.correct||'')+'" onchange="updateExamQuestion('+i+',\'correct\',this.value)"></div>';
   else if(q.type==='complete')h+='<div class="form-group"><label>الإجابة المرجعية — لا تظهر للطالب</label><textarea rows="3" onchange="updateExamQuestion('+i+',\'correct\',this.value)">'+escapeHtml(q.correct||'')+'</textarea></div>';
-  else h+='<div class="alert alert-info">سيتم التحقق من بصمة الطالب أولاً، ثم من محتوى التلاوة. إذا كانت البصمة غير مطابقة فلن يُحفظ التسجيل.</div>';
+  else h+='<div class="alert alert-info">سيتم التحقق من بصمة الطالب أولاً، ثم من مح��وى التلاوة. إذا كانت البصمة غير مطابقة فلن يُحفظ التسجيل.</div>';
   h+='</div>';c.innerHTML=h;
 }
 function showExamAlert(t,type){const e=document.getElementById('examBuilderAlert');if(e)e.innerHTML='<div class="alert alert-'+(type||'info')+'">'+t+'</div>'}
@@ -2308,7 +2308,7 @@ function notifyStudentExamOnce(student){
   playNotifyChime();
 }
 
-function saveManualBoardEdit(){const id=parseInt(document.getElementById('recordStudentId').value);let students=getData('students');const i=students.findIndex(s=>s.id===id);if(i<0)return;students[i].manualBoard={text:document.getElementById('manualBoardText').value,image:document.getElementById('manualBoardImage').value,updatedAt:Date.now()};setData('students',students);showToast('🖼️ تم حفظ التعديل اليدوي مع بقاء الاختيار التلقائي فعالاً','success')}
+function saveManualBoardEdit(){const id=parseInt(document.getElementById('recordStudentId').value);let students=getData('students');const i=students.findIndex(s=>s.id===id);if(i<0)return;students[i].manualBoard={text:document.getElementById('manualBoardText').value,image:document.getElementById('manualBoardImage').value,updatedAt:Date.now()};setData('students',students);showToast('🖼️ تم حفظ التعد��ل اليدوي مع بقاء الاختيار التلقائي فعالاً','success')}
 function escapeHtml(s){return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 function viewStudentExamSlide(i){const ex=currentUser&&currentUser.activeExam;if(!ex||i<0||i>studentExamCurrentIndex)return;studentExamViewIndex=i;renderStudentExam()}
 function renderStudentExam(){
@@ -3030,7 +3030,7 @@ async function runDevAssistant(){
   const request = input ? input.value.trim() : '';
   if(!request){ showToast('❌ اكتب طلب التطوير أولاً', 'error'); return; }
 
-  // بوابة الحماية: العمليات الخطيرة تتطلب تأكيداً صريحاً قبل التنفيذ التلقائي.
+  // بوابة الحماية: العمليات الخ��يرة تتطلب تأكيداً صريحاً قبل التنفيذ التلقائي.
   const dangers = detectDevDanger(request);
   if(dangers.length){
     const confirmed = confirm(
@@ -3066,7 +3066,7 @@ async function runDevAssistant(){
       flagged: dangers,
     });
     renderDevAudit();
-    showToast(plan && plan.applied ? '✅ تم تنفيذ التعديل بنجاح' : '⚠️ تم تحليل الطلب ولم يكتمل التطبيق', plan && plan.applied ? 'success' : 'info');
+    showToast(plan && plan.applied ? '✅ تم ��نفيذ التعديل بنجاح' : '⚠️ تم تحليل الطلب ولم يكتمل التطبيق', plan && plan.applied ? 'success' : 'info');
   } catch(err) {
     const reason = err && err.message ? err.message : 'سبب غير معروف';
     const canRetry = !!(err && err.retryable);
@@ -3432,13 +3432,15 @@ function replyMessage(idx) {
   renderMessages();
 }
 
-function updateMsgBadge() {
-  const msgs = getData('messages');
-  const count = msgs.filter(m => (m.receiverType === 'admin' || !m.receiverType) && !m.read).length;
+  function updateMsgBadge() {
+  const raw = getData('messages');
+  const msgs = Array.isArray(raw) ? raw : [];
+  const count = msgs.filter(m => m && (m.receiverType === 'admin' || !m.receiverType) && !m.read).length;
   const badge = document.getElementById('msgBadge');
-  badge.textContent = count;
+  if(!badge) return;
+  badge.textContent = String(count);
   badge.classList.toggle('hidden', count === 0);
-}
+  }
 
 // ====== SUBJECTS & TEACHERS ======
 function renderSubjects() {
@@ -3587,7 +3589,7 @@ function renderStudentDashboard() {
     draftHtml += '<p><strong>التاريخ:</strong> '+draft.date+'</p>';
     draft.elements.forEach((el, ei) => {
       draftHtml += '<div style="padding:10px; background:var(--input-bg); border-radius:8px; margin-bottom:8px; border-right:3px solid '+(el.color || 'var(--primary)')+';">';
-      draftHtml += '<strong>'+el.name+'</strong> - '+(el.surah || 'بدون سورة')+'<br>';
+      draftHtml += '<strong>'+el.name+'</strong> - '+(el.surah || 'بدون س��رة')+'<br>';
       draftHtml += 'من آية '+(el.from || '-')+' إلى '+(el.to || '-')+' | ';
       draftHtml += 'التقءءيم: <span class="badge '+getRatingClass(el.rating)+'">'+getRatingLabel(el.rating)+'</span>';
       draftHtml += '</div>';
@@ -4390,10 +4392,13 @@ function markStudentMessagesRead() {
 }
 
 function updateStudentMsgBadge() {
-  const msgs = getData('messages');
-  const count = msgs.filter(m => m.receiverType === 'student' && m.receiverId === currentUser.id && !m.read).length;
+  const raw = getData('messages');
+  const msgs = Array.isArray(raw) ? raw : [];
+  const userId = currentUser && !Array.isArray(currentUser) ? currentUser.id : null;
+  const count = msgs.filter(m => m && m.receiverType === 'student' && userId != null && m.receiverId === userId && !m.read).length;
   const badge = document.getElementById('studentMsgBadge');
-  badge.textContent = count; badge.classList.toggle('hidden', count === 0);
+  if(!badge) return;
+  badge.textContent = String(count); badge.classList.toggle('hidden', count === 0);
 }
 
 async function sendStudentChat() {
@@ -4522,10 +4527,13 @@ function markParentMessagesRead() {
 }
 
 function updateParentMsgBadge() {
-  const msgs = getData('messages');
-  const count = msgs.filter(m => m.receiverType === 'parent' && m.receiverName === currentUser[0].parent && !m.read).length;
+  const raw = getData('messages');
+  const msgs = Array.isArray(raw) ? raw : [];
+  const parent = Array.isArray(currentUser) && currentUser[0] ? currentUser[0].parent : null;
+  const count = msgs.filter(m => m && m.receiverType === 'parent' && parent && m.receiverName === parent && !m.read).length;
   const badge = document.getElementById('parentMsgBadge');
-  badge.textContent = count; badge.classList.toggle('hidden', count === 0);
+  if(!badge) return;
+  badge.textContent = String(count); badge.classList.toggle('hidden', count === 0);
 }
 
 async function sendParentChat() {
