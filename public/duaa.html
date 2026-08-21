@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&family=Amiri:wght@400;700&display=swap">
+<title>دعاء | ثمار</title>
+<link rel="icon" href="/images/icon-duaa.svg">
+<style>
+  :root{ --primary:#1d5038; --bg:#f4f6f5; --card:#ffffff; --text:#1c2b24; --muted:#6b7a72; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);}
+  header{background:linear-gradient(135deg,var(--primary),#2f6e4f);color:#fff;padding:18px 16px 22px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.12);}
+  header img{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));}
+  header h1{margin:0;font-size:1.15rem;}
+  .back-btn{margin-inline-start:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:8px 14px;font-size:.85rem;cursor:pointer;}
+  .container{max-width:780px;margin:0 auto;padding:18px 14px 40px;}
+  .cat-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:14px;}
+  .cat-tab{flex:none;padding:8px 16px;border-radius:20px;background:var(--card);border:1px solid #e2e6e3;font-size:.85rem;font-weight:700;cursor:pointer;color:var(--muted);}
+  .cat-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .duaa-card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.05);border-right:4px solid var(--primary);}
+  .duaa-title{font-weight:800;color:var(--primary);margin-bottom:10px;font-size:1rem;}
+  .duaa-text{font-size:1.15rem;line-height:2.1;text-align:right;}
+</style>
+</head>
+<body>
+<header>
+  <img src="/images/icon-duaa.svg" alt="دعاء">
+  <h1>دعاء</h1>
+  <button class="back-btn" onclick="window.close(); if(!window.closed){history.back();}">إغلاق</button>
+</header>
+<div class="container">
+  <div class="cat-tabs">
+    <button class="cat-tab active" data-cat="0">أدعية عامة</button>
+    <button class="cat-tab" data-cat="1">أدعية الصباح والمساء</button>
+    <button class="cat-tab" data-cat="2">أدعية من القرآن</button>
+  </div>
+  <div id="list"></div>
+</div>
+<script>
+var DUAAS = [
+  [
+    { t:'دعاء طلب العلم', d:'رَبِّ زِدْنِي عِلْمًا وَارْزُقْنِي فَهْمًا' },
+    { t:'دعاء الرضا', d:'اللَّهُمَّ اجْعَلْنِي مِنَ التَّوَّابِينَ، وَاجْعَلْنِي مِنَ الْمُتَطَهِّرِينَ' },
+    { t:'دعاء تفريج الهم', d:'اللَّهُمَّ لا سَهْلَ إِلَّا مَا جَعَلْتَهُ سَهْلًا، وَأَنْتَ تَجْعَلُ الْحَزَنَ إِذَا شِئْتَ سَهْلًا' },
+    { t:'دعاء الاستخارة', d:'اللَّهُمَّ إِنِّي أَسْتَخِيرُكَ بِعِلْمِكَ، وَأَسْتَقْدِرُكَ بِقُدْرَتِكَ، وَأَسْأَلُكَ مِنْ فَضْلِكَ الْعَظِيمِ' }
+  ],
+  [
+    { t:'دعاء الصباح', d:'اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ' },
+    { t:'دعاء المساء', d:'اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النَّشُورُ' },
+    { t:'سيد الاستغفار', d:'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ' }
+  ],
+  [
+    { t:'دعاء (ربنا آتنا)', d:'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ' },
+    { t:'دعاء (ربنا لا تزغ)', d:'رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِنْ لَدُنْكَ رَحْمَةً إِنَّكَ أَنْتَ الْوَهَّابُ' },
+    { t:'دعاء (رب اشرح لي)', d:'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي' },
+    { t:'دعاء (ربنا اغفر لنا)', d:'رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا الَّذِينَ سَبَقُونَا بِالْإِيمَانِ وَلَا تَجْعَلْ فِي قُلُوبِنَا غِلًّا لِلَّذِينَ آمَنُوا' }
+  ]
+];
+
+function render(catIndex){
+  document.querySelectorAll('.cat-tab').forEach(function(b,i){ b.classList.toggle('active', i===catIndex); });
+  var list = document.getElementById('list');
+  list.innerHTML = DUAAS[catIndex].map(function(item){
+    return '<div class="duaa-card"><div class="duaa-title">'+item.t+'</div><div class="duaa-text">'+item.d+'</div></div>';
+  }).join('');
+}
+document.querySelectorAll('.cat-tab').forEach(function(btn,i){
+  btn.addEventListener('click', function(){ render(i); });
+});
+render(0);
+</script>
+</body>
+</html>

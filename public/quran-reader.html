@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1d5038">
+<meta name="description" content="عارض المصحف الكامل — منصة ثمار">
+<title>عارض المصحف | ثمار</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap">
+<style>
+:root{--green:#1d5038;--green2:#28734f;--gold:#bf994a;--bg:#f7f4ea;--card:#fffdf6;--text:#22392c;--text-light:#6a7c6c;--border:#e7dfc6}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(160deg,var(--green),var(--green2));color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.icon-btn{width:36px;height:36px;flex:none;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.05rem;cursor:pointer}
+.icon-btn:hover{background:rgba(255,255,255,.26)}
+.topbar-title{flex:1;text-align:center;font-weight:800;font-size:1rem}
+.topbar-title small{display:block;font-weight:600;font-size:.72rem;opacity:.8}
+.reader{max-width:720px;margin:0 auto;padding:20px 18px 80px}
+.surah-banner{text-align:center;margin:26px 0 18px;padding:16px 10px;border:2px solid var(--gold);border-radius:16px;background:var(--card);position:relative}
+.surah-banner .num{position:absolute;top:-14px;right:50%;transform:translateX(50%);background:var(--gold);color:#fff;font-size:.75rem;font-weight:800;padding:2px 12px;border-radius:20px}
+.surah-banner h2{margin:6px 0 4px;font-family:'Amiri',serif;font-size:1.7rem;color:var(--green)}
+.surah-banner p{margin:0;font-size:.8rem;color:var(--text-light)}
+.ayah-block{font-family:'Amiri',serif;font-size:clamp(1.35rem,3.4vw,1.7rem);line-height:2.35;text-align:justify;color:var(--text);margin-bottom:6px}
+.ayah-num{display:inline-flex;align-items:center;justify-content:center;width:1.9em;height:1.9em;margin:0 3px;font-size:.62em;font-weight:800;color:var(--green);border:1.5px solid var(--gold);border-radius:50%;background:rgba(191,153,74,.08);vertical-align:middle}
+.loading,.err{text-align:center;padding:30px;color:var(--text-light)}
+.err{color:#a33}
+.load-more{display:block;width:100%;margin:24px 0;padding:14px;border:1px dashed var(--gold);border-radius:14px;background:transparent;color:var(--green);font-weight:800;font-family:inherit;cursor:pointer}
+.load-more:hover{background:rgba(191,153,74,.08)}
+.load-more:disabled{opacity:.5;cursor:default}
+.jump-nav{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:30px;padding:8px 10px;box-shadow:0 12px 30px rgba(0,0,0,.15);z-index:20}
+.jump-nav button{border:none;background:var(--green2);color:#fff;border-radius:20px;padding:8px 16px;font-weight:700;font-family:inherit;cursor:pointer;font-size:.85rem}
+.jump-nav button:hover{background:var(--green)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <button type="button" class="icon-btn" onclick="location.href='/quran.html'" aria-label="فهرس السور">☰</button>
+  <div class="topbar-title" id="topbarTitle">جارٍ التحميل…<small>المصحف الكامل</small></div>
+  <button type="button" class="icon-btn" onclick="window.close();history.length>1?history.back():location.href='/app.html'" aria-label="إغلاق">✕</button>
+</header>
+
+<main class="reader" id="readerContent">
+  <div class="loading">جاري تحميل السورة من المصحف…</div>
+</main>
+
+<div class="jump-nav">
+  <button type="button" onclick="location.href='/quran.html'">فهرس السور</button>
+  <button type="button" id="nextSurahBtn">السورة التالية</button>
+</div>
+
+<script>
+var SURAH_NAMES = ["الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس","هود","يوسف","الرعد","إبراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه","الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم","لقمان","السجدة","الأحزاب","سبأ","فاطر","يس","الصافات","ص","الزمر","غافر","فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق","الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة","الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج","نوح","الجن","المزمل","المدثر","القيامة","الإنسان","المرسلات","النبأ","النازعات","عبس","التكوير","الإنفطار","المطففين","الإنشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد","الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات","القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر","المسد","الإخلاص","الفلق","الناس"];
+var SURAH_TYPES = ["meccan","medinan","medinan","medinan","medinan","meccan","meccan","medinan","medinan","meccan","meccan","meccan","medinan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","medinan","meccan","medinan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","medinan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","medinan","medinan","medinan","meccan","meccan","meccan","meccan","meccan","medinan","meccan","medinan","medinan","medinan","medinan","medinan","medinan","medinan","medinan","medinan","medinan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","medinan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","medinan","medinan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","meccan","medinan","meccan","meccan","meccan","meccan"];
+
+function getSurahNumFromUrl(){
+  var params = new URLSearchParams(location.search);
+  var n = parseInt(params.get('surah'), 10);
+  if(!n || n < 1 || n > 114) n = 1;
+  return n;
+}
+
+var currentSurah = getSurahNumFromUrl();
+var loadedUpTo = 0;
+var content = document.getElementById('readerContent');
+var titleEl = document.getElementById('topbarTitle');
+var nextBtn = document.getElementById('nextSurahBtn');
+
+function updateTitle(n){
+  titleEl.innerHTML = 'سورة '+SURAH_NAMES[n-1]+'<small>المصحف الكامل — رقم '+n+' من 114</small>';
+}
+
+function surahBanner(n){
+  var typeLabel = SURAH_TYPES[n-1] === 'meccan' ? 'مكية' : 'مدنية';
+  return '<div class="surah-banner"><span class="num">سورة رقم '+n+'</span>'
+    + '<h2>سورة '+SURAH_NAMES[n-1]+'</h2>'
+    + '<p>'+typeLabel+'</p></div>';
+}
+
+function renderAyahs(ayahs){
+  return '<p class="ayah-block">' + ayahs.map(function(a){
+    return a.text + ' <span class="ayah-num">'+a.numberInSurah+'</span>';
+  }).join(' ') + '</p>';
+}
+
+function fetchSurah(n){
+  return fetch('https://api.alquran.cloud/v1/surah/'+n+'/quran-uthmani')
+    .then(function(r){ if(!r.ok) throw new Error('network'); return r.json(); })
+    .then(function(json){
+      if(!json || !json.data || !json.data.ayahs) throw new Error('bad-data');
+      return json.data.ayahs;
+    });
+}
+
+function loadSurahBlock(n, isFirst){
+  var wrap = document.createElement('div');
+  wrap.id = 'surah-'+n;
+  if(isFirst){
+    content.innerHTML = '';
+  } else {
+    var loadingNote = document.createElement('div');
+    loadingNote.className = 'loading';
+    loadingNote.textContent = 'جاري تحميل سورة '+SURAH_NAMES[n-1]+'…';
+    loadingNote.id = 'loadingNote';
+    content.appendChild(loadingNote);
+  }
+  fetchSurah(n).then(function(ayahs){
+    var note = document.getElementById('loadingNote');
+    if(note) note.remove();
+    wrap.innerHTML = surahBanner(n) + renderAyahs(ayahs);
+    content.appendChild(wrap);
+    loadedUpTo = n;
+    if(isFirst){ updateTitle(n); }
+    nextBtn.disabled = false;
+    nextBtn.textContent = n < 114 ? ('السورة التالية: '+SURAH_NAMES[n]) : 'انتهى المصحف الكريم';
+    if(n >= 114) nextBtn.disabled = true;
+  }).catch(function(){
+    var note = document.getElementById('loadingNote');
+    if(note) note.remove();
+    var errDiv = document.createElement('div');
+    errDiv.className = 'err';
+    errDiv.textContent = 'تعذر تحميل سورة '+SURAH_NAMES[n-1]+'. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.';
+    content.appendChild(errDiv);
+    var retryBtn = document.createElement('button');
+    retryBtn.className = 'load-more';
+    retryBtn.textContent = 'إعادة المحاولة';
+    retryBtn.onclick = function(){ errDiv.remove(); retryBtn.remove(); loadSurahBlock(n, isFirst); };
+    content.appendChild(retryBtn);
+  });
+}
+
+nextBtn.addEventListener('click', function(){
+  if(loadedUpTo >= 114) return;
+  nextBtn.disabled = true;
+  loadSurahBlock(loadedUpTo + 1, false);
+});
+
+loadSurahBlock(currentSurah, true);
+</script>
+</body>
+</html>

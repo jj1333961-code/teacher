@@ -529,6 +529,33 @@ tr:hover { background: var(--table-hover); }
   .record-element,.homework-section,.reading-section { border:1px solid var(--border); border-radius:18px; box-shadow:0 8px 24px rgba(33,86,57,.05); }
   .record-element { background:var(--card-bg); } .homework-section { background:rgba(79,148,103,.07); } .reading-section { background:rgba(188,148,80,.08); }
   .msg-item { border-right:3px solid var(--primary); border-radius:14px; background:var(--table-header); }
+
+  /* ===== ودجة الأدوات الإسلامية لصفحة الطالب ===== */
+  .islamic-widget { border-radius:24px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:24px; background:var(--card-bg); }
+  .islamic-widget-header { position:relative; padding:18px 18px 26px; color:#fff; background:linear-gradient(160deg, rgba(13,38,28,.72), rgba(29,80,56,.55)); min-height:158px; }
+  .islamic-widget-header::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,30,22,.15), rgba(8,22,16,.72)); }
+  .widget-top-row { position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .widget-top-icons { display:flex; gap:8px; }
+  .widget-icon-btn { width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,.35); background:rgba(255,255,255,.14); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.95rem; padding:0; }
+  .widget-icon-btn:hover { background:rgba(255,255,255,.26); }
+  .widget-location { display:flex; align-items:center; gap:6px; font-weight:700; font-size:.98rem; text-shadow:0 1px 6px rgba(0,0,0,.35); }
+  .widget-location svg { flex:none; }
+  .widget-date-row { position:relative; z-index:1; display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin-top:34px; }
+  .widget-date-g { font-size:.92rem; font-weight:700; opacity:.95; }
+  .widget-date-h { font-size:.86rem; opacity:.8; margin-top:2px; }
+  .widget-prayer { text-align:left; }
+  .widget-prayer-name { color:#f4cf6a; font-weight:900; font-size:1.15rem; margin-bottom:2px; }
+  .widget-prayer-count { font-size:.82rem; opacity:.85; }
+  .widget-prayer-time { font-size:1.7rem; font-weight:900; color:#fff; margin-inline-start:4px; }
+  .islamic-tools-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; padding:18px 10px; background:var(--card-bg); }
+  .islamic-tool-btn { display:flex; flex-direction:column; align-items:center; gap:8px; background:transparent; border:none; padding:8px 4px; cursor:pointer; border-radius:14px; color:var(--text); }
+  .islamic-tool-btn:hover { background:var(--table-header); }
+  .islamic-tool-icon-wrap { position:relative; width:56px; height:56px; }
+  .islamic-tool-icon-wrap img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 4px 10px rgba(0,0,0,.12)); }
+  .islamic-tool-dot { position:absolute; top:-2px; right:2px; width:9px; height:9px; border-radius:50%; background:#ef4444; border:1.5px solid var(--card-bg); }
+  .islamic-tool-label { font-size:.86rem; font-weight:700; color:var(--text); text-align:center; line-height:1.3; }
+  @media(max-width:480px){ .islamic-tools-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:2px; padding:14px 4px; } .islamic-tool-icon-wrap { width:48px; height:48px; } .islamic-tool-label { font-size:.78rem; } .widget-prayer-time { font-size:1.4rem; } }
+
   @media(max-width:1000px){ .home-page .cards,.menu-grid,.stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media(max-width:620px){ .container { padding-inline:12px; } .home-page .cards,.menu-grid,.stats { grid-template-columns:1fr; } .home-page .card { min-height:150px; } .page { padding:18px; border-radius:18px; } .display-controls { top:10px; left:10px; } }
   @media(prefers-reduced-motion:reduce){ *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
@@ -734,7 +761,7 @@ tr:hover { background: var(--table-hover); }
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
   <div class="form-group">
     <label>طلب التطوير</label>
-    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر��د إضافته أو تعديله ف الموقع..."></textarea>
+    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر����د إضافته أو تعديله ف الموقع..."></textarea>
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
@@ -1320,7 +1347,7 @@ tr:hover { background: var(--table-hover); }
 <div id="proctorGate" class="proctor-gate hidden" role="dialog" aria-modal="true" aria-labelledby="proctorTitle">
   <div class="proctor-panel">
     <h2 id="proctorTitle">التحقق قبل بدء الجلسة</h2>
-    <p>لن تُحفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
+    <p>لن تُحفظ صورة أو فيديو. يجري الفحص على ج��ازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
     <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص للسماح بالكاميرا</div></div>
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
     <div class="proctor-checks" aria-live="polite">

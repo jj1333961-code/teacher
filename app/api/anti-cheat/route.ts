@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { generateText } from 'ai'
 import { and, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { antiCheatEvents, antiCheatGlobalConfig, antiCheatItemConfigs, antiCheatSessions } from '@/lib/db/schema'
@@ -71,6 +72,14 @@ export async function POST(request: Request) {
       await db.insert(antiCheatSessions).values(created)
       return NextResponse.json({ sessionId: created.id, config: resolved.config, source: resolved.source, reused: false })
     }
+    if (action === 'ai-review') {
+      const signals = Array.isArray(body.signals) ? body.signals.slice(0, 12) : []
+      const summary = JSON.stringify({ score: clamp(body.riskScore), severity: body.severity, signals })
+      if (!process.env.AI_GATEWAY_API_KEY) return NextResponse.json({ ok: true, available: false, recommendation: 'continue' })
+      const result = await generateText({ model: 'google/gemini-3.7-flash', system: 'أنت مساعد مراقبة اختبارات. حلل إشارات نصية مجهولة فقط، ولا تستخدمها وحدها لإدانة الطالب. أعد كلمة واحدة فقط: continue أو warn أو review أو block. اختر block فقط عند اجتماع إشارتين أو أكثر مستمرتين ومتوافقتين.', prompt: summary })
+      const recommendation = ['continue', 'warn', 'review', 'block'].includes(result.text.trim()) ? result.text.trim() : 'review'
+      return NextResponse.json({ ok: true, available: true, recommendation })
+    }
     if (action === 'event') {
       const event = body.event ?? {}
       if (!event.sessionId || !event.studentId || !event.itemId || !validType(event.itemType) || !event.eventType) return NextResponse.json({ error: 'بيانات الحدث غير مكتملة' }, { status: 400 })
@@ -83,7 +92,7 @@ export async function POST(request: Request) {
       const riskScore = clamp(calculateRiskScore(signals, session.riskScore)), severity = severityFor(riskScore, resolved.config)
       const riskDelta = riskScore - session.riskScore
       const reason = String(event.reason || 'تم رصد إشارة قابلة للتفسير من مجموعة الفحوص').slice(0, 300)
-      const metadata = event.metadata && typeof event.metadata === 'object' ? event.metadata : { signalCount: signals.filter((signal) => signal.active).length, signalTypes: signals.filter((signal) => signal.active).map((signal) => signal.type) }
+      const metadata = event.metadata && typeof event.metadata === 'object' ? event.metadata : { signalCount: signals.filter((signal: { active: boolean }) => signal.active).length, signalTypes: signals.filter((signal: { active: boolean }) => signal.active).map((signal: { type: string }) => signal.type) }
       await db.insert(antiCheatEvents).values({ id: id(), sessionId: session.id, studentId: session.studentId, itemId: session.itemId, itemType: session.itemType, eventType: String(event.eventType).slice(0, 64), riskScore, riskDelta, severity, decision: severity, reason, durationMs: clamp(event.durationMs, 0, 86400000), metadata })
       await db.update(antiCheatSessions).set({ riskScore, severity, updatedAt: new Date() }).where(eq(antiCheatSessions.id, session.id))
       return NextResponse.json({ ok: true, riskScore, severity })

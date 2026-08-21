@@ -1,5 +1,11 @@
 import { pgTable, text, integer, timestamp, jsonb, boolean, primaryKey } from 'drizzle-orm/pg-core'
 
+export const appSnapshots = pgTable('app_snapshots', {
+  id: text('id').primaryKey(),
+  data: jsonb('data').notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
 export const quizzes = pgTable('quizzes', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),

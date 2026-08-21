@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1d5038">
+<meta name="description" content="الأذكار — منصة ثمار">
+<title>الأذكار | ثمار</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap">
+<style>
+:root{--green:#1d5038;--green2:#28734f;--gold:#bf994a;--bg:#f7faf7;--card:#ffffff;--text:#18352b;--text-light:#62766d;--border:#e2ece3}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);padding-bottom:40px}
+.header{position:relative;padding:20px 18px 26px;color:#fff;background:linear-gradient(160deg,rgba(13,38,28,.78),rgba(29,80,56,.62))}
+.header-top{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.back-btn{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer}
+.back-btn:hover{background:rgba(255,255,255,.26)}
+.header h1{margin:0;font-size:1.3rem;font-weight:900}
+.header p{margin:4px 0 0;font-size:.82rem;opacity:.85}
+.content{max-width:720px;margin:0 auto;padding:20px 16px}
+.tabs{display:flex;gap:8px;background:var(--card);border-radius:16px;padding:6px;box-shadow:0 10px 30px rgba(33,86,57,.1);margin-bottom:18px;overflow-x:auto}
+.tab-btn{flex:none;padding:10px 16px;border:none;background:transparent;border-radius:12px;font-weight:800;color:var(--text-light);cursor:pointer;font-family:inherit;font-size:.88rem;white-space:nowrap}
+.tab-btn.active{background:var(--green2);color:#fff}
+.zikr-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 8px 24px rgba(33,86,57,.06)}
+.zikr-text{font-family:'Amiri',serif;font-size:1.28rem;line-height:2.1;color:var(--text)}
+.zikr-meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:.82rem;color:var(--text-light)}
+.zikr-count{background:rgba(191,153,74,.15);color:#8a6a2c;padding:3px 12px;border-radius:20px;font-weight:800}
+.section{display:none}
+.section.active{display:block}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <button type="button" class="back-btn" onclick="window.close();history.length>1?history.back():location.href='/app.html'" aria-label="رجوع">›</button>
+    <div><h1>الأذكار</h1><p>أذكار الصباح والمساء وأذكار متفرقة</p></div>
+  </div>
+</header>
+<main class="content">
+  <div class="tabs">
+    <button type="button" class="tab-btn active" onclick="setSection('morning', this)">أذكار الصباح</button>
+    <button type="button" class="tab-btn" onclick="setSection('evening', this)">أذكار المساء</button>
+    <button type="button" class="tab-btn" onclick="setSection('general', this)">أذكار متفرقة</button>
+  </div>
+
+  <div id="morning" class="section active">
+    <div class="zikr-card"><div class="zikr-text">أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ</div><div class="zikr-meta"><span>يُقال مرة واحدة</span><span class="zikr-count">×1</span></div></div>
+    <div class="zikr-card"><div class="zikr-text">اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَحْيَيْنَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ</div><div class="zikr-meta"><span>يُقال مرة واحدة</span><span class="zikr-count">×1</span></div></div>
+    <div class="zikr-card"><div class="zikr-text">سُبْحَانَ اللَّهِ وَبِحَمْدِهِ</div><div class="zikr-meta"><span>تسبيح وحمد</span><span class="zikr-count">×100</span></div></div>
+    <div class="zikr-card"><div class="zikr-text">أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ</div><div class="zikr-meta"><span>حماية من الشر</span><span class="zikr-count">×3</span></div></div>
+  </div>
+
+  <div id="evening" class="section">
+    <div class="zikr-card"><div class="zikr-text">أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ</div><div class="zikr-meta"><span>يُقال مرة واحدة</span><span class="zikr-count">×1</span></div></div>
+    <div class="zikr-card"><div class="zikr-text">اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ</div><div class="zikr-meta"><span>يُقال مرة واحدة</span><span class="zikr-count">×1</span></div></div>
+    <div class="zikr-card"><div class="zikr-text">اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي</div><div class="zikr-meta"><span>دعاء العافية</span><span class="zikr-count">×3</span></div></div>
+    <div class="zikr-card"><div class="zikr-text">حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ، عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ</div><div class="zikr-meta"><span>عند المساء</span><span class="zikr-count">×7</span></div></div>
+  </div>
+
+  <div id="general" class="section">
+    <div class="zikr-card"><div class="zikr-text">لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ يُحْيِي وَيُمِيتُ وَهُوَ حَيٌّ لَا يَمُوتُ، بِيَدِهِ الْخَيْرُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ</div><div class="zikr-meta"><span>ذكر عام</span><span class="zikr-count">×10</span></div></div>
+    <div class="zikr-card"><div class="zikr-text">سُبْحَانَ اللَّهِ، وَالْحَمْدُ لِلَّهِ، وَلَا إِلَهَ إِلَّا اللَّهُ، وَاللَّهُ أَكْبَرُ</div><div class="zikr-meta"><span>الباقيات الصالحات</span><span class="zikr-count">×3</span></div></div>
+    <div class="zikr-card"><div class="zikr-text">رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ</div><div class="zikr-meta"><span>استغفار</span><span class="zikr-count">×100</span></div></div>
+    <div class="zikr-card"><div class="zikr-text">اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ</div><div class="zikr-meta"><span>الصلاة على النبي ﷺ</span><span class="zikr-count">×10</span></div></div>
+  </div>
+</main>
+<script>
+function setSection(id, btn){
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

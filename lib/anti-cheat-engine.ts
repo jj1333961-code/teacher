@@ -3,6 +3,8 @@ export type AntiCheatSeverity = 'NORMAL' | 'WARNING' | 'SUSPICIOUS' | 'CHEATING_
 export type AntiCheatConfig = {
   enabled: boolean
   requireCamera: boolean
+  eyeTracking: boolean
+  warnOnAway: boolean
   facePresence: boolean
   multipleFaces: boolean
   gaze: boolean
@@ -22,7 +24,7 @@ export type AntiCheatConfig = {
 }
 
 export const defaultAntiCheatConfig: AntiCheatConfig = {
-  enabled: false, requireCamera: true, facePresence: true, multipleFaces: true, gaze: true,
+  enabled: false, requireCamera: true, eyeTracking: true, warnOnAway: true, facePresence: true, multipleFaces: true, gaze: true,
   headPose: true, eyeClosure: true, focus: true, fullscreen: false, singleTouch: true,
   warningThreshold: 20, suspiciousThreshold: 45, cheatingThreshold: 75, graceMs: 2500,
   blockMs: 8000, autoRestore: true, analysisIntervalMs: 150, sensitivity: 'medium',
