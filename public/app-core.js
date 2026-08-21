@@ -236,7 +236,69 @@ if(!localStorage.getItem('initialized_v7')) {
 }
 
 let currentUser = null, currentType = null, currentAdminId = null;
-let voiceBlob = null, voiceChunks = [], mediaRecorder = null;
+  let roleSidebarLastTrigger = null;
+  const roleSidebarMenus = {
+    admin: {
+      title: 'أدوات المسؤول',
+      items: [
+        ['💬', 'الرسائل', "showPage('messagesPage')"],
+        ['⚙️', 'الإعدادات', "showPage('adminSettings')"],
+        ['📁', 'الملفات المرفوعة', "showPage('filesPage')"],
+        ['🛠️', 'مساعد تطوير الموقع', 'openDevAssistant()'],
+        ['✦', 'المحادثة مع الذكاء الاصطناعي', "showPage('adminAIPage')"],
+        ['🔗', 'مزامنة GitHub', 'openGithubSync()']
+      ]
+    },
+    student: {
+      title: 'أدوات الطالب',
+      items: [
+        ['💬', 'الرسائل', "showPage('studentInbox')"],
+        ['📁', 'الملفات', "showPage('studentFilesPage')"],
+        ['✦', 'مساعد الذكاء الاصطناعي', "showPage('studentAIChat')"],
+        ['📈', 'مخطط التقييم', 'showStudentFullChart()'],
+        ['🎙️', 'صندوق التسجيلات', "showPage('studentRecordsPage')"]
+      ]
+    },
+    parent: {
+      title: 'أدوات ولي الأمر',
+      items: [
+        ['💬', 'الرسائل', "showPage('parentInbox')"],
+        ['📁', 'الملفات', "showPage('parentFilesPage')"],
+        ['✦', 'مساعد الذكاء الاصطناعي', "showPage('parentAIChat')"],
+        ['📈', 'المخطط', "showPage('parentChartPage')"]
+      ]
+    }
+  };
+  function openRoleSidebar(role) {
+    const menu = roleSidebarMenus[role] || roleSidebarMenus[currentType];
+    const backdrop = document.getElementById('roleSidebarBackdrop');
+    const list = document.getElementById('roleSidebarList');
+    const title = document.getElementById('roleSidebarTitle');
+    if (!menu || !backdrop || !list || !title) return;
+    roleSidebarLastTrigger = document.activeElement;
+    title.textContent = menu.title;
+    list.innerHTML = menu.items.map(([icon, label, action]) => '<button type="button" class="role-sidebar-item" onclick="closeRoleSidebar();'+action+'"><span class="role-sidebar-icon" aria-hidden="true">'+icon+'</span><span>'+label+'</span></button>').join('');
+    backdrop.classList.add('is-open');
+    backdrop.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('role-sidebar-open');
+    document.querySelectorAll('.role-sidebar-trigger').forEach(btn => btn.setAttribute('aria-expanded', 'true'));
+    const first = list.querySelector('button');
+    if (first) first.focus();
+  }
+  function closeRoleSidebar() {
+    const backdrop = document.getElementById('roleSidebarBackdrop');
+    if (!backdrop) return;
+    backdrop.classList.remove('is-open');
+    backdrop.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('role-sidebar-open');
+    document.querySelectorAll('.role-sidebar-trigger').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+    if (roleSidebarLastTrigger && typeof roleSidebarLastTrigger.focus === 'function') roleSidebarLastTrigger.focus();
+    roleSidebarLastTrigger = null;
+  }
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeRoleSidebar();
+  });
+  let voiceBlob = null, voiceChunks = [], mediaRecorder = null;
 let voiceFingerprint = null, voiceDataUrl = null, voiceProfileGemini = null;
 let recordElements = [], homeworkItems = [], readingItems = [];
 let fullChartStudentId = null;
@@ -2007,7 +2069,7 @@ function localSmartChatReply(message,role){
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
-  if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
+  if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، ��أرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت االهدف والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
 }
@@ -4179,7 +4241,7 @@ async function blobToWav(blob) {
   const decoded = await ctx.decodeAudioData(buf.slice(0));
   await ctx.close();
   const targetRate = 12000;
-    const srcData = decoded.getChannelData(0); // نأخذ القناة الأوى (أحادي)
+    const srcData = decoded.getChannelData(0); // نأخذ الق��اة الأوى (أحادي)
     const ratio = decoded.sampleRate / targetRate;
     const outLen = Math.floor(srcData.length / ratio);
     const out = new Float32Array(outLen);
@@ -4896,7 +4958,7 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلام','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الواجبءءءت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الواجبءءءت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية م��صصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
@@ -4974,7 +5036,7 @@ function generateAIResponse(text, student) {
   }
   // افتراضي ذكي
   let r = '🤖 أهلاً '+name+'، لم فهم ءءؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
-  r += '• <strong>مستواي</strong> — تحليل آخر تقييم<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآيات</strong> — كيف تعرض آيات التسءءيع كصورة<br>• <strong>تحفيز</strong> — كلمة تشدّ همتك';
+  r += '• <strong>مستواي</strong> — تحليل آخر تقيي��<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآيات</strong> — كيف تعرض آيات التسءءيع كصورة<br>• <strong>تحفيز</strong> — كلمة تشدّ همتك';
   if(pending.length > 0) r += '<br><br>📌 تذكير: لديك '+pending.length+' مهمة لم تُعتمد بعد.';
   return r;
 }
