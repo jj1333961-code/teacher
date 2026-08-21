@@ -5,8 +5,8 @@ export const dynamic = "force-dynamic"
 const COOKIE = "teacher_google_state"
 const SESSION = "teacher_google_session"
 const DOMAIN = "https://teacher-three-ashen.vercel.app"
+const APP_PAGE = `${DOMAIN}/app.html`
 const CALLBACK = `${DOMAIN}/api/auth/google`
-const APP_RETURN = `${DOMAIN}/app.html`
 
 function config() {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim()
@@ -52,29 +52,27 @@ export async function GET(request: NextRequest) {
       auth.searchParams.set("redirect_uri", redirectUri())
       auth.searchParams.set("response_type", "code")
       auth.searchParams.set("scope", "openid email profile")
-      // اجعل Google تعرض اختيار الحسابات المتاحة بدل الاعتماد على الحساب السابق فقط.
-      auth.searchParams.set("prompt", "select_account")
       auth.searchParams.set("state", state)
-      if (error) { const response = NextResponse.redirect(`${APP_RETURN}?google_error=cancelled`); response.cookies.delete(COOKIE); return response }
+      if (error) { const response = NextResponse.redirect(`${APP_PAGE}?google_error=cancelled`); response.cookies.delete(COOKIE); return response }
       const response = NextResponse.redirect(auth)
       response.cookies.set(COOKIE, state, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 })
       return response
     }
     const state = request.cookies.get(COOKIE)?.value
     const returnedState = url.searchParams.get("state")
-    if (!state || !returnedState || state !== returnedState) return NextResponse.redirect(`${DOMAIN}/?google_error=invalid_state`)
+    if (!state || !returnedState || state !== returnedState) return NextResponse.redirect(`${APP_PAGE}?google_error=invalid_state`)
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri(), grant_type: "authorization_code" }), cache: "no-store" })
-    if (!tokenResponse.ok) return NextResponse.redirect(`${DOMAIN}/?google_error=token_exchange`)
+    if (!tokenResponse.ok) return NextResponse.redirect(`${APP_PAGE}?google_error=token_exchange`)
     const tokens = await tokenResponse.json()
     const userResponse = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${tokens.access_token}` }, cache: "no-store" })
-    if (!userResponse.ok) return NextResponse.redirect(`${DOMAIN}/?google_error=userinfo`)
+    if (!userResponse.ok) return NextResponse.redirect(`${APP_PAGE}?google_error=userinfo`)
     const user = await userResponse.json()
-    if (typeof user.email !== "string" || user.email_verified !== true) return NextResponse.redirect(`${DOMAIN}/?google_error=email_not_verified`)
-    const response = NextResponse.redirect(`${APP_RETURN}?google=success`)
+    if (typeof user.email !== "string" || user.email_verified !== true) return NextResponse.redirect(`${APP_PAGE}?google_error=email_not_verified`)
+    const response = NextResponse.redirect(`${APP_PAGE}?google=success`)
     response.cookies.set(SESSION, sessionValue(user.email, typeof user.name === "string" ? user.name : "", clientSecret), { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 7 })
     response.cookies.delete(COOKIE)
     return response
-  } catch { return NextResponse.redirect(`${DOMAIN}/?google_error=not_configured`) }
+  } catch { return NextResponse.redirect(`${APP_PAGE}?google_error=not_configured`) }
 }
 
 export async function POST() {
