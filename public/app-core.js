@@ -209,23 +209,80 @@ let langObserver = new MutationObserver(function(){
 function initLanguage(){ applyLangToDom(); langObserver.observe(document.body,{childList:true,subtree:true}); }
 
 let neonSaveTimer = null;
+let neonSaveInFlight = null;
+let neonSavePending = false;
+let neonLastSyncedAt = '';
+let neonRetryTimer = null;
 const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests'];
 function getData(key, def) { try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); } catch (e) { console.warn('تعذر قراءة البيانات المحلية للمفتاح:', key, e); return def || []; } }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
+// حفظ فعلي واحد في كل مرة؛ أي طلب حفظ يصل أثناء رفع سابق يُعاد جدولته تلقائياً بعد انتهائه (لا يُفقد).
 async function saveAllDataToNeon(){
   const status=document.getElementById('cloudSaveStatus');
-  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})}); if(!res.ok)throw new Error(); if(status)status.textContent='محفو في Neon'; }
-  catch(e){ if(status)status.textContent='تعذر الحفظ في Neon'; }
+  if(neonSaveInFlight){ neonSavePending=true; return neonSaveInFlight; }
+  neonSavePending=false;
+  neonSaveInFlight=(async function(){
+    try{
+      const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})});
+      const body=await res.json().catch(function(){return {}});
+      if(!res.ok||body.unavailable) throw new Error('save-unavailable');
+      neonLastSyncedAt=body.updatedAt||neonLastSyncedAt;
+      sessionStorage.removeItem('neon_unavailable_v1');
+      if(status)status.textContent='محفوظ في Neon';
+      clearTimeout(neonRetryTimer);
+    }catch(e){
+      sessionStorage.setItem('neon_unavailable_v1','1');
+      if(status)status.textContent='تعذر الحفظ في Neon، سيُعاد المحاولة تلقائياً';
+      // لا نتوقف عن المزامنة نهائياً؛ نعيد المحاولة تلقائياً بدل تعطيل الحفظ لبقية الجلسة.
+      clearTimeout(neonRetryTimer);
+      neonRetryTimer=setTimeout(saveAllDataToNeon,5000);
+    }finally{
+      neonSaveInFlight=null;
+      if(neonSavePending) saveAllDataToNeon();
+    }
+  })();
+  return neonSaveInFlight;
 }
-function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); if(sessionStorage.getItem('neon_unavailable_v1')==='1') return; clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
+function flushPendingSave(){ clearTimeout(neonSaveTimer); neonSaveTimer=null; saveAllDataToNeon(); }
+function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
+// نضمن عدم فقد آخر تعديل عند إغلاق التبويب أو تبديل التطبيق (شائع على الهاتف) بإرسال الحفظ فوراً دون انتظار المؤقت.
+document.addEventListener('visibilitychange',function(){ if(document.hidden && neonSaveTimer) flushPendingSave(); });
+window.addEventListener('pagehide',flushPendingSave);
+window.addEventListener('beforeunload',flushPendingSave);
 async function hydrateDataFromNeon(){
-  if(sessionStorage.getItem('neon_hydrated_v1'))return;
-  try{ const res=await fetch('/api/data',{cache:'no-store'}); const body=await res.json(); if(res.ok&&body.data){ const before=JSON.stringify(collectCloudData()); Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); }); sessionStorage.setItem('neon_hydrated_v1','1'); const changed=before!==JSON.stringify(collectCloudData()); if(changed && !sessionStorage.getItem('neon_reload_done_v1')){ sessionStorage.setItem('neon_reload_done_v1','1'); location.reload(); } } else if(body.unavailable){ sessionStorage.setItem('neon_hydrated_v1','1'); sessionStorage.setItem('neon_unavailable_v1','1'); } else { sessionStorage.setItem('neon_hydrated_v1','1'); await saveAllDataToNeon(); } }
-  catch(e){ sessionStorage.setItem('neon_hydrated_v1','1'); }
+  try{
+    const res=await fetch('/api/data',{cache:'no-store'});
+    const body=await res.json();
+    if(res.ok&&body.data){
+      const before=JSON.stringify(collectCloudData());
+      Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); });
+      neonLastSyncedAt=body.updatedAt||neonLastSyncedAt;
+      sessionStorage.setItem('neon_hydrated_v1','1');
+      sessionStorage.removeItem('neon_unavailable_v1');
+      const changed=before!==JSON.stringify(collectCloudData());
+      if(changed && !sessionStorage.getItem('neon_reload_done_v1')){ sessionStorage.setItem('neon_reload_done_v1','1'); location.reload(); }
+    } else if(body.unavailable){
+      sessionStorage.setItem('neon_hydrated_v1','1');
+      sessionStorage.setItem('neon_unavailable_v1','1');
+      clearTimeout(neonRetryTimer);
+      neonRetryTimer=setTimeout(hydrateDataFromNeon,5000);
+    } else {
+      sessionStorage.setItem('neon_hydrated_v1','1');
+      await saveAllDataToNeon();
+    }
+  }catch(e){
+    sessionStorage.setItem('neon_hydrated_v1','1');
+    sessionStorage.setItem('neon_unavailable_v1','1');
+    clearTimeout(neonRetryTimer);
+    neonRetryTimer=setTimeout(hydrateDataFromNeon,5000);
+  }
 }
   // لا نؤخر شاشة الترحيب بسبب الشبكة؛ تتم المزامنة بعد أول رسم وفي وقت خمول المتصفح.
   const scheduleHydration = window.requestIdleCallback || function(cb){ window.setTimeout(cb, 1200); };
   scheduleHydration(function(){ hydrateDataFromNeon(); });
+  // إعادة المزامنة عند رجوع التبويب للواجهة أو استعادة الاتصال، حتى تنعكس تعديلات هاتف آخر بأسرع وقت.
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden && sessionStorage.getItem('neon_hydrated_v1')) saveAllDataToNeon(); });
+  window.addEventListener('online',function(){ sessionStorage.removeItem('neon_unavailable_v1'); saveAllDataToNeon(); });
 
 if(!localStorage.getItem('initialized_v7')) {
   setData('subjects', [
@@ -1421,7 +1478,7 @@ async function saveStudent() {
   const notes = document.getElementById('stNotes').value.trim();
   const selectedSubjects = Array.from(subjectSelect.selectedOptions).map(o => parseInt(o.value));
 
-  if(!name || !username || !national || !birth || !parent || !parentPass || !studentPass || selectedSubjects.length === 0) return fail('يرجى ملء جميع الحقول المطلوبة');
+  if(!name || !username || !national || !birth || !parent || !parentPass || !studentPass || selectedSubjects.length === 0) return fail('يرجى ملء جميع الحقول المطلو��ة');
   if(national.length !== 14) return fail('الرقم القومي يجب أن يكون 14 رقم بالضبط');
   if(phone && phone.length !== 11) return fail('رقم الهاتف يجب أن يكون 11 رقم');
 
@@ -1686,7 +1743,7 @@ proctorMaxViolations: 1
 function removeRecordElement(idx) {
   recordElements[idx].deleted = true;
   renderRecordElements(); renderExtraElements();
-  showToast('🗑️ تم حذف عنصر "'+recordElements[idx].name+'" — يمكنك استرجاعه', 'error');
+  showToast('🗑️ تم حذف عن��ر "'+recordElements[idx].name+'" — يمكنك استرجاعه', 'error');
 }
 
 function restoreRecordElement(idx) {
@@ -3088,7 +3145,7 @@ async function runDevAssistant(){
       flagged: dangers,
     });
     renderDevAudit();
-    showToast(plan && plan.applied ? '✅ تم تنفيذ التعديل بنجاح' : '⚠️ تم تحليل الطلب ولم يكتمل التطبيق', plan && plan.applied ? 'success' : 'info');
+    showToast(plan && plan.applied ? '✅ تم تنفيذ التعد��ل بنجاح' : '⚠️ تم تحليل الطلب ولم يكتمل التطبيق', plan && plan.applied ? 'success' : 'info');
   } catch(err) {
     const reason = err && err.message ? err.message : 'سبب غير معروف';
     const canRetry = !!(err && err.retryable);
@@ -3939,7 +3996,7 @@ function renderStudentTasks() {
   const extraTasks=Array.from(temp.querySelectorAll('[data-task-category="extra"]')).map(el=>el.outerHTML).join('');
   const exam=s.activeExam&&s.activeExam.status==='pending'?s.activeExam:null;
   const examHtml=exam?'<p>لديك اختبار نشط من '+(exam.questions?.length||0)+' سؤال.</p><button class="btn btn-primary" onclick="showPage(\'studentExamPage\')">فتح الاختبار</button>':'<p style="color:var(--text-light)">لا يوجد اختبار نشط حاليًا.</p>';
-  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المهمات اءءإضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمءءت ءءضافية حالية.</p>')+'</section></div>';
+  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المهمات اءءإضاف��ة <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمءءت ءءضافية حالية.</p>')+'</section></div>';
   if(proctor.active)bindLiveProctorHold();
 }
 
@@ -4644,7 +4701,7 @@ function renderParentDashboard() {
 
       if(finalizedSessions.length > 0) {
         const chartId = 'parent_chart_' + s.id;
-        html += '<div class="chart-container" style="margin-top:15px;"><h5 style="color:var(--primary); margin-bottom:10px;">📊 مخطط التقييم</h5><canvas id="'+chartId+'" width="900" height="400" style="max-width:100%; height:auto;"></canvas></div>';
+        html += '<div class="chart-container" style="margin-top:15px;"><h5 style="color:var(--primary); margin-bottom:10px;">📊 مخطط ا��تقييم</h5><canvas id="'+chartId+'" width="900" height="400" style="max-width:100%; height:auto;"></canvas></div>';
         setTimeout(() => drawTotalOnlyChart(chartId, finalizedSessions), 200);
       }
 
@@ -4878,7 +4935,7 @@ function uploadFile(input) {
     };
     files.push(fileData);
     setData('uploadedFiles', files);
-    progressDiv.innerHTML = '<div class="alert alert-success">✅ تم رفع الملف بنجاح!</div>';
+    progressDiv.innerHTML = '<div class="alert alert-success">✅ تم رف�� الملف بنجاح!</div>';
     document.getElementById('fileDesc').value = '';
     document.getElementById('fileInput').value = '';
     renderFiles();
@@ -5109,7 +5166,7 @@ function generateAIResponse(text, student) {
   if(has('السلا��','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
     return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الواجبءءءت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية م��صصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
-  // شكر
+  // ��كر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
     return 'وإياك '+name+' 🌸 دائماً في خدمتك. استمر، فكل حرف تحءءظه لك به حسنة والحسنة بعشر أمثالها.';
   }
@@ -5215,6 +5272,6 @@ if(restoreSession()) {
     showPage('lockScreen');
   }
 } else {
-  // الصفحة الرئيسية الأصلية هي شاشة الدخول الموحدة؛ لا نعرض بطاقات اختيار المسؤول/الطالب/ولي الأمر.
+  // الصفحة الرئيسية الأصلية هي شاشة الدخو�� الموحدة؛ لا نعرض بطاقات اختيار المسؤول/الطالب/ولي الأمر.
   showPage('lockScreen');
 }
