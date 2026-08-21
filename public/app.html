@@ -734,7 +734,7 @@ tr:hover { background: var(--table-hover); }
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
   <div class="form-group">
     <label>طلب التطوير</label>
-    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر��د إضافته أو تعديله ف الموقع..."></textarea>
+    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر����د إضافته أو تعديله ف الموقع..."></textarea>
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
@@ -815,6 +815,23 @@ tr:hover { background: var(--table-hover); }
 <div id="adminSettings" class="page hidden" style="max-width:600px;">
   <div class="page-header"><h2>⚙️ إعدادات المسؤول</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="adminSettingsAlert"></div>
+  <section class="record-element" style="padding:18px; margin:18px 0; background:var(--table-header);" aria-labelledby="proctorSettingsTitle">
+    <h3 id="proctorSettingsTitle" style="margin:0 0 8px; color:var(--primary);">🔐 إعدادات فحص الغش للطالب</h3>
+    <p style="color:var(--text-light); margin:0 0 15px;">تُطبّق هذه الإعدادات على جميع عناصر التسميع والاختبارات والمهام الجديدة. يُجرى الفحص مرة واحدة عند بدء الاختبار، وتستمر المراقبة حتى التسليم.</p>
+    <div class="form-row">
+      <div class="form-group"><label><input type="checkbox" id="proctorSettingEnabled" style="width:auto;"> تفعيل فحص الغش</label></div>
+      <div class="form-group"><label><input type="checkbox" id="proctorSettingCamera" style="width:auto;"> طلب الكاميرا</label></div>
+      <div class="form-group"><label><input type="checkbox" id="proctorSettingTouch" style="width:auto;"> مراقبة اللمسات</label></div>
+      <div class="form-group"><label><input type="checkbox" id="proctorSettingFocus" style="width:auto;"> مراقبة مغادرة الصفحة</label></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label for="proctorSettingGaze">مهلة تصحيح النظر (ثانية)</label><input id="proctorSettingGaze" type="number" min="3" max="120" step="1"></div>
+      <div class="form-group"><label for="proctorSettingTouchGrace">مهلة اللمسات الإضافية (ثانية)</label><input id="proctorSettingTouchGrace" type="number" min="1" max="60" step="1"></div>
+      <div class="form-group"><label for="proctorSettingMax">عدد المخالفات قبل الإيقاف</label><input id="proctorSettingMax" type="number" min="1" max="10" step="1"></div>
+    </div>
+    <button type="button" class="btn btn-primary" onclick="saveProctorSettings()">💾 حفظ إعدادات فحص الغش</button>
+    <span id="proctorSettingsStatus" class="badge badge-success" style="display:none; margin-right:8px;">تم الحفظ</span>
+  </section>
   <h4 style="color:var(--primary); margin:20px 0 15px; border-bottom:2px solid var(--border); padding-bottom:10px;">🔐 تأكيد الهوية</h4>
   <div class="form-group">
     <label>رقم الموبايل الحالي (للتأكيد)</label>
@@ -1348,7 +1365,7 @@ function getAIModelLabel(){return 'Gemini / Groq';}
 function showToast(msg, type){
   if(!type){
     var t = String(msg);
-    type = (/(❌||فشل|طأ|لا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
+    type = (/(❌||فشل|طأ|��ا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
   }
   var box = document.getElementById('toastBox');
   if(!box){ box = document.createElement('div'); box.id='toastBox'; document.body.appendChild(box); }
