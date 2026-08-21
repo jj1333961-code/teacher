@@ -416,7 +416,7 @@ const SYS_VOICE_PRINT = `أنت محرك بصمة صوتية. تستمع إلى 
 
 const SYS_VOICE_MATCH = `أنت محرك تحقق من هوية المتحدث بالبصمة الصوتية. لديك تسجيل صوتي حديث، ووصف بصمة صوتية مرجعية محفوظة لنفس الشخص المتوقع (referenceProfile)، وقد يصلك تسجيل مرجعي أيضاً.
 حلّل خصائص الصوت في التسجيل الحديث ثم قارنها بالمرجع: الطبقة، اللون الصوتي، الجرس، الأنفية، السرعة، اللكنة.
-تجاهل اختلاف الكلمات أو النص المقر��ء تماماً؛ المقارنة على الصوت فقط. راعِ اختلاف الميكروفون والضجيج.
+تجاهل اختلاف الكلمات أو النص المقرءءء تماماً؛ المقارنة على الصوت فقط. راعِ اختلاف الميكروفون والضجيج.
 أعد JSON فقط بلا markdown:
 {"sameSpeaker":true/false,"matchPercent":number,"confidence":"low|medium|high","quality":"good|noisy|too-short","reason":"سبب موجز بالعربية","profile":{"gender":"male|female|unknown","pitch":"very-low|low|medium|high|very-high","pitchHz":number,"timbre":"وصف موجز","speed":"slow|medium|fast"}}`
 
@@ -627,7 +627,7 @@ async function githubDeleteFile(path: string, message: string) {
 }
 
 // حالة المزامنة: يتحقق من الاتصال بمستودع المسؤول ويعيد آخر commit ورابط سجل التعديلات.
-// لا يكشف أبداً قيمة أ�� رمز مميز. عند أي فشل يعيد connected=false مع سبب واضح.
+// لا يكشف أبداً قيمة أءء رمز مميز. عند أي فشل يعيد connected=false مع سبب واضح.
 async function getGithubSyncStatus() {
   const missing: string[] = []
   if (!GITHUB_TOKEN) missing.push("GITHUB_TOKEN")
@@ -963,7 +963,7 @@ export async function POST(req: Request) {
         ? payload.previousQuestionFingerprints.map(String).map((value: string) => value.slice(0, 240)).slice(0, 500)
         : []
       const safePayload = { topic, plan, startSurahNumber, endSurahNumber, pastScope, nearSurahs, farSurahs, sourceSurahs, referenceContext, sourceFile, useReferenceFiles, previousQuestionFingerprints }
-      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالس��ر الموجودة في sourceSurahs فقط، واجعل كل سؤال تطبيقاً مباشراً لموضوع المسؤول topic لا لمطلع السورة. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. إذا وُجد sourceFile فاستخرج منه أفكار الأسئلة والمتشابهات ذات الصلة بالموضوع، ثم طابق كل موضع مع sourceSurahs قبل اعتماده. استفد من referenceContext لصياغة المتشابهات والفروق اللفظية الدقيقة. نوّع المواضع عبر كامل السور ولا تبدأ دائماً من أوائلها. استبعد previousQuestionFingerprints تماماً. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
+      const text = await runText(JSON.stringify(safePayload), SYS_EXAM + "\nالتزم بالسءءر الموجودة في sourceSurahs فقط، واجعل كل سؤال تطبيقاً مباشراً لموضوع المسؤول topic لا لمطلع السورة. pastScope يحدد الماضي القريب أو البعيد أو كليهما؛ وعند both اجعل قرابة 70% من الأسئلة من nearSurahs و30% من farSurahs. إذا وُجد sourceFile فاستخرج منه أفكار الأسئلة والمتشابهات ذات الصلة بالموضوع، ثم طابق كل موضع مع sourceSurahs قبل اعتماده. استفد من referenceContext لصياغة المتشابهات والفروق اللفظية الدقيقة. نوّع المواضع عبر كامل السور ولا تبدأ دائماً من أوائلها. استبعد previousQuestionFingerprints تماماً. في complete وaudio لا تضع كلمات الإجابة في prompt أو stem. ممنوع إعادة كتابة أو تعديل نص أي آية.", temperature)
       const parsed = extractJson(text)
       const questions = Array.isArray(parsed) ? parsed : parsed?.questions
       if (!Array.isArray(questions)) return json({ error: "تعذر توليد أسئلة صالحة", diagnostics }, 502)
