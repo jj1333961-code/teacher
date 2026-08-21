@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       const riskScore = clamp(calculateRiskScore(signals, session.riskScore)), severity = severityFor(riskScore, resolved.config)
       const riskDelta = riskScore - session.riskScore
       const reason = String(event.reason || 'تم رصد إشارة قابلة للتفسير من مجموعة الفحوص').slice(0, 300)
-      const metadata = event.metadata && typeof event.metadata === 'object' ? event.metadata : { signalCount: signals.filter((signal) => signal.active).length, signalTypes: signals.filter((signal) => signal.active).map((signal) => signal.type) }
+      const metadata = event.metadata && typeof event.metadata === 'object' ? event.metadata : { signalCount: signals.filter((signal: { active: boolean }) => signal.active).length, signalTypes: signals.filter((signal: { active: boolean }) => signal.active).map((signal: { type: string }) => signal.type) }
       await db.insert(antiCheatEvents).values({ id: id(), sessionId: session.id, studentId: session.studentId, itemId: session.itemId, itemType: session.itemType, eventType: String(event.eventType).slice(0, 64), riskScore, riskDelta, severity, decision: severity, reason, durationMs: clamp(event.durationMs, 0, 86400000), metadata })
       await db.update(antiCheatSessions).set({ riskScore, severity, updatedAt: new Date() }).where(eq(antiCheatSessions.id, session.id))
       return NextResponse.json({ ok: true, riskScore, severity })
