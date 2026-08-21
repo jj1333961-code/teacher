@@ -734,7 +734,7 @@ tr:hover { background: var(--table-hover); }
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
   <div class="form-group">
     <label>طلب التطوير</label>
-    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تريد إضافته أو تعديله ف الموقع..."></textarea>
+    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر��د إضافته أو تعديله ف الموقع..."></textarea>
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
@@ -965,7 +965,8 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div></div><div class="form-row"><div class="form-group"><label>عدد المخالفات المسموحة</label><input id="globalMaxViolations" type="number" min="1" max="10" value="1"></div><div class="form-group"><label><input id="globalFullscreen" type="checkbox" checked> ءءلب ملء الشاشة وإنهاء المهمة عند الخروج</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
+  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
+  <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
   <div class="page" style="margin:15px 0;border:2px dashed var(--info);">
@@ -1040,7 +1041,7 @@ tr:hover { background: var(--table-hover); }
 <!-- صفحة المخطط الكامل -->
 <div id="fullChartPage" class="chart-page hidden">
   <div class="page-header">
-    <h2>📊 المخطط الت��صيلي</h2>
+    <h2>📊 المخط�� الت��صيلي</h2>
     <button class="btn btn-secondary" onclick="closeFullChart()">رجوع</button>
   </div>
   <div id="fullChartContainer" style="text-align:center;"></div>
@@ -1066,7 +1067,7 @@ tr:hover { background: var(--table-hover); }
   <div id="msgComposeSection" class="hidden">
     <div class="form-row">
       <div class="form-group"><label>إرسال إلى</label><select id="composeTarget" onchange="updateComposePersons()"><option value="">اختر...</option><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
-      <div class="form-group"><label>الشخص</label><select id="composePerson"><option value="">اختر أولاً نوع المستلم</option></select></div>
+      <div class="form-group"><label>الشخص</label><select id="composePerson"><option value="">اختر أولاً نوع ��لمستلم</option></select></div>
     </div>
     <div class="form-group"><label>الرسالة</label><textarea id="composeText" rows="4" placeholder="اكتب رسالتك..."></textarea></div>
     <div id="voiceBox_compose"></div>
@@ -1331,7 +1332,8 @@ tr:hover { background: var(--table-hover); }
     <div class="proctor-actions"><button id="proctorScanBtn" type="button" class="btn btn-primary" onclick="startProctorScan()">تشغيل الفحص</button><button type="button" class="btn btn-secondary" onclick="closeProctorGate()">إلغاء</button></div>
   </div>
 </div>
-<div id="proctorWarning" class="proctor-warning hidden" role="alert" aria-live="assertive"></div>
+  <div id="proctorWarning" class="proctor-warning hidden" role="alert" aria-live="assertive"></div>
+  <div id="proctorBlock" class="proctor-gate hidden" role="alertdialog" aria-modal="true" aria-labelledby="proctorBlockTitle"><div class="proctor-panel"><h2 id="proctorBlockTitle">تم إيقاف التحكم مؤقتاً</h2><p id="proctorBlockMessage">نحتاج إلى عودة الإشارات الطبيعية قبل استكمال المهمة. لا تُنهى المحاولة بسبب هذا التنبيه.</p><div class="proctor-checks"><div id="proctorBlockStatus" class="proctor-check bad">! جارٍ استعادة الفحص</div></div></div></div>
 <div id="studentWorkModal" class="student-work-modal hidden" role="dialog" aria-modal="true" aria-labelledby="studentWorkModalTitle" onclick="if(event.target===this)closeStudentWorkModal()">
   <div class="student-work-dialog">
     <div class="student-work-dialog-header"><h3 id="studentWorkModalTitle">المطلوب</h3><button type="button" class="btn btn-secondary" onclick="closeStudentWorkModal()" aria-label="إغلاق النافذة">إغلاق</button></div>
