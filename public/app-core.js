@@ -374,7 +374,41 @@ function clearSession() {
   } catch(e) { console.error('clearSession error:', e); }
 }
 
+let activeRoleSidebar = null;
+function toggleRoleSidebar(role) {
+  const nav = document.getElementById(role + 'RoleNav');
+  if(!nav) return;
+  if(nav.classList.contains('is-open')) closeRoleSidebar();
+  else openRoleSidebar(nav);
+}
+function openRoleSidebar(nav) {
+  closeRoleSidebar();
+  activeRoleSidebar = nav;
+  nav.classList.add('is-open');
+  nav.setAttribute('aria-hidden', 'false');
+  const backdrop = document.getElementById('roleSidebarBackdrop');
+  if(backdrop) { backdrop.classList.add('is-open'); backdrop.setAttribute('aria-hidden', 'false'); }
+  const toggle = document.querySelector('.role-sidebar-toggle[aria-controls="' + nav.id + '"]');
+  if(toggle) { toggle.setAttribute('aria-expanded', 'true'); toggle.focus({ preventScroll: true }); }
+}
+function closeRoleSidebar() {
+  if(activeRoleSidebar) {
+    activeRoleSidebar.classList.remove('is-open');
+    activeRoleSidebar.setAttribute('aria-hidden', 'true');
+  }
+  document.querySelectorAll('.role-sidebar-toggle[aria-expanded="true"]').forEach(function(toggle) {
+    toggle.setAttribute('aria-expanded', 'false');
+  });
+  const backdrop = document.getElementById('roleSidebarBackdrop');
+  if(backdrop) { backdrop.classList.remove('is-open'); backdrop.setAttribute('aria-hidden', 'true'); }
+  activeRoleSidebar = null;
+}
+window.addEventListener('keydown', function(event) {
+  if(event.key === 'Escape' && activeRoleSidebar) closeRoleSidebar();
+});
+
 function showPage(id) {
+  closeRoleSidebar();
   const currentVisible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   const currentId = currentVisible ? currentVisible.id : null;
 
@@ -2056,7 +2090,7 @@ function localSmartChatReply(message,role){
     }
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
-  if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
+  if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيق��ان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت االهدف والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
@@ -2094,7 +2128,7 @@ function getExamPastRange(){
 function syncExamSurahRange(){
   const base=document.getElementById('examBaseSurah'),last=document.getElementById('examLastSurah');if(!base||!last)return;
   const previous=last.value,start=Math.max(0,ALL_SURAHS_ORDERED.indexOf(base.value));
-  const allowed=ALL_SURAHS_ORDERED.slice(start);last.innerHTML='<option value="">سورة الناس تلقائياً</option>'+allowed.map(s=>'<option value="'+s+'">'+s+'</option>').join('');
+  const allowed=ALL_SURAHS_ORDERED.slice(start);last.innerHTML='<option value="">��ورة الناس تلقائياً</option>'+allowed.map(s=>'<option value="'+s+'">'+s+'</option>').join('');
   last.value=allowed.includes(previous)?previous:'';
   try{const range=getExamPastRange(),help=document.getElementById('examPastScopeHelp');if(help)help.textContent='القريب: '+range.near[0]+' ← '+range.near[range.near.length-1]+(range.far.length?'، البعيد: '+range.far[0]+' ← '+range.far[range.far.length-1]:'، ولا يوجد نصف بعيد مستقل في هذا النطاق.')}catch(e){}
 }
@@ -2430,7 +2464,7 @@ async function recordStudentExamAudio(i){
     recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
     recorder.onstop=async()=>{
       stream.getTracks().forEach(t=>t.stop());if(asr)asr.stop();await new Promise(r=>setTimeout(r,400));
-      const blob=new Blob(chunks,{type:'audio/webm'});const dataUrl=await blobToDataURL(blob);const transcript=asr?(asr.text||''):'';preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='🤖 جاري التحقق من البصمة والمحتوى...';
+      const blob=new Blob(chunks,{type:'audio/webm'});const dataUrl=await blobToDataURL(blob);const transcript=asr?(asr.text||''):'';preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='🤖 جاري التح��ق من البصمة والمحتوى...';
       const identity=await verifyVoiceIdentity(blob,currentUser);const match=identity?identity.pct:null;
       if(match!==null && (match<VOICE_MATCH_THRESHOLD || identity.sameSpeaker===false)){status.textContent='❌ البصمة غير مطابقة — لم يُحفظ التسجيل';aiBox.innerHTML='<div class="alert alert-danger">🚫 هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل بصوت الطالب نفسه.</div>';showToast('❌ التسجيل غير مطابق للبصمة ولم يتم حفظه','error');studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;btn.dataset.recording='false';btn.classList.remove('recording');return;}
       // تحليل الصوت على الخادم (تفريغ حقيقي + تصحيح) مع احتياطي المتصفح
@@ -3291,7 +3325,7 @@ function openMessageFileById(msgId, readonly) {
   const msgs = getData('messages');
   const m = msgs.find(x => x.id === msgId);
   if(!m || !m.fileData) { alert('الملف غير متاح'); return; }
-  if(readonly && !m.shareWithParent) { alert('لم يسمح المسؤول بالاطلاع على هذا الملف بعد'); return; }
+  if(readonly && !m.shareWithParent) { alert('لم يسمح المسؤول بالاطلا�� على هذا الملف بعد'); return; }
   openFileModal(m.fileData, m.fileName || 'file', 'ملف مرسل من ' + m.sender + (typeof m.voiceMatch === 'number' ? ' — 🤖 مطابقة البصم الصوتية: ' + m.voiceMatch + '% ' + (m.voiceMatch >= VOICE_MATCH_THRESHOLD ? '✅ مطابق' : '⚠️ ير مطابق') : ''), m.fileType === 'homework' ? 'image/jpeg' : (m.fileType === 'reading' || m.fileType === 'voice') ? 'audio/webm' : '', readonly);
 }
 
@@ -4011,7 +4045,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   if(matchPct !== null && matchPct < VOICE_MATCH_THRESHOLD) {
     showToast('❌ فشل التحقق من البصمة الصوتية (' + matchPct + '%) — لم يتم حفظ أو إرسال التءءجيل', 'error');
     if(statusEl) statusEl.textContent = 'غير مطابق — أعد التسجيل ❌';
-    if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 التحقق الأمني:</strong><br>البصمة الصوتية غير مطابقة لصوت الطال (' + matchPct + '%).<br>لم يتم حفظ التسجيل أو إرساله للمسؤول أو ولي الأمر.</div>';
+    if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 التحقق الأمني:</strong><br>البصمة الصوتية غير مط��بقة لصوت الطال (' + matchPct + '%).<br>لم يتم حفظ التسجيل أو إرساله للمسؤول أو ولي الأمر.</div>';
     return false;
   }
 
@@ -4146,7 +4180,7 @@ function _fft(re, im) {
 
 async function computeVoicePrint(blob) {
   // بصة محلية متعددة السمات: طيف صوتي + مركز الطيف + عبور الصفر + إحصاءات زمنية.
-  // لا نرفع البصمة الخام إلى Gemini وGroq؛ تبقى المقارنة على جهاز المستخدم.
+  // لا نرفع البصمة الخام إلى Gemini وGroq؛ تبقى المق��رنة على جهاز المستخدم.
   try{
     const buf=await blob.arrayBuffer(),AC=window.AudioContext||window.webkitAudioContext,ctx=new AC(),audio=await ctx.decodeAudioData(buf.slice(0)),ch=audio.getChannelData(0);
     const N=1024,hop=512,bands=48,bandSum=new Float64Array(bands),bandSq=new Float64Array(bands),cent=[] ,zcr=[],ener=[];let frames=0;
@@ -4653,7 +4687,7 @@ function renderParentPendingTasks() {
     // المهام التي رفضها المسؤول اليوم
     html += '<h4 style="color:var(--danger); margin:15px 0 10px;">❌ المهام المرفوضة اليوم ('+rejectedToday.length+')</h4>';
     if(rejectedToday.length === 0) {
-      html += '<div class="alert alert-info">لا توجد مهام مرفوضة اليوم</div>';
+      html += '<div class="alert alert-info">لا توج�� مهام مرفوضة اليوم</div>';
     } else {
       rejectedToday.slice().reverse().forEach(task => {
         html += '<div class="task-card" style="border-right-color:var(--danger);">';
@@ -4900,7 +4934,7 @@ function generateWelcomeMessages(student) {
     {title: 'هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من شيء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر أن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
     {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية وسترى الفرق في حياتك.'},
-    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
+    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراج��ة قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
     {title: 'يوم مبارك يا '+student.name+'! ✨', body: 'حافظ على الاستمرارية في الحفظ، فالقرآن يُحفظ بالتكرار والمراجعة. ثق بالله، فهو معك في كل خطوة.'}
   ];
   const base = templates[dayOfWeek % templates.length];
@@ -4987,7 +5021,7 @@ function generateAIResponse(text, student) {
   }
   // الآيات ءءالصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُعرض بارم العثمانءء المشكَّل كصورة مطابقة تماماً لمصحف.';
+    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُعرض بارم العثمانءء المشكَّل كصورة مطاب��ة تماماً لمصحف.';
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صءءت','ميكروفون','تحق')) {
