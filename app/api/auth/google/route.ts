@@ -43,9 +43,9 @@ function verify(value: string, secret: string) {
 function redirectUri(request: NextRequest) { return callbackUrl(request) }
 
 export async function GET(request: NextRequest) {
+  const page = appPage(request)
   try {
     const { clientId, clientSecret } = config()
-    const page = appPage(request)
     const redirect = redirectUri(request)
     const url = new URL(request.url)
     // Older bookmarks may still start OAuth on teacher.vercel.app. Move the
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       const state = randomBytes(24).toString("base64url")
       const auth = new URL("https://accounts.google.com/o/oauth2/v2/auth")
       auth.searchParams.set("client_id", clientId)
-      auth.searchParams.set("redirect_uri", redirectUri())
+      auth.searchParams.set("redirect_uri", redirect)
       auth.searchParams.set("response_type", "code")
       auth.searchParams.set("scope", "openid email profile")
       auth.searchParams.set("state", state)
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     if (!userResponse.ok) return NextResponse.redirect(`${page}?google_error=userinfo`)
     const user = await userResponse.json()
     if (typeof user.email !== "string" || user.email_verified !== true) return NextResponse.redirect(`${page}?google_error=email_not_verified`)
-    const response = NextResponse.redirect(`${APP_PAGE}?google=success`)
+    const response = NextResponse.redirect(`${page}?google=success`)
     response.cookies.set(SESSION, sessionValue(user.email, typeof user.name === "string" ? user.name : "", clientSecret), { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 7 })
     response.cookies.delete(COOKIE)
     return response

@@ -147,7 +147,20 @@ const LANG_DICT = {
   'تحديث': 'Refresh', 'تسجيل الدخول': 'Log in', 'تسجيل الخروج': 'Log out',
   'مساعد Gemini / Groq الإداري': 'Gemini / Groq Admin Assistant',
   'محادثة Gemini وGroq الإدارية': 'Gemini وGroq Admin Chat', 'مزامنة GitHub': 'GitHub Sync',
-  '📁 الملفات لمرفوعة': '📁 Uploaded files', 'ف الموقع': 'to the site', 'بيانات الموقع': 'site data'
+  '📁 الملفات لمرفوعة': '📁 Uploaded files', 'ف الموقع': 'to the site', 'بيانات الموقع': 'site data',
+  'الرئيسية': 'Home', 'الصفحة الرئيسية': 'Home', 'المستخدم': 'User', 'المستلم': 'Recipient',
+  'اسم الطالب': 'Student name', 'اسم المدرس': 'Teacher name', 'اسم ولي الأمر': 'Parent name',
+  'الرقم القومي': 'National ID', 'تاريخ الميلاد': 'Date of birth', 'السن': 'Age',
+  'المواد الدراسية': 'Subjects', 'القرآن الكريم': 'The Holy Quran', 'القراءة': 'Reading',
+  'الواجب': 'Homework', 'الاختبار': 'Exam', 'الاختبارات': 'Exams', 'المستوى': 'Level',
+  'بحث': 'Search', 'اختر...': 'Choose...', 'اختر الجزء...': 'Choose a Juz...', 'اختر السورة...': 'Choose a Surah...',
+  'اختر الجزء أولاً...': 'Choose a Juz first...', 'معلومات إضافية': 'Additional information',
+  'جاهز': 'Ready', 'جاهز للتسجيل': 'Ready to record', 'بدء التسجيل': 'Start recording',
+  'إيقاف مؤقت': 'Pause', 'استئناف': 'Resume', 'إخفاء الإعدادات': 'Hide settings',
+  'تطبيق على جميع العناصر': 'Apply to all items', 'إغلاق': 'Close', 'التالي': 'Next', 'السابق': 'Previous',
+  'تم الحفظ بنجاح': 'Saved successfully', 'تم التحقق من هويتك بنجاح.': 'Identity verified successfully.',
+  'البيانات': 'Data', 'الملاحظات': 'Notes', 'المرفوعة': 'Uploaded', 'المسؤولون': 'Admins',
+  'المهام': 'Tasks', 'حالة الجلسة': 'Session status', 'المخطط التفصيلي': 'Detailed chart'
 };
 let currentLang = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
 const LANG_ATTRS = ['placeholder','title','aria-label','alt'];
@@ -1989,7 +2002,7 @@ async function loadExamFiles(){
 }
 function updateExamSourceDistribution(){const mode=document.getElementById('examSourceMode')?.value||'ai',group=document.getElementById('examFileSourceGroup'),source=document.getElementById('examFileSource'),label=document.getElementById('examSourceDistribution');if(group)group.style.display=mode==='file'?'block':'none';if(source)source.disabled=mode!=='file';if(label)label.textContent=mode==='file'?'ستُنشأ الدفعة كاملة من الملف المحدد.':'توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.'}
 function getExamSourceMode(){return document.getElementById('examSourceMode')?.value==='file'?'file':'ai'}
-async function uploadExamFile(input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById('examFileUploadStatus');if(status)status.innerHTML='<div class="alert alert-info">جاري رفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);const res=await fetch('/api/exam-files',{method:'POST',body:form});await readApiJson(res,'تعذر رفع الملف');if(status)status.innerHTML='<div class="alert alert-success">تم حفظ اءءملف واستخراج النص.</div>';await loadExamFiles()}catch(e){if(status)status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر رفع الملف')+' <button class="btn btn-sm btn-primary" onclick="document.getElementById(\'examFileInput\')?.click()">اختيار ملف آخر</button></div>'}finally{input.value=''}}
+async function uploadExamFile(input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById('examFileUploadStatus');if(status)status.innerHTML='<div class="alert alert-info">جاري رفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);const res=await fetch('/api/exam-files',{method:'POST',body:form});await readApiJson(res,'تعذر رفع الملف');if(status)status.innerHTML='<div class="alert alert-success">تم حفظ الملف واستخراج النص.</div>';await loadExamFiles()}catch(e){if(status)status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر رفع الملف')+' <button class="btn btn-sm btn-primary" onclick="document.getElementById(\'examFileInput\')?.click()">اختيار ملف آخر</button></div>'}finally{input.value=''}}
 async function deleteExamFile(id){const file=examFilesCache.find(f=>f.id===id);if(!file||!confirm('هل تريد حذف هذا الملف نهائياً؟'))return;try{const res=await fetch('/api/exam-files',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({pathname:file.pathname,metadataPathname:file.metadataPathname})});await readApiJson(res,'تعذر حذف الملف');await loadExamFiles()}catch(e){alert(e.message||'تعذر الحذف')}}
 function toggleExamSource(){loadExamFiles().catch(e=>showExamAlert(e.message,'danger'))}
 function shuffled(values){return values.slice().sort(()=>Math.random()-.5)}
@@ -4179,7 +4192,7 @@ async function blobToWav(blob) {
   const decoded = await ctx.decodeAudioData(buf.slice(0));
   await ctx.close();
   const targetRate = 12000;
-    const srcData = decoded.getChannelData(0); // نأخذ القناة الأوى (أحادي)
+    const srcData = decoded.getChannelData(0); // نأخذ القناة الأولى (أحادي)
     const ratio = decoded.sampleRate / targetRate;
     const outLen = Math.floor(srcData.length / ratio);
     const out = new Float32Array(outLen);
@@ -4896,7 +4909,7 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلام','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الواجبءءءت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'!<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح لك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهامي</em> — لعرض الواجبات والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسميعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مخصصة لك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
