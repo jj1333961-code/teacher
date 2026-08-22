@@ -855,7 +855,7 @@ function submitSignupRequest() {
   const juz = document.getElementById('signupJuz').value;
   const surah = document.getElementById('signupSurah').value;
   const notes = document.getElementById('signupNotes').value.trim();
-  if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم ا��قومي ورقم الهاتف مطلوبة</div>'; return; }
+  if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم ا����قومي ورقم الهاتف مطلوبة</div>'; return; }
   if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هاتف صحيحًا مع اختيار كود الدولة</div>'; return; }
   if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يكون 14 رقم</div>'; return; }
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
@@ -1080,7 +1080,7 @@ async function toggleVoiceRecord() {
   } catch(e) {
   voiceProfileGemini = null; voiceFingerprint = null; voiceDataUrl = null;
   status.textContent = 'تعذّر تحليل الصوت بواسطة Gemini';
-  showToast((e&&e.message)||'تعذّر اتصال Gemini — أعد التسجيءء', 'error');
+  showToast((e&&e.message)||'تعذ��ر اتصال Gemini — أعد التسجيءء', 'error');
   }
     };
     mediaRecorder.start();
@@ -1234,7 +1234,7 @@ function unifiedLogin() {
   showToast('❌ بيانات الدخول غير صحيحة', 'error');
 }
 
-// نسخ الرقم الري لولي الأمر إلى الطالب (تطابق الرقم السري)
+// نسخ الرقم الري لولي الأمر إلى الطالب (تطابق الرقم ا��سري)
 function syncStudentPass(prefix) {
   const cb = document.getElementById(prefix === 'st' ? 'stSamePass' : 'editSamePass');
   const sp = document.getElementById(prefix === 'st' ? 'stStudentPass' : 'editStudentPass');
@@ -2502,7 +2502,7 @@ function saveSession(isFinal) {
     return;
   }
 
-  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ الم��ام الالية وا��انتقال لليوم التالي.
+  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ث�� تفريغ الم��ام الالية وا��انتقال لليوم التالي.
   const session = {date,elements:JSON.parse(JSON.stringify(activeElements)),homework:JSON.parse(JSON.stringify(homeworkItems)),reading:JSON.parse(JSON.stringify(readingItems)),totalScore,notes,isDraft:false,finalizedAt:nowText,status:'نهائ',completedTaskSnapshot:previousTasks};
   students[idx].sessions = students[idx].sessions.filter(s => !s.isDraft && s.date !== date);
   students[idx].sessions.push(session);
@@ -4021,7 +4021,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   if(rec.pct < RECITATION_MIN_PCT) {
     // لا يُحفظ التسجيل المرفوض ولا يُرسل للمسؤول ئذا لم   طابق المقرر.
     showToast('❌ التلاوة لا تئابق ' + targetTxt + ' — لم يتم حفظ التسجيل', 'error');
-    if(statusEl) statusEl.textContent = 'مرفوض — أعد الرفع ❌';
+    if(statusEl) statusEl.textContent = 'مرفوض — أعد الر��ع ❌';
     if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 قرير الذكاء ا  اصطناعي — المحتوى غير مطابق:</strong><br>' +
       'المطلوب: <strong>' + targetTxt + '</strong><br>' +
       'نسبة مطابقة المحتوى: <strong>' + rec.pct + '%</strong> (الحد الأدنى ' + RECITATION_MIN_PCT + '%)' + (rec.txtPct !== null && rec.txtPct !== undefined ? ' | مطابقة النص المنطوق: ' + rec.txtPct + '%' : '') + '<br>' +
@@ -4344,8 +4344,11 @@ function toggleInlineAyat(boxId, surah, from, to) {
 const STUDENT_SURAH_NAMES=['الفاتحة','البقرة','آل عمران','النساء','المائدة','الأنعام','الأعراف','الأنفال','التوبة','يونس','هود','يوسف','الرعد','إبراهيم','الحجر','النحل','الإسراء','الكهف','مريم','طه','الأنبياء','الحج','المؤمنون','النور','الفرقان','الشعراء','النمل','القصص','العنكبوت','الروم','لقمان','السجدة','الأحزاب','سبأ','فاطر','يس','الصافات','ص','الزمر','غافر','فصلت','الشورى','الزخرف','الدخان','الجاثية','الأحقاف','محمد','الفتح','الحجرات','ق','الذاريات','ال��ور','النجم','ا��قمر','الرحمن','الواقعة','الحديد','المجادلة','الحشر','الممتحنة','الصف','الجمعة','المنافقون','التغابن','الطلاق','التحريم','الملك','القلم','الحاقة','المعارج','نوح','الجن','المزمل','المدثر','القيامة','الإنسان','المرسلات','النبأ','النازعات','عبس','التكوير','الانفطار','المطففين','الانشقاق','البروج','الطارق','الأعلى','الغاشية','الفجر','البلد','الشمس','الليل','الضحى','الشرح','التين','العلق','القدر','البينة','الزلزلة','العاديات','القارعة','التكاثر','العصر','الهمزة','الفيل','قريش','الماعون','الكوثر','الكافرون','النصر','المسد','الإخلاص','الفلق','الناس'];
 const STUDENT_SURAH_PAGES=[1,2,50,77,106,128,151,177,187,208,221,235,249,255,262,267,282,293,305,312,322,332,342,350,359,367,377,385,396,404,411,415,418,428,434,440,446,453,458,467,477,483,489,496,499,502,507,511,515,518,520,523,526,528,531,534,537,539,542,544,546,548,550,552,553,555,556,558,560,562,564,566,568,570,572,574,575,577,578,580,582,583,585,586,587,589,590,591,592,593,594,595,596,597,598,599,600,601,602,603,604];
 let studentSurahIndex=0;
-function initStudentQuran(){const select=document.getElementById('studentSurahSelect');if(!select)return;if(!select.options.length)select.innerHTML=STUDENT_SURAH_NAMES.map((n,i)=>'<option value="'+i+'">'+(i+1)+' — '+n+'</option>').join('');select.value=String(studentSurahIndex);openStudentSurah(studentSurahIndex)}
-function openStudentSurah(value){studentSurahIndex=Math.max(0,Math.min(113,Number(value)||0));const select=document.getElementById('studentSurahSelect');if(select)select.value=String(studentSurahIndex);const frame=document.getElementById('studentQuranFrame');if(frame)frame.src='/E-Quran-PDF.pdf#page='+STUDENT_SURAH_PAGES[studentSurahIndex]}
+const QURAN_MEDINAN_SURAHS=new Set([2,3,4,5,8,9,13,22,24,33,47,48,49,55,57,58,59,60,61,62,63,64,65,66,76,98,99,110]);
+function renderSurahDirectory(query){const box=document.getElementById('quranSurahDirectory');if(!box)return;const q=String(query||'').trim();box.innerHTML=ALL_SURAHS_ORDERED.map((name,index)=>({name,index})).filter(x=>!q||x.name.includes(q)).map(x=>'<button type="button" class="quran-surah-item '+(x.index===studentSurahIndex?'active':'')+'" onclick="openStudentSurah('+x.index+')"><span>'+(x.index+1)+' — '+x.name+'</span><small>'+(SURAH_AYAH_TOTALS[x.index]||'')+' آية · '+(QURAN_MEDINAN_SURAHS.has(x.index+1)?'مدنية':'مكية')+'</small></button>').join('')||'<p class="alert alert-info">لا توجد سورة بهذا الاسم.</p>'}
+function filterSurahDirectory(query){renderSurahDirectory(query)}
+function initStudentQuran(){const select=document.getElementById('studentSurahSelect');if(select&&!select.options.length)select.innerHTML=ALL_SURAHS_ORDERED.map((n,i)=>'<option value="'+i+'">'+(i+1)+' — '+n+'</option>').join('');renderSurahDirectory(document.getElementById('quranSurahSearch')?.value||'');openStudentSurah(studentSurahIndex)}
+function openStudentSurah(value){studentSurahIndex=Math.max(0,Math.min(113,Number(value)||0));const select=document.getElementById('studentSurahSelect');if(select)select.value=String(studentSurahIndex);const title=document.getElementById('quranActiveSurah');if(title)title.textContent=(studentSurahIndex+1)+' — '+ALL_SURAHS_ORDERED[studentSurahIndex];const frame=document.getElementById('studentQuranFrame');if(frame)frame.src='/E-Quran-PDF.pdf#page='+STUDENT_SURAH_PAGES[studentSurahIndex];renderSurahDirectory(document.getElementById('quranSurahSearch')?.value||'')}
 function previousStudentSurah(){openStudentSurah(studentSurahIndex-1)} function nextStudentSurah(){openStudentSurah(studentSurahIndex+1)}
 function showQiblaBearing(lat,lon,accuracy){const rad=Math.PI/180;const bearing=(Math.atan2(Math.sin((21.4225-lat)*rad),Math.cos(lat*rad)*Math.tan(21.4225*rad)-Math.sin(lat*rad)*Math.cos((21.4225-lat)*rad))*180/Math.PI+360)%360;const needle=document.getElementById('qiblaNeedle');if(needle)needle.style.transform='rotate('+bearing+'deg)';const details=document.getElementById('qiblaDetails');if(details)details.textContent='اتجاه الكعبة: '+bearing.toFixed(1)+'° من الشمال'+(accuracy?' — دقة الموقع: '+Math.round(accuracy)+' متر':' — تم الحساب يدويًا');const status=document.getElementById('qiblaStatus');if(status)status.textContent='تم تحديد اتجاه القبلة حسب موقعك الحالي.'}
 function calculateManualQibla(){const lat=Number(document.getElementById('qiblaLat')?.value),lon=Number(document.getElementById('qiblaLon')?.value);if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180){const status=document.getElementById('qiblaStatus');if(status)status.textContent='أدخل خط العرض والطول بشكل صحيح ثم أعد المحاولة.';return}showQiblaBearing(lat,lon,0)}
@@ -5027,7 +5030,7 @@ function generateAIResponse(text, student) {
   }
   // بيانات الحفظ
   if(has('حفظ','قرآن','قران','سورة','جزء','وين وئلت','أين وصلت')) {
-    return '📖 <strong>بيانات حفظك:</strong><br>• الجزء: '+(student.juz || 'غير محدد')+'<br>• السورة الحالية: '+(student.surah || 'غير محددة')+'<br>• عدد التسميعات النهائية: '+finalizedSessions.length+'<br><br>حافظ على المراجعة اليومية لتثبيت ما حفظت.';
+    return '📖 <strong>بيانات حفظك:</strong><br>• الجزء: '+(student.juz || 'غير محدد')+'<br>• السورة الحالية: '+(student.surah || 'غير محددة')+'<br>• عدد التسميعات النهائية: '+finalizedSessions.length+'<br><br>حافظ على المراجعة اليومية لتثب��ت ما حفظت.';
   }
   // التواصل مع المسؤو
   if(has('مسؤول','معلم','شيخ','ابلاغ','إبلاغ','رسالءء','رسالة','تواصل','شكوى')) {
