@@ -8,8 +8,6 @@
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="/app.html" as="document" fetchpriority="high">
-<link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
 <link rel="stylesheet" href="https://www.fontstatic.com/f=diwanltr">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap" media="print" onload="this.media='all'">
 <style>
@@ -38,18 +36,8 @@
   let moving=false;
   let started=false;
 
-  // الصفحة الرئيسية وملف النظام يُجلبان من البداية ويُحفظان في ذاكرة المتصفح.
-  // لا يبدأ تنفيذ النظام الكامل هنا، لذلك تبقى صفحة الترحيب خفيفة.
-  function warmMainPage(){
-    const requests=[
-      fetch('/app.html',{cache:'force-cache',credentials:'same-origin'}),
-      fetch('/app-core.js',{cache:'force-cache',credentials:'same-origin'})
-    ];
-    Promise.allSettled(requests).then(function(){
-      if(!started) status.textContent='المنصة جاهزة. اضغط للدخول والاستماع إلى التلاوة.';
-    });
-  }
-  warmMainPage();
+  // لا نجلب ملفات المنصة أو حزم الأدوار أثناء شاشة الترحيب.
+  // يتم تحميل صفحة الوجهة فقط بعد الضغط على الدخول.
 
   function enterApp(){
     if(moving) return;

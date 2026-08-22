@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#315c4b">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-<link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
 <link rel="stylesheet" href="https://www.fontstatic.com/f=diwanltr">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
@@ -580,7 +579,7 @@ tr:hover { background: var(--table-hover); }
   #lockScreen .btn:disabled { opacity:.75; cursor:wait; }
   </style>
 </head>
-<body>
+<body data-platform-page="role-aware">
 
   <div class="display-controls" aria-label="إعدادات العرض">
     <button class="theme-toggle" type="button" onclick="toggleTheme()" title="تبديل الوضع" aria-label="تبديل الوضع">🌙</button>
@@ -725,7 +724,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
 <div id="devAssistantPage" class="page hidden" style="max-width:820px; margin:40px auto;">
-  <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>🛠️ م��اعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
     ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكو�� المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
