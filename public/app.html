@@ -1378,10 +1378,8 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواجهة.
-  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core warmup failed', err); }); };
-  if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
-  else setTimeout(warm, 350);
+  // لا يتم تحميل حزمة التطبيق أثناء شاشة الدخول. تُحمّل فقط عند أول عملية تحتاجها.
+  // هذا يمنع تحميل لوحات المسؤول والطالب وولي الأمر دفعة واحدة عند فتح الموقع.
 })();
 </script>
 <script>
