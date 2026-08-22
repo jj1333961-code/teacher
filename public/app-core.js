@@ -984,7 +984,7 @@ function toggleStudentSpeech(){
     if(status)status.textContent=currentLang==='en'?'Direct speech recognition is unavailable. Starting secure recording fallback...':'التعرف المباشر غير متاح؛ بدأنا التسجيل الصوتي الآمن تلقائياً.';
     if(transcript){transcript.classList.remove('hidden');transcript.textContent=currentLang==='en'?'Speak clearly, then press Stop and the recording will be analyzed automatically.':'تحدث بوضوح، ثم اضغط إنهاء التسجيل وسيتم تحليل التسجيل تلقائياً.'}
     const recorderBtn=document.getElementById('studentIntakeRecordBtn');
-    if(recorderBtn){recorderBtn.focus();await toggleStudentIntakeRecord();}
+    if(recorderBtn){recorderBtn.focus();toggleStudentIntakeRecord();}
     return;
   }
   const recognition=new Recognition();studentSpeechRecognition=recognition;recognition.lang=speechLanguage();recognition.continuous=false;recognition.interimResults=true;recognition.maxAlternatives=1;
@@ -3215,7 +3215,7 @@ function sendComposeMessage() {
   const type = parts[0];
   const id = parts.slice(1).join('_');
   if(type === 'student') {
-    messages.push({type:'admin', sender:'المسؤول', senderId:0, receiverType:'student', receiverId:parseInt(id), text: text || '🎙️ رسالة صوتية', voiceData: voice, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
+    messages.push({type:'admin', sender:'المسؤول', senderId:0, receiverType:'student', receiverId:parseInt(id), text: text || '��️ رسالة صوتية', voiceData: voice, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
   } else {
     messages.push({type:'admin', sender:'المسؤول', senderId:0, receiverType:'parent', receiverName:id, text: text || '🎙️ رسالة صوتية', voiceData: voice, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
   }
