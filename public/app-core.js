@@ -3573,7 +3573,7 @@ function renderStudentDashboard() {
   if(isQuran && s.juz) html += '<p><strong>الجزء:</strong> <span class="score-badge">'+s.juz+'</span></p>';
   if(isQuran && s.surah) html += '<p><strong>السورة:</strong> <span class="score-badge">'+s.surah+'</span></p>';
   html += '</div></div></div>';
-  html += '<section class="page islamic-tools-launcher" style="margin-top:18px"><h4 style="color:var(--primary);margin-bottom:12px">أدوات المسلم</h4><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-primary" href="/quran.html">القرآن الكريم</a><button class="btn btn-outline" type="button" onclick="showToast(\'سيتم فتح مكتبة الأذكار قريبًا\',\'info\')">الأذكار والأدعية</button><button class="btn btn-outline" type="button" onclick="showToast(\'فعّل الموقع من المتصفح لحساب اتجاه القبلة بدقة\',\'info\')">اتجاه القبلة</button></div></section>';
+  html += '<section class="page islamic-tools-launcher" style="margin-top:18px"><h4 style="color:var(--primary);margin-bottom:12px">أدوات المسلم</h4><div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-primary" href="/quran.html">القرآن الكريم</a><a class="btn btn-outline" href="/islamic-tools.html">الأذكار والأدعية والقبلة</a></div></section>';
   document.getElementById('studentInfo').innerHTML = html;
 
   if(s.activeExam && s.activeExam.status==='pending'){
@@ -4494,7 +4494,7 @@ function renderParentDashboard() {
 
     html += '<p style="margin-top:10px; color:var(--text-light); font-size:0.9rem;">🕐 تاريخ التسجيل: '+s.createdAt+'</p></div></div>';
   });
-  html += '</div>';
+  html += '</div><div class="page" style="margin-top:18px"><h4 style="color:var(--primary)">أدوات المسلم</h4><a class="btn btn-primary" href="/islamic-tools.html">فتح الأذكار والقرآن والقبلة</a></div>';
   document.getElementById('parentInfo').innerHTML = html;
 }
 
