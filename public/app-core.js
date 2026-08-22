@@ -977,10 +977,14 @@ function toggleStudentSpeech(){
   const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition, btn=document.getElementById('studentSpeechBtn'), status=document.getElementById('studentSpeechStatus'), transcript=document.getElementById('studentSpeechTranscript');
   if(studentSpeechListening){stopStudentSpeech();return}
   if(!Recognition){
-    if(status)status.textContent=currentLang==='en'?'Browser speech recognition is unavailable; recording fallback is ready.':'التعرف المباشر غير متاح؛ سيتم استخدام التسجيل الصوتي كبديل آمن.';
-    if(transcript){transcript.classList.remove('hidden');transcript.textContent=currentLang==='en'?'Press the recording button below, then analyze the same recording.':'اضغط زر التسجيل بالأسفل، ثم حلّل التسجيل نفسه.'}
+    if(typeof MediaRecorder==='undefined'){
+      if(status)status.textContent=currentLang==='en'?'Voice input and recording are unavailable in this browser. Use Chrome or Safari with microphone permission.':'الإدخال الصوتي والتسجيل غير متاحين في هذا المتصفح. استخدم Chrome أو Safari مع السماح بالميكروفون.';
+      return;
+    }
+    if(status)status.textContent=currentLang==='en'?'Direct speech recognition is unavailable. Starting secure recording fallback...':'التعرف المباشر غير متاح؛ بدأنا التسجيل الصوتي الآمن تلقائياً.';
+    if(transcript){transcript.classList.remove('hidden');transcript.textContent=currentLang==='en'?'Speak clearly, then press Stop and the recording will be analyzed automatically.':'تحدث بوضوح، ثم اضغط إنهاء التسجيل وسيتم تحليل التسجيل تلقائياً.'}
     const recorderBtn=document.getElementById('studentIntakeRecordBtn');
-    if(recorderBtn){recorderBtn.focus();}
+    if(recorderBtn){recorderBtn.focus();await toggleStudentIntakeRecord();}
     return;
   }
   const recognition=new Recognition();studentSpeechRecognition=recognition;recognition.lang=speechLanguage();recognition.continuous=false;recognition.interimResults=true;recognition.maxAlternatives=1;
@@ -1405,7 +1409,7 @@ async function saveStudent() {
 
   const students = getData('students');
   if(students.find(s => s.national === national)) return fail('هذا الرقم القومي مسجل مسبقاً');
-  if(students.find(s => s.username === username)) return fail('اسم المستخدم مسجل مسبقاً');
+  if(students.find(s => s.username === username)) return fail('اسم المستخد�� مسجل مسبقاً');
   if(students.find(s => s.username === username)) return fail('اسم المستخدم مسجل مسبقاً');
   // ✅ مسموح الآن أن يكون الرقم السري للطالب مطابقاً للرقم السري لولي الأمر
 
@@ -2048,7 +2052,7 @@ function localSmartChatReply(message,role){
     }
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
-  if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
+  if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقتر��ة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت االهدف والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
@@ -2425,7 +2429,7 @@ async function recordStudentExamAudio(i){
       const blob=new Blob(chunks,{type:'audio/webm'});const dataUrl=await blobToDataURL(blob);const transcript=asr?(asr.text||''):'';preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='🤖 جاري التحقق من البصمة والمحتوى...';
       const identity=await verifyVoiceIdentity(blob,currentUser);const match=identity?identity.pct:null;
       if(match!==null && (match<VOICE_MATCH_THRESHOLD || identity.sameSpeaker===false)){status.textContent='❌ البصمة غير مطابقة — لم يُحفظ التسجيل';aiBox.innerHTML='<div class="alert alert-danger">🚫 هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل بصوت الطالب نفسه.</div>';showToast('❌ التسجيل غير مطابق للبصمة ولم يتم حفظه','error');studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;btn.dataset.recording='false';btn.classList.remove('recording');return;}
-      // تحليل الصوت على الخادم (تفريغ حقيقي + تصحيح) مع احتياطي المتصفح
+      // تحليل الصوت على الخادم (تفريغ حقيقي + تصحيح) مع احتياطي المتصف��
       let aiResult=await serverRecitationAnalysis(blob,{surah:q.surah,from:q.from,to:q.to});
       let usedTranscript=transcript;
       if(aiResult){ usedTranscript=aiResult.transcript||transcript; }
@@ -2962,7 +2966,7 @@ function openDevAssistant(){
 }
 
 // ===== سجل التدقيق لمساعد التطوير (Audit Log) =====
-// عبءءرات تدل ��لى عمليات خطيرة تتطلب تأكيداً صريحاً قبل التنفيذ التلقائي.
+// عبء��رات تدل ��لى عمليات خطيرة تتطلب تأكيداً صريحاً قبل التنفيذ التلقائي.
 const DEV_DANGER_PATTERNS = [
   {re:/حذف\s*(قاعدة|لقاعدة)\s*ا��بيانات|drop\s+database|delete\s+database/i, label:'حذف قاعدة البيانات'},
   {re:/حذف\s*(المشروع|كل\s*الملفات|جميع\s*الملفات)|delete\s+project/i, label:'حذف المشروع أو كل الملفات'},
@@ -3386,7 +3390,7 @@ function approveMessage(idx, approved) {
         msgs.push({
           type:'admin', sender:'المسؤول', senderId:0,
           receiverType: 'student', receiverId: studentId,
-          text: '❌ تم رفض ملفك من المسؤول. يرجى المحاوة مرة أخرى وإرسال ملف جديد.',
+          text: '❌ تم رفض ملفك من المسؤول. يرجى المحاوة مرة أخرى وإر��ال ملف جديد.',
           reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false
         });
 
@@ -4182,7 +4186,7 @@ function voiceMatchPercent(a, b) { return Math.round(Math.max(0, Math.min(1, (vo
 const VOICE_MATCH_THRESHOLD = 78;      // نسبة قبول مطابقة صوت الطالب
 const VOICE_DUPLICATE_THRESHOLD = 93;  // نسبة اعتبار البصمة مكررة لطالب آخر
 
-// ====== جميناي هو المسؤوئ الوحيد عن البصمة الصوتية والتحقق من هوية المتحدث ======
+// ====== جميناي هو المسؤوئ الوحيد عن ال��صمة الصوتية والتحقق من هوية المتحدث ======
 async function voiceAudioPayload(blob){
   // Gemini يدع�� WAV/MP3/OGG/MP4، بينما تسجيل المتصفح يكون غالباً WebM/Opus.
   // نحول WebM وOpus دائماً إلى WAV قبل الإرسال حتى لا يفشل Gemini ثم يسقط الطلب بالكامل.
