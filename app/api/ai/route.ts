@@ -268,9 +268,10 @@ function extractJson(text: string): any {
   return null
 }
 
-async function geminiText(prompt: string, system: string, temperature: number, audio?: { mimeType: string; data: string }): Promise<string> {
+async function geminiText(prompt: string, system: string, temperature: number, audio?: { mimeType: string; data: string }, image?: { mimeType: string; data: string }): Promise<string> {
   if (!GEMINI.key) throw new Error("GEMINI_API_KEY غير موجود على الخادم")
   const parts: any[] = [{ text: prompt }]
+  if (image) parts.unshift({ inlineData: { mimeType: image.mimeType, data: image.data } })
   if (audio) parts.unshift({ inlineData: { mimeType: audio.mimeType, data: audio.data } })
   const models = audio ? GEMINI.models : [GEMINI.model]
   let lastError: unknown = null
@@ -455,10 +456,10 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 شكل كل عنصر:
 {"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"نص السؤال","stem":"","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
 
-تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs، وأن لكل سؤال إجابة واحدة قطعية.`
+تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs، وأن لكل سؤال إجاب�� واحدة قطعية.`
 
 const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
-كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
+كن متساهلاً مع الأخطاء ال��يسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
 احسب matchedPercent (0-100) لمدى مطابقة المعنى والألفاظ للنص المرجعي.
 score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إذا نصت آية واحدة أو خطأ جوهي بسيط، 0 إذا كان مختلفاً أو ناقصاً كثيراً.
 أعد JSON فقط: {"accepted":true/false,"score":1|0.5|0,"matchedPercent":number,"reason":"سبب مختصر بالعربية","missingAyahs":[]}`
@@ -515,7 +516,7 @@ const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد 
  "understanding": "إعادة صياغة موجزة لفهمك للطلب",
  "feasible": true/false,
  "summary": "ملخص عام للخطة في جملة أو جملتين",
- "files": [ { "path": "مسار الملف", "action": "modify"|"create", "reason": "لماذا يُعدّل هذا الملف", "changes": ["تغيير مقترح 1","تغيير مقترح 2"] } ],
+ "files": [ { "path": "مسار الملف", "action": "modify"|"create", "reason": "ل��اذا يُعدّل هذا الملف", "changes": ["تغيير مقترح 1","تغيير مقترح 2"] } ],
  "steps": ["خطوة تنفيذ 1","خطوة 2"],
  "risks": ["مخاطرة أو أثر جانبي محتمل"],
  "clarifications": ["سؤال توضيحي إن كان الطلب غامضاً"]
@@ -717,7 +718,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
   if (perms && perms.push !== true && perms.admin !== true && perms.maintain !== true) {
     return {
       ok: false,
-      reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
+      reason: `��لرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
   // التحقق من أن الفرع المحدد أو الافتراضي قابل للحل.
@@ -755,7 +756,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 - لا تُرجع ملفاً لم يتغير فعلاً.
 - لا تُرجع أي مسار غير موجود في الملفات المعطاة إلا إذا كانت الخطة تقول create وكان إنشاء الملف ضرورياً.
 - لا تنشئ أو تعل ملفات الأسرار مثل .env.
-- إذا كان الطلب غير آمن أو غير واضح أو يخالف القيود، أعد patches=[] واشرح السبب في summary.
+- إذا كان الطلب غير آمن أو غير واضح أو يخ��لف القيود، أعد patches=[] واشرح السبب في summary.
 
 أعد JSON فقط بالشكل التالي (بدون أي نص خارجه):
 {"summary":"وصف عربي واضح لما تم تعديله فعلياً وكيف","patches":[{"path":"...","content":"المحتوى الكامل الجديد للملف","reason":"سبب التعديل وما تغيّر في هذا الملف بالتحديد"}],"tests":["ملاحظة تحقق أو خطوة اختبار يدوي مقترحة"]}`
@@ -907,7 +908,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية ل��يانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -1112,6 +1113,18 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
         reason: typeof parsed.reason === "string" ? parsed.reason.slice(0, 300) : "",
         profile: parsed.profile && typeof parsed.profile === "object" ? parsed.profile : {},
       }, diagnostics })
+    }
+
+    if (mode === "anti_cheat_review") {
+      const signals = JSON.stringify(payload?.signals || {}).slice(0, 6000)
+      const imageData = typeof payload?.imageBase64 === "string" ? payload.imageBase64.replace(/^data:[^;]+;base64,/, "").slice(0, 1_500_000) : ""
+      const image = imageData ? { mimeType: typeof payload?.mimeType === "string" ? payload.mimeType.slice(0, 80) : "image/jpeg", data: imageData } : undefined
+      const system = "أنت نظام مراجعة غش للاختبارات. حلّل إشارات المراقبة والصورة الثابتة إن وُجدت، ولا تعتبر إشارة واحدة دليلاً كافياً. أعد JSON فقط بالمفاتيح: decision (allow أو review أو cancel)، confidence (0 إلى 1)، reason (عربي قصير). اعتبر صورة مطبوعة/شاشة بديلة أو غياب الوجه المتكرر مؤشرات قوية، لكن لا تدّعِ اليقين من صورة غير واضحة."
+      let text = ""
+      try { text = await geminiText(`إشارات المراقبة:\n${signals}`, system, 0.05, undefined, image) } catch { text = await runText(`إشارات المراقبة:\n${signals}`, system, 0.05) }
+      const parsed = extractJson(text) || {}
+      const confidence = Math.max(0, Math.min(1, Number(parsed.confidence) || 0))
+      return json({ result: { decision: parsed.decision === "cancel" || parsed.decision === "review" ? parsed.decision : "allow", confidence, reason: typeof parsed.reason === "string" ? parsed.reason.slice(0, 300) : "" }, diagnostics })
     }
 
     if (mode === "admin_assistant") {

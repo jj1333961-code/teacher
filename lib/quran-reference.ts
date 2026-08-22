@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { get } from "@vercel/blob"
-import { PDFParse } from "pdf-parse"
+
 
 const QURAN_PATH = "references/quran.pdf"
 const MUTASHABIHAT_PATH = "references/mutashabihat.pdf"
@@ -39,12 +39,18 @@ async function readReference(pathname: string) {
 }
 
 async function extractPdf(data: Uint8Array) {
-  const parser = new PDFParse({ data })
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs")
+  const document = await pdfjs.getDocument({ data }).promise
   try {
-    const result = await parser.getText()
-    return result.text.replace(/\u0000/g, "").replace(/\s+/g, " ").trim().slice(0, MAX_REFERENCE_CHARS)
+    const pages: string[] = []
+    for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+      const page = await document.getPage(pageNumber)
+      const content = await page.getTextContent()
+      pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "))
+    }
+    return pages.join(" ").replace(/\u0000/g, "").replace(/\s+/g, " ").trim().slice(0, MAX_REFERENCE_CHARS)
   } finally {
-    await parser.destroy().catch(() => undefined)
+    await document.destroy().catch(() => undefined)
   }
 }
 

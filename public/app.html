@@ -490,7 +490,8 @@ tr:hover { background: var(--table-hover); }
   .proctor-panel h2{margin:0 0 8px;color:#f8fafc}.proctor-panel p{color:#cbd5e1;line-height:1.7}.proctor-camera{position:relative;overflow:hidden;border-radius:14px;background:#020617;aspect-ratio:4/3;margin:14px 0}.proctor-camera video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}.proctor-camera-status{position:absolute;inset:auto 10px 10px;background:rgba(2,6,23,.82);padding:7px 10px;border-radius:8px;font-size:.85rem}.proctor-touch-zone{width:100%;min-height:90px;border:2px dashed #60a5fa;border-radius:14px;background:#172554;color:#dbeafe;font-weight:700;touch-action:none;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center;text-align:center}.proctor-touch-zone.holding{background:#14532d;border-color:#4ade80;color:#dcfce7}
   .proctor-checks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.proctor-check{padding:9px;border-radius:9px;background:#1e293b;color:#cbd5e1}.proctor-check.ok{background:#123d2c;color:#bbf7d0}.proctor-check.bad{background:#4c1d24;color:#fecaca}.proctor-hold{width:100%;min-height:76px;border:2px dashed #60a5fa;border-radius:14px;background:#172554;color:#dbeafe;font-weight:700;touch-action:none;user-select:none;-webkit-user-select:none}.proctor-hold.holding{background:#14532d;border-color:#4ade80;color:#dcfce7}.proctor-actions{display:flex;gap:10px;margin-top:12px}.proctor-actions .btn{flex:1}
   .proctor-warning{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:10001;width:min(92%,520px);padding:14px;border-radius:12px;background:#7f1d1d;color:#fff;text-align:center;font-weight:700;box-shadow:0 12px 35px rgba(0,0,0,.35)}.proctor-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#111c2f;color:#f8fafc;border-radius:12px;padding:10px 12px;margin-bottom:12px}.proctor-live-hold{min-width:140px;min-height:48px;border:2px dashed #60a5fa;border-radius:10px;background:#172554;color:#dbeafe;font-weight:700;touch-action:none}.proctor-live-hold.holding{background:#14532d;border-color:#4ade80}
-.student-work-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.student-work-card{margin:0!important;min-width:0;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}.student-work-card:hover,.student-work-card:focus-within{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--primary)}.student-work-card>h4{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.student-work-card .work-card-action{width:100%;margin-top:12px}.student-work-modal{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(8,15,28,.82);backdrop-filter:blur(4px)}.student-work-modal.hidden{display:none}.student-work-dialog{width:min(100%,820px);max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border);border-radius:18px;background:var(--card-bg);box-shadow:0 24px 70px rgba(0,0,0,.4)}.student-work-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}.student-work-dialog-header h3{margin:0;color:var(--primary)}.student-work-dialog-body{overflow:auto;padding:18px;overscroll-behavior:contain}.student-work-dialog-body .task-card{margin-bottom:12px}.proctor-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px;margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--table-header)}
+  .qibla-compass{width:min(72vw,280px);height:min(72vw,280px);margin:24px auto;border:12px solid var(--primary);border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,var(--card-bg) 0 58%,var(--table-header) 59%);box-shadow:var(--shadow)}.qibla-compass #qiblaNeedle{font-size:3rem;transition:transform .4s ease}.adhkar-list{display:grid;gap:12px;margin-top:18px}.adhkar-card{padding:18px;border:1px solid var(--border);border-radius:12px;background:var(--card-bg);line-height:1.9}.adhkar-card strong{color:var(--primary)}
+  .student-work-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.student-work-card{margin:0!important;min-width:0;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}.student-work-card:hover,.student-work-card:focus-within{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--primary)}.student-work-card>h4{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.student-work-card .work-card-action{width:100%;margin-top:12px}.student-work-modal{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(8,15,28,.82);backdrop-filter:blur(4px)}.student-work-modal.hidden{display:none}.student-work-dialog{width:min(100%,820px);max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border);border-radius:18px;background:var(--card-bg);box-shadow:0 24px 70px rgba(0,0,0,.4)}.student-work-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}.student-work-dialog-header h3{margin:0;color:var(--primary)}.student-work-dialog-body{overflow:auto;padding:18px;overscroll-behavior:contain}.student-work-dialog-body .task-card{margin-bottom:12px}.proctor-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px;margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--table-header)}
 @media(max-width:800px){.student-work-grid{grid-template-columns:1fr}.proctor-settings-grid{grid-template-columns:1fr}}
 @media(max-width:480px){.proctor-panel{padding:14px}.proctor-checks{grid-template-columns:1fr}.proctor-camera{aspect-ratio:16/11}.proctor-bar{align-items:stretch;flex-direction:column}.proctor-live-hold{width:100%}.student-work-dialog-body{padding:12px}}
   /* Thimar visual system — presentation only; existing IDs and actions remain untouched. */
@@ -525,6 +526,8 @@ tr:hover { background: var(--table-hover); }
   .menu-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
   .menu-btn { min-height:110px; border-radius:18px; background:var(--card-bg) !important; border:1px solid var(--border); color:var(--text); box-shadow:0 8px 24px rgba(33,86,57,.06); }
   .menu-btn:hover { transform:translateY(-4px); border-color:var(--primary); color:var(--primary); }
+  .quran-view-tabs{display:flex;gap:10px;margin-bottom:14px}.quran-directory{padding:18px;border:1px solid var(--border);border-radius:16px;background:var(--card-bg);margin-bottom:16px}.quran-surah-directory{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:360px;overflow:auto;margin-top:14px}.quran-surah-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--table-header);color:var(--text);text-align:right;cursor:pointer}.quran-surah-item:hover,.quran-surah-item.active{border-color:var(--primary);background:var(--primary);color:var(--primary-foreground)}.quran-surah-item small{opacity:.8;white-space:nowrap}.quran-reader-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0}.quran-reader-toolbar strong{font-size:1.25rem;color:var(--primary)}.quran-reader-toolbar div{display:flex;gap:8px}.quran-reader-frame{overflow:hidden;border:1px solid var(--border);border-radius:14px;background:var(--card-bg)}.quran-reader-frame iframe{display:block;width:100%;height:75vh;border:0}.quran-protection-note{color:var(--text-light);font-size:.85rem}@media(max-width:700px){.quran-surah-directory{grid-template-columns:repeat(2,minmax(0,1fr))}.quran-reader-toolbar{align-items:flex-start;flex-direction:column}.quran-reader-toolbar div{width:100%}.quran-reader-toolbar button{flex:1}}@media(max-width:440px){.quran-surah-directory{grid-template-columns:1fr}}
+  .qibla-manual{margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--table-header)}.qibla-manual summary{cursor:pointer;color:var(--primary);font-weight:700;margin-bottom:12px}.qibla-manual input{flex:1;min-width:160px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text)}.qibla-manual small{display:block;color:var(--text-light);margin-top:10px}.tasbeeh-panel{display:flex;flex-direction:column;align-items:center;gap:18px;padding:36px;border:1px solid var(--border);border-radius:24px;background:var(--card-bg);text-align:center}.tasbeeh-panel #tasbeehCount{font-size:5rem;font-weight:900;color:var(--primary)}.tasbeeh-button{width:180px;height:180px;border:10px solid var(--primary);border-radius:50%;background:var(--table-header);color:var(--primary);font-size:1.5rem;font-weight:800;cursor:pointer}.tasbeeh-button:active{transform:scale(.96)}.faith-launch-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0}.faith-launch-card{min-height:168px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;padding:20px;border:1px solid var(--border);border-radius:22px;background:var(--card-bg);color:var(--text);text-align:right;cursor:pointer;box-shadow:0 10px 28px rgba(33,86,57,.08);transition:transform .2s,border-color .2s,box-shadow .2s}.faith-launch-card:hover,.faith-launch-card:focus-visible{transform:translateY(-5px);border-color:var(--primary);box-shadow:var(--shadow);outline:none}.faith-launch-icon{font-size:3rem;line-height:1}.faith-launch-card strong{font-size:1.15rem;color:var(--primary)}.faith-launch-card small{color:var(--text-light);line-height:1.5}@media(max-width:700px){.faith-launch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:440px){.faith-launch-grid{grid-template-columns:1fr}.faith-launch-card{min-height:132px;flex-direction:row;align-items:center}}
   .student-work-grid { gap:16px; } .student-work-card { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:20px; }
   .record-element,.homework-section,.reading-section { border:1px solid var(--border); border-radius:18px; box-shadow:0 8px 24px rgba(33,86,57,.05); }
   .record-element { background:var(--card-bg); } .homework-section { background:rgba(79,148,103,.07); } .reading-section { background:rgba(188,148,80,.08); }
@@ -627,7 +630,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><button class="btn btn-outline" id="signupMethodGoogleBtn" onclick="setSignupMethod('google')" style="width:100%">🔵 التسجيل بحساب جوجل</button></div>
     <div class="form-group"><button class="btn btn-outline" id="signupMethodPhoneBtn" onclick="setSignupMethod('phone')" style="width:100%">🟢 التسجيل برقم الهاتف (واتساب)</button></div>
   </div>
-  <!-- منطقة التسجيل بحساب جوجل: تظهر حسابات جوجل الموجودة على الجهاز للاختيار مباشرةً بدون تحقق واتساب -->
+  <!-- منطقة التسجيل بحساب جوجل: تظهر حسابات جوجل الموجودة على الجهاز للاختيار مباشرةً ��دون تحقق واتساب -->
   <div class="form-group" id="signupGoogleBox" style="display:none;">
     <label>اختر حساب جوجل لإكمال التسجيل *</label>
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
@@ -649,7 +652,7 @@ tr:hover { background: var(--table-hover); }
 <div id="signupStep2" class="page hidden" style="max-width:720px; margin:40px auto;">
   <div class="page-header"><h2>📝 بيانات طلب الانضمام</h2><button class="btn btn-secondary" onclick="showPage('signupStep1')">رجوع</button></div>
   <div id="signupStep2Alert"></div>
-  <div class="alert alert-success" id="signupVerifiedNote">✅ تم التحقق من هويتك بنجاح.</div>
+  <div class="alert alert-success" id="signupVerifiedNote">✅ تم التحقق من هو��تك بنجاح.</div>
   <div class="form-row">
     <div class="form-group"><label>نوع الحساب *</label><select id="signupRole" onchange="syncSignupRelationshipField()"><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
     <div class="form-group"><label>الاسم بالكامل *</label><input type="text" id="signupName" placeholder="الاسم كما في البطاقة"></div>
@@ -692,7 +695,7 @@ tr:hover { background: var(--table-hover); }
   <button type="button" class="side-fab" onclick="openRoleSidebar('admin')" aria-label="فتح قائمة الأدوات" aria-controls="sidebar-admin" aria-expanded="false"><span></span><span></span><span></span></button>
   <div id="sidebar-admin" class="side-sidebar-wrap">
     <div class="side-sidebar-overlay" onclick="closeRoleSidebar('admin')"></div>
-    <aside class="side-sidebar" aria-label="أدوات المسؤول">
+    <aside class="side-sidebar" aria-label="أدوات ا��مسؤول">
       <div class="side-sidebar-head">
         <h3>الأدوات</h3>
         <button type="button" class="side-sidebar-close" onclick="closeRoleSidebar('admin')" aria-label="إغلاق القائمة">×</button>
@@ -708,7 +711,7 @@ tr:hover { background: var(--table-hover); }
     </aside>
   </div>
   <div class="stats">
-    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائمة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div><button class="stat-action" onclick="event.stopPropagation();showPage('addStudent')">➕ إضافة طالب جديد</button></div>
+    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائ��ة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div><button class="stat-action" onclick="event.stopPropagation();showPage('addStudent')">➕ إضافة طالب جديد</button></div>
     <div class="stat-box"><div class="num" id="statTeachers">0</div><div class="label">عدد المعلمين</div><button class="stat-action" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button></div>
     <div class="stat-box"><div class="num" id="statAdmins">0</div><div class="label">المسؤولين</div><button class="stat-action" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button></div>
     <div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num" id="statDrafts">0</div><div class="label">تسميعات نشطة</div></div>
@@ -719,7 +722,7 @@ tr:hover { background: var(--table-hover); }
 
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد Gemini / Groq الإداري</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بانات الموقع عندما تكون مرتبطة بسؤالك.</p>
+  <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بيانات الموقع عندما تكون مرتبطة بسؤالك.</p>
   <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو الاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
@@ -728,13 +731,13 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكو�� المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
+    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكو   المطل  �� ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
   <div class="form-group">
     <label>طلب التطوير</label>
-    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر��د إضافته أو تعديله ف الموقع..."></textarea>
+    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر      د إضافته أو تعديله ف الموقع..."></textarea>
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
@@ -760,7 +763,7 @@ tr:hover { background: var(--table-hover); }
 <!-- مزامنة GitHub (للمسؤول فقط) -->
 <div id="githubSyncPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🔗 مزامنة المشروع مع GitHub</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">المشروع مرتبط بمستودعك ا��شخصي فقط عبر متغيرات البيئة على الخادم (<code>GITHUB_TOKEN</code>, <code>GITHUB_OWNER</code>, <code>GITHUB_REPO</code>, <code>GITHUB_BRANCH</code>). كل إضافة أو تعديل يقوم به مساعد التطوير يُنشئ <b>Commit</b> ويُدفع تلقائياً إلى فرعك المحدد، مع الحفاظ على كامل تاريخ الإصدارات. لا يتم وضع أي مفتاح أو سرّ داخل الملفات أو في المتصفح.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">المشروع مرتبط بمستودعك ا  شخصي فقط عبر متغيرات البيئة على الخادم (<code>GITHUB_TOKEN</code>, <code>GITHUB_OWNER</code>, <code>GITHUB_REPO</code>, <code>GITHUB_BRANCH</code>). كل إضافة أو تعديل يقوم به مساعد التطوير يُنشئ <b>Commit</b> ويُدفع تلقائياً إلى فرعك المحدد، مع الحفاظ على كامل تاريخ الإصدارات. لا يتم وضع أي مفتاح أو سرّ داخل الملفات أو في المتصفح.</p>
   <div id="githubSyncAlert"></div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
     <button class="btn btn-primary" id="githubSyncRefreshBtn" onclick="refreshGithubSync()">🔄 تحقق من حالة المزامنة</button>
@@ -771,7 +774,7 @@ tr:hover { background: var(--table-hover); }
   <!-- حذف ملف بتأكيد صريح -->
   <div id="githubDeleteBox" style="display:none; background:rgba(220,53,69,0.08); border:1px solid #dc3545; border-radius:10px; padding:14px 16px;">
     <h3 style="margin:0 0 8px; color:#dc3545;">🗑️ حذف ملف من المستودع</h3>
-    <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">ءءُءءشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأساسية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
+    <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">ءءُءءشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات ا��أساسية للمشروع مح��ية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
     <div class="form-group"><label>مسر الملف المراد حذفه</label><input id="githubDeletePath" placeholder="مثال: public/old-file.js" /></div>
     <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أنني أريد حذف هذا الملف نهائياً من المستودع</label>
     <button class="btn" style="background:#dc3545; color:#fff;" onclick="deleteGithubFile()">حذف الملف</button>
@@ -832,7 +835,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <h4 style="color:var(--success); margin:25px 0 15px; border-bottom:2px solid var(--border); padding-bottom:10px;">✏️ البيانات الجديدة</h4>
   <div class="form-group">
-    <label>رقم الموبا��ل الجديد</label>
+    <label>رقم الموبايل الجديد</label>
     <div style="position:relative;">
       <input type="password" id="newMobile" placeholder="أدخل الرقم الجديد" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')" style="padding-left:45px;">
       <span onclick="togglePassVisibility('newMobile', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span>
@@ -854,7 +857,7 @@ tr:hover { background: var(--table-hover); }
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
     <label style="font-size:1.05rem;">الإملاء الصوتي لبيانات الطالب</label>
-    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، المواد القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ الخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البيانات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، المواد القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ الخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
       <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
@@ -882,7 +885,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>السن (يحسب تلقائياً)</label><input type="number" id="stAge" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري للطالب *</label><input type="password" id="stStudentPass" placeholder="رقم سري لتسجيل دخول الطالب"><label style="font-weight:normal; margin-top:6px; display:block;"><input type="checkbox" id="stSamePass" onchange="syncStudentPass('st')"> استخدام نفس الرقم السري لولي الأمر</label></div>
+    <div class="form-group"><label>الرقم السري للطالب *</label><input type="password" id="stStudentPass" placeholder="رقم سري لتسجيل دخول الطالب"><label style="font-weight:normal; margin-top:6px; display:block;"><input type="checkbox" id="stSamePass" onchange="syncStudentPass('st')"> ا��تخدام نفس الرقم السري لولي الأمر</label></div>
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
@@ -921,7 +924,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي (14 رقم)</label><input type="text" id="editNational" maxlength="14" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم ال��اتف (11 رقم)</label><input type="text" id="editPhone" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div class="form-group"><label>رقم ال  اتف (11 رقم)</label><input type="text" id="editPhone" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>
@@ -966,7 +969,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
   <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
-  <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
+  <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل فحص الغش بالكامل</label></div><div class="form-group"><label><input id="globalFaceEnabled" type="checkbox" checked> فحص الوجه والعينين</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة فقدان إصبع واحد (ثانية)</label><input id="globalTouchGrace" type="number" min="1" max="60" value="12"></div><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
   <div class="page" style="margin:15px 0;border:2px dashed var(--info);">
@@ -985,7 +988,7 @@ tr:hover { background: var(--table-hover); }
     </div>
 <p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
-<div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الناس.</small></div>
+<div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من ال��ور التي تسبقها في المراجعة حتى سورة الناس.</small></div>
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة الناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدوياً قبل ءءقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
@@ -1041,7 +1044,7 @@ tr:hover { background: var(--table-hover); }
 <!-- صفحة المخطط الكامل -->
 <div id="fullChartPage" class="chart-page hidden">
   <div class="page-header">
-    <h2>📊 المخط�� الت��صيلي</h2>
+    <h2>📊 المخط   الت  صيلي</h2>
     <button class="btn btn-secondary" onclick="closeFullChart()">رجوع</button>
   </div>
   <div id="fullChartContainer" style="text-align:center;"></div>
@@ -1067,7 +1070,7 @@ tr:hover { background: var(--table-hover); }
   <div id="msgComposeSection" class="hidden">
     <div class="form-row">
       <div class="form-group"><label>إرسال إلى</label><select id="composeTarget" onchange="updateComposePersons()"><option value="">اختر...</option><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
-      <div class="form-group"><label>الشخص</label><select id="composePerson"><option value="">اختر أولاً نوع ��لمستلم</option></select></div>
+      <div class="form-group"><label>الشخص</label><select id="composePerson"><option value="">اختر أولاً نوع   لمستلم</option></select></div>
     </div>
     <div class="form-group"><label>الرسالة</label><textarea id="composeText" rows="4" placeholder="اكتب رسالتك..."></textarea></div>
     <div id="voiceBox_compose"></div>
@@ -1119,10 +1122,21 @@ tr:hover { background: var(--table-hover); }
         <button type="button" class="role-nav-item" onclick="showPage('studentAIChat')"><span class="role-nav-icon" aria-hidden="true">✦</span><span>مساعد الذكاء الاصطناعي</span></button>
         <button type="button" class="role-nav-item" onclick="showStudentFullChart()"><span class="role-nav-icon" aria-hidden="true">📈</span><span>مخطط التقييم</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('studentRecordsPage')"><span class="role-nav-icon" aria-hidden="true">🎙️</span><span>صندوق التسجيلات</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('studentQuranPage');initStudentQuran()"><span class="role-nav-icon" aria-hidden="true">📖</span><span>المصحف الشريف</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('studentQiblaPage');initQibla()"><span class="role-nav-icon" aria-hidden="true">🧭</span><span>اتجاه القبلة</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('studentAdhkarPage');initAdhkar()"><span class="role-nav-icon" aria-hidden="true">🤲</span><span>الأدعية والأحاديث</span></button>
       </div>
     </aside>
   </div>
   <div id="studentWelcome"></div>
+  <div class="faith-launch-grid" aria-label="أدوات الطالب الإسلامية">
+    <button class="faith-launch-card" onclick="showPage('studentQuranPage');initStudentQuran()"><span class="faith-launch-icon">📖</span><strong>القرآن الكريم</strong><small>اختر السورة وتابع التلاوة</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentAdhkarPage');initAdhkar()"><span class="faith-launch-icon">🤲</span><strong>الأدعية والأذكار</strong><small>أدعية يومية وأذكار موثوقة</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentQiblaPage');initQibla()"><span class="faith-launch-icon">🧭</span><strong>القبلة</strong><small>احسب الاتجاه من موقعك</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentHadithPage');initHadith()"><span class="faith-launch-icon">📚</span><strong>الأحاديث</strong><small>مختارات للقراءة والتعلم</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentTasbeehPage');initTasbeeh()"><span class="faith-launch-icon">📿</span><strong>التسبيح</strong><small>عداد بسيط وسهل الاستخدام</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentDashboard')"><span class="faith-launch-icon">✦</span><strong>المزيد</strong><small>استكشف أدوات المنصة</small></button>
+  </div>
   <div id="studentInfo"></div>
   <div id="studentDraftSection"></div>
   <div id="studentTasksSection"></div>
@@ -1147,6 +1161,13 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>📁 الملفات المرسلة لي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="studentFilesContent"></div>
 </div>
+
+<!-- المصحف والقبلة والأذكار للطالب -->
+<div id="studentQuranPage" class="page hidden"><div class="page-header"><h2>📖 المصحف الشريف</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><div id="quranDirectoryView"><div class="quran-view-tabs"><button type="button" class="btn btn-primary" onclick="showQuranList()">قائمة السور</button><button type="button" class="btn btn-secondary" onclick="showQuranReader()">فتح المصحف</button></div><div class="quran-directory"><label for="quranSurahSearch">ابحث عن السورة</label><input id="quranSurahSearch" class="form-control" placeholder="اكتب اسم السورة..." oninput="filterSurahDirectory(this.value)"><div id="quranSurahDirectory" class="quran-surah-directory"></div></div></div><div id="quranReaderView" class="hidden"><div class="quran-view-tabs"><button type="button" class="btn btn-secondary" onclick="showQuranList()">العودة إلى قائمة السور</button></div><div class="quran-reader-toolbar"><strong id="quranActiveSurah">الفاتحة</strong></div><div class="quran-reader-frame"><iframe id="studentQuranFrame" title="عارض المصحف الشريف" src="/E-Quran-PDF.pdf#page=1" sandbox="allow-same-origin" loading="lazy"></iframe></div><p class="quran-protection-note">يُعرض المصحف داخل الموقع للقراءة فقط. قد تختلف أدوات المتصفح حسب الجهاز.</p></div></div>
+<div id="studentQiblaPage" class="page hidden"><div class="page-header"><h2>🧭 تحديد القبلة</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><div id="qiblaStatus" class="alert alert-info">اضغط تحديد موقعي للسماح بحساب اتجاه الكعبة.</div><div class="qibla-compass"><div id="qiblaNeedle">🕋</div></div><p id="qiblaDetails" style="text-align:center"></p><button class="btn btn-primary" onclick="initQibla(true)">تحديد موقعي واتجاه القبلة</button><details class="qibla-manual"><summary>لم يعمل إذن الموقع؟ أدخل موقعك يدويًا</summary><div class="form-row"><input id="qiblaLat" type="number" step="any" placeholder="خط العرض مثل 30.0444"><input id="qiblaLon" type="number" step="any" placeholder="خط الطول مثل 31.2357"><button class="btn btn-secondary" onclick="calculateManualQibla()">حساب الاتجاه</button></div><small>قد يحدث ذلك داخل معاينة الموقع أو عند حظر الموقع من المتصفح.</small></details></div>
+<div id="studentAdhkarPage" class="page hidden"><div class="page-header"><h2>🤲 الأدعية والأذكار</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><input id="adhkarSearch" class="form-control" placeholder="ابحث في الأدعية والأذكار..." oninput="renderAdhkar(this.value)"><div id="adhkarList" class="adhkar-list"></div></div>
+<div id="studentHadithPage" class="page hidden"><div class="page-header"><h2>📚 الأحاديث النبوية</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><input id="hadithSearch" class="form-control" placeholder="ابحث في الأحاديث..." oninput="renderHadith(this.value)"><div id="hadithList" class="adhkar-list"></div></div>
+<div id="studentTasbeehPage" class="page hidden"><div class="page-header"><h2>📿 التسبيح</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><div class="tasbeeh-panel"><div id="tasbeehCount">0</div><button class="tasbeeh-button" onclick="incrementTasbeeh()">سبّح</button><button class="btn btn-secondary" onclick="resetTasbeeh()">تصفير العداد</button></div></div>
 
 <!-- صندوق رسائل الطالب -->
 <div id="studentInbox" class="page hidden">
@@ -1218,6 +1239,14 @@ tr:hover { background: var(--table-hover); }
     </aside>
   </div>
   <div id="parentWelcome"></div>
+  <div class="faith-launch-grid" aria-label="أدوات ولي الأمر الإسلامية">
+    <button class="faith-launch-card" onclick="showPage('studentQuranPage');initStudentQuran()"><span class="faith-launch-icon">📖</span><strong>القرآن الكريم</strong><small>متابعة القراءة واختيار السور</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentAdhkarPage');initAdhkar()"><span class="faith-launch-icon">🤲</span><strong>الأدعية والأذكار</strong><small>محتوى إيماني للأسرة</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentQiblaPage');initQibla()"><span class="faith-launch-icon">🧭</span><strong>القبلة</strong><small>تحديد الاتجاه بدقة</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentHadithPage');initHadith()"><span class="faith-launch-icon">📚</span><strong>الأحاديث</strong><small>مختارات نافعة</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentTasbeehPage');initTasbeeh()"><span class="faith-launch-icon">📿</span><strong>التسبيح</strong><small>عداد الأذكار</small></button>
+    <button class="faith-launch-card" onclick="showPage('parentChartPage')"><span class="faith-launch-icon">📊</span><strong>متابعة الأبناء</strong><small>التقدم والتقييمات</small></button>
+  </div>
   <div id="parentInfo"></div>
 </div>
 
@@ -1320,7 +1349,7 @@ tr:hover { background: var(--table-hover); }
 <div id="proctorGate" class="proctor-gate hidden" role="dialog" aria-modal="true" aria-labelledby="proctorTitle">
   <div class="proctor-panel">
     <h2 id="proctorTitle">التحقق قبل بدء الجلسة</h2>
-    <p>لن تُحفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
+    <p>يجري الفحص محلياً على جهازك. عند الاشتباه فقط قد تُرسل لقطة ثابتة واحدة ومصغّرة مع بيانات الإشارات إلى خدمة التحليل الآمن لتحسين القرار؛ لا يتم إرسال فيديو مستمر، وتُرسل للمسؤول نتيجة المخالفة ووقتها.</p>
     <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص للسماح بالكاميرا</div></div>
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
     <div class="proctor-checks" aria-live="polite">
