@@ -100,7 +100,7 @@ const LANG_DICT = {
   'عدد الطلاب': 'Students',
   'عدد المعلمين': 'Teachers',
   'المسؤول': 'Admin',
-  'ا��مسؤولون': 'Admins',
+  'ا����مسؤولون': 'Admins',
   'تسميعات نشطة': 'Active recitations',
   '➕ إضافة طالب جديد': '➕ Add New Student',
   '📚 المواد والمعلمين': '📚 Subjects & Teachers',
@@ -243,6 +243,20 @@ if(!localStorage.getItem('initialized_v7')) {
   admins.forEach(a => { if(a.mobile === '0000000000') { a.mobile = '00000000000'; changed = true; } });
   if(changed) setData('admins', admins);
 }
+
+// ملف طالب تجريبي محفوظ محليًا مرة واحدة، ولا يستبدل أي سجل موجود.
+(function ensureLocalStudentProfile(){
+  const localKey='thimar_local_student_uthman_v1';
+  const profile={name:'عثمان',username:'عثمان',national:'00000000000000',phone:'01000000000',birth:'12/12/2006',studentPass:'1234',parent:'شعبان',parentPass:'1234',subjectIds:[1],subjects:[{id:1,name:'القرآن الكريم'}],juz:'28',surah:'الحشر',createdAt:new Date().toLocaleString('ar-EG'),isLocalSeed:true};
+  try{
+    if(!localStorage.getItem(localKey)) localStorage.setItem(localKey,JSON.stringify(profile));
+    const students=getData('students',[]);
+    if(!students.some(s=>s.isLocalSeed&&s.username==='عثمان')){
+      const next={id:'local_uthman_v1',...profile,sessions:[],tasks:[],completedTasks:[],homeworkApproved:false,readingApproved:false,voiceApproved:false};
+      localStorage.setItem('students',JSON.stringify([next,...students]));
+    }
+  }catch(error){ console.warn('تعذر حفظ ملف الطالب المحلي:',error); }
+})();
 
 let currentUser = null, currentType = null, currentAdminId = null;
 let voiceBlob = null, voiceChunks = [], mediaRecorder = null;
@@ -2024,7 +2038,7 @@ async function loadExamFiles(){
     const previous=document.getElementById('examFileSource')?.value||'';
     const res=await fetch('/api/exam-files',{cache:'no-store'});const data=await readApiJson(res,'تعذر تحميل ملفات الاختبارات');examFilesCache=Array.isArray(data.files)?data.files:[];
     const select=document.getElementById('examFileSource');if(select){select.innerHTML='<option value="">اختر مرجعاً...</option>'+examFilesCache.map(f=>'<option value="'+f.id+'">'+escapeHtml(f.name)+(f.pinned?' — مثبت دائماً':'')+'</option>').join('');select.value=examFilesCache.some(f=>f.id===previous)?previous:(examFilesCache[0]?.id||'')}
-    if(box)box.innerHTML=(data.warning?'<div class="alert alert-warning">'+escapeHtml(data.warning)+'</div>':'')+(examFilesCache.length?examFilesCache.map(f=>'<div class="exam-plan-row"><strong>'+escapeHtml(f.name)+(f.pinned?' <span class="badge badge-primary">مرجع مثبت</span>':'')+'</strong><div style="color:var(--text-light);font-size:.85rem">'+(f.text||'').length+' حرف'+(f.pinned?' — متاح دائماً':' — '+new Date(f.uploadedAt).toLocaleString('ar-EG'))+'</div>'+(f.pinned?'':'<button class="btn btn-sm btn-danger" onclick="deleteExamFile(\''+f.id+'\')">حذف الملف</button>')+'</div>').join(''):'<div class="alert alert-info">لا توجد ملفات اختبارات محفوظة.</div>');
+    if(box)box.innerHTML=(data.warning?'<div class="alert alert-warning">'+escapeHtml(data.warning)+'</div>':'')+(examFilesCache.length?examFilesCache.map(f=>'<div class="exam-plan-row"><strong>'+escapeHtml(f.name)+(f.pinned?' <span class="badge badge-primary">مرجع مثبت</span>':'')+'</strong><div style="color:var(--text-light);font-size:.85rem">'+(f.text||'').length+' حرف'+(f.pinned?' — متاح دائماً':' — '+new Date(f.uploadedAt).toLocaleString('ar-EG'))+'</div>'+(f.pinned?'':'<button class="btn btn-sm btn-danger" onclick="deleteExamFile(\''+f.id+'\')">حذف الم��ف</button>')+'</div>').join(''):'<div class="alert alert-info">لا توجد ملفات اختبارات محفوظة.</div>');
     updateExamSourceDistribution();
   }catch(e){examFilesCache=[];if(box)box.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر تحميل الملفات')+' <button class="btn btn-sm btn-primary" onclick="loadExamFiles()">إعادة المحاولة</button></div>';throw e}
 }
@@ -2039,7 +2053,7 @@ function generateLocalFileQuestions(file,plans){const sentences=String(file.text
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
   const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الطالب';
-  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|مرحبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنني مساعدتك؟';
+  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|مرحبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنني مس��عدتك؟';
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
@@ -2624,7 +2638,7 @@ function openHistory(id) {
           html += '<div class="history-element-name">'+(ei+1)+'. '+el.name+'</div>';
           html += '<div class="history-element-details">';
           html += '<div class="history-detail"><strong>السورة:</strong> '+(el.surah || '-')+'</div>';
-          html += '<div class="history-detail"><strong>من آية:</strong> '+(el.from || '-')+'</div>';
+          html += '<div class="history-detail"><strong>��ن آية:</strong> '+(el.from || '-')+'</div>';
           html += '<div class="history-detail"><strong>إلى آية:</strong> '+(el.to || '-')+'</div>';
           html += '<div class="history-detail"><strong>التقييم:</strong> <span class="badge '+getRatingClass(el.rating)+'">'+getRatingLabel(el.rating)+'</span></div>';
           if(el.color) html += '<div class="history-detail"><span style="display:inline-block; width:20px; height:20px; background:'+el.color+'; border-radius:50%; vertical-align:middle;"></span></div>';
@@ -4186,7 +4200,7 @@ async function voiceAudioPayload(blob){
   let audioBlob=blob;
   if(!supported){audioBlob=await blobToWav(blob);}
   if(!audioBlob) throw new Error('تعذر تجهيز التسجيل بصيغة يدعمها Gemini');
-  if(audioBlob.size>2800000) throw new Error('حجم التسجيل كبير جداً للتحليل الصوتي. سجّل مقطعاً أقصر من دقيقة ونصف.');
+  if(audioBlob.size>2800000) throw new Error('حجم التسجيل كبير جداً للتحليل الصوتي. سجّل م��طعاً أقصر من دقيقة ونصف.');
   return {audioBase64:await audioBlobToBase64(audioBlob),mimeType:audioBlob.type.split(';')[0]||'audio/wav'};
 }
 async function geminiVoiceProfile(blob){
@@ -4806,7 +4820,7 @@ function renderUserFiles(role) {
     html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">🕐 ' + f.uploadedAt + '</p>';
     html += '<div style="display:flex; gap:8px;">';
     html += '<a href="' + f.data + '" download="' + f.name + '" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تحميل</a>';
-    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁️ عر</button>';
+    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁�� عر</button>';
     html += '</div></div>';
   });
   html += '</div>';
@@ -4954,7 +4968,7 @@ function generateAIResponse(text, student) {
     return r;
   }
   // التقدم عبر الجلسات
-  if(has('تقد','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
+  if(has('تقد','تطور','مقا��نة','احصائ','إحصائ','رسم','مخطط')) {
     if(finalizedSessions.length < 2) return ' أحتاج تسميعن نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
@@ -5000,7 +5014,7 @@ function generateAIResponse(text, student) {
     ];
     return quotes[Math.floor(Math.random()*quotes.length)];
   }
-  // بيانات الحفظ
+  // بي��نات الحفظ
   if(has('حفظ','قرآن','قران','سورة','جزء','وين وئلت','أين وصلت')) {
     return '📖 <strong>بيانات حفظك:</strong><br>• الجزء: '+(student.juz || 'غير محدد')+'<br>• السورة الحالية: '+(student.surah || 'غير محددة')+'<br>• عدد التسميعات النهائية: '+finalizedSessions.length+'<br><br>حافظ على المراجعة اليومية لتثبيت ما حفظت.';
   }
