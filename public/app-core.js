@@ -99,7 +99,8 @@ const LANG_DICT = {
   'خروج': 'Logout',
   'عدد الطلاب': 'Students',
   'عدد المعلمين': 'Teachers',
-  'المسؤولن': 'Admins',
+  'المسؤول': 'Admin',
+  'المسؤولون': 'Admins',
   'تسميعات نشطة': 'Active recitations',
   '➕ إضافة طالب جديد': '➕ Add New Student',
   '📚 المواد والمعلمين': '📚 Subjects & Teachers',
@@ -117,7 +118,7 @@ const LANG_DICT = {
   '🔵 التسجيل بحساب جوجل': '🔵 Sign up with Google',
   '🟢 التسجيل برقم الهاتف (واتساب)': '🟢 Sign up with phone (WhatsApp)',
   'بريد حساب جوجل *': 'Google account email *',
-  '📩 إرسال كود التحقق على واتساب': '��� Send verification code on WhatsApp',
+  '📩 إرسال كود التحقق على واتساب': '📩 Send verification code on WhatsApp',
   'كود التحقق (6 أرقام) *': 'Verification code (6 digits) *',
   '✅ تأكيد الهوية والمتابعة': '✅ Verify identity and continue',
   '🔁 إعادة إرسال الكود': '🔁 Resend code',
@@ -139,7 +140,7 @@ const LANG_DICT = {
   'الاختبارات': 'Exams', 'المهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل الصوتي': 'Audio recording',
   'مكافحة الغش': 'Anti-cheat', 'تحليل التسجيل': 'Analyze recording', 'جاري التحليل...': 'Analyzing...',
   'تعذر تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
-  'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا تو��د بيانات': 'No data available',
+  'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا توجد بيانات': 'No data available',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'حذف': 'Delete', 'تعديل': 'Edit', 'إضافة': 'Add',
   'إرسال': 'Send', 'تحميل': 'Loading', 'جار التحميل...': 'Loading...', 'تأكيد': 'Confirm',
   'نجح': 'Succeeded', 'فشل': 'Failed', 'محظور': 'Blocked', 'مفعل': 'Enabled', 'غير مفعل': 'Disabled',
@@ -214,7 +215,7 @@ function getData(key, def) { try { const d = localStorage.getItem(key); return d
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
   const status=document.getElementById('cloudSaveStatus');
-  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})}); if(!res.ok)throw new Error(); if(status)status.textContent='محفو في Neon'; }
+  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})}); if(!res.ok)throw new Error(); if(status)status.textContent='محفوظ في Neon'; }
   catch(e){ if(status)status.textContent='تعذر الحفظ في Neon'; }
 }
 function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); if(sessionStorage.getItem('neon_unavailable_v1')==='1') return; clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
@@ -854,7 +855,7 @@ function submitSignupRequest() {
   const surah = document.getElementById('signupSurah').value;
   const notes = document.getElementById('signupNotes').value.trim();
   if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
-  if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هاتف صحيحًا مع اختيار كود الدولة</div>'; return; }
+  if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هات�� صحيحًا مع اختيار كود الدولة</div>'; return; }
   if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يكون 14 رقم</div>'; return; }
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
   const time = new Date().toLocaleString('ar-EG');
@@ -1017,7 +1018,7 @@ async function toggleStudentIntakeRecord(){
   const btn=document.getElementById('studentIntakeRecordBtn'),status=document.getElementById('studentIntakeStatus'),preview=document.getElementById('studentIntakePreview'),result=document.getElementById('studentIntakeResult');
   if(!btn||!status||!preview||!result)return;
   if(studentIntakeRecorder&&studentIntakeRecorder.state!=='inactive'){stopAudioRecorder('student-intake');btn.disabled=true;status.textContent='جاري تجهيز التسجيل...';return}
-  if(typeof MediaRecorder==='undefined'){status.textContent='هذا المتصفح لا يدعم التسجيل الصوتي. استخدم إصداراً حديثاً من Chrome أو Safari.';return}
+  if(typeof MediaRecorder==='undefined'){status.textContent='هذا المتصفح لا يدعم التسجيل الصوتي. ��ستخدم إصداراً حديثاً من Chrome أو Safari.';return}
   try{
     const stream=await safeGetMic(),mimeType=preferredRecorderMimeType();studentIntakeChunks=[];studentIntakeRecorder=mimeType?new MediaRecorder(stream,{mimeType: mimeType}):new MediaRecorder(stream);
     const recorder=studentIntakeRecorder;
@@ -2264,7 +2265,7 @@ function renderExamQuestions(){
     '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآيات محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
   if(q.type==='mcq'||q.type==='truefalse')h+='<div class="form-group"><label>الاختيارات (كل اختيار في سطر)</label><textarea rows="4" onchange="updateExamQuestion('+i+',\'options\',this.value.split(/\\n/).map(x=>x.trim()).filter(Boolean))">'+escapeHtml((q.options||[]).join('\n'))+'</textarea></div><div class="form-group"><label>الإجابة الصحيحة — لا تظهر للطالب</label><input value="'+escapeHtml(q.correct||'')+'" onchange="updateExamQuestion('+i+',\'correct\',this.value)"></div>';
   else if(q.type==='complete')h+='<div class="form-group"><label>الإجابة المرجعية — لا تظهر للطالب</label><textarea rows="3" onchange="updateExamQuestion('+i+',\'correct\',this.value)">'+escapeHtml(q.correct||'')+'</textarea></div>';
-  else h+='<div class="alert alert-info">سيتم التحقق من بصمة الطالب أولاً، ثم من مح��وى التلاوة. إذا كانت البصمة غير مطابقة فلن يُحفظ التسجيل.</div>';
+  else h+='<div class="alert alert-info">سيتم التحقق من بصمة الطالب أو��اً، ثم من مح��وى التلاوة. إذا كانت البصمة غير مطابقة فلن يُحفظ التسجيل.</div>';
   h+='</div>';c.innerHTML=h;
 }
 function showExamAlert(t,type){const e=document.getElementById('examBuilderAlert');if(e)e.innerHTML='<div class="alert alert-'+(type||'info')+'">'+t+'</div>'}
@@ -4335,7 +4336,7 @@ function renderStudentChart() {
   const sessions = s.sessions || [];
   const finalizedSessions = sessions.filter(sess => !sess.isDraft);
   if(finalizedSessions.length === 0) {
-    document.getElementById('studentChartSection').innerHTML = '<div class="page" style="margin-top:20px;"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط التقييم</h4><div class="alert alert-info">لا توجد تقييم��ت نهائية مسجلة بعد. سيتم ظهور المخطط بعد إغلاق أول تسميع.</div></div>'; return;
+    document.getElementById('studentChartSection').innerHTML = '<div class="page" style="margin-top:20px;"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط الت��ييم</h4><div class="alert alert-info">لا توجد تقييم��ت نهائية مسجلة بعد. سيتم ظهور المخطط بعد إغلاق أول تسميع.</div></div>'; return;
   }
   const canvasId = 'chart_' + s.id;
   document.getElementById('studentChartSection').innerHTML = '<div class="chart-container"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط تقييم حفظ القرآن الكريم</h4><canvas id="'+canvasId+'" width="1100" height="550" style="max-width:100%; height:auto;"></canvas><div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:#6f42c1"></div><span>المجموع</span></div></div><div style="margin-top:15px;"><button class="btn btn-info" onclick="showStudentFullChart()"> عرض المخطط الكامل في صفحة منفصة</button></div></div>';
@@ -4988,7 +4989,7 @@ function generateAIResponse(text, student) {
   }
   // نصائح
   if(has('نصفحة','نصائح','ساعدني','مساعدة','انسى','أنسى','نسيت','صعب')) {
-    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
+    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى ا��آية قبل حفظها.<br>4. لا تنتل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
   }
   // تحفيز
   if(has('تحفيز','همة','ملل','تعبان','زهقن','احبت','أحبطت')) {

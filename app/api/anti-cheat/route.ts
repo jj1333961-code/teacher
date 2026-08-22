@@ -9,12 +9,10 @@ const clamp = (value: unknown, min = 0, max = 100) => Math.max(min, Math.min(max
 const validType = (value: unknown) => value === 'recitation' || value === 'exam' || value === 'task'
 const safeConfig = (value: unknown): AntiCheatConfig => normalizeServerConfig(value)
 
-async function resolveConfig(itemId: string, itemType: string) {
-  const item = await db.select().from(antiCheatItemConfigs).where(and(eq(antiCheatItemConfigs.itemId, itemId), eq(antiCheatItemConfigs.itemType, itemType))).limit(1)
-  if (item[0]) return { config: safeConfig({ enabled: item[0].enabled, ...(item[0].config as object) }), source: 'override' as const }
+async function resolveConfig(_itemId: string, _itemType: string) {
   const global = await db.select().from(antiCheatGlobalConfig).where(eq(antiCheatGlobalConfig.id, true)).limit(1)
   const current = global[0]
-  return { config: safeConfig({ enabled: current?.enabled ?? false, ...(current?.config as object ?? {}) }), source: 'global-default' as const }
+  return { config: safeConfig({ enabled: current?.enabled ?? false, ...(current?.config as object ?? {}) }), source: 'global' as const }
 }
 
 export async function GET(request: Request) {
