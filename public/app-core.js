@@ -1008,7 +1008,7 @@ function preferredRecorderMimeType(){
 }
 function microphoneErrorMessage(error){
   if(!window.isSecureContext)return 'يلزم فتح الموقع عبر اتصال آمن HTTPS لاستخدام الميكروفون.';
-  if(error&&['NotAllowedError','SecurityError'].includes(error.name))return 'تم رفض إذن الميكروفون. اسمح بالوصول من إعدادات المتصفح ثم أعد المحاولة.';
+  if(error&&['NotAllowedError','SecurityError'].includes(error.name))return 'تم رفض ��ذن الميكروفون. اسمح بالوصول من إعدادات المتصفح ثم أعد المحاولة.';
   if(error&&error.name==='NotFoundError')return 'لم يتم العثور على ميكروفون متصل بالجهاز.';
   if(error&&error.name==='NotReadableError')return 'الميكروفون مستخدم في تطبيق آخر أو تعذر تشغيله.';
   return 'تعذر تشغيل الميكروفون. تحقق من الإذن ثم أعد المحاولة.';
@@ -1080,7 +1080,7 @@ async function toggleVoiceRecord() {
     mediaRecorder.start();
     registerAudioRecorder('student-fingerprint',mediaRecorder,stream,{statusId:'voiceRecordStatus',buttonId:'voiceRecordBtn',maxMs:20000});
     btn.classList.add('recording'); 
-    status.textContent = 'جاري التسجيل... (20 ثانية فعلية)';
+    status.textContent = 'جاري التسجيل... (20 ثانية ��علية)';
   } catch(err) { alert('لا يمكن الوصول للميكروفون. يرجى السماح بالوصول.'); }
 }
 
@@ -2165,7 +2165,7 @@ function renderExamPlanRows(){
       '<option value="mcq" '+(r.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(r.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(r.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(r.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+
       '<div class="form-group"><label>موضع السؤال</label><select onchange="examPlanRows['+i+'].position=this.value"><option value="random" '+((r.position||'random')==='random'?'selected':'')+'>عشوائي ومتنوع</option><option value="start" '+(r.position==='start'?'selected':'')+'>أول السورة</option><option value="middle" '+(r.position==='middle'?'selected':'')+'>وسط السورة</option><option value="end" '+(r.position==='end'?'selected':'')+'>آخر السورة</option></select></div>'+
       '<div class="form-group"><label>وقت السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" title="الساعات" type="number" min="0" max="23" value="'+Math.floor((r.timeLimit||60)/3600)+'" onchange="setExamPlanTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" title="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((r.timeLimit||60)%3600)/60)+'" onchange="setExamPlanTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" title="الثواني" type="number" min="0" max="59" value="'+((r.timeLimit||60)%60)+'" onchange="setExamPlanTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+
-      (r.type==='mcq'?'<div class="form-group"><label>عدد الاختيارات</label><input type="number" min="2" max="6" value="'+(r.optionsCount||4)+'" onchange="examPlanRows['+i+'].optionsCount=Math.max(2,Math.min(6,parseInt(this.value)||4))"></div>':'')+
+      (r.type==='mcq'?'<div class="form-group"><label>عدد الاختيارا��</label><input type="number" min="2" max="6" value="'+(r.optionsCount||4)+'" onchange="examPlanRows['+i+'].optionsCount=Math.max(2,Math.min(6,parseInt(this.value)||4))"></div>':'')+
       (r.type==='complete'?'<div class="form-group"><label>عدد الآيات المراد إكمالها</label><input type="number" min="1" max="20" value="'+(r.completeAyahs||1)+'" onchange="examPlanRows['+i+'].completeAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">يحدد عدد الآيات التي سيكملها الطالب بعد بداية السؤال</small></div>':'')+
       (r.type==='audio'?'<div class="form-group"><label>عدد الآات المطلوب تسجيلها</label><input type="number" min="1" max="20" value="'+(r.reciteAyahs||1)+'" onchange="examPlanRows['+i+'].reciteAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">عدد الآيات التي سيقرأها الطالب</small></div>':'')+
       (r.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="examPlanRows['+i+'].audioShareWithParent=this.value===\'true\'"><option value="true" '+(r.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(r.audioShareWithParent===false?'selected':'')+'>إخفاء عن ولي الأمر</option></select></div>':'')+
@@ -3555,7 +3555,7 @@ function renderStudentDashboard() {
   const welcomeMsgs = generateWelcomeMessages(s);
   document.getElementById('studentWelcome').innerHTML = '<div class="welcome-msg"><h4>🌟 '+welcomeMsgs.title+'</h4><p>'+welcomeMsgs.body+'</p></div>';
 
-  let html = '<div class="stats">';
+  let html = '<div class="dashboard-stats stats">';
   html += '<div class="stat-box"><div class="num">'+s.name+'</div><div class="label">اسم الطالب</div></div>';
   html += '<div class="stat-box" style="background:linear-gradient(135deg,#28a745,#20c997)"><div class="num">'+(s.age || '-')+'</div><div class="label">السن</div></div>';
   html += '<div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num">'+(s.subjects ? s.subjects.map(sub=>sub.name).join('، ') : '-')+'</div><div class="label">المواد</div></div>';
@@ -4209,7 +4209,7 @@ function blobToDataURL(blob) {
 // ====== تحويل الصوت المسجّل (webm/ogg) إلى WAV ======
 // Gemini وGroq يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصية webm.
 // نفكّ الترميز عبر Web Audio ثم نعيد ترميزه PCM 16-bit أحادي القناة بمعدل 12kHz.
-// يحافظ المعدل على وضوح الكلم ويُبقي تسجيل الدقيقة والنصف دون حد طلبات Vercel بعد Base64.
+// يحافظ المعدل على وضوح الكلم ويُبقي تسجيل الدقيقة والنصف دون ح�� طلبات Vercel بعد Base64.
 async function blobToWav(blob) {
   try {
   const buf = await blob.arrayBuffer();
@@ -4427,7 +4427,7 @@ function renderParentDashboard() {
   const welcomeMsgs = generateParentWelcome(children[0]);
   document.getElementById('parentWelcome').innerHTML = '<div class="welcome-msg"><h4>🌟 '+welcomeMsgs.title+'</h4><p>'+welcomeMsgs.body+'</p></div>';
 
-  let html = '<div style="display:flex; gap:20px; flex-wrap:wrap;">';
+  let html = '<div class="parent-dashboard-grid" style="display:flex; gap:20px; flex-wrap:wrap;">';
   children.forEach(s => {
     const isQuran = s.subjects && s.subjects.some(sub => sub.name.includes('قرآن'));
     html += '<div style="flex:1; min-width:350px;"><div class="page" style="margin-top:0; border-right:5px solid var(--primary);">';
@@ -4686,7 +4686,7 @@ function uploadFile(input) {
   reader.onprogress = function(e) {
     if(e.lengthComputable) {
       const pct = Math.round((e.loaded / e.total) * 100);
-      progressDiv.innerHTML = '<div class="alert alert-info">⏳ جاري الرفع... '+pct+'%</div>';
+      progressDiv.innerHTML = '<div class="alert alert-info">⏳ جاري الر��ع... '+pct+'%</div>';
     }
   };
   reader.onload = function(e) {
