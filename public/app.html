@@ -496,14 +496,15 @@ tr:hover { background: var(--table-hover); }
   :root { --bg: #f7faf7; --card-bg: #ffffff; --text: #18352b; --text-light: #62766d; --border: #dce9df; --primary: #28734f; --primary-hover: #1d5c3e; --success: #4f9467; --warning: #bc9450; --info: #4c7e83; --secondary: #718179; --input-bg: #fcfffc; --table-header: #f1f7f2; --table-hover: #f5faf6; --shadow: 0 18px 55px rgba(33, 86, 57, .10); }
   [data-theme="dark"] { --bg:#12251d; --card-bg:#1b3328; --text:#edf7ef; --text-light:#b7cbbd; --border:#315344; --primary:#8fbd82; --primary-hover:#a6ce99; --success:#72aa7e; --warning:#d6b568; --info:#80b5b1; --secondary:#8ca49a; --input-bg:#213b2f; --table-header:#234336; --table-hover:#294c3d; --shadow:0 18px 55px rgba(0,0,0,.25); }
   body { background:var(--bg); background-image:radial-gradient(circle at 10% 18%, rgba(40,115,79,.08) 0 1px, transparent 1px), linear-gradient(135deg, transparent 0 48%, rgba(188,148,80,.035) 48% 52%, transparent 52%); background-size:30px 30px, 96px 96px; }
-  .role-reference-card { display:grid; grid-template-columns:minmax(220px,.85fr) 1.15fr; gap:20px; align-items:stretch; margin:0 0 22px; padding:14px; border:1px solid var(--border); border-radius:22px; background:var(--card-bg); box-shadow:var(--shadow); overflow:hidden; }
-  .role-reference-card img { width:100%; height:100%; min-height:170px; object-fit:cover; border-radius:16px; display:block; }
-  .role-reference-content { display:flex; flex-direction:column; justify-content:center; gap:10px; padding:8px 10px; }
+  .role-reference-card { margin:0 0 22px; padding:18px; border:1px solid var(--border); border-radius:22px; background:var(--card-bg); box-shadow:var(--shadow); }
+  .role-reference-content { display:flex; flex-direction:column; gap:14px; }
   .role-reference-content h3 { margin:0; color:var(--primary); font-size:1.3rem; }
   .role-reference-content p { margin:0; color:var(--text-light); line-height:1.8; }
-  .role-reference-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
-  .role-reference-actions button { flex:1 1 130px; }
-  @media(max-width:680px){ .role-reference-card { grid-template-columns:1fr; } .role-reference-card img { max-height:190px; } }
+  .role-reference-actions { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; }
+  .role-reference-actions button { min-height:92px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:1px solid var(--border); border-radius:16px; background:var(--input-bg); color:var(--text); cursor:pointer; font-weight:700; }
+  .role-reference-actions button:hover { background:var(--table-hover); border-color:var(--primary); }
+  .role-tool-icon { font-size:2rem; line-height:1; }
+  @media(max-width:680px){ .role-reference-actions { grid-template-columns:repeat(2, minmax(0,1fr)); } }
   body::after { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.35; background-image:linear-gradient(30deg, transparent 0 46%, rgba(40,115,79,.045) 46% 54%, transparent 54%), linear-gradient(150deg, transparent 0 46%, rgba(188,148,80,.035) 46% 54%, transparent 54%); background-size:160px 160px; }
   .container { max-width:1440px; padding:24px clamp(16px, 3vw, 48px) 100px; }
   .display-controls { top:18px; left:18px; }
@@ -650,7 +651,7 @@ tr:hover { background: var(--table-hover); }
   <!-- منطقة التسجيل برقم اهاتف: تظهر خانة الواتساب وكود التحقق فقط -->
   <div id="signupPhoneBox" style="display:none;">
     <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupWhatsCountry" aria-label="كود دولة الواتساب" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupWhats" placeholder="رقم واتساب بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,''); updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational')" style="flex:1; direction:ltr;"></div><small id="signupWhatsInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
-    <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
+    <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق ��لى واتساب</button>
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أر��ام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
       <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
@@ -1003,7 +1004,7 @@ tr:hover { background: var(--table-hover); }
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة الناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدوياً قبل قسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
- <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.</small></div>
+ <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع الت��قق من النص القرآني والمراجع الموثوقة.</small></div>
  <div class="form-group" id="examFileSourceGroup" style="display:none"><label for="examFileSource">ملف المرجع</label><select id="examFileSource"><option value="">اختر مرجعاً...</option></select><small style="color:var(--text-light)">يجب اختيار ملف عند استخدام «من الملفات».</small></div>
  </div>
  <div class="alert alert-info"><strong>مصدر حصري وواضح:</strong> اختر الذكاء الاصطناعي لأسئلة قرآنية صعبة ومتنوعة، أو اختر ملفاً واحداً ليكون مصدر الدفعة كاملة. كل ضغطة توليد تضيف أسئلة جديدة ولا تمسح السابقة.</div>
@@ -1136,10 +1137,7 @@ tr:hover { background: var(--table-hover); }
       </div>
     </aside>
   </div>
-  <section class="role-reference-card" aria-labelledby="student-reference-title">
-    <img src="/images/role-dashboard-reference.jpg" alt="واجهة إسلامية مرجعية تضم القرآن والأذكار والدعاء والتسبيح والقبلة" loading="lazy">
-    <div class="role-reference-content"><h3 id="student-reference-title">مساحة الطالب</h3><p>الوصول السريع إلى أدوات القرآن والعبادات والاختبارات من مكان واحد.</p><div class="role-reference-actions"><button type="button" class="btn btn-primary" onclick="window.location.href='/quran.html'">القرآن الكريم</button><button type="button" class="btn btn-secondary" onclick="window.location.href='/islamic-tools.html'">الأذكار والقبلة</button></div></div>
-  </section>
+  <section class="role-reference-card" aria-labelledby="student-reference-title"><div class="role-reference-content"><h3 id="student-reference-title">أدوات الطالب</h3><p>اضغط على أي خانة لفتح الأداة مباشرة.</p><div class="role-reference-actions"><button type="button" onclick="window.location.href='/quran.html'"><span class="role-tool-icon" aria-hidden="true">📖</span><span>القرآن</span></button><button type="button" onclick="window.location.href='/islamic-tools.html#tasbeeh'"><span class="role-tool-icon" aria-hidden="true">📿</span><span>التسبيح</span></button><button type="button" onclick="window.location.href='/islamic-tools.html#adhkar'"><span class="role-tool-icon" aria-hidden="true">🤲</span><span>الدعاء</span></button><button type="button" onclick="window.location.href='/islamic-tools.html#qibla'"><span class="role-tool-icon" aria-hidden="true">🧭</span><span>القبلة</span></button><button type="button" onclick="window.location.href='/islamic-tools.html#adhkar'"><span class="role-tool-icon" aria-hidden="true">📿</span><span>الأذكار</span></button><button type="button" onclick="showPage('studentExamPage')"><span class="role-tool-icon" aria-hidden="true">✏️</span><span>اختبار</span></button><button type="button" onclick="document.getElementById('studentTasksSection').scrollIntoView({behavior:'smooth',block:'start'})"><span class="role-tool-icon" aria-hidden="true">✅</span><span>المهام</span></button><button type="button" onclick="showPage('homePage')"><span class="role-tool-icon" aria-hidden="true">⌂</span><span>المزيد</span></button></div></div></section>
   <div id="studentWelcome"></div>
   <div id="studentInfo"></div>
   <div id="studentDraftSection"></div>
@@ -1225,7 +1223,7 @@ tr:hover { background: var(--table-hover); }
     <aside class="side-sidebar" aria-label="أدوات ولي الأمر">
       <div class="side-sidebar-head">
         <h3>الأدوات</h3>
-        <button type="button" class="side-sidebar-close" onclick="closeRoleSidebar('parent')" aria-label="إغلاق القائمة">×</button>
+        <button type="button" class="side-sidebar-close" onclick="closeRoleSidebar('parent')" aria-label="إغلاق الق��ئمة">×</button>
       </div>
       <div class="side-sidebar-body">
         <button type="button" class="role-nav-item" onclick="showPage('parentInbox')"><span class="role-nav-icon" aria-hidden="true">💬</span><span>الرسائل</span></button>
@@ -1235,10 +1233,7 @@ tr:hover { background: var(--table-hover); }
       </div>
     </aside>
   </div>
-  <section class="role-reference-card" aria-labelledby="parent-reference-title">
-    <img src="/images/role-dashboard-reference.jpg" alt="واجهة إسلامية مرجعية تضم القرآن والأذكار والدعاء والتسبيح والقبلة" loading="lazy">
-    <div class="role-reference-content"><h3 id="parent-reference-title">مساحة ولي الأمر</h3><p>متابعة رحلة الأبناء والانتقال المباشر إلى الأدوات الإسلامية المتاحة.</p><div class="role-reference-actions"><button type="button" class="btn btn-primary" onclick="window.location.href='/quran.html'">فتح المصحف</button><button type="button" class="btn btn-secondary" onclick="window.location.href='/islamic-tools.html'">الأذكار والقبلة</button></div></div>
-  </section>
+  <section class="role-reference-card" aria-labelledby="parent-reference-title"><div class="role-reference-content"><h3 id="parent-reference-title">أدوات ولي الأمر</h3><p>اضغط على أي خانة للوصول إلى الخدمة مباشرة.</p><div class="role-reference-actions"><button type="button" onclick="window.location.href='/quran.html'"><span class="role-tool-icon" aria-hidden="true">📖</span><span>القرآن</span></button><button type="button" onclick="window.location.href='/islamic-tools.html#tasbeeh'"><span class="role-tool-icon" aria-hidden="true">📿</span><span>التسبيح</span></button><button type="button" onclick="window.location.href='/islamic-tools.html#adhkar'"><span class="role-tool-icon" aria-hidden="true">🤲</span><span>الدعاء</span></button><button type="button" onclick="window.location.href='/islamic-tools.html#qibla'"><span class="role-tool-icon" aria-hidden="true">🧭</span><span>القبلة</span></button><button type="button" onclick="window.location.href='/islamic-tools.html#adhkar'"><span class="role-tool-icon" aria-hidden="true">📿</span><span>الأذكار</span></button><button type="button" onclick="showPage('parentChartPage')"><span class="role-tool-icon" aria-hidden="true">📈</span><span>المخطط</span></button><button type="button" onclick="showPage('parentFilesPage')"><span class="role-tool-icon" aria-hidden="true">📁</span><span>الملفات</span></button><button type="button" onclick="showPage('parentInbox')"><span class="role-tool-icon" aria-hidden="true">💬</span><span>الرسائل</span></button></div></div></section>
   <div id="parentWelcome"></div>
   <div id="parentInfo"></div>
 </div>
