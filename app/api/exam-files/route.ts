@@ -68,20 +68,21 @@ async function extractText(buffer: Buffer, extension: string) {
     return normalizeText(result.value)
   }
 
-  // الاستيراد الكسول يمنع قارئ PDF وعامله من إسقاط GET أو رفع TXT/DOCX أثناء تهيئة المسار.
-  const { PDFParse } = await import("pdf-parse")
-  const parser = new PDFParse({ data: new Uint8Array(buffer) })
+  // استخدام نسخة PDF.js الخاصة بـ Node يمنع تحميل pdf-parse ومراجع DOM مثل DOMMatrix.
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs")
+  const document = await pdfjs.getDocument({ data: new Uint8Array(buffer) }).promise
   try {
-    const result = await parser.getText()
-    return normalizeText(result.text)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : ""
-    if (/worker|pdf\.worker|fake worker/i.test(message)) {
-      throw new Error("تعذر تشغيل قارئ PDF على الخادم. أعد المحاولة بعد تحديث الصفحة.")
+    const pages: string[] = []
+    for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+      const page = await document.getPage(pageNumber)
+      const content = await page.getTextContent()
+      pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "))
     }
-    throw error
+    return normalizeText(pages.join("\n"))
+  } catch (error) {
+    throw new Error("تعذر استخراج نص ملف PDF على الخادم. تأكد من سلامة الملف وأعد المحاولة.", { cause: error })
   } finally {
-    await parser.destroy().catch(() => undefined)
+    await document.destroy().catch(() => undefined)
   }
 }
 
