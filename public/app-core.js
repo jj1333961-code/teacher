@@ -32,7 +32,7 @@ const quranData = {
   30: ["النبأ", "النازعات", "عبس", "التكوير", "الإنفطار", "المطففين", "الإنشقاق", "البروج", "الطارق", "الأعلى", "الغاشية", "الفجر", "البلد", "الشمس", "الليل", "لضحى", "الشرح", "التين", "العلق", "القدر", "البينة", "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النص", "المسد", "الإخلاص", "الفلق", "الناس"]
 };
 
-const ALL_SURAHS_ORDERED = [
+const STUDENT_SURAH_NAMES = [
   "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال", "التوبة", "يونس", "هود", "يوسف", "الرعد", "إبراهيم", "الحجر", "النحل",
   "الإسراء", "الكهف", "مريم", "طه", "الأنبياء", "الحج", "المؤمنون", "النور", "الفرقان", "الشعراء", "النمل", "القصص", "العنكبوت", "الروم", "لقمان", "السجدة",
   "الأحزاب", "سبأ", "فاطر", "يس", "الصافات", "ص", "الزمر", "غافر", "فصلت", "الشورى", "الزخرف", "الدخان", "الجاثية", "الأحقاف", "محمد", "الفتح", "الحجرات", "ق",
@@ -42,8 +42,8 @@ const ALL_SURAHS_ORDERED = [
   "الزلزلة", "العاديات", "القارعة", "التكاثر", "العصر", "الهمزة", "الفيل", "قريش", "الماعون", "الكوثر", "الكافرون", "النصر", "المسد", "الإخلاص", "الفلق", "الناس"
 ];
 const SURAH_AYAH_TOTALS = [7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
-const SURAH_AYAH_COUNTS = Object.fromEntries(ALL_SURAHS_ORDERED.map((name,index)=>[name,SURAH_AYAH_TOTALS[index]]));
-const EASY_SHORT_SURAHS = new Set(ALL_SURAHS_ORDERED.filter((name,index)=>SURAH_AYAH_TOTALS[index]<=11 && index>=92));
+const SURAH_AYAH_COUNTS = Object.fromEntries(STUDENT_SURAH_NAMES.map((name,index)=>[name,SURAH_AYAH_TOTALS[index]]));
+const EASY_SHORT_SURAHS = new Set(STUDENT_SURAH_NAMES.filter((name,index)=>SURAH_AYAH_TOTALS[index]<=11 && index>=92));
 
 const RATING_COLORS = {
   '4': '#28a745',
@@ -263,7 +263,7 @@ function proctorTaskLabel(ctx){return ctx&&ctx.type==='exam'?'الاختبار':
 function proctorStopCamera(){clearInterval(proctor.scanTimer);proctor.scanTimer=null;proctor.analyzing=false;proctor.faceMeshResults=null;if(proctor.detectorType==='mediapipe')try{proctor.detector?.close()}catch(e){}proctor.detector=null;proctor.detectorType='';if(proctor.stream){proctor.stream.getTracks().forEach(t=>t.stop());proctor.stream=null}const v=document.getElementById('proctorVideo');if(v)v.srcObject=null;const scan=document.getElementById('proctorScanBtn');if(scan)scan.disabled=false}
 function closeProctorGate(){proctorStopCamera();proctor.onReady=null;proctor.context=null;document.getElementById('proctorGate')?.classList.add('hidden')}
 function openProctorGate(context,onReady){proctorStopCamera();proctor.active=false;proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.violations=0;proctor.blocked=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبع واحد':'هذه المهمة تعمل على هاتف بشاشة لمس فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبع واحد هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اضغط تشغيل الفحص للسماح بالكاميرا'}
-async function startProctorScan(){if(!navigator.mediaDevices?.getUserMedia){document.getElementById('proctorHelp').textContent='الكاميرا تحتاج متصفحاً حديثاً واتصال HTTPS.';return}try{proctor.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:640},height:{ideal:480}},audio:false});const video=document.getElementById('proctorVideo');video.srcObject=proctor.stream;await video.play();if('FaceDetector' in window){proctor.detector=new FaceDetector({fastMode:true,maxDetectedFaces:2});proctor.detectorType='native'}else if(window.FaceMesh){const mesh=new FaceMesh({locateFile:file=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/'+file});mesh.setOptions({maxNumFaces:2,refineLandmarks:true,minDetectionConfidence:.55,minTrackingConfidence:.55});mesh.onResults(results=>{proctor.faceMeshResults=results.multiFaceLandmarks||[]});proctor.detector=mesh;proctor.detectorType='mediapipe'}else{throw new Error('face-model-unavailable')}document.getElementById('proctorScanBtn').disabled=true;document.getElementById('proctorHelp').textContent='يعمل الفحص على Chrome وSafari وFirefox وEdge الحديثة.';proctor.scanTimer=setInterval(proctorAnalyzeFrame,350);proctorAnalyzeFrame()}catch(e){proctorStopCamera();const name=e&&e.name||'';document.getElementById('proctorHelp').textContent=e&&e.message==='face-model-unavailable'?'تعذر تحميل نموذج فحص الوجه. تحقق من اتصال الإنترنت ثم أعد المحاولة.':name==='NotAllowedError'?'تم رفض إذن الكاميرا. اسمح به من إعدادات الموقع ثم أعد المحاولة.':name==='NotFoundError'?'لم يتم العثور على كاميرا متاحة.':name==='NotReadableError'?'الكاميرا مستخدمة في تطبيق آخر. أغلقه ثم أعد المحاولة.':name==='SecurityError'?'افتح الصفحة عبر HTTPS للسماح بالكاميرا.':'تعذر فتح الك  ميرا. تحقق من إذن المتصفح ثم أعد المحاو  ة.'}}
+async function startProctorScan(){if(!navigator.mediaDevices?.getUserMedia){document.getElementById('proctorHelp').textContent='الكاميرا تحتاج متصفحاً حديثاً واتصال HTTPS.';return}try{proctor.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:640},height:{ideal:480}},audio:false});const video=document.getElementById('proctorVideo');video.srcObject=proctor.stream;await video.play();if('FaceDetector' in window){proctor.detector=new FaceDetector({fastMode:true,maxDetectedFaces:2});proctor.detectorType='native'}else if(window.FaceMesh){const mesh=new FaceMesh({locateFile:file=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/'+file});mesh.setOptions({maxNumFaces:2,refineLandmarks:true,minDetectionConfidence:.55,minTrackingConfidence:.55});mesh.onResults(results=>{proctor.faceMeshResults=results.multiFaceLandmarks||[]});proctor.detector=mesh;proctor.detectorType='mediapipe'}else{throw new Error('face-model-unavailable')}document.getElementById('proctorScanBtn').disabled=true;document.getElementById('proctorHelp').textContent='يعمل الفحص على Chrome وSafari وFirefox وEdge الحديثة.';proctor.scanTimer=setInterval(proctorAnalyzeFrame,350);proctorAnalyzeFrame()}catch(e){proctorStopCamera();const name=e&&e.name||'';document.getElementById('proctorHelp').textContent=e&&e.message==='face-model-unavailable'?'تعذر تحميل نموذج فحص الوجه. تحقق من اتصال الإنترنت ثم أعد المحاولة.':name==='NotAllowedError'?'تم رفض إذن الكاميرا. اسمح به من إعدادات الموقع ثم أعد المحاولة.':name==='NotFoundError'?'لم يتم العثور على كاميرا متاحة.':name==='NotReadableError'?'الكاميرا مستخدمة في تطبيق آخر. أغلقه ثم ��عد المحاولة.':name==='SecurityError'?'افتح الصفحة عبر HTTPS للسماح بالكاميرا.':'تعذر فتح الك  ميرا. تحقق من إذن المتصفح ثم أعد المحاو  ة.'}}
 async function proctorDetectFaces(video){if(proctor.detectorType==='native')return await proctor.detector.detect(video);if(proctor.detectorType==='mediapipe'){await proctor.detector.send({image:video});return (proctor.faceMeshResults||[]).map(points=>{let minX=1,minY=1,maxX=0,maxY=0;points.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});return{boundingBox:{x:minX*video.videoWidth,y:minY*video.videoHeight,width:(maxX-minX)*video.videoWidth,height:(maxY-minY)*video.videoHeight},landmarks:points}})}return[]}
 function proctorAverage(list){return list.length?list.reduce((a,b)=>a+b,0)/list.length:0}
 function proctorEyeRatio(points,upper,lower,left,right){if(!points||!points[upper]||!points[lower]||!points[left]||!points[right])return null;const vertical=Math.hypot(points[upper].x-points[lower].x,points[upper].y-points[lower].y),horizontal=Math.max(.001,Math.hypot(points[left].x-points[right].x,points[left].y-points[right].y));return vertical/horizontal}
@@ -630,7 +630,7 @@ function updateSurahSelect() {
   select.innerHTML = html;
   const ranges=getJuzVerseRanges(juz);
   const hint=document.getElementById('juzBoundaryHint');
-  if(hint) hint.textContent='حدود الجزء: '+ranges.map(r=>'سورة '+(ALL_SURAHS_ORDERED[r[0]-1]||r[0])+' '+r[1]+'–'+r[2]).join(' | ');
+  if(hint) hint.textContent='حدود الجزء: '+ranges.map(r=>'سورة '+(STUDENT_SURAH_NAMES[r[0]-1]||r[0])+' '+r[1]+'–'+r[2]).join(' | ');
 }
 // ====== إنشاء حساب جديد (طلب انضمام) ======
 let signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
@@ -1080,7 +1080,7 @@ async function toggleVoiceRecord() {
   } catch(e) {
   voiceProfileGemini = null; voiceFingerprint = null; voiceDataUrl = null;
   status.textContent = 'تعذّر تحليل الصوت بواسطة Gemini';
-  showToast((e&&e.message)||'تعذ��ر اتصال Gemini — أعد التسجيءء', 'error');
+  showToast((e&&e.message)||'��عذ��ر اتصال Gemini — أعد التسجيءء', 'error');
   }
     };
     mediaRecorder.start();
@@ -1739,14 +1739,14 @@ function renderRecordElementHTML(el, i, num) {
 
   if(el.name === 'اللوح' || el.name === 'السورة') {
     html += '<select onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="width:100%;font-weight:bold;color:var(--primary);border:2px solid var(--primary);">';
-    ALL_SURAHS_ORDERED.forEach(sur => { html += '<option value="'+sur+'" '+(el.surah===sur?'selected':'')+'>'+sur+'</option>'; });
+    STUDENT_SURAH_NAMES.forEach(sur => { html += '<option value="'+sur+'" '+(el.surah===sur?'selected':'')+'>'+sur+'</option>'; });
     html += '</select>';
     html += '<small style="color:var(--text-light)">تُحدد تلقائياً من بيانات   لطالب ويمكن للمسؤول تغييرها يدوياً.</small>';
   } else if(el.name === 'الماضي القريب' || el.name === 'الماضي البعيد') {
-    const mainSurahIndex = ALL_SURAHS_ORDERED.indexOf(mainSurah);
+    const mainSurahIndex = STUDENT_SURAH_NAMES.indexOf(mainSurah);
     let afterSurahs = [];
-    if(mainSurahIndex !== -1 && mainSurahIndex < ALL_SURAHS_ORDERED.length - 1) {
-      afterSurahs = ALL_SURAHS_ORDERED.slice(mainSurahIndex + 1);
+    if(mainSurahIndex !== -1 && mainSurahIndex < STUDENT_SURAH_NAMES.length - 1) {
+      afterSurahs = STUDENT_SURAH_NAMES.slice(mainSurahIndex + 1);
     }
     if(afterSurahs.length > 0) {
       html += '<select onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="margin-bottom:8px; width:100%;">';
@@ -1765,7 +1765,7 @@ function renderRecordElementHTML(el, i, num) {
   } else if(el.isExtra) {
     html += '<select onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="margin-bottom:8px; width:100%;">';
     html += '<option value="">-- اختر االسورة --</option>';
-    ALL_SURAHS_ORDERED.forEach(sur => {
+    STUDENT_SURAH_NAMES.forEach(sur => {
       html += '<option value="'+sur+'" '+(el.surah===sur?'selected':'')+'>'+sur+'</option>';
     });
     html += '</select>';
@@ -1977,7 +1977,7 @@ function renderReadingItems() {
 
     html += '<div class="form-group"><label>السورة</label><select onchange="updateReadingItem('+i+', \'surah\', this.value)" style="width:100%;">';
     html += '<option value="">-- اختر السورة --</option>';
-    ALL_SURAHS_ORDERED.forEach(sur => { html += '<option value="'+sur+'" '+(item.surah===sur?'selected':'')+'>'+sur+'</option>'; });
+    STUDENT_SURAH_NAMES.forEach(sur => { html += '<option value="'+sur+'" '+(item.surah===sur?'selected':'')+'>'+sur+'</option>'; });
     html += '</select></div>';
 
     if(ayahCount > 0) {
@@ -2050,7 +2050,7 @@ function localSmartChatReply(message,role){
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
-      return 'ملخص البيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل ال��راجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
+      return 'ملخص البيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبار��ت المتأخرة، ثم اجعل ال��راجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
     }
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
@@ -2075,30 +2075,30 @@ function initExamBuilder(){
   examQuestions=[];examEditorActiveIndex=0;
   examPlanRows=[{count:5,level:'medium',type:'mcq',position:'random',timeLimit:60,completeAyahs:1,reciteAyahs:1,audioShareWithParent:true,optionsCount:4}];
   const base=document.getElementById('examBaseSurah');
-  if(base){base.innerHTML=ALL_SURAHS_ORDERED.map(s=>'<option value="'+s+'">'+s+'</option>').join('');base.value=currentRecordMainSurah||ALL_SURAHS_ORDERED[0]}
+  if(base){base.innerHTML=STUDENT_SURAH_NAMES.map(s=>'<option value="'+s+'">'+s+'</option>').join('');base.value=currentRecordMainSurah||STUDENT_SURAH_NAMES[0]}
   syncExamSurahRange();
   loadExamFiles().catch(e=>showExamAlert(e.message,'danger'));
   const deadline=document.getElementById('examDeadline');if(deadline&&!deadline.value){const d=new Date(Date.now()+24*60*60*1000);deadline.value=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)}
   renderExamPlanRows(); renderExamQuestions(); updateExamSourceDistribution();
 }
 function getExamPastRange(){
-  const base=document.getElementById('examBaseSurah')?.value||currentRecordMainSurah||'',baseIndex=ALL_SURAHS_ORDERED.indexOf(base);
-  const requestedLast=document.getElementById('examLastSurah')?.value||'الناس',lastIndex=ALL_SURAHS_ORDERED.indexOf(requestedLast);
+  const base=document.getElementById('examBaseSurah')?.value||currentRecordMainSurah||'',baseIndex=STUDENT_SURAH_NAMES.indexOf(base);
+  const requestedLast=document.getElementById('examLastSurah')?.value||'الناس',lastIndex=STUDENT_SURAH_NAMES.indexOf(requestedLast);
   if(baseIndex<0||lastIndex<baseIndex)throw new Error('نطاق الماضي غير صالح.');
-  const previousSurahs=ALL_SURAHS_ORDERED.slice(baseIndex+1,lastIndex+1),all=previousSurahs.length?previousSurahs:[ALL_SURAHS_ORDERED[baseIndex]],middle=Math.ceil(all.length/2),near=all.slice(0,middle),far=all.slice(middle),scope=document.getElementById('examPastScope')?.value||'both';
+  const previousSurahs=STUDENT_SURAH_NAMES.slice(baseIndex+1,lastIndex+1),all=previousSurahs.length?previousSurahs:[STUDENT_SURAH_NAMES[baseIndex]],middle=Math.ceil(all.length/2),near=all.slice(0,middle),far=all.slice(middle),scope=document.getElementById('examPastScope')?.value||'both';
   const selected=scope==='near'?near:scope==='far'?(far.length?far:near):all;
   return {all,near,far,selected,scope,start:selected[0],end:selected[selected.length-1]};
 }
 function syncExamSurahRange(){
   const base=document.getElementById('examBaseSurah'),last=document.getElementById('examLastSurah');if(!base||!last)return;
-  const previous=last.value,start=Math.max(0,ALL_SURAHS_ORDERED.indexOf(base.value));
-  const allowed=ALL_SURAHS_ORDERED.slice(start);last.innerHTML='<option value="">سورة الناس تلقائياً</option>'+allowed.map(s=>'<option value="'+s+'">'+s+'</option>').join('');
+  const previous=last.value,start=Math.max(0,STUDENT_SURAH_NAMES.indexOf(base.value));
+  const allowed=STUDENT_SURAH_NAMES.slice(start);last.innerHTML='<option value="">سورة الناس تلقائياً</option>'+allowed.map(s=>'<option value="'+s+'">'+s+'</option>').join('');
   last.value=allowed.includes(previous)?previous:'';
   try{const range=getExamPastRange(),help=document.getElementById('examPastScopeHelp');if(help)help.textContent='القريب: '+range.near[0]+' ← '+range.near[range.near.length-1]+(range.far.length?'، البعيد: '+range.far[0]+' ← '+range.far[range.far.length-1]:'، ولا يوجد نصف بعيد مستقل في هذا النطاق.')}catch(e){}
 }
 
 function quranQuestionImageUrl(q,ayah,display){
-  const mappedNumber=ALL_SURAHS_ORDERED.indexOf(String(q.surah||''))+1,surahNumber=Math.max(0,parseInt(q.surahNumber)||mappedNumber),from=Math.max(1,parseInt(ayah||q.from)||1),type=['mcq','truefalse','complete','audio'].includes(q.type)?q.type:'mcq';
+  const mappedNumber=STUDENT_SURAH_NAMES.indexOf(String(q.surah||''))+1,surahNumber=Math.max(0,parseInt(q.surahNumber)||mappedNumber),from=Math.max(1,parseInt(ayah||q.from)||1),type=['mcq','truefalse','complete','audio'].includes(q.type)?q.type:'mcq';
   return surahNumber>0?'/api/quran-question-image?surah='+surahNumber+'&ayah='+from+'&to='+from+'&type='+type+'&display='+(display||'anchor'):'';
 }
 function openQuranImage(src){const box=document.getElementById('quranImageLightbox'),img=document.getElementById('quranImageLightboxImg');if(!box||!img)return;img.src=src;box.classList.remove('hidden');document.body.style.overflow='hidden'}
@@ -2129,8 +2129,8 @@ function cleanExamQuestion(q){
   return q;
 }
 async function generateLocalQuranQuestions(base,lastSurah,plans){
-  const start=ALL_SURAHS_ORDERED.indexOf(base),end=lastSurah?ALL_SURAHS_ORDERED.indexOf(lastSurah):113;if(start<0||end<start)throw new Error('نطاق السور غير صالح: يجب أن تكون آخر سورة بعد أول سورة.');
-  const range=ALL_SURAHS_ORDERED.slice(start,end+1),needed=plans.reduce((n,p)=>n+p.count,0),sourceOrder=[];
+  const start=STUDENT_SURAH_NAMES.indexOf(base),end=lastSurah?STUDENT_SURAH_NAMES.indexOf(lastSurah):113;if(start<0||end<start)throw new Error('نطاق السور غير صالح: يجب أن تكون آخر سورة بعد أول سورة.');
+  const range=STUDENT_SURAH_NAMES.slice(start,end+1),needed=plans.reduce((n,p)=>n+p.count,0),sourceOrder=[];
   for(let left=0,right=range.length-1;left<=right;left++,right--){sourceOrder.push(range[left]);if(right!==left)sourceOrder.push(range[right])}
   const sourceLimit=Math.min(range.length,Math.max(needed,8)),sources=[];
   for(const surah of sourceOrder.slice(0,sourceLimit)){const max=SURAH_AYAH_COUNTS[surah]||1;const text=await fetchAyatText(surah,1,max);const ayahs=String(text||'').split(/\s*﴿?\d+﴾?\s*/).map(x=>x.trim()).filter(Boolean);if(ayahs.length)sources.push({surah,ayahs,text})}
@@ -2140,7 +2140,7 @@ async function generateLocalQuranQuestions(base,lastSurah,plans){
     else if(plan.type==='truefalse'){const truth=Math.random()>.5,shown=truth?src.surah:(shuffled(range.filter(s=>s!==src.surah))[0]||src.surah);q.prompt='هل المقطع المصور من سورة '+shown+'؟';q.options=['صح','خطأ'];q.correct=truth?'صح':'خطأ'}
     else if(plan.type==='complete'){const words=ayah.split(/\s+/),cut=Math.max(2,Math.floor(words.length*.55));q.prompt='أكمل المقطع المخفي في صورة المصحف';q.correct=words.slice(cut).join(' ')||next}
     else {q.prompt='سجّل تلاوة المقطع المعروض من المصحف';q.correct=src.ayahs.slice(from-1,q.to).join(' ')}
-    q.stem='';q.questionImage='/api/quran-question-image?surah='+(ALL_SURAHS_ORDERED.indexOf(src.surah)+1)+'&ayah='+from+'&to='+q.to+'&type='+plan.type;
+    q.stem='';q.questionImage='/api/quran-question-image?surah='+(STUDENT_SURAH_NAMES.indexOf(src.surah)+1)+'&ayah='+from+'&to='+q.to+'&type='+plan.type;
     out.push(cleanExamQuestion(q));}}
   return out;
 }
@@ -2187,8 +2187,8 @@ function examLevelLabel(l){return l==='easy'?'سهل':l==='hard'?'صعب':'مت�
 function normalizeExamText(t){return normalizeAr(t||'').replace(/[إأآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').trim()}
 
 async function buildExamSourceCandidates(base){
-  const baseIdx=ALL_SURAHS_ORDERED.indexOf(base);
-  const pool=baseIdx>=0 ? ALL_SURAHS_ORDERED.slice(baseIdx) : ALL_SURAHS_ORDERED.slice();
+  const baseIdx=STUDENT_SURAH_NAMES.indexOf(base);
+  const pool=baseIdx>=0 ? STUDENT_SURAH_NAMES.slice(baseIdx) : STUDENT_SURAH_NAMES.slice();
   const picked=[]; let offset=0;
   while(picked.length<Math.min(12,pool.length)){
     const surah=pool[offset%pool.length]; offset++;
@@ -2227,7 +2227,7 @@ async function generateExamQuestions(){
     if(sourceMode==='file'&&!examFilesCache.length)await loadExamFiles();
     const file=examFilesCache.find(f=>f.id===document.getElementById('examFileSource')?.value);if(sourceMode==='file'&&!file)throw new Error('اختر ملف المرجع أولاً.');
     const normalizedPlans=plans.map(r=>({count:parseInt(r.count)||1,level:r.level,type:r.type,position:['start','middle','end','random'].includes(r.position)?r.position:'random',timeLimit:Math.max(5,Math.min(3600,parseInt(r.timeLimit)||60)),completeAyahs:parseInt(r.completeAyahs)||1,reciteAyahs:parseInt(r.reciteAyahs)||1,audioShareWithParent:r.audioShareWithParent!==false,proctorEnabled:r.proctorEnabled!==false,optionsCount:Math.max(2,Math.min(6,parseInt(r.optionsCount)||4))}));
-    const expandedPlans=expandExamPlans(normalizedPlans).map(p=>Object.assign({},p,{count:1})),range=getExamPastRange(),startIndex=ALL_SURAHS_ORDERED.indexOf(range.start),endIndex=ALL_SURAHS_ORDERED.indexOf(range.end);
+    const expandedPlans=expandExamPlans(normalizedPlans).map(p=>Object.assign({},p,{count:1})),range=getExamPastRange(),startIndex=STUDENT_SURAH_NAMES.indexOf(range.start),endIndex=STUDENT_SURAH_NAMES.indexOf(range.end);
     const existingFingerprints=examQuestions.map(examQuestionFingerprint),existingSet=new Set(existingFingerprints);let raw=[];
     try{
       const ai=await callStudentAI('generate_exam',{topic,sourceMode,sourceFile:sourceMode==='file'?{id:file.id,name:file.name,text:String(file.text||'').slice(0,60000)}:null,surahNumber:startIndex+1,endSurahNumber:endIndex+1,plan:expandedPlans,pastScope:range.scope,nearSurahs:range.near,farSurahs:range.far,useReferenceFiles:true,excludeEasyShortSurahs:true,previousQuestionFingerprints:existingFingerprints},0.18);
@@ -2239,7 +2239,7 @@ async function generateExamQuestions(){
     const unique=[];for(const q of raw.map(cleanExamQuestion).filter(q=>q.prompt&&q.correct!==undefined)){const fingerprint=examQuestionFingerprint(q);if(existingSet.has(fingerprint))continue;existingSet.add(fingerprint);unique.push(q);if(unique.length===requestedTotal)break}
     if(!unique.length)throw new Error('لم تُنتج ادفعة أسئلة جديدة غير مكررة. غيّر النطاق أو الخطة ثم أعد المحاولة.');
     const stamp=Date.now(),added=unique.map((q,index)=>{const plan=expandedPlans[index]||normalizedPlans[0];return {id:'exam_'+stamp+'_'+index,type:plan.type,level:plan.level,surah:q.surah||base,prompt:q.prompt||'',stem:q.stem||'',options:Array.isArray(q.options)?q.options:[],correct:q.correct||'',from:parseInt(q.from)||1,to:parseInt(q.to)||parseInt(q.from)||1,surahNumber:parseInt(q.surahNumber)||0,timeLimit:plan.timeLimit,completeAyahs:plan.completeAyahs,reciteAyahs:plan.reciteAyahs,audioShareWithParent:plan.audioShareWithParent!==false,proctorEnabled:plan.proctorEnabled!==false,points:typeof q.points==='number'?q.points:1,rejected:false,weakened:false,source:q.source||(sourceMode==='file'?'file':'ai-verified'),sourceFileId:q.sourceFileId||'',sourceFileName:q.sourceFileName||'',questionImage:q.questionImage||'',optionsCount:plan.optionsCount||4,pastScope:range.scope}});
-    const previousCount=examQuestions.length;examQuestions=examQuestions.concat(added);examEditorActiveIndex=previousCount;generationSucceeded=true;renderExamQuestions();showExamAlert('ئمت إضافة '+added.length+' سؤالاً جديداً، والإجمالي الآن '+examQuestions.length+' سؤالاً. لم تُحذف الأسئلة السابقة.','success');
+    const previousCount=examQuestions.length;examQuestions=examQuestions.concat(added);examEditorActiveIndex=previousCount;generationSucceeded=true;renderExamQuestions();showExamAlert('ئمت إضافة '+added.length+' سؤالاً جديداً، والإجمالي الآن '+examQuestions.length+' سؤال��ً. لم تُحذف الأسئلة السابقة.','success');
   }catch(e){showExamAlert((e.message||'تعذر توليد الأسئلة')+' لم   تم حذف أي سؤال سابق.','danger')}
   finally{finishExamGenerationProgress(generationSucceeded);btns.forEach(b=>b.disabled=false)}
 }
@@ -2952,7 +2952,7 @@ async function deleteGithubFile(){
   }
   }
 
-// ===== مساعد تطوير الموقع بالذكاء الاصطءءاعي (للمسؤول ��قط) =====
+// ===== مساعد تطوير الموقع بالذك��ء الاصطءءاعي (للمسؤول ��قط) =====
 let lastDevPlan = null;
 function openDevAssistant(){
   // حصر الميزة على المسؤول فقط
@@ -3377,7 +3377,7 @@ function approveMessage(idx, approved) {
         if(!students[sIdx].tasks[taskIdx].rejectCount) students[sIdx].tasks[taskIdx].rejectCount = 0;
         students[sIdx].tasks[taskIdx].rejectCount++;
 
-        // سجل الرفض
+        // سج�� الرفض
         if(!students[sIdx].rejectedLog) students[sIdx].rejectedLog = [];
         students[sIdx].rejectedLog.push({
           ...task,
@@ -3524,7 +3524,7 @@ function studentLogin() {
   const students = getData('students');
   const s = students.find(x => x.username === username);
   if(!s) {
-    document.getElementById('studentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ اسم المستخدم غير مسجل في النظام</div>'; return;
+    document.getElementById('studentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ اسم المست��دم غير مسجل في النظام</div>'; return;
   }
   if(s.studentPass !== pass) {
     document.getElementById('studentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ الرقم السري غير صحيح</div>'; return;
@@ -3761,7 +3761,7 @@ function renderStudentTasks() {
       if(isProctorCancelled) {
         html += '<div class="task-rejected-alert">لءء يمكن إعادة هذه ءءلمهمة بعد إلغءءئها. تواصل مع المءءؤول لإسناءء مهمة جديدة.</div>';
       } else if(isRejected) {
-        html += '<div class="task-rejected-alert">⚠️ تم رفض التسيل السابق. يرجى إرسال تسجيل جديد.</div>';
+        html += '<div class="task-rejected-alert">⚠️ تم رفض التسيل السا��ق. يرجى إرسال تسجيل جديد.</div>';
         html += studentVoiceRecorderHTML(originalIdx);
       } else if(!isSubmitted) {
         html += studentVoiceRecorderHTML(originalIdx);
@@ -3849,7 +3849,7 @@ function normalizeAr(t) {
 }
 
 function surahIndexByName(name) {
-  const i = ALL_SURAHS_ORDERED.indexOf(name);
+  const i = STUDENT_SURAH_NAMES.indexOf(name);
   return i === -1 ? 0 : i + 1;
 }
 
@@ -3915,7 +3915,7 @@ async function guessSpokenSurah(transcript, exclude) {
     });
     if(bestPct >= 40 && best) {
       const num = parseInt(best.split(':')[0]);
-      const nm = ALL_SURAHS_ORDERED[num - 1];
+      const nm = STUDENT_SURAH_NAMES[num - 1];
       if(nm && nm !== exclude) return nm;
     }
     return '';
@@ -4267,7 +4267,7 @@ function dataURLToBlob(dataUrl) {
 
 // ====== QURAN AYAH IMAGES (صور الآيات ارسم العثماني المُشكَّل) ======
 function surahNumber(name) {
-  const i = ALL_SURAHS_ORDERED.indexOf((name || '').trim());
+  const i = STUDENT_SURAH_NAMES.indexOf((name || '').trim());
   return i === -1 ? 0 : i + 1;
 }
 function ayahImageUrl(sNum, ayah) {
@@ -4341,21 +4341,23 @@ function toggleInlineAyat(boxId, surah, from, to) {
 }
 
 
-const STUDENT_SURAH_NAMES=['الفاتحة','البقرة','آل عمران','النساء','المائدة','الأنعام','الأعراف','الأنفال','التوبة','يونس','هود','يوسف','الرعد','إبراهيم','الحجر','النحل','الإسراء','الكهف','مريم','طه','الأنبياء','الحج','المؤمنون','النور','الفرقان','الشعراء','النمل','القصص','العنكبوت','الروم','لقمان','السجدة','الأحزاب','سبأ','فاطر','يس','الصافات','ص','الزمر','غافر','فصلت','الشورى','الزخرف','الدخان','الجاثية','الأحقاف','محمد','الفتح','الحجرات','ق','الذاريات','ال��ور','النجم','ا��قمر','الرحمن','الواقعة','الحديد','المجادلة','الحشر','الممتحنة','الصف','الجمعة','المنافقون','التغابن','الطلاق','التحريم','الملك','القلم','الحاقة','المعارج','نوح','الجن','المزمل','المدثر','القيامة','الإنسان','المرسلات','النبأ','النازعات','عبس','التكوير','الانفطار','المطففين','الانشقاق','البروج','الطارق','الأعلى','الغاشية','الفجر','البلد','الشمس','الليل','الضحى','الشرح','التين','العلق','القدر','البينة','الزلزلة','العاديات','القارعة','التكاثر','العصر','الهمزة','الفيل','قريش','الماعون','الكوثر','الكافرون','النصر','المسد','الإخلاص','الفلق','الناس'];
+const QURAN_SURAH_NAMES=['الفاتحة','البقرة','آل عمران','النساء','المائدة','الأنعام','الأعراف','الأنفال','التوبة','يونس','هود','يوسف','الرعد','إبراهيم','الحجر','النحل','الإسراء','الكهف','مريم','طه','الأنبياء','الحج','المؤمنون','النور','الفرقان','الشعراء','النمل','القصص','العنكبوت','الروم','لقمان','السجدة','الأحزاب','سبأ','فاطر','يس','الصافات','ص','الزمر','غافر','فصلت','الشورى','الزخرف','الدخان','الجاثية','الأحقاف','محمد','الفتح','الحجرات','ق','الذاريات','ال��ور','النجم','ا��قمر','الرحمن','الواقعة','الحديد','المجادلة','الحشر','الممتحنة','الصف','الجمعة','المنافقون','التغابن','الطلاق','التحريم','الملك','القلم','الحاقة','المعارج','نوح','الجن','المزمل','المدثر','القيامة','الإنسان','المرسلات','النبأ','النازعات','عبس','التكوير','الانفطار','المطففين','الانشقاق','البروج','الطارق','الأعلى','الغاشية','الفجر','البلد','الشمس','الليل','الضحى','الشرح','التين','العلق','القدر','البينة','الزلزلة','العاديات','القارعة','التكاثر','العصر','الهمزة','الفيل','قريش','الماعون','الكوثر','الكافرون','النصر','المسد','الإخلاص','الفلق','الناس'];
 const STUDENT_SURAH_PAGES=[1,2,50,77,106,128,151,177,187,208,221,235,249,255,262,267,282,293,305,312,322,332,342,350,359,367,377,385,396,404,411,415,418,428,434,440,446,453,458,467,477,483,489,496,499,502,507,511,515,518,520,523,526,528,531,534,537,539,542,544,546,548,550,552,553,555,556,558,560,562,564,566,568,570,572,574,575,577,578,580,582,583,585,586,587,589,590,591,592,593,594,595,596,597,598,599,600,601,602,603,604];
 let studentSurahIndex=0;
 const QURAN_MEDINAN_SURAHS=new Set([2,3,4,5,8,9,13,22,24,33,47,48,49,55,57,58,59,60,61,62,63,64,65,66,76,98,99,110]);
-function renderSurahDirectory(query){const box=document.getElementById('quranSurahDirectory');if(!box)return;const q=String(query||'').trim();box.innerHTML=ALL_SURAHS_ORDERED.map((name,index)=>({name,index})).filter(x=>!q||x.name.includes(q)).map(x=>'<button type="button" class="quran-surah-item '+(x.index===studentSurahIndex?'active':'')+'" onclick="openStudentSurah('+x.index+')"><span>'+(x.index+1)+' — '+x.name+'</span><small>'+(SURAH_AYAH_TOTALS[x.index]||'')+' آية · '+(QURAN_MEDINAN_SURAHS.has(x.index+1)?'مدنية':'مكية')+'</small></button>').join('')||'<p class="alert alert-info">لا توجد سورة بهذا الاسم.</p>'}
+function renderSurahDirectory(query){const box=document.getElementById('quranSurahDirectory');if(!box)return;const q=String(query||'').trim();box.innerHTML=STUDENT_SURAH_NAMES.map((name,index)=>({name,index})).filter(x=>!q||x.name.includes(q)).map(x=>'<button type="button" class="quran-surah-item '+(x.index===studentSurahIndex?'active':'')+'" onclick="openStudentSurah('+x.index+')"><span>'+(x.index+1)+' — '+x.name+'</span><small>'+(SURAH_AYAH_TOTALS[x.index]||'')+' آية · '+(QURAN_MEDINAN_SURAHS.has(x.index+1)?'مدنية':'مكية')+'</small></button>').join('')||'<p class="alert alert-info">لا توجد سورة بهذا الاسم.</p>'}
+function showQuranList(){document.getElementById('quranDirectoryView')?.classList.remove('hidden');document.getElementById('quranReaderView')?.classList.add('hidden')}
+function showQuranReader(){document.getElementById('quranDirectoryView')?.classList.add('hidden');document.getElementById('quranReaderView')?.classList.remove('hidden')}
 function filterSurahDirectory(query){renderSurahDirectory(query)}
-function initStudentQuran(){const select=document.getElementById('studentSurahSelect');if(select&&!select.options.length)select.innerHTML=ALL_SURAHS_ORDERED.map((n,i)=>'<option value="'+i+'">'+(i+1)+' — '+n+'</option>').join('');renderSurahDirectory(document.getElementById('quranSurahSearch')?.value||'');openStudentSurah(studentSurahIndex)}
-function openStudentSurah(value){studentSurahIndex=Math.max(0,Math.min(113,Number(value)||0));const select=document.getElementById('studentSurahSelect');if(select)select.value=String(studentSurahIndex);const title=document.getElementById('quranActiveSurah');if(title)title.textContent=(studentSurahIndex+1)+' — '+ALL_SURAHS_ORDERED[studentSurahIndex];const frame=document.getElementById('studentQuranFrame');if(frame)frame.src='/E-Quran-PDF.pdf#page='+STUDENT_SURAH_PAGES[studentSurahIndex];renderSurahDirectory(document.getElementById('quranSurahSearch')?.value||'')}
+function initStudentQuran(){const select=document.getElementById('studentSurahSelect');if(select&&!select.options.length)select.innerHTML=STUDENT_SURAH_NAMES.map((n,i)=>'<option value="'+i+'">'+(i+1)+' — '+n+'</option>').join('');renderSurahDirectory(document.getElementById('quranSurahSearch')?.value||'');openStudentSurah(studentSurahIndex);showQuranList()}
+function openStudentSurah(value){studentSurahIndex=Math.max(0,Math.min(113,Number(value)||0));showQuranReader();const select=document.getElementById('studentSurahSelect');if(select)select.value=String(studentSurahIndex);const title=document.getElementById('quranActiveSurah');if(title)title.textContent=(studentSurahIndex+1)+' — '+STUDENT_SURAH_NAMES[studentSurahIndex];const frame=document.getElementById('studentQuranFrame');if(frame)frame.src='/E-Quran-PDF.pdf#page='+STUDENT_SURAH_PAGES[studentSurahIndex];renderSurahDirectory(document.getElementById('quranSurahSearch')?.value||'')}
 function previousStudentSurah(){openStudentSurah(studentSurahIndex-1)} function nextStudentSurah(){openStudentSurah(studentSurahIndex+1)}
 function showQiblaBearing(lat,lon,accuracy){const rad=Math.PI/180;const bearing=(Math.atan2(Math.sin((21.4225-lat)*rad),Math.cos(lat*rad)*Math.tan(21.4225*rad)-Math.sin(lat*rad)*Math.cos((21.4225-lat)*rad))*180/Math.PI+360)%360;const needle=document.getElementById('qiblaNeedle');if(needle)needle.style.transform='rotate('+bearing+'deg)';const details=document.getElementById('qiblaDetails');if(details)details.textContent='اتجاه الكعبة: '+bearing.toFixed(1)+'° من الشمال'+(accuracy?' — دقة الموقع: '+Math.round(accuracy)+' متر':' — تم الحساب يدويًا');const status=document.getElementById('qiblaStatus');if(status)status.textContent='تم تحديد اتجاه القبلة حسب موقعك الحالي.'}
 function calculateManualQibla(){const lat=Number(document.getElementById('qiblaLat')?.value),lon=Number(document.getElementById('qiblaLon')?.value);if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180){const status=document.getElementById('qiblaStatus');if(status)status.textContent='أدخل خط العرض والطول بشكل صحيح ثم أعد المحاولة.';return}showQiblaBearing(lat,lon,0)}
 function initQibla(){const status=document.getElementById('qiblaStatus');if(!status)return;if(!navigator.geolocation){status.textContent='هذا المتصفح لا يدعم تحديد الموقع. استخدم الإدخال اليدوي بالأسفل.';return}status.textContent='جارٍ تحديد موقعك بدقة لحساب اتجاه الكعبة...';navigator.geolocation.getCurrentPosition(pos=>showQiblaBearing(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy),error=>{const messages={1:'تم حظر إذن الموقع. اسمح بالموقع من إعدادات المتصفح أو استخدم الإدخال اليدوي بالأسفل.',2:'تعذر الحصول على إحداثيات موقعك. استخدم الإدخال اليدوي بالأسفل.',3:'انتهت مهلة تحديد الموقع. استخدم الإدخال اليدوي بالأسفل ثم أعد المحاولة.'};status.textContent=messages[error.code]||'تعذر تحديد الموقع. استخدم الإدخال اليدوي بالأسفل.'},{enableHighAccuracy:true,timeout:20000,maximumAge:60000})}
 const STUDENT_ADHKAR=[['دعاء الاستفتاح','اللهم باعد بيني وبين خطاياي كما باعدت بين المشرق والمغرب، اللهم نقني من خطاياي كما ينقى الثوب الأبيض من الدنس.'],['سيد الاستغفار','اللهم أنت ربي لا إله إلا أنت، خلقتني وأنا عبدك وأنا على عهدك ووعدك ما استطعت.'],['دعاء العلم','رب زدني علماً.'],['دعاء الوالدين','رب ارحمهما كما ربياني صغيراً.'],['دعاء الكرب','لا إله إلا الله العظيم الحليم، لا إله إلا الله رب العرش العظيم.'],['حديث نبوي','إنما الأعمال بالنيات، وإنما لكل امرئ ما نوى.'],['حديث نبوي','من لا يرحم لا يُرحم.'],['حديث نبوي','المسلم من سلم المسلمون من لسانه ويده.'],['حديث نبوي','خيركم من تعلم القرآن وعلمه.']];
 function initAdhkar(){renderAdhkar('')} function renderAdhkar(query){const box=document.getElementById('adhkarList');if(!box)return;const q=String(query||'').trim();box.innerHTML=STUDENT_ADHKAR.filter(x=>!q||(x[0]+' '+x[1]).includes(q)).map(x=>'<article class="adhkar-card"><strong>'+x[0]+'</strong><div>'+x[1]+'</div></article>').join('')||'<div class="alert alert-info">لا توجد نتائج مطابقة.</div>'}
-const STUDENT_HADITH=[['الأعمال بالنيات','إنما الأعمال بالنيات، وإنما لكل امرئ ما نوى.'],['الرحمة','من لا يَرحم لا يُرحم.'],['القرآن','خيركم من تعلم القرآن وعلمه.'],['الأخلاق','ما من شيء أثقل في ميزان المؤمن يوم القيامة من حسن الخلق.'],['الصدق','عليكم بالصدق، فإن الصدق يهدي إلى البر.'],['الرفق','إن الرفق لا يكون في شيء إلا زانه، ولا ينزع من شيء إلا شانه.'],['العلم','من سلك طريقاً يلتمس فيه علماً سهل الله له به طريقاً إلى الجنة.'],['الذكر','مثل الذي يذكر ربه والذي لا يذكر ربه مثل الحي والميت.'],['الابتسامة','تبسمك في وجه أخيك لك صدقة.'],['الجار','من كان يؤمن بالله واليوم الآخر فليكرم جاره.'],['الوالدان','رضا الرب في رضا الوالد، وسخط الرب في سخط الوالد.'],['التعاون','والله في عون العبد ما كان العبد في عون أخيه.']];
+const STUDENT_HADITH=[['الأعمال بالنيات','إنما الأعمال بالنيات، وإنما لكل امرئ ما نوى.'],['الرحمة','من لا يَرحم لا يُرحم.'],['القرآن','خي��كم من تعلم القرآن وعلمه.'],['الأخلاق','ما من شيء أثقل في ميزان المؤمن يوم القيامة من حسن الخلق.'],['الصدق','عليكم بالصدق، فإن الصدق يهدي إلى البر.'],['الرفق','إن الرفق لا يكون في شيء إلا زانه، ولا ينزع من شيء إلا شانه.'],['العلم','من سلك طريقاً يلتمس فيه علماً سهل الله له به طريقاً إلى الجنة.'],['الذكر','مثل الذي يذكر ربه والذي لا يذكر ربه مثل الحي والميت.'],['الابتسامة','تبسمك في وجه أخيك لك صدقة.'],['الجار','من كان يؤمن بالله واليوم الآخر فليكرم جاره.'],['الوالدان','رضا الرب في رضا الوالد، وسخط الرب في سخط الوالد.'],['التعاون','والله في عون العبد ما كان العبد في عون أخيه.']];
 function initHadith(){renderHadith('')} function renderHadith(query){const box=document.getElementById('hadithList');if(!box)return;const q=String(query||'').trim();box.innerHTML=STUDENT_HADITH.filter(x=>!q||(x[0]+' '+x[1]).includes(q)).map(x=>'<article class="adhkar-card"><strong>'+x[0]+'</strong><div>'+x[1]+'</div><small>رواه البخاري أو مسلم بحسب الرواية</small></article>').join('')||'<div class="alert alert-info">لا توجد نتائج مطابقة.</div>'}
 let tasbeehCount=0;function initTasbeeh(){const el=document.getElementById('tasbeehCount');if(el)el.textContent=String(tasbeehCount)}function incrementTasbeeh(){tasbeehCount+=1;initTasbeeh()}function resetTasbeeh(){tasbeehCount=0;initTasbeeh()}
 
@@ -4462,7 +4464,7 @@ function renderParentDashboard() {
     html += '<div style="flex:1; min-width:350px;"><div class="page" style="margin-top:0; border-right:5px solid var(--primary);">';
     html += '<h4 style="color:var(--primary); margin-bottom:15px;">👨🎓 '+s.name+'</h4>';
     html += '<p><strong>السن:</strong> '+(s.age || '-')+' سنة</p>';
-    html += '<p><strong>المادة:</strong> <span class="badge badge-primary">'+(s.subjects ? s.subjects.map(sub=>sub.name).join('، ') : '-')+'</span></p>';
+    html += '<p><strong>الما��ة:</strong> <span class="badge badge-primary">'+(s.subjects ? s.subjects.map(sub=>sub.name).join('، ') : '-')+'</span></p>';
     html += '<p><strong>المدرسون:</strong> '+(s.subjects ? s.subjects.map(sub => sub.teacher+(sub.phone ? ' (📞 '+sub.phone+')' : '')).join('<br>') : '-')+'</p>';
     html += '<hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">';
 
