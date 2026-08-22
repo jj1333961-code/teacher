@@ -526,6 +526,7 @@ tr:hover { background: var(--table-hover); }
   .menu-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
   .menu-btn { min-height:110px; border-radius:18px; background:var(--card-bg) !important; border:1px solid var(--border); color:var(--text); box-shadow:0 8px 24px rgba(33,86,57,.06); }
   .menu-btn:hover { transform:translateY(-4px); border-color:var(--primary); color:var(--primary); }
+  .tasbeeh-panel{display:flex;flex-direction:column;align-items:center;gap:18px;padding:36px;border:1px solid var(--border);border-radius:24px;background:var(--card-bg);text-align:center}.tasbeeh-panel #tasbeehCount{font-size:5rem;font-weight:900;color:var(--primary)}.tasbeeh-button{width:180px;height:180px;border:10px solid var(--primary);border-radius:50%;background:var(--table-header);color:var(--primary);font-size:1.5rem;font-weight:800;cursor:pointer}.tasbeeh-button:active{transform:scale(.96)}.faith-launch-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0}.faith-launch-card{min-height:168px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;padding:20px;border:1px solid var(--border);border-radius:22px;background:var(--card-bg);color:var(--text);text-align:right;cursor:pointer;box-shadow:0 10px 28px rgba(33,86,57,.08);transition:transform .2s,border-color .2s,box-shadow .2s}.faith-launch-card:hover,.faith-launch-card:focus-visible{transform:translateY(-5px);border-color:var(--primary);box-shadow:var(--shadow);outline:none}.faith-launch-icon{font-size:3rem;line-height:1}.faith-launch-card strong{font-size:1.15rem;color:var(--primary)}.faith-launch-card small{color:var(--text-light);line-height:1.5}@media(max-width:700px){.faith-launch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:440px){.faith-launch-grid{grid-template-columns:1fr}.faith-launch-card{min-height:132px;flex-direction:row;align-items:center}}
   .student-work-grid { gap:16px; } .student-work-card { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:20px; }
   .record-element,.homework-section,.reading-section { border:1px solid var(--border); border-radius:18px; box-shadow:0 8px 24px rgba(33,86,57,.05); }
   .record-element { background:var(--card-bg); } .homework-section { background:rgba(79,148,103,.07); } .reading-section { background:rgba(188,148,80,.08); }
@@ -650,7 +651,7 @@ tr:hover { background: var(--table-hover); }
 <div id="signupStep2" class="page hidden" style="max-width:720px; margin:40px auto;">
   <div class="page-header"><h2>📝 بيانات طلب الانضمام</h2><button class="btn btn-secondary" onclick="showPage('signupStep1')">رجوع</button></div>
   <div id="signupStep2Alert"></div>
-  <div class="alert alert-success" id="signupVerifiedNote">✅ تم التحقق من هويتك بنجاح.</div>
+  <div class="alert alert-success" id="signupVerifiedNote">✅ تم التحقق من هو��تك بنجاح.</div>
   <div class="form-row">
     <div class="form-group"><label>نوع الحساب *</label><select id="signupRole" onchange="syncSignupRelationshipField()"><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
     <div class="form-group"><label>الاسم بالكامل *</label><input type="text" id="signupName" placeholder="الاسم كما في البطاقة"></div>
@@ -729,7 +730,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكو   المطل  ب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
+    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكو   المطل  �� ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
@@ -883,7 +884,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>السن (يحسب تلقائياً)</label><input type="number" id="stAge" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري للطالب *</label><input type="password" id="stStudentPass" placeholder="رقم سري لتسجيل دخول الطالب"><label style="font-weight:normal; margin-top:6px; display:block;"><input type="checkbox" id="stSamePass" onchange="syncStudentPass('st')"> استخدام نفس الرقم السري لولي الأمر</label></div>
+    <div class="form-group"><label>الرقم السري للطالب *</label><input type="password" id="stStudentPass" placeholder="رقم سري لتسجيل دخول الطالب"><label style="font-weight:normal; margin-top:6px; display:block;"><input type="checkbox" id="stSamePass" onchange="syncStudentPass('st')"> ا��تخدام نفس الرقم السري لولي الأمر</label></div>
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
@@ -1127,6 +1128,14 @@ tr:hover { background: var(--table-hover); }
     </aside>
   </div>
   <div id="studentWelcome"></div>
+  <div class="faith-launch-grid" aria-label="أدوات الطالب الإسلامية">
+    <button class="faith-launch-card" onclick="showPage('studentQuranPage');initStudentQuran()"><span class="faith-launch-icon">📖</span><strong>القرآن الكريم</strong><small>اختر السورة وتابع التلاوة</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentAdhkarPage');initAdhkar()"><span class="faith-launch-icon">🤲</span><strong>الأدعية والأذكار</strong><small>أدعية يومية وأذكار موثوقة</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentQiblaPage');initQibla()"><span class="faith-launch-icon">🧭</span><strong>القبلة</strong><small>احسب الاتجاه من موقعك</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentHadithPage');initHadith()"><span class="faith-launch-icon">📚</span><strong>الأحاديث</strong><small>مختارات للقراءة والتعلم</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentTasbeehPage');initTasbeeh()"><span class="faith-launch-icon">📿</span><strong>التسبيح</strong><small>عداد بسيط وسهل الاستخدام</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentDashboard')"><span class="faith-launch-icon">✦</span><strong>المزيد</strong><small>استكشف أدوات المنصة</small></button>
+  </div>
   <div id="studentInfo"></div>
   <div id="studentDraftSection"></div>
   <div id="studentTasksSection"></div>
@@ -1155,7 +1164,9 @@ tr:hover { background: var(--table-hover); }
 <!-- المصحف والقبلة والأذكار للطالب -->
 <div id="studentQuranPage" class="page hidden"><div class="page-header"><h2>📖 المصحف الشريف</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><div class="form-row"><div class="form-group"><label for="studentSurahSelect">اختر السورة</label><select id="studentSurahSelect" onchange="openStudentSurah(this.value)"></select></div><div class="form-group"><label>التنقل بين السور</label><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="previousStudentSurah()">السورة السابقة</button><button class="btn btn-primary" onclick="nextStudentSurah()">السورة التالية</button></div></div></div><iframe id="studentQuranFrame" title="المصحف الشريف" src="/E-Quran-PDF.pdf#page=1" style="width:100%;height:75vh;border:1px solid var(--border);border-radius:12px;background:var(--card-bg)"></iframe></div>
 <div id="studentQiblaPage" class="page hidden"><div class="page-header"><h2>🧭 تحديد القبلة</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><div id="qiblaStatus" class="alert alert-info">اضغط تحديد موقعي للسماح بحساب اتجاه الكعبة.</div><div class="qibla-compass"><div id="qiblaNeedle">🕋</div></div><p id="qiblaDetails" style="text-align:center"></p><button class="btn btn-primary" onclick="initQibla(true)">تحديد موقعي واتجاه القبلة</button></div>
-<div id="studentAdhkarPage" class="page hidden"><div class="page-header"><h2>🤲 الأدعية والأحاديث</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><input id="adhkarSearch" class="form-control" placeholder="ابحث في الأدعية والأحاديث..." oninput="renderAdhkar(this.value)"><div id="adhkarList" class="adhkar-list"></div></div>
+<div id="studentAdhkarPage" class="page hidden"><div class="page-header"><h2>🤲 الأدعية والأذكار</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><input id="adhkarSearch" class="form-control" placeholder="ابحث في الأدعية والأذكار..." oninput="renderAdhkar(this.value)"><div id="adhkarList" class="adhkar-list"></div></div>
+<div id="studentHadithPage" class="page hidden"><div class="page-header"><h2>📚 الأحاديث النبوية</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><input id="hadithSearch" class="form-control" placeholder="ابحث في الأحاديث..." oninput="renderHadith(this.value)"><div id="hadithList" class="adhkar-list"></div></div>
+<div id="studentTasbeehPage" class="page hidden"><div class="page-header"><h2>📿 التسبيح</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div><div class="tasbeeh-panel"><div id="tasbeehCount">0</div><button class="tasbeeh-button" onclick="incrementTasbeeh()">سبّح</button><button class="btn btn-secondary" onclick="resetTasbeeh()">تصفير العداد</button></div></div>
 
 <!-- صندوق رسائل الطالب -->
 <div id="studentInbox" class="page hidden">
@@ -1227,6 +1238,14 @@ tr:hover { background: var(--table-hover); }
     </aside>
   </div>
   <div id="parentWelcome"></div>
+  <div class="faith-launch-grid" aria-label="أدوات ولي الأمر الإسلامية">
+    <button class="faith-launch-card" onclick="showPage('studentQuranPage');initStudentQuran()"><span class="faith-launch-icon">📖</span><strong>القرآن الكريم</strong><small>متابعة القراءة واختيار السور</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentAdhkarPage');initAdhkar()"><span class="faith-launch-icon">🤲</span><strong>الأدعية والأذكار</strong><small>محتوى إيماني للأسرة</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentQiblaPage');initQibla()"><span class="faith-launch-icon">🧭</span><strong>القبلة</strong><small>تحديد الاتجاه بدقة</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentHadithPage');initHadith()"><span class="faith-launch-icon">📚</span><strong>الأحاديث</strong><small>مختارات نافعة</small></button>
+    <button class="faith-launch-card" onclick="showPage('studentTasbeehPage');initTasbeeh()"><span class="faith-launch-icon">📿</span><strong>التسبيح</strong><small>عداد الأذكار</small></button>
+    <button class="faith-launch-card" onclick="showPage('parentChartPage')"><span class="faith-launch-icon">📊</span><strong>متابعة الأبناء</strong><small>التقدم والتقييمات</small></button>
+  </div>
   <div id="parentInfo"></div>
 </div>
 

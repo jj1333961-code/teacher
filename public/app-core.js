@@ -855,7 +855,7 @@ function submitSignupRequest() {
   const juz = document.getElementById('signupJuz').value;
   const surah = document.getElementById('signupSurah').value;
   const notes = document.getElementById('signupNotes').value.trim();
-  if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
+  if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم ا��قومي ورقم الهاتف مطلوبة</div>'; return; }
   if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هاتف صحيحًا مع اختيار كود الدولة</div>'; return; }
   if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يكون 14 رقم</div>'; return; }
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
@@ -1032,7 +1032,7 @@ async function toggleStudentIntakeRecord(){
     recorder.onstop=async function(){
       const blob=new Blob(studentIntakeChunks,{type:recorder.mimeType||mimeType||'audio/webm'});studentIntakeLastBlob=blob;studentIntakeChunks=[];
       try{
-        if(blob.size<1500)throw new Error('التسجيل قصير أو فارغ. تحدث بوضوح لعدة ثوانٍ ثم أعد المحاولة.');
+        if(blob.size<1500)throw new Error('التسجيل قصير أو ��ارغ. تحدث بوضوح لعدة ثوانٍ ثم أعد المحاولة.');
         if(blob.size>2800000)throw new Error('حجم التسجيل كبير جداً للإرسال الآمن. اجعله أقصر من دقيقة ونصف ثم أعد المحاولة.');
         if(preview.src&&preview.src.startsWith('blob:'))URL.revokeObjectURL(preview.src);
         preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='جاري فهم بيانات الطالب...';result.innerHTML='';
@@ -1917,7 +1917,7 @@ function updateHomeworkItem(idx, field, value) {
 }
 function renderHomeworkItems() {
   const container = document.getElementById('homeworkItems');
-  if(homeworkItems.length === 0) { container.innerHTML = '<p style="color:var(--text-light)">لا يجد واجبات مضافة. اضغط + لإضافة واجب</p>'; return; }
+  if(homeworkItems.length === 0) { container.innerHTML = '<p style="color:var(--text-light)">لا يجد واجبات مضافة. اضغط + لإضا��ة واجب</p>'; return; }
   let html = '';
   homeworkItems.forEach((item, i) => {
     html += '<div style="background:#fff; padding:12px; border-radius:8px; margin-bottom:8px; border:1px solid var(--border);">';
@@ -2430,7 +2430,7 @@ async function recordStudentExamAudio(i){
       stream.getTracks().forEach(t=>t.stop());if(asr)asr.stop();await new Promise(r=>setTimeout(r,400));
       const blob=new Blob(chunks,{type:'audio/webm'});const dataUrl=await blobToDataURL(blob);const transcript=asr?(asr.text||''):'';preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='🤖 جاري التحقق من البصمة والمحتوى...';
       const identity=await verifyVoiceIdentity(blob,currentUser);const match=identity?identity.pct:null;
-      if(match!==null && (match<VOICE_MATCH_THRESHOLD || identity.sameSpeaker===false)){status.textContent='❌ البصمة غير مطابقة — لم يُحفظ التسجيل';aiBox.innerHTML='<div class="alert alert-danger">🚫 هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل بصوت الطالب نفسه.</div>';showToast('❌ التسجيل غير مطابق للبصمة ولم يتم حفظه','error');studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;btn.dataset.recording='false';btn.classList.remove('recording');return;}
+      if(match!==null && (match<VOICE_MATCH_THRESHOLD || identity.sameSpeaker===false)){status.textContent='❌ البصمة غير مطابقة — لم يُحفظ ��لتسجيل';aiBox.innerHTML='<div class="alert alert-danger">🚫 هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل بصوت الطالب نفسه.</div>';showToast('❌ التسجيل غير مطابق للبصمة ولم يتم حفظه','error');studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;btn.dataset.recording='false';btn.classList.remove('recording');return;}
       // تحليل الصوت على الخادم (تفريغ حقيقي + تصحيح) مع احتياطي المتصفح
       let aiResult=await serverRecitationAnalysis(blob,{surah:q.surah,from:q.from,to:q.to});
       let usedTranscript=transcript;
@@ -2458,7 +2458,7 @@ function renderParentExamResults(s){
   let arr=s.examResults||[];if(!arr.length)return '';
   let h='<div class="page" style="margin-top:15px;border-right:5px solid var(--info)"><h4 style="color:var(--info)">🧪 نتائج الاختبارات</h4>';
   arr.slice().reverse().forEach(ex=>{h+='<div class="history-element"><div class="history-element-name">📅 '+escapeHtml(ex.date||'')+'</div><div class="history-element-details"><div class="history-detail"><strong>الدرجة:</strong> '+ex.score+'/'+ex.maxScore+'</div><div class="history-detail"><strong>الوقت:</strong> '+ex.totalDurationSeconds+' ثانية</div></div>';
-    if(ex.answers&&ex.questions){h+='<details style="margin-top:10px"><summary>ءء️ عرءء إجابات الطالب</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{},r=a.aiResult||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br><span>إجابة الطالب: '+escapeHtml(a.answer||'—')+'</span><br><span>النتيجة: '+(a.score>=1?'✅ كاملة':a.score===.5?'🟡 نصف درجة':'❌ غير صحيحة')+'</span>'+(r.reason?'<br><span>تقرير AI: '+escapeHtml(r.reason)+'</span>':'');if(q.type==='audio'&&a.audioData&&a.audioShareWithParent!==false){h+='<div style="margin-top:8px">🎙️ التسجيل: <audio controls src="'+a.audioData+'" style="height:38px"></audio></div>'}h+='</div>'});h+='</details>'}h+='</div>'});
+    if(ex.answers&&ex.questions){h+='<details style="margin-top:10px"><summary>ءء️ عرءء إجابات الطالب</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{},r=a.aiResult||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br><span>إجابة الطالب: '+escapeHtml(a.answer||'—')+'</span><br><span>النتيجة: '+(a.score>=1?'✅ كاملة':a.score===.5?'🟡 نصف درجة':'❌ غير صحيحة')+'</span>'+(r.reason?'<br><span>تقرير AI: '+escapeHtml(r.reason)+'</span>':'');if(q.type==='audio'&&a.audioData&&a.audioShareWithParent!==false){h+='<div style="margin-top:8px">🎙️ ��لتسجيل: <audio controls src="'+a.audioData+'" style="height:38px"></audio></div>'}h+='</div>'});h+='</details>'}h+='</div>'});
   return h+'</div>';
 }
 
@@ -4341,7 +4341,7 @@ function toggleInlineAyat(boxId, surah, from, to) {
 }
 
 
-const STUDENT_SURAH_NAMES=['الفاتحة','البقرة','آل عمران','النساء','المائدة','الأنعام','الأعراف','الأنفال','التوبة','يونس','هود','يوسف','الرعد','إبراهيم','الحجر','النحل','الإسراء','الكهف','مريم','طه','الأنبياء','الحج','المؤمنون','النور','الفرقان','الشعراء','النمل','القصص','العنكبوت','الروم','لقمان','السجدة','الأحزاب','سبأ','فاطر','يس','الصافات','ص','الزمر','غافر','فصلت','الشورى','الزخرف','الدخان','الجاثية','الأحقاف','محمد','الفتح','الحجرات','ق','الذاريات','الطور','النجم','القمر','الرحمن','الواقعة','الحديد','المجادلة','الحشر','الممتحنة','الصف','الجمعة','المنافقون','التغابن','الطلاق','التحريم','الملك','القلم','الحاقة','المعارج','نوح','الجن','المزمل','المدثر','القيامة','الإنسان','المرسلات','النبأ','النازعات','عبس','التكوير','الانفطار','المطففين','الانشقاق','البروج','الطارق','الأعلى','الغاشية','الفجر','البلد','الشمس','الليل','الضحى','الشرح','التين','العلق','القدر','البينة','الزلزلة','العاديات','القارعة','التكاثر','العصر','الهمزة','الفيل','قريش','الماعون','الكوثر','الكافرون','النصر','المسد','الإخلاص','الفلق','الناس'];
+const STUDENT_SURAH_NAMES=['الفاتحة','البقرة','آل عمران','النساء','المائدة','الأنعام','الأعراف','الأنفال','التوبة','يونس','هود','يوسف','الرعد','إبراهيم','الحجر','النحل','الإسراء','الكهف','مريم','طه','الأنبياء','الحج','المؤمنون','النور','الفرقان','الشعراء','النمل','القصص','العنكبوت','الروم','لقمان','السجدة','الأحزاب','سبأ','فاطر','يس','الصافات','ص','الزمر','غافر','فصلت','الشورى','الزخرف','الدخان','الجاثية','الأحقاف','محمد','الفتح','الحجرات','ق','الذاريات','الطور','النجم','ا��قمر','الرحمن','الواقعة','الحديد','المجادلة','الحشر','الممتحنة','الصف','الجمعة','المنافقون','التغابن','الطلاق','التحريم','الملك','القلم','الحاقة','المعارج','نوح','الجن','المزمل','المدثر','القيامة','الإنسان','المرسلات','النبأ','النازعات','عبس','التكوير','الانفطار','المطففين','الانشقاق','البروج','الطارق','الأعلى','الغاشية','الفجر','البلد','الشمس','الليل','الضحى','الشرح','التين','العلق','القدر','البينة','الزلزلة','العاديات','القارعة','التكاثر','العصر','الهمزة','الفيل','قريش','الماعون','الكوثر','الكافرون','النصر','المسد','الإخلاص','الفلق','الناس'];
 const STUDENT_SURAH_PAGES=[1,2,50,77,106,128,151,177,187,208,221,235,249,255,262,267,282,293,305,312,322,332,342,350,359,367,377,385,396,404,411,415,418,428,434,440,446,453,458,467,477,483,489,496,499,502,507,511,515,518,520,523,526,528,531,534,537,539,542,544,546,548,550,552,553,555,556,558,560,562,564,566,568,570,572,574,575,577,578,580,582,583,585,586,587,589,590,591,592,593,594,595,596,597,598,599,600,601,602,603,604];
 let studentSurahIndex=0;
 function initStudentQuran(){const select=document.getElementById('studentSurahSelect');if(!select)return;if(!select.options.length)select.innerHTML=STUDENT_SURAH_NAMES.map((n,i)=>'<option value="'+i+'">'+(i+1)+' — '+n+'</option>').join('');select.value=String(studentSurahIndex);openStudentSurah(studentSurahIndex)}
@@ -4350,6 +4350,9 @@ function previousStudentSurah(){openStudentSurah(studentSurahIndex-1)} function 
 function initQibla(){const status=document.getElementById('qiblaStatus'),details=document.getElementById('qiblaDetails');if(!navigator.geolocation){status.textContent='تحديد الموقع غير مدعوم في هذا المتصفح.';return}status.textContent='جارٍ تحديد موقعك بدقة لحساب اتجاه الكعبة...';navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lon=pos.coords.longitude,rad=Math.PI/180;const bearing=(Math.atan2(Math.sin((21.4225-lat)*rad),Math.cos(lat*rad)*Math.tan(21.4225*rad)-Math.sin(lat*rad)*Math.cos((21.4225-lat)*rad))*180/Math.PI+360)%360;const needle=document.getElementById('qiblaNeedle');if(needle)needle.style.transform='rotate('+bearing+'deg)';status.textContent='تم تحديد اتجاه القبلة حسب موقعك الحالي.';details.textContent='اتجاه الكعبة: '+bearing.toFixed(1)+'° من الشمال — دقة الموقع: '+Math.round(pos.coords.accuracy)+' متر';},()=>{status.textContent='تعذر تحديد الموقع. فعّل إذن الموقع ثم أعد المحاولة.'},{enableHighAccuracy:true,timeout:15000,maximumAge:30000})}
 const STUDENT_ADHKAR=[['دعاء الاستفتاح','اللهم باعد بيني وبين خطاياي كما باعدت بين المشرق والمغرب، اللهم نقني من خطاياي كما ينقى الثوب الأبيض من الدنس.'],['سيد الاستغفار','اللهم أنت ربي لا إله إلا أنت، خلقتني وأنا عبدك وأنا على عهدك ووعدك ما استطعت.'],['دعاء العلم','رب زدني علماً.'],['دعاء الوالدين','رب ارحمهما كما ربياني صغيراً.'],['دعاء الكرب','لا إله إلا الله العظيم الحليم، لا إله إلا الله رب العرش العظيم.'],['حديث نبوي','إنما الأعمال بالنيات، وإنما لكل امرئ ما نوى.'],['حديث نبوي','من لا يرحم لا يُرحم.'],['حديث نبوي','المسلم من سلم المسلمون من لسانه ويده.'],['حديث نبوي','خيركم من تعلم القرآن وعلمه.']];
 function initAdhkar(){renderAdhkar('')} function renderAdhkar(query){const box=document.getElementById('adhkarList');if(!box)return;const q=String(query||'').trim();box.innerHTML=STUDENT_ADHKAR.filter(x=>!q||(x[0]+' '+x[1]).includes(q)).map(x=>'<article class="adhkar-card"><strong>'+x[0]+'</strong><div>'+x[1]+'</div></article>').join('')||'<div class="alert alert-info">لا توجد نتائج مطابقة.</div>'}
+const STUDENT_HADITH=[['الأعمال بالنيات','إنما الأعمال بالنيات، وإنما لكل امرئ ما نوى.'],['الرحمة','من لا يَرحم لا يُرحم.'],['القرآن','خيركم من تعلم القرآن وعلمه.'],['الأخلاق','ما من شيء أثقل في ميزان المؤمن يوم القيامة من حسن الخلق.'],['الصدق','عليكم بالصدق، فإن الصدق يهدي إلى البر.'],['الرفق','إن الرفق لا يكون في شيء إلا زانه، ولا ينزع من شيء إلا شانه.'],['العلم','من سلك طريقاً يلتمس فيه علماً سهل الله له به طريقاً إلى الجنة.'],['الذكر','مثل الذي يذكر ربه والذي لا يذكر ربه مثل الحي والميت.'],['الابتسامة','تبسمك في وجه أخيك لك صدقة.'],['الجار','من كان يؤمن بالله واليوم الآخر فليكرم جاره.'],['الوالدان','رضا الرب في رضا الوالد، وسخط الرب في سخط الوالد.'],['التعاون','والله في عون العبد ما كان العبد في عون أخيه.']];
+function initHadith(){renderHadith('')} function renderHadith(query){const box=document.getElementById('hadithList');if(!box)return;const q=String(query||'').trim();box.innerHTML=STUDENT_HADITH.filter(x=>!q||(x[0]+' '+x[1]).includes(q)).map(x=>'<article class="adhkar-card"><strong>'+x[0]+'</strong><div>'+x[1]+'</div><small>رواه البخاري أو مسلم بحسب الرواية</small></article>').join('')||'<div class="alert alert-info">لا توجد نتائج مطابقة.</div>'}
+let tasbeehCount=0;function initTasbeeh(){const el=document.getElementById('tasbeehCount');if(el)el.textContent=String(tasbeehCount)}function incrementTasbeeh(){tasbeehCount+=1;initTasbeeh()}function resetTasbeeh(){tasbeehCount=0;initTasbeeh()}
 
 function renderStudentChart() {
   const s = currentUser;
@@ -4504,7 +4507,7 @@ function renderParentDashboard() {
       html += '<div style="margin-top:15px;"><h5 style="color:var(--primary); margin-bottom:10px;">📝 المهام الحالية</h5>';
       s.tasks.forEach(task => {
         const status = task.approved ? '✅ تمت الموافقة' : (task.rejected ? '❌ تم الرفض' : '⏳ قيد لانتظار');
-        html += '<p><strong>'+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '📖 قراءة' : '🎙️ تسجيل صوتي')+':</strong> '+(task.name || task.text || '')+' — '+status+'</p>';
+        html += '<p><strong>'+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '��� قراءة' : '🎙️ تسجيل صوتي')+':</strong> '+(task.name || task.text || '')+' — '+status+'</p>';
       });
       html += '</div>';
     }
@@ -4975,7 +4978,7 @@ function generateAIResponse(text, student) {
   }
   // التقدم عبر الجلسات
   if(has('تقد','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
-    if(finalizedSessions.length < 2) return ' أحتاج تسميعءءن نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
+    if(finalizedSessions.length < 2) return ' أحتاج تسميعءءن نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بد��ة.';
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
