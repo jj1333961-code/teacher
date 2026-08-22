@@ -100,7 +100,7 @@ const LANG_DICT = {
   'عدد الطلاب': 'Students',
   'عدد المعلمين': 'Teachers',
   'المسؤول': 'Admin',
-  'المسؤولون': 'Admins',
+  'ا��مسؤولون': 'Admins',
   'تسميعات نشطة': 'Active recitations',
   '➕ إضافة طالب جديد': '➕ Add New Student',
   '📚 المواد والمعلمين': '📚 Subjects & Teachers',
@@ -255,7 +255,7 @@ let currentRecordJuz = 0;
 
 // ====== PROCTORING: camera, gaze approximation and continuous touch ======
 const proctor={stream:null,detector:null,detectorType:'',faceMeshResults:null,analyzing:false,scanTimer:null,active:false,context:null,onReady:null,warningAt:0,touchWarningAt:0,lastGoodAt:0,stableSince:0,holding:false,touches:new Set(),baseline:null,gazeSamples:[],eyeSamples:[],screenWidth:0,screenHeight:0,cancelled:false,blocked:false,violations:0,leaveAt:0};
-function getProctorSettings(){const ctx=proctor.context||{};let global={};try{global=JSON.parse(localStorage.getItem('thimar_global_proctor')||'{}')}catch(e){}const source=Object.keys(global).length?global:ctx;return{touchGraceMs:Math.max(1,parseInt(source.touchGrace||source.touchGraceMs/1000)||12)*1000,gazeGraceMs:Math.max(3,parseInt(source.gazeGrace||source.gazeGraceMs/1000)||12)*1000,leaveGraceMs:Math.max(1,parseInt(source.leaveGrace||source.leaveGraceMs/1000)||5)*1000,maxViolations:Math.max(1,parseInt(source.maxViolations)||2),fullscreen:source.fullscreen===true,focus:source.focus!==false,touch:source.touch!==false,autoRestore:source.autoRestore!==false,enabled:source.enabled!==false,aiAnalysis:source.aiAnalysis!==false,lockMode:source.lockMode||'theme',requireFace:source.requireFace!==false,requireEyes:source.requireEyes!==false,lightMin:Math.max(10,parseInt(source.lightMin)||42),lightMax:Math.min(255,parseInt(source.lightMax)||240)}}
+function getProctorSettings(){const source=proctor.context?.proctorConfig||proctor.context||{};return{touchGraceMs:Math.max(1,parseInt(source.touchGrace||source.touchGraceMs/1000)||12)*1000,gazeGraceMs:Math.max(3,parseInt(source.gazeGrace||source.gazeGraceMs/1000)||12)*1000,leaveGraceMs:Math.max(1,parseInt(source.leaveGrace||source.leaveGraceMs/1000)||5)*1000,maxViolations:Math.max(1,parseInt(source.maxViolations)||2),fullscreen:source.fullscreen===true,focus:source.focus!==false,touch:source.touch!==false,autoRestore:source.autoRestore!==false,enabled:source.enabled!==false,aiAnalysis:source.aiAnalysis!==false,lockMode:source.lockMode||'theme',requireFace:source.requireFace!==false,requireEyes:source.requireEyes!==false,lightMin:Math.max(10,parseInt(source.lightMin)||42),lightMax:Math.min(255,parseInt(source.lightMax)||240)}}
 function setProctorCheck(id,ok,text){const el=document.getElementById(id);if(!el)return;el.className='proctor-check '+(ok?'ok':'bad');el.textContent=(ok?'✓ ':'! ')+text}
 function isTouchDevice(){return 'ontouchstart' in window||navigator.maxTouchPoints>0}
 function proctorTaskLabel(ctx){return ctx&&ctx.type==='exam'?'الاختبار':'مهمة '+(ctx&&ctx.type==='reading'?'القراءة':'التسميع')}
@@ -711,7 +711,7 @@ async function renderGoogleButton() {
   let attempts = 0;
   const retry = function() {
     if(render() || ++attempts >= 20) {
-      if(attempts >= 20 && box) box.innerHTML = '<div class="alert alert-warning">تعذر تحميل واجهة اختيار الحسابات في هذا المتصفح. اضغط للمتابعة عبر Google OAuth الآمن.</div><button class="btn btn-primary" type="button" style="width:100%" onclick="window.location.href=\'/api/auth/google?prompt=select_account\'">🔵 المتابعة باستخدام Google</button>';
+      if(attempts >= 20 && box) box.innerHTML = '<div class="alert alert-warning">تعذر تحميل واجهة اختيار الحسابات في هذا المتصفح. اضغط للمتابعة عبر Google OAuth ��لآمن.</div><button class="btn btn-primary" type="button" style="width:100%" onclick="window.location.href=\'/api/auth/google?prompt=select_account\'">🔵 المتابعة باستخدام Google</button>';
       return;
     }
     setTimeout(retry, 250);
@@ -855,7 +855,7 @@ function submitSignupRequest() {
   const surah = document.getElementById('signupSurah').value;
   const notes = document.getElementById('signupNotes').value.trim();
   if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
-  if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هات�� صحيحًا مع اختيار كود الدولة</div>'; return; }
+  if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">��� أدخل رقم هات�� صحيحًا مع اختيار كود الدولة</div>'; return; }
   if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يكون 14 رقم</div>'; return; }
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
   const time = new Date().toLocaleString('ar-EG');
@@ -2265,7 +2265,7 @@ function renderExamQuestions(){
     '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآيات محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
   if(q.type==='mcq'||q.type==='truefalse')h+='<div class="form-group"><label>الاختيارات (كل اختيار في سطر)</label><textarea rows="4" onchange="updateExamQuestion('+i+',\'options\',this.value.split(/\\n/).map(x=>x.trim()).filter(Boolean))">'+escapeHtml((q.options||[]).join('\n'))+'</textarea></div><div class="form-group"><label>الإجابة الصحيحة — لا تظهر للطالب</label><input value="'+escapeHtml(q.correct||'')+'" onchange="updateExamQuestion('+i+',\'correct\',this.value)"></div>';
   else if(q.type==='complete')h+='<div class="form-group"><label>الإجابة المرجعية — لا تظهر للطالب</label><textarea rows="3" onchange="updateExamQuestion('+i+',\'correct\',this.value)">'+escapeHtml(q.correct||'')+'</textarea></div>';
-  else h+='<div class="alert alert-info">سيتم التحقق من بصمة الطالب أو��اً، ثم من مح��وى التلاوة. إذا كانت البصمة غير مطابقة فلن يُحفظ التسجيل.</div>';
+  else h+='<div class="alert alert-info">سيتم التحق�� من بصمة الطالب أو��اً، ثم من مح��وى التلاوة. إذا كانت البصمة غير مطابقة فلن يُحفظ التسجيل.</div>';
   h+='</div>';c.innerHTML=h;
 }
 function showExamAlert(t,type){const e=document.getElementById('examBuilderAlert');if(e)e.innerHTML='<div class="alert alert-'+(type||'info')+'">'+t+'</div>'}
@@ -3892,7 +3892,7 @@ function transcriptMatchPercent(transcript, expected) {
   return Math.round((2 * precision * recall / (precision + recall)) * 100);
 }
 
-// تخمين السورة التي قرأها الطالب فعلياً (عند عدم المطابقة)
+// تخمين السورة التي قرأها الطالب فعلياً (عند ع��م المطابقة)
 async function guessSpokenSurah(transcript, exclude) {
   try {
     const words = normalizeAr(transcript).split(' ').filter(Boolean);
@@ -4989,7 +4989,7 @@ function generateAIResponse(text, student) {
   }
   // نصائح
   if(has('نصفحة','نصائح','ساعدني','مساعدة','انسى','أنسى','نسيت','صعب')) {
-    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف النظر.<br>3. افهم معنى ا��آية قبل حفظها.<br>4. لا تنتل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
+    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أضعاف الن��ر.<br>3. افهم معنى ا��آية قبل حفظها.<br>4. لا تنتل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
   }
   // تحفيز
   if(has('تحفيز','همة','ملل','تعبان','زهقن','احبت','أحبطت')) {
