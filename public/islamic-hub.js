@@ -129,6 +129,7 @@
       '<div class="isl-prayer-time" data-isl-ptime>--:--</div>' +
       '<div class="isl-prayer-meta" data-isl-pmeta></div>' +
       '<div class="isl-prayer-countdown" data-isl-pcd></div>' +
+      '<div class="isl-prayer-strip" data-isl-pstrip></div>' +
       '<button type="button" class="isl-prayer-btn" data-isl-open="times">' +
       "<span>عرض جميع المواقيت</span><span aria-hidden=\"true\">&#8249;</span></button>" +
       "</div></div>"
@@ -548,19 +549,38 @@
       var timeEl = card.querySelector("[data-isl-ptime]");
       var metaEl = card.querySelector("[data-isl-pmeta]");
       var cdEl = card.querySelector("[data-isl-pcd]");
+      var stripEl = card.querySelector("[data-isl-pstrip]");
 
       if (!state.next) {
         nameEl.textContent = "مواقيت الصلاة";
         timeEl.innerHTML = "--:--";
         metaEl.textContent = greg + (hijri ? " • " + hijri : "");
-        cdEl.textContent = "اضغط لتحديد موقعك وعرض المواقيت";
+        cdEl.textContent = "جاري تحديد موقعك تلقائيًا…";
+        if (stripEl) stripEl.innerHTML = "";
         return;
       }
       var f = fmt12(state.next.time);
-      nameEl.textContent = state.next.name;
+      nameEl.textContent = "الصلاة القادمة: " + state.next.name;
       timeEl.innerHTML = esc(f.t) + "<small>" + f.mer + "</small>";
-      metaEl.textContent = hijri + (state.loc && state.loc.label ? " • " + state.loc.label : "");
+      metaEl.innerHTML =
+        esc(greg) +
+        (hijri ? '<span class="isl-dot">•</span>' + esc(hijri) : "") +
+        (state.loc && state.loc.label ? '<span class="isl-dot">•</span>' + esc(state.loc.label) : "");
       cdEl.textContent = "متبقٍ " + remainText(state.next.at);
+
+      if (stripEl) {
+        stripEl.innerHTML = state.timings
+          ? PRAYER_KEYS.filter(function (p) { return !p.info; }).map(function (p) {
+              var ff = fmt12(state.timings[p.key]);
+              var isNext = state.next && state.next.key === p.key;
+              return (
+                '<span class="isl-strip-item' + (isNext ? " is-next" : "") + '">' +
+                '<b>' + esc(p.name) + "</b>" +
+                "<i>" + ff.t + " " + ff.mer + "</i></span>"
+              );
+            }).join("")
+          : "";
+      }
     });
   }
 
@@ -802,6 +822,26 @@
     if (id === "qibla") return openQibla();
   }
 
+  /* ---------------- تحديد الموقع تلقائيًا ---------------- */
+  function autoLocate() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      async function (pos) {
+        try {
+          var lat = pos.coords.latitude, lng = pos.coords.longitude;
+          var data = await fetchTimingsByCoords(lat, lng);
+          applyTimings(data, { lat: lat, lng: lng, label: "موقعي الحالي", manual: false });
+          // حدّث نافذة المواقيت إن كانت مفتوحة
+          var body = document.querySelector("[data-times-body]");
+          if (body) renderTimesBody(body);
+          console.log("[v0] auto-location resolved");
+        } catch (e) { console.log("[v0] auto timings failed"); }
+      },
+      function () { console.log("[v0] auto-location denied"); },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 600000 }
+    );
+  }
+
   /* ---------------- التهيئة ---------------- */
   async function boot() {
     mountAll();
@@ -812,6 +852,11 @@
           : await fetchTimingsByCoords(state.loc.lat, state.loc.lng);
         applyTimings(data, null);
       } catch (e) { console.log("[v0] timings restore failed"); }
+      // حدّث الموقع تلقائيًا في الخلفية إن كان الموقع محفوظًا عبر GPS
+      if (!state.loc.manual) autoLocate();
+    } else {
+      // لا يوجد موقع محفوظ: حدّد موقع المستخدم تلقائيًا
+      autoLocate();
     }
     startTick();
   }
