@@ -578,6 +578,32 @@ tr:hover { background: var(--table-hover); }
   html::-webkit-scrollbar, body::-webkit-scrollbar { width:0; height:0; display:none; }
   body { -ms-overflow-style:none; }
   #lockScreen .btn:disabled { opacity:.75; cursor:wait; }
+  /* ثمار — لوحة داكنة بلمسات الذهب */
+  :root { --bg:linear-gradient(145deg,#e8eee7 0%,#d8e4dc 100%); --primary:#155044; --primary-hover:#0d3b33; --card-bg:#fffaf0; --border:#d9d9c9; --shadow:0 14px 34px rgba(22,66,52,.12); }
+  [data-theme="dark"] { --bg:linear-gradient(145deg,#061e22 0%,#0d302b 100%); --card-bg:#102b29; --border:#2d5148; --text:#f6f0e5; --text-light:#b9c8bd; --input-bg:#163733; --primary:#d3aa5b; --primary-hover:#e1bd73; }
+  * { font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; }
+  body { letter-spacing:-.01em; }
+  .container { padding-bottom:120px; }
+  .page { border-radius:24px; box-shadow:var(--shadow); }
+  .page-header { border-bottom:1px solid var(--border); border-radius:18px; }
+  #adminDashboard .page-header,#studentDashboard .page-header,#parentDashboard .page-header { color:#f6f0e5; background:linear-gradient(135deg,#082d2c,#155044); border:0; border-radius:24px; padding:24px; box-shadow:0 15px 30px rgba(3,28,30,.2); }
+  #adminDashboard .page-header h2,#studentDashboard .page-header h2,#parentDashboard .page-header h2 { color:#f6f0e5; font-weight:800; }
+  .card,.menu-btn,.stat-box,.student-work-card { border-radius:20px; }
+  .menu-btn { min-height:118px; padding:18px; box-shadow:0 8px 20px rgba(22,66,52,.08); }
+  .menu-btn .icon,.menu-btn span:first-child { color:var(--primary); }
+  .stat-box { background:linear-gradient(145deg,#155044,#246c59) !important; border:1px solid rgba(211,170,91,.3); }
+  .stat-box:nth-child(2){background:linear-gradient(145deg,#1d5c50,#3b8067)!important}.stat-box:nth-child(3){background:linear-gradient(145deg,#24555a,#3c7778)!important}.stat-box:nth-child(4){background:linear-gradient(145deg,#aa8037,#d3aa5b)!important}
+  .btn { border-radius:24px; font-family:inherit; font-weight:700; }
+  .alert,.badge,.form-group input,.form-group select,.form-group textarea,.search-box input { border-radius:16px; }
+  .side-fab { display:none !important; }
+  #bottomNav { position:fixed; inset-inline:12px; bottom:12px; z-index:9000; display:none; align-items:center; justify-content:space-around; gap:4px; padding:10px 8px calc(10px + env(safe-area-inset-bottom)); background:rgba(255,250,240,.96); border:1px solid var(--border); border-radius:24px; box-shadow:0 14px 34px rgba(3,28,30,.24); backdrop-filter:blur(14px); }
+  [data-theme="dark"] #bottomNav { background:rgba(11,39,36,.96); }
+  #bottomNav.is-visible { display:flex; }
+  .bottom-nav-item { min-width:56px; flex:1; border:0; background:transparent; color:var(--text-light); border-radius:16px; padding:7px 4px; font-family:inherit; font-size:.66rem; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .bottom-nav-item strong { font-size:1.2rem; line-height:1; font-weight:400; }
+  .bottom-nav-item.active { color:var(--primary); font-weight:800; }
+  .bottom-nav-item.active strong { width:40px; height:32px; display:grid; place-items:center; border-radius:18px; background:var(--gold,#d3aa5b); color:#173a31; transform:translateY(-13px); box-shadow:0 8px 16px rgba(211,170,91,.28); }
+  @media(max-width:620px){ #bottomNav{inset-inline:8px;bottom:8px}.container{padding-bottom:132px}#adminDashboard .page-header,#studentDashboard .page-header,#parentDashboard .page-header{padding:19px} }
   </style>
 </head>
 <body>
@@ -734,7 +760,7 @@ tr:hover { background: var(--table-hover); }
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
   <div class="form-group">
     <label>طلب التطوير</label>
-    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر��د إضافته أو تعديله ف الموقع..."></textarea>
+    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر����د إضافته أو تعديله ف الموقع..."></textarea>
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
@@ -1348,7 +1374,7 @@ function getAIModelLabel(){return 'Gemini / Groq';}
 function showToast(msg, type){
   if(!type){
     var t = String(msg);
-    type = (/(❌||فشل|طأ|لا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
+    type = (/(❌||فشل|طأ|��ا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
   }
   var box = document.getElementById('toastBox');
   if(!box){ box = document.createElement('div'); box.id='toastBox'; document.body.appendChild(box); }
@@ -1506,6 +1532,7 @@ window.alert = function(m){ showToast(m); };
     if(e.key === 'Escape') closeAllSidebars();
   });
 })();
-</script>
+ </script>
+ <nav id="bottomNav" aria-label="التنقل الرئيسي"></nav>
  </body>
 </html>
