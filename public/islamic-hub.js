@@ -319,7 +319,9 @@
     try {
       var page = await pdfDoc.getPage(pdfPage);
       var base = page.getViewport({ scale: 1 });
-      var scale = Math.min(window.innerWidth / base.width, window.innerHeight / base.height) * mushafZoom;
+      var availableWidth = Math.max(1, window.innerWidth - 8);
+      var availableHeight = Math.max(1, window.innerHeight - 8);
+      var scale = Math.min(availableWidth / base.width, availableHeight / base.height) * mushafZoom;
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       var viewport = page.getViewport({ scale: scale * dpr });
       mushafCanvas.width = Math.floor(viewport.width);
@@ -353,7 +355,9 @@
     mushaf.addEventListener("touchmove", function (e) {
       if (e.touches.length !== 2 || !pinchStart) return;
       var distance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      mushafZoom = Math.min(2.5, Math.max(1, zoomStart * distance / pinchStart));
+      var nextZoom = Math.min(2.5, Math.max(1, zoomStart * distance / pinchStart));
+      if (Math.abs(nextZoom - mushafZoom) < 0.02) return;
+      mushafZoom = nextZoom;
       renderPage(pdfPage);
     }, { passive: true });
 
@@ -705,7 +709,7 @@
   function askNotify() {
     if (!window.Notification) return toast("التنبيهات غير مدعومة في هذا المتصفح", "error");
     Notification.requestPermission().then(function (p) {
-      toast(p === "granted" ? "تم تشغيل تنبيه الصلاة" : "لم يتم السماح بالتنبيهات", p === "granted" ? "success" : "error");
+      toast(p === "granted" ? "تم ت��غيل تنبيه الصلاة" : "لم يتم السماح بالتنبيهات", p === "granted" ? "success" : "error");
     });
   }
 

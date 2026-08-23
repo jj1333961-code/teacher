@@ -619,10 +619,16 @@ tr:hover { background: var(--table-hover); }
   .thimar-orn:last-of-type { transform:scaleX(-1); }
   .thimar-ayah { font-family:'Amiri',serif; color:var(--thimar-ink); font-size:clamp(1rem,4.6vw,1.35rem); line-height:2.1; text-wrap:balance; }
   .thimar-ayah-ref { display:block; color:var(--thimar-gold); font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-size:clamp(.75rem,3.2vw,.9rem); margin-top:10px; }
-  .thimar-quran { width:min(100%,340px); height:auto; display:block; margin:clamp(6px,2vw,14px) auto clamp(10px,3vw,18px); filter:var(--thimar-quran-glow);
-    -webkit-mask-image:radial-gradient(105% 88% at 50% 44%, #000 34%, rgba(0,0,0,.55) 62%, transparent 88%);
-    mask-image:radial-gradient(105% 88% at 50% 44%, #000 34%, rgba(0,0,0,.55) 62%, transparent 88%);
-  }
+  .thimar-quran { width:min(100%,370px); height:auto; display:block; margin:clamp(6px,2vw,14px) auto clamp(10px,3vw,18px); filter:var(--thimar-quran-glow); border-radius:28px; mix-blend-mode:screen; opacity:.94; transform:translateY(2px); }
+  .thimar-inner { isolation:isolate; }
+  .thimar-quran-wrap { position:relative; width:min(100%,370px); margin:clamp(6px,2vw,14px) auto clamp(10px,3vw,18px); }
+  .thimar-quran-wrap::before, .thimar-quran-wrap::after { content:''; position:absolute; pointer-events:none; z-index:-1; }
+  .thimar-quran-wrap::before { inset:8% -10% 4%; border-radius:50%; background:radial-gradient(ellipse, rgba(177,214,194,.34), transparent 70%); filter:blur(12px); }
+  .thimar-quran-wrap::after { inset:auto 8% -4%; height:24%; border-radius:50%; background:rgba(8,42,34,.34); filter:blur(16px); }
+  .thimar-quran { width:100%; margin:0; }
+  .thimar-cloud { position:absolute; z-index:1; width:34%; height:18%; opacity:.58; filter:blur(.2px); pointer-events:none; background:radial-gradient(ellipse at 50% 70%, rgba(220,239,226,.68) 0 28%, rgba(220,239,226,.3) 46%, transparent 72%); }
+  .thimar-cloud-left { left:-7%; bottom:16%; transform:scaleX(-1); }
+  .thimar-cloud-right { right:-7%; top:18%; }
   #lockScreen.thimar-auth #unifiedLoginAlert { width:100%; }
   #lockScreen.thimar-auth .alert { background:var(--thimar-input-bg); border:1px solid var(--thimar-gold-line); color:var(--thimar-ink); text-align:center; }
   #lockScreen.thimar-auth .alert-danger { background:rgba(181,79,79,.22); border-color:rgba(233,150,150,.45); color:#ffdede; }
@@ -672,7 +678,7 @@ tr:hover { background: var(--table-hover); }
     <button class="lang-toggle" type="button" id="langToggleBtn" onclick="toggleLang()" title="تغيير اللغة / Change language" aria-label="تغيير اللغة / Change language">EN</button>
   </div>
   <div id="examGenerationOverlay" class="exam-generation-overlay hidden" role="status" aria-live="polite" aria-busy="true">
-    <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من النطاق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
+    <div class="exam-generation-card"><div class="exam-generation-mark" aria-hidden="true">AI</div><strong id="examGenerationTitle">جاري تجهيز الاختبار</strong><span id="examGenerationStage">جلب الآيات من الن��اق المحدد...</span><div class="exam-generation-progress"><span id="examGenerationBar"></span></div><span id="examGenerationEta">الوقت المتبقي التقريبي: 01:30</span></div>
   </div>
   <div id="quranImageLightbox" class="quran-lightbox hidden" role="dialog" aria-modal="true" aria-label="تكبير صورة السؤال" onclick="if(event.target===this)closeQuranImage()"><button class="btn btn-secondary quran-lightbox-close" onclick="closeQuranImage()">إغلاق</button><img id="quranImageLightboxImg" alt="صورة السؤال القرآني بحجم كبير"></div>
 
@@ -707,7 +713,11 @@ tr:hover { background: var(--table-hover); }
       <span class="thimar-orn" aria-hidden="true">❁</span>
     </div>
 
-    <img class="thimar-quran" src="/images/thimar-quran-rehl.png" alt="مصحف مفتوح على حامل خشبي">
+    <div class="thimar-quran-wrap">
+  <span class="thimar-cloud thimar-cloud-left" aria-hidden="true"></span>
+  <img class="thimar-quran" src="/images/thimar-quran-rehl.png" alt="مصحف مفتوح على حامل خشبي">
+  <span class="thimar-cloud thimar-cloud-right" aria-hidden="true"></span>
+  </div>
 
     <div id="unifiedLoginAlert"></div>
 
@@ -722,7 +732,7 @@ tr:hover { background: var(--table-hover); }
         <div class="thimar-field">
           <span class="thimar-field-icon" aria-hidden="true">🔒</span>
           <label class="sr-only" for="unifiedPass">الرقم السري</label>
-          <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
+          <input type="password" id="unifiedPass" placeholder="الر��م السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
         </div>
       </div>
       <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
@@ -862,7 +872,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-    ⚡ الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكو�� المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
+    �� الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكو�� المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
@@ -1290,7 +1300,7 @@ tr:hover { background: var(--table-hover); }
     <h4 style="color:var(--primary); margin-bottom:10px;">✉️ مراسلة المسؤول (نص أو رسالة صوتية)</h4>
     <div class="form-group"><textarea id="studentMsgText" rows="3" placeholder="اكتب رسالتك للمسؤول..."></textarea></div>
     <div id="voiceBox_student"></div>
-    <button class="btn btn-primary" onclick="sendUserMessageToAdmin('student')">📤 إرسال</button>
+    <button class="btn btn-primary" onclick="sendUserMessageToAdmin('student')">📤 إرس��ل</button>
   </div>
   <div id="studentInboxList"></div>
 </div>
