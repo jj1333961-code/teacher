@@ -76,8 +76,32 @@
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>',
   };
 
+  var TASBEEH = [
+    "سُبْحَانَ اللهِ وَبِحَمْدِهِ",
+    "سُبْحَانَ اللهِ العَظِيمِ",
+    "سُبْحَانَ اللهِ وَالحَمْدُ لِلَّهِ",
+    "لَا إِلَهَ إِلَّا اللهُ",
+    "اللهُ أَكْبَرُ",
+    "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ",
+    "أَسْتَغْفِرُ اللهَ وَأَتُوبُ إِلَيْهِ",
+    "اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ عَلَى نَبِيِّنَا مُحَمَّدٍ",
+    "حَسْبِيَ اللهُ لَا إِلَهَ إِلَّا هُوَ، عَلَيْهِ تَوَكَّلْتُ",
+    "رَبِّ اغْفِرْ لِي وَارْحَمْنِي وَاهْدِنِي وَعَافِنِي وَارْزُقْنِي",
+    "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ",
+    "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ",
+    "اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ العَفْوَ فَاعْفُ عَنِّي",
+    "سُبْحَانَ ذِي المُلْكِ وَالمَلَكُوتِ",
+    "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ",
+    "رَضِيتُ بِاللهِ رَبًّا، وَبِالإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ نَبِيًّا",
+    "آمَنْتُ بِاللهِ وَحْدَهُ لَا شَرِيكَ لَهُ",
+    "اللَّهُمَّ بَارِكْ لَنَا فِي أَوْقَاتِنَا وَأَعْمَالِنَا",
+    "اللَّهُمَّ اجْعَلْنِي مِنَ التَّوَّابِينَ وَاجْعَلْنِي مِنَ المُتَطَهِّرِينَ",
+    "اللَّهُمَّ اهْدِنِي وَسَدِّدْنِي"
+  ];
+
   var TILES = [
     { id: "quran", label: "القرآن الكريم", icon: ICONS.quran },
+    { id: "tasbeeh", label: "التسبيح", icon: ICONS.adhkar },
     { id: "dua", label: "الدعاء", icon: ICONS.dua },
     { id: "hadith", label: "الأحاديث", icon: ICONS.hadith },
     { id: "adhkar", label: "الأذكار", icon: ICONS.adhkar },
@@ -816,8 +840,26 @@
   /* ============================================================
      التوجيه
      ============================================================ */
+  function openTasbeeh() {
+    var html = '<div class="isl-tasbeeh-wrap"><label for="islTasbeehText">اختر التسبيحة</label><select id="islTasbeehText">' + TASBEEH.map(function (item, i) { return '<option value="' + i + '">' + esc(item) + '</option>'; }).join('') + '</select>' +
+      '<div class="isl-tasbeeh-count" data-tasbeeh-count>0</div><div class="isl-tasbeeh-progress"><span data-tasbeeh-progress></span></div>' +
+      '<div class="isl-tasbeeh-targets" role="group" aria-label="عدد التسبيحات"><button type="button" data-target="30">30</button><button type="button" data-target="50">50</button><button type="button" data-target="100">100</button><button type="button" data-target="1000">1000</button><input type="number" min="1" max="100000" value="100" aria-label="عدد مخصص" data-target-input></div>' +
+      '<button type="button" class="isl-tasbeeh-tap" data-tasbeeh-tap>اضغط للتسبيح</button><p class="isl-tasbeeh-label" data-tasbeeh-label>' + esc(TASBEEH[0]) + '</p><button type="button" class="isl-tasbeeh-reset" data-tasbeeh-reset>إعادة ضبط العداد</button></div>';
+    openSheet("التسبيح", html, function (root) {
+      var count = 0, target = 100, countEl = root.querySelector('[data-tasbeeh-count]'), progress = root.querySelector('[data-tasbeeh-progress]'), label = root.querySelector('[data-tasbeeh-label]'), select = root.querySelector('#islTasbeehText'), input = root.querySelector('[data-target-input]');
+      function paint() { countEl.textContent = count + ' / ' + target; progress.style.width = Math.min(100, count / target * 100) + '%'; label.textContent = TASBEEH[parseInt(select.value, 10) || 0]; }
+      root.querySelectorAll('[data-target]').forEach(function (b) { b.addEventListener('click', function () { target = parseInt(b.dataset.target, 10); input.value = target; count = 0; paint(); }); });
+      input.addEventListener('change', function () { target = Math.min(100000, Math.max(1, parseInt(input.value, 10) || 1)); input.value = target; count = 0; paint(); });
+      select.addEventListener('change', paint);
+      root.querySelector('[data-tasbeeh-tap]').addEventListener('click', function () { if (count < target) count++; paint(); if (count === target) toast('أحسنت، اكتمل العدد المحدد', 'success'); });
+      root.querySelector('[data-tasbeeh-reset]').addEventListener('click', function () { count = 0; paint(); });
+      paint();
+    });
+  }
+
   function openSection(id) {
     ensureLayers();
+    if (id === "tasbeeh") return openTasbeeh();
     if (id === "quran") return openQuran();
     if (id === "dua") return openGroups("الدعاء", D.duas || []);
     if (id === "adhkar") return openGroups("الأذكار", D.adhkar || []);
