@@ -328,16 +328,7 @@ tr:hover { background: var(--table-hover); }
 .draft-section { background: linear-gradient(135deg, rgba(255,193,7,0.15), rgba(255,152,0,0.15)); border: 2px solid var(--warning); border-radius: 15px; padding: 20px; margin-bottom: 20px; }
 
 /* Back Button Fixed at Bottom */
-.back-btn-container {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
+  .back-btn-container, .back-btn, button[onclick="goBack()"], button[onclick^="showPage("][class*="btn-secondary"] { display:none !important; }
 .back-btn {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: #fff;
@@ -883,14 +874,14 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
-  <div class="page-header"><h2>مساعد Gemini / Groq الإداري</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>مساعد Gemini / Groq الإداري</h2></div>
   <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بانات الموقع عندما تكون مرتبطة بسؤالك.</p>
   <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو الاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
 <div id="devAssistantPage" class="page hidden" style="max-width:820px; margin:40px auto;">
-  <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
     �� الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكو�� المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
@@ -924,7 +915,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- مزامنة GitHub (للمسؤول فقط) -->
 <div id="githubSyncPage" class="page hidden" style="max-width:820px; margin:40px auto;">
-  <div class="page-header"><h2>🔗 مزامنة المشروع مع GitHub</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>🔗 مزامنة المشروع مع GitHub</h2></div>
   <p style="color:var(--text-light); margin-bottom:12px;">المشروع مرتبط بمستودعك ا��شخصي فقط عبر متغيرات البيئة على الخادم (<code>GITHUB_TOKEN</code>, <code>GITHUB_OWNER</code>, <code>GITHUB_REPO</code>, <code>GITHUB_BRANCH</code>). كل إضافة أو تعديل يقوم به مساعد التطوير يُنشئ <b>Commit</b> ويُدفع تلقائياً إلى فرعك المحدد، مع الحفاظ على كامل تاريخ الإصدارات. ل�� يتم وضع أي مفتاح أو سرّ داخل الملفات أو في المتصفح.</p>
   <div id="githubSyncAlert"></div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
@@ -946,7 +937,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- إدارة المسؤولين -->
 <div id="adminsPage" class="page hidden">
-  <div class="page-header"><h2>👨‍💼 إدارة المسؤولين</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>👨‍💼 إدارة المسؤولين</h2></div>
   <div id="adminsAlert"></div>
   <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
     <div class="form-group" style="margin-bottom:0;">
@@ -978,7 +969,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- إعدادت المسؤول -->
 <div id="adminSettings" class="page hidden" style="max-width:600px;">
-  <div class="page-header"><h2>⚙️ إعدادات المسؤول</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>⚙️ إعدادات المسؤول</h2></div>
   <div id="adminSettingsAlert"></div>
   <h4 style="color:var(--primary); margin:20px 0 15px; border-bottom:2px solid var(--border); padding-bottom:10px;">🔐 تأكيد الهوية</h4>
   <div class="form-group">
@@ -1015,7 +1006,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- إضافة طالب -->
 <div id="addStudent" class="page hidden">
-  <div class="page-header"><h2>➕ إضافة طالب جديد</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>➕ إضافة طالب جديد</h2></div>
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
     <label style="font-size:1.05rem;">الإملاء الصوتي لبيانات الطالب</label>
@@ -1077,7 +1068,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- تعديل بيانات الطالب -->
 <div id="editStudent" class="page hidden">
-  <div class="page-header"><h2>✏️ تعديل بيانات الطالب</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>✏️ تعديل بيانات الطالب</h2></div>
   <div id="editStudentAlert"></div>
   <input type="hidden" id="editId">
   <div class="form-row">
@@ -1109,7 +1100,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-group" style="border:1px dashed var(--primary);padding:12px;border-radius:10px;">
     <label>🎙️ البصمة الصوتية</label>
-    <div id="editVoiceStatus" style="margin:6px 0;color:var(--text-light)">يمءءن استبدال البصمة الصوتية الحالية بتسجيل جديد.</div>
+    <div id="editVoiceStatus" style="margin:6px 0;color:var(--text-light)">يمءءن استبدال البص��ة الصوتية الحالية بتسجيل جديد.</div>
     <button type="button" class="voice-record-btn" id="editVoiceBtn" onclick="toggleEditVoiceRecord()">🎙️</button>
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
@@ -1119,7 +1110,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- تسجيل تسميع جديد -->
 <div id="recordSession" class="page hidden">
-  <div class="page-header"><h2>🎙️ تسجيل تسميع جديد</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>🎙️ تسجيل تسميع جديد</h2></div>
   <div id="recordAlert"></div>
   <input type="hidden" id="recordStudentId">
   <div class="form-group"><label>اسم الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
@@ -1197,7 +1188,7 @@ tr:hover { background: var(--table-hover); }
     <h2>📋 سجل الطالب: التسميعات والاختبارات</h2>
     <div>
       <button class="btn btn-info" onclick="openFullChart()">📊 عرض المخطط الكامل</button>
-      <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
+      
     </div>
   </div>
   <div id="historyContent"></div>
@@ -1214,14 +1205,14 @@ tr:hover { background: var(--table-hover); }
 
 <!-- قائمة الطلاب -->
 <div id="studentsList" class="page hidden">
-  <div class="page-header"><h2>👥 قائمة الطلاب المسجلين (<span id="studentsCount">0</span>)</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>👥 قائمة الطلاب المسجلين (<span id="studentsCount">0</span>)</h2></div>
   <div class="search-box"><input type="text" id="searchStudent" placeholder="🔍 ابحث باسم الطالب أو اسم المستخدم أو الرقم القومي..." onkeyup="renderStudents()"></div>
   <div id="studentsTable"></div>
 </div>
 
 <!-- الرسائل -->
 <div id="messagesPage" class="page hidden">
-  <div class="page-header"><h2>💬 الرسائل</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>💬 الرسائل</h2></div>
   <div class="msg-tabs">
     <div class="msg-tab active" onclick="switchMsgTab('inbox', this)">📥 الرسائل الواردة</div>
     <div class="msg-tab" onclick="switchMsgTab('compose', this)">✉️ التواصل</div>
@@ -1242,7 +1233,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- المواد والمعلمين -->
 <div id="subjectsPage" class="page hidden">
-  <div class="page-header"><h2>📚 المواد والمعلمين</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📚 المواد والمعلمين</h2></div>
   <div class="form-row" style="margin-bottom:20px;">
     <div class="form-group"><label>اسم امادة الجديدة</label><input type="text" id="newSubName"></div>
     <div class="form-group"><label>اسم المدرس</label><input type="text" id="newSubTeacher"></div>
@@ -1304,19 +1295,19 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="studentRecordsPage" class="page hidden">
-  <div class="page-header"><h2>📦 صنوق التسجيلات</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📦 صنوق التسجيلات</h2></div>
   <div id="studentRecordsContent"></div>
 </div>
 
 <!-- ملفات المسؤول للطالب -->
 <div id="studentFilesPage" class="page hidden">
-  <div class="page-header"><h2>📁 الملفات المرسلة لي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📁 الملفات المرسلة لي</h2></div>
   <div id="studentFilesContent"></div>
 </div>
 
 <!-- صندوق رسائل الطالب -->
 <div id="studentInbox" class="page hidden">
-  <div class="page-header"><h2>📬 صندوق الرسائل</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📬 صندوق الرسائل</h2></div>
   <div class="page" style="margin-top:0;">
     <h4 style="color:var(--primary); margin-bottom:10px;">✉️ مراسلة المسؤول (نص أو رسالة صوتية)</h4>
     <div class="form-group"><textarea id="studentMsgText" rows="3" placeholder="اكتب رسالتك للمسؤول..."></textarea></div>
@@ -1328,7 +1319,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- دردشة AI للطاب -->
 <div id="studentAIChat" class="page hidden">
-  <div class="page-header"><h2>🤖 مساعدك الذكي في القرآن</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>🤖 مساعدك الذكي في القرآن</h2></div>
   <div class="ai-chat">
     <div id="studentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
@@ -1346,7 +1337,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group"><label>الرقم السري الحالي</label><input type="password" id="currentStudentPass" placeholder="أدخل الرقم السري الحالي"></div>
   <div class="form-group"><label>الرقم السي الجديد</label><input type="password" id="newStudentPass" placeholder="أدخل الرقم السري لجديد"></div>
   <button class="btn btn-success" onclick="saveStudentPass()">💾 حفظ</button>
-  <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
+  
 </div>
 
 <!-- دخول ولي الأمر -->
@@ -1390,13 +1381,13 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ملفات المسؤول لولي الأمر -->
 <div id="parentFilesPage" class="page hidden">
-  <div class="page-header"><h2>الملفات المرسلة</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>الملفات المرسلة</h2></div>
   <div id="parentFilesContent"></div>
 </div>
 
 <!-- صندوق رسائل ولي الأمر -->
 <div id="parentInbox" class="page hidden">
-  <div class="page-header"><h2>📬 صندوق الرسائل</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📬 صندوق الرسائل</h2></div>
   <div class="page" style="margin-top:0;">
     <h4 style="color:var(--primary); margin-bottom:10px;">✉️ مراسلة المسؤول (نص أو رسالة صوتية)</h4>
     <div class="form-group"><textarea id="parentMsgText" rows="3" placeholder="اكتب رسالتك للمسؤول..."></textarea></div>
@@ -1408,7 +1399,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- دردشة AI لولي الأمر -->
 <div id="parentAIChat" class="page hidden">
-  <div class="page-header"><h2>🤖 مساعدك الذكي في متابعة ابنك</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>🤖 مساعدك الذكي في متابعة ابنك</h2></div>
   <div class="ai-chat">
     <div id="parentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
@@ -1423,7 +1414,7 @@ tr:hover { background: var(--table-hover); }
 <div id="parentRecordsPage" class="page hidden">
   <div class="page-header">
     <h2>📋 سجلات التسميعات النهائية</h2>
-    <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
+    
   </div>
   <div id="parentRecordsContent"></div>
 </div>
@@ -1432,14 +1423,14 @@ tr:hover { background: var(--table-hover); }
 <div id="parentPendingTasksPage" class="page hidden">
   <div class="page-header">
     <h2>⏳ المهام اليومية</h2>
-    <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
+    
   </div>
   <div id="parentPendingTasksContent"></div>
 </div>
 
 <!-- صفحة الملفات المرفوعة -->
 <div id="filesPage" class="page hidden">
-  <div class="page-header"><h2>📁 الملفات المرفوعة</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
+  <div class="page-header"><h2>📁 الملفات المرفوعة</h2></div>
   <div id="filesAlert"></div>
   <section style="background:var(--table-header);border:2px solid var(--primary);border-radius:15px;padding:20px;margin-bottom:20px;">
     <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
@@ -1477,7 +1468,7 @@ tr:hover { background: var(--table-hover); }
 <div id="parentChartPage" class="chart-page hidden">
   <div class="page-header">
     <h2>📊 ��خطط التقييم الكامل</h2>
-    <button class="btn btn-secondary" onclick="goBack()">رجوع</button>
+    
   </div>
   <div id="parentChartContainer" style="text-align:center;"></div>
 </div>
@@ -1607,7 +1598,10 @@ window.alert = function(m){ showToast(m); };
     document.documentElement.dir = next === 'en' ? 'ltr' : 'rtl';
     var btn = document.getElementById('langToggleBtn');
     if (btn) btn.textContent = next === 'en' ? 'ع' : 'EN';
-    window.loadThimarAppCore().catch(function(err){ console.error('App core failed to load', err); });
+    window.loadThimarAppCore().then(function(){
+      window.dispatchEvent(new Event('languagechange'));
+      if (typeof window.applyLangToDom === 'function') window.applyLangToDom();
+    }).catch(function(err){ console.error('App core failed to load', err); });
   };
   window.toggleLang = wrappers.toggleLang;
 })();
