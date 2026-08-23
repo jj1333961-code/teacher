@@ -155,7 +155,7 @@
   /* ============================================================
      الطبقة المشتركة: النافذة، المصحف، التنبيه
      ============================================================ */
-  var modal, sheetTitle, sheetBody, backBtn, mushaf, mushafCanvas, mushafClose, mushafLoader, athan;
+  var modal, sheetTitle, sheetBody, backBtn, mushaf, mushafFrame, mushafClose, athan;
   var sheetStack = [];
 
   function ensureLayers() {
@@ -182,15 +182,13 @@
 
     mushaf = el(
       '<div class="isl-mushaf" hidden role="dialog" aria-modal="true" aria-label="المصحف الشريف">' +
-      '<div class="isl-mushaf-loader"><i></i><span>جاري تحميل المصحف…</span></div>' +
-      '<canvas class="isl-mushaf-canvas"></canvas>' +
+      '<iframe class="isl-mushaf-frame" title="المصحف الشريف" loading="eager"></iframe>' +
       '<button type="button" class="isl-mushaf-close" aria-label="إغلاق المصحف">&times;</button>' +
       "</div>"
     );
     document.body.appendChild(mushaf);
-    mushafCanvas = mushaf.querySelector("canvas");
+    mushafFrame = mushaf.querySelector(".isl-mushaf-frame");
     mushafClose = mushaf.querySelector(".isl-mushaf-close");
-    mushafLoader = mushaf.querySelector(".isl-mushaf-loader");
     mushafClose.addEventListener("click", function (e) { e.stopPropagation(); closeMushaf(); });
 
     athan = el(
@@ -286,14 +284,7 @@
   }
 
   /* ---------------- عارض المصحف ---------------- */
-  var pdfDoc = null, pdfLib = null, pdfPage = 1, rendering = false, pendingPage = null, hideTimer = null;
-
-  async function loadPdfLib() {
-    if (pdfLib) return pdfLib;
-    pdfLib = await import("/vendor/pdfjs/pdf.min.mjs");
-    pdfLib.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.min.mjs";
-    return pdfLib;
-  }
+  var pdfPage = 1, hideTimer = null;
 
   async function openMushaf(surahNumber) {
     ensureLayers();
@@ -301,51 +292,17 @@
     pdfPage = s ? s.page : 1;
     mushaf.hidden = false;
     document.body.style.overflow = "hidden";
-    mushafLoader.hidden = false;
     showMushafClose();
-
-    try {
-      var lib = await loadPdfLib();
-      if (!pdfDoc) {
-        pdfDoc = await lib.getDocument({
-          url: D.mushafPath || "/quran/quran.pdf",
-          cMapUrl: "/vendor/pdfjs/cmaps/",
-          cMapPacked: true,
-        }).promise;
-      }
-      await renderPage(pdfPage);
-    } catch (err) {
-      console.log("[v0] mushaf error:", err && err.message);
-      mushafLoader.innerHTML = "<span>تعذّر تحميل المصحف، حاول مرة أخرى.</span>";
-      return;
-    }
+    // عرض ملف PDF الأصلي مباشرة يحافظ على الخطوط والزخارف دون إعادة رسم أو تشابك.
+    mushafFrame.src = (D.mushafPath || "/quran/quran.pdf") + "#page=" + pdfPage + "&view=Fit";
     bindMushafGestures();
   }
 
-  async function renderPage(n) {
-    if (!pdfDoc) return;
-    var total = pdfDoc.numPages || D.mushafPages || 604;
-    n = Math.min(Math.max(1, n), total);
-    pdfPage = n;
-    if (rendering) { pendingPage = n; return; }
-    rendering = true;
-    try {
-      var page = await pdfDoc.getPage(n);
-      var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-      var base = page.getViewport({ scale: 1 });
-      var scale = Math.min(window.innerWidth / base.width, window.innerHeight / base.height);
-      var vp = page.getViewport({ scale: scale * dpr });
-      mushafCanvas.width = Math.floor(vp.width);
-      mushafCanvas.height = Math.floor(vp.height);
-      mushafCanvas.style.width = Math.floor(vp.width / dpr) + "px";
-      mushafCanvas.style.height = Math.floor(vp.height / dpr) + "px";
-      await page.render({ canvasContext: mushafCanvas.getContext("2d"), viewport: vp }).promise;
-      mushafLoader.hidden = true;
-    } catch (err) {
-      console.log("[v0] render error:", err && err.message);
+  function renderPage(n) {
+    pdfPage = Math.max(1, n);
+    if (mushafFrame) {
+      mushafFrame.src = (D.mushafPath || "/quran/quran.pdf") + "#page=" + pdfPage + "&view=Fit";
     }
-    rendering = false;
-    if (pendingPage != null) { var p = pendingPage; pendingPage = null; renderPage(p); }
   }
 
   var gesturesBound = false;
@@ -710,7 +667,7 @@
   }
 
   /* ============================================================
-     6) اتجاه القبلة
+     6) اتجاه القبل��
      ============================================================ */
   var compassHandler = null, qiblaBearing = null;
 
