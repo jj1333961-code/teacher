@@ -187,7 +187,7 @@
   }
 
   /* ============================================================
-     الطبقة المشتركة: النافذة، المصحف، التنبيه
+     الطبقة المشتركة: النافذة، الم��حف، التنبيه
      ============================================================ */
   var modal, sheetTitle, sheetBody, backBtn, mushaf, mushafCanvas, mushafClose, athan, mushafZoom;
   var pdfDoc = null, pdfLib = null, rendering = false, pendingPage = null;
@@ -228,11 +228,26 @@
     mushafClose.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); closeMushaf(); });
 
     athan = el(
-      '<div class="isl-athan-toast" hidden role="status" aria-live="polite">' +
-      '<span data-athan-text></span><button type="button" aria-label="إغلاق التنبيه">&times;</button></div>'
+      '<div class="isl-athan-toast" hidden role="dialog" aria-modal="true" aria-live="assertive">' +
+      '<div class="isl-athan-backdrop"></div>' +
+      '<div class="isl-athan-card">' +
+      '<img src="/images/prayer-alert-reference.png" alt="تنبيه وقت الصلاة" class="isl-athan-art" />' +
+      '<div class="isl-athan-overlay">' +
+      '<button type="button" class="isl-athan-dismiss" aria-label="إغلاق التنبيه">&times;</button>' +
+      '<p class="isl-athan-now">حان الآن وقت</p>' +
+      '<h2 data-athan-name>الصلاة</h2>' +
+      '<div class="isl-athan-time" data-athan-time>--:--</div>' +
+      '<p class="isl-athan-date" data-athan-date></p>' +
+      '<p class="isl-athan-text" data-athan-text></p>' +
+      '<button type="button" class="isl-athan-action" data-athan-action>تم</button>' +
+      '</div></div></div>'
     );
+    athan._audio = new Audio("/audio/adhan-alert.mp3");
+    athan._audio.preload = "auto";
     document.body.appendChild(athan);
-    athan.querySelector("button").addEventListener("click", function () { athan.hidden = true; });
+    function dismissAthan() { athan.hidden = true; try { athan._audio.pause(); athan._audio.currentTime = 0; } catch (e) {} }
+    athan.querySelector(".isl-athan-dismiss").addEventListener("click", dismissAthan);
+    athan.querySelector("[data-athan-action]").addEventListener("click", dismissAthan);
 
     document.addEventListener("keydown", function (e) {
       if (e.key !== "Escape") return;
@@ -648,8 +663,13 @@
     var f = fmt12(p.time);
   var msg = "حان وقت صلاة " + p.name + " — " + f.t + " " + f.mer;
   playNotificationSound();
-  athan.querySelector("[data-athan-text]").innerHTML = "🕌 <b>" + esc(msg) + "</b>";
-    athan.hidden = false;
+  var today = new Date();
+  athan.querySelector("[data-athan-name]").textContent = "صلاة " + p.name;
+  athan.querySelector("[data-athan-time]").textContent = f.t + " " + f.mer;
+  athan.querySelector("[data-athan-date]").textContent = today.toLocaleDateString("ar-EG", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  athan.querySelector("[data-athan-text]").textContent = "حافظ على صلاتك في وقتها";
+  athan.hidden = false;
+  try { athan._audio.currentTime = 0; athan._audio.play().catch(function () {}); } catch (e) {}
     setTimeout(function () { athan.hidden = true; }, 30000);
     try {
       if (window.Notification && Notification.permission === "granted") {
