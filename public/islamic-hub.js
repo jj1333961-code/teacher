@@ -53,7 +53,17 @@
     }
   }
 
+  var notificationAudio = null;
+  function playNotificationSound() {
+    try {
+      if (!notificationAudio) { notificationAudio = new Audio("/audio/notification-chime.mp3"); notificationAudio.preload = "auto"; notificationAudio.volume = 0.65; }
+      notificationAudio.currentTime = 0;
+      var playback = notificationAudio.play();
+      if (playback && playback.catch) playback.catch(function () {});
+    } catch (e) {}
+  }
   function toast(msg, type) {
+    playNotificationSound();
     if (typeof window.showToast === "function") { window.showToast(msg, type || "info"); return; }
     console.log("[v0] isl:", msg);
   }
@@ -636,8 +646,9 @@
   function announce(p) {
     ensureLayers();
     var f = fmt12(p.time);
-    var msg = "حان وقت صلاة " + p.name + " — " + f.t + " " + f.mer;
-    athan.querySelector("[data-athan-text]").innerHTML = "🕌 <b>" + esc(msg) + "</b>";
+  var msg = "حان وقت صلاة " + p.name + " — " + f.t + " " + f.mer;
+  playNotificationSound();
+  athan.querySelector("[data-athan-text]").innerHTML = "🕌 <b>" + esc(msg) + "</b>";
     athan.hidden = false;
     setTimeout(function () { athan.hidden = true; }, 30000);
     try {
