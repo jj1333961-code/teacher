@@ -184,11 +184,6 @@
     mushaf = el(
       '<div class="isl-mushaf" hidden role="dialog" aria-modal="true" aria-label="المصحف الشريف">' +
       '<div class="isl-mushaf-stage"><canvas class="isl-mushaf-canvas"></canvas></div>' +
-      '<div class="isl-mushaf-controls" aria-label="أدوات المصحف">' +
-      '<button type="button" data-mushaf-zoom="out" aria-label="تصغير">−</button>' +
-      '<button type="button" data-mushaf-zoom="reset" aria-label="الحجم الأصلي">100%</button>' +
-      '<button type="button" data-mushaf-zoom="in" aria-label="تكبير">+</button>' +
-      '</div>' +
       '<button type="button" class="isl-mushaf-close" aria-label="العودة إلى قائمة السور">&times;</button>' +
       "</div>"
     );
@@ -196,14 +191,7 @@
     mushafCanvas = mushaf.querySelector(".isl-mushaf-canvas");
     mushafClose = mushaf.querySelector(".isl-mushaf-close");
     mushafZoom = 1;
-    mushafClose.addEventListener("click", function (e) { e.stopPropagation(); closeMushaf(); });
-    mushaf.querySelectorAll("[data-mushaf-zoom]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        var action = button.getAttribute("data-mushaf-zoom");
-        mushafZoom = action === "reset" ? 1 : Math.min(2.5, Math.max(1, mushafZoom + (action === "in" ? 0.25 : -0.25)));
-        renderPage(pdfPage);
-      });
-    });
+    mushafClose.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); closeMushaf(); });
 
     athan = el(
       '<div class="isl-athan-toast" hidden role="status" aria-live="polite">' +
@@ -349,20 +337,34 @@
   function bindMushafGestures() {
     if (gesturesBound) return;
     gesturesBound = true;
-    var sx = 0, sy = 0, moved = false;
+    var sx = 0, sy = 0, moved = false, pinchStart = 0, zoomStart = 1;
 
     mushaf.addEventListener("touchstart", function (e) {
+      if (e.touches.length === 2) {
+        pinchStart = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        zoomStart = mushafZoom;
+        moved = true;
+        return;
+      }
       if (!e.touches.length) return;
       sx = e.touches[0].clientX; sy = e.touches[0].clientY; moved = false;
     }, { passive: true });
 
+    mushaf.addEventListener("touchmove", function (e) {
+      if (e.touches.length !== 2 || !pinchStart) return;
+      var distance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      mushafZoom = Math.min(2.5, Math.max(1, zoomStart * distance / pinchStart));
+      renderPage(pdfPage);
+    }, { passive: true });
+
     mushaf.addEventListener("touchend", function (e) {
+      if (pinchStart) { pinchStart = 0; return; }
       var t = e.changedTouches && e.changedTouches[0];
       if (!t) return;
       var dx = t.clientX - sx, dy = t.clientY - sy;
+      if (dy > 90 && Math.abs(dy) > Math.abs(dx)) { closeMushaf(); return; }
       if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
         moved = true;
-        // مصحف عربي: السحب لليمين ينقل للصفحة التالية
         renderPage(dx > 0 ? pdfPage + 1 : pdfPage - 1);
       }
       if (!moved) toggleMushafClose();
