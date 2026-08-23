@@ -309,7 +309,7 @@ function finishGoogleLogin(user){
 }
 function restorePendingGoogleSignup(){try{const raw=sessionStorage.getItem('thimar_pending_google_signup');if(!raw)return false;const pending=JSON.parse(raw);if(!pending?.email)return false;signupState.method='google';signupState.email=String(pending.email).trim().toLowerCase();signupState.name=String(pending.name||'');signupState.whats='';signupState.verified=true;const note=document.getElementById('signupVerifiedNote');if(note)note.innerHTML='تم التحقق من هويتك عبر Google — '+escapeHtml(signupState.email);const name=document.getElementById('signupName');if(name&&!name.value)name.value=signupState.name;initSignupJuzSelect();showPage('signupStep2');return true}catch(e){try{sessionStorage.removeItem('thimar_pending_google_signup')}catch(ignore){}return false}}
 
-document.addEventListener('DOMContentLoaded',()=>{loadGlobalProctorSettings();setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store',credentials:'same-origin'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('تعذر قراءة جلسة Google');finishGoogleLogin(data.user);history.replaceState({},'',location.pathname)}).catch(()=>{history.replaceState({},'',location.pathname);const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر استكمال تسجيل الدخول عبر Google.</div>'})}else if(!restoreSession())restorePendingGoogleSignup()});
+document.addEventListener('DOMContentLoaded',()=>{loadGlobalProctorSettings();setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store',credentials:'same-origin'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('��عذر قراءة جلسة Google');finishGoogleLogin(data.user);history.replaceState({},'',location.pathname)}).catch(()=>{history.replaceState({},'',location.pathname);const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر استكمال تسجيل الدخول عبر Google.</div>'})}else if(!restoreSession())restorePendingGoogleSignup()});
 
 // ====== SESSION PERSISTENCE ======
 function saveSessionState() {
@@ -1298,18 +1298,58 @@ function saveAdminSettings() {
   document.getElementById('newPass').value = '';
 }
 
+function adminHasMainAccess() {
+  const admin = getData('admins').find(a => a.id == currentAdminId);
+  return !!(admin && (admin.isMain || admin.role === 'main'));
+}
+
+function escapeAdminText(value) {
+  return String(value ?? '').replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#039;'}[ch]));
+}
+
 function renderAdminStats() {
   const students = getData('students');
   const subjects = getData('subjects');
   const admins = getData('admins');
   let draftCount = 0;
-  students.forEach(s => {
-    if(s.sessions) draftCount += s.sessions.filter(sess => sess.isDraft).length;
-  });
-  document.getElementById('statStudents').textContent = students.length;
-  document.getElementById('statTeachers').textContent = subjects.length;
-  document.getElementById('statAdmins').textContent = admins.length;
-  document.getElementById('statDrafts').textContent = draftCount;
+  students.forEach(s => { if(s.sessions) draftCount += s.sessions.filter(sess => sess.isDraft).length; });
+  const canManageAdmins = adminHasMainAccess();
+  const stat = (id, value) => { const el = document.getElementById(id); if(el) el.textContent = value; };
+  stat('statStudents', students.length); stat('statTeachers', subjects.length); stat('statAdmins', admins.length); stat('statDrafts', draftCount);
+  ['adminNavAdmins','adminStatAdmins'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden', !canManageAdmins); });
+  const admin = getData('admins').find(a => a.id == currentAdminId) || currentUser || {};
+  const name = admin.name || admin.username || 'المسؤول';
+  ['adminGreetingName','adminProfileName'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = name; });
+  const initial = document.getElementById('adminProfileInitial'); if(initial) initial.textContent = name.charAt(0);
+  renderAdminOverview(students, subjects, admins, draftCount);
+}
+
+function renderAdminOverview(students, subjects, admins, draftCount) {
+  const chart = document.getElementById('adminActivityChart');
+  const days = Array.from({length:14}, (_, i) => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - (13-i)); return d; });
+  const counts = days.map(day => students.reduce((sum, s) => sum + (s.sessions || []).filter(x => !x.isDraft && x.date && new Date(x.date).toDateString() === day.toDateString()).length, 0));
+  if(chart) chart.innerHTML = counts.every(v => v === 0) ? '<div class="admin-chart-empty">لا توجد بيانات تسميع بعد</div>' : counts.map((v,i) => '<div class="admin-chart-bar" style="height:'+Math.max(2, v * 22)+'px" title="'+v+' تسميعات"><span class="admin-chart-label">'+(i%3===0 ? days[i].getDate() : '')+'</span></div>').join('');
+  const distribution = document.getElementById('adminDistributionChart');
+  const subjectCounts = subjects.map(sub => ({name:sub.name, count:students.filter(s => (s.subjects || []).some(id => String(id) === String(sub.id))).length})).filter(x => x.count > 0);
+  if(distribution) distribution.innerHTML = subjectCounts.length ? '<div class="admin-donut" style="background:conic-gradient(var(--success) 0 100%)"></div><div>'+subjectCounts.slice(0,5).map(x => '<div class="admin-row"><span class="admin-avatar">'+escapeAdminText(x.count)+'</span><div class="admin-row-main"><strong>'+escapeAdminText(x.name)+'</strong><small>'+x.count+' طالب</small></div></div>').join('')+'</div>' : '<div class="admin-empty-state">لا يوجد توزيع للطلاب حتى الآن</div>';
+  const recent = document.getElementById('adminRecentStudents');
+  const recentStudents = [...students].slice(-4).reverse();
+  if(recent) recent.innerHTML = recentStudents.length ? recentStudents.map(s => '<div class="admin-row"><span class="admin-avatar">'+escapeAdminText((s.name||'?').charAt(0))+'</span><div class="admin-row-main"><strong>'+escapeAdminText(s.name || 'بدون اسم')+'</strong><small>'+escapeAdminText(s.username || 'طالب')+'</small></div></div>').join('') : '<div class="admin-empty-state">لا يوجد طلاب مسجلون بعد</div>';
+  const alerts = document.getElementById('adminRecentAlerts');
+  const alertItems = [];
+  if(draftCount) alertItems.push({title:'تسميعات نشطة تحتاج متابعة', detail:draftCount+' قيد التعديل'});
+  if(!students.length && !subjects.length) alertItems.push({title:'ابدأ بإضافة بيانات المنصة', detail:'ستظهر الإحصائيات هنا تلقائياً'});
+  if(alerts) alerts.innerHTML = alertItems.length ? alertItems.map(a => '<div class="admin-row"><span class="admin-avatar">!</span><div class="admin-row-main"><strong>'+escapeAdminText(a.title)+'</strong><small>'+escapeAdminText(a.detail)+'</small></div></div>').join('') : '<div class="admin-empty-state">لا توجد تنبيهات جديدة</div>';
+  const msgCount = typeof getData === 'function' ? getData('messages').filter(m => !m.read && (!m.to || m.to == currentAdminId)).length : 0;
+  ['adminTopMsgBadge','adminNavMsgBadge'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=msgCount; });
+}
+
+function searchAdminDashboard(query) {
+  const box = document.getElementById('adminSearchResults'); if(!box) return;
+  const q = query.trim().toLowerCase(); if(!q) { box.classList.add('hidden'); return; }
+  const results = [...getData('students').map(x=>({name:x.name,type:'طالب',page:'studentsList'})), ...getData('subjects').map(x=>({name:x.name,type:'مادة/معلم',page:'subjectsPage'})), ...getData('admins').map(x=>({name:x.name || x.mobile,type:'مسؤول',page:'adminsPage'}))].filter(x=>String(x.name||'').toLowerCase().includes(q)).slice(0,6);
+  box.innerHTML = results.length ? results.map(x=>'<button class="admin-row" onclick="showPage(\''+x.page+'\')" style="width:100%;border:0;background:transparent;cursor:pointer;text-align:right"><span class="admin-avatar">⌕</span><span class="admin-row-main"><strong>'+escapeAdminText(x.name)+'</strong><small>'+x.type+'</small></span></button>').join('') : '<div class="admin-empty-state">لا توجد نتائج مطابقة</div>';
+  box.classList.remove('hidden');
 }
 
 function renderActiveDrafts() {
@@ -2297,7 +2337,7 @@ function saveExamDraft(){
 }
 function cancelExamDraft(){const id=parseInt(document.getElementById('recordStudentId').value);let students=getData('students');const i=students.findIndex(s=>s.id===id);if(i>=0){students[i].activeExam=null;setData('students',students)}showExamAlert('تم إلغاء الاختبار الحالي.','info')}
 
-// نغمة تنبيه شبيهة بنغمة رسائل واتساب (نغمتان متتاليتان)
+// نغمة تنبيه شبيهة بنغمة رسائل واتس��ب (نغمتان متتاليتان)
 function playNotifyChime(){
   try{
     const C=window.AudioContext||window.webkitAudioContext; if(!C)return;
@@ -2510,7 +2550,7 @@ function saveSession(isFinal) {
     return;
   }
 
-  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام الالية والانتقال لليوم التالي.
+  // الحفظ النه��ئي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام الالية والانتقال لليوم التالي.
   const session = {date,elements:JSON.parse(JSON.stringify(activeElements)),homework:JSON.parse(JSON.stringify(homeworkItems)),reading:JSON.parse(JSON.stringify(readingItems)),totalScore,notes,isDraft:false,finalizedAt:nowText,status:'نهائ',completedTaskSnapshot:previousTasks};
   students[idx].sessions = students[idx].sessions.filter(s => !s.isDraft && s.date !== date);
   students[idx].sessions.push(session);
@@ -3088,7 +3128,7 @@ async function runDevAssistant(){
       '<div style="background:#fdecea; color:#b02a37; padding:16px 18px; border-radius:10px; line-height:1.9;" role="alert">'+
       '<div style="font-weight:bold; font-size:1.15rem; margin-bottom:6px;">تعذر تنفيذ التعديل</div>'+
       '<div><strong>سبب الخطأ:</strong> '+escapeHtmlAi(reason)+'</div>'+
-      (canRetry?'<button type="button" class="btn btn-sm btn-primary" style="margin-top:12px;" onclick="runDevAssistant()">إعادة المحاولة</button>':'')+
+      (canRetry?'<button type="button" class="btn btn-sm btn-primary" style="margin-top:12px;" onclick="runDevAssistant()">إع��دة المحاولة</button>':'')+
       '</div>';
     recordDevAudit({ status:'failed', request, error:reason, flagged:dangers });
     renderDevAudit();
@@ -4226,7 +4266,7 @@ function blobToDataURL(blob) {
 // ====== تحويل الصوت المسجّل (webm/ogg) إلى WAV ======
 // Gemini وGroq يقبل صوت الإدخال بصيغة wav أو mp3 فقط، بينما المتصفح يسجّل غالباً بصية webm.
 // نفكّ الترميز عبر Web Audio ثم نعيد ترميزه PCM 16-bit أحادي القناة بمعدل 12kHz.
-// يحافظ المعدل على وضوح الكلءءم ويُبقي تسجيل الدقيقة والنصف دون حد طلبات Vercel بعد Base64.
+// يحافظ المعدل على وضوح الكلءءم ويُبقي تسجيل الدقيقة والنصف دون حد طلب��ت Vercel بعد Base64.
 async function blobToWav(blob) {
   try {
   const buf = await blob.arrayBuffer();
@@ -4952,7 +4992,7 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلا��','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الواجبءءءت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية م��صصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع ا��قرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الواجبءءءت والتسجيلات المطلوبة<br>• <em>الآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية م��صصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
@@ -5030,7 +5070,7 @@ function generateAIResponse(text, student) {
   }
   // افتراضي ذكي
   let r = '🤖 أهلاً '+name+'، لم فهم ءءؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
-  r += '• <strong>مستواي</strong> — تحليل آخر تقييم<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآيات</strong> — كيف تعرض آيات التسءءيع كصورة<br>• <strong>تحفيز</strong> — كلمة تشدّ همتك';
+  r += '• <strong>مستواي</strong> — تحليل آخر تقييم<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآي��ت</strong> — كيف تعرض آيات التسءءيع كصورة<br>• <strong>تحفيز</strong> — كلمة تشدّ همتك';
   if(pending.length > 0) r += '<br><br>📌 تذ��ير: لديك '+pending.length+' مهمة لم تُعتمد بعد.';
   return r;
 }
