@@ -112,7 +112,7 @@
     to right,
     transparent 0%,
     rgba(24, 59, 50, 0.4) 40%,
-    var(--isl-green-deep) 60%,
+    var(--isl-green-deep) 48%,
     var(--isl-green-deep) 100%
   );
   pointer-events: none;
@@ -125,9 +125,11 @@
   flex-direction: column;
   gap: 6px;
   width: 100%;
-  max-width: 68%;
-  margin-inline-start: auto;
+  max-width: none;
+  margin: 0;
+  padding-inline: 28px;
   align-items: flex-start;
+  text-align: right;
 }
 .isl-prayer-clock {
   width: 40px;
@@ -184,6 +186,8 @@
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 10px;
+  width: 100%;
+  justify-content: flex-start;
 }
 .isl-prayer-strip:empty { display: none; }
 .isl-strip-item {
