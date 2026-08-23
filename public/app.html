@@ -11,6 +11,8 @@
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="https://www.fontstatic.com/f=diwanltr">
   <link rel="stylesheet" href="/islamic-hub.css">
+  <link rel="stylesheet" href="/heritage.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" media="print" onload="this.media='all'">
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -863,11 +865,76 @@ tr:hover { background: var(--table-hover); }
       </div>
     </aside>
   </div>
-  <div class="stats">
-    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائمة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div><button class="stat-action" onclick="event.stopPropagation();showPage('addStudent')">➕ إضافة طالب جديد</button></div>
-    <div class="stat-box"><div class="num" id="statTeachers">0</div><div class="label">عدد المعلمين</div><button class="stat-action" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button></div>
-    <div class="stat-box"><div class="num" id="statAdmins">0</div><div class="label">المسؤولين</div><button class="stat-action" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button></div>
-    <div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num" id="statDrafts">0</div><div class="label">تسميعات نشطة</div></div>
+  <div class="heritage-section-title"><span></span>إدارة المنصة<span></span></div>
+  <div class="heritage-grid">
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('studentsList')" title="عرض قائمة الطلاب">
+      <div class="heritage-illus"><img src="/images/heritage/students.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">الطلاب</h3>
+        <p class="heritage-desc">قائمة الطلاب ومتابعة تقدّمهم في الحفظ والتسميع.</p>
+        <span class="heritage-count"><span id="statStudents">0</span><small>طالب</small></span>
+        <button class="heritage-action" onclick="event.stopPropagation();showPage('addStudent')">➕ إضافة طالب جديد</button>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('subjectsPage')">
+      <div class="heritage-illus"><img src="/images/heritage/mosque.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">المواد والمعلمون</h3>
+        <p class="heritage-desc">إدارة المواد الدراسية والمعلمين المسؤولين عنها.</p>
+        <span class="heritage-count"><span id="statTeachers">0</span><small>معلم</small></span>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('adminsPage')">
+      <div class="heritage-illus"><img src="/images/heritage/seal.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">إدارة المسؤولين</h3>
+        <p class="heritage-desc">إضافة المسؤولين وتحديد صلاحياتهم على المنصة.</p>
+        <span class="heritage-count"><span id="statAdmins">0</span><small>مسؤول</small></span>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="document.getElementById('activeDraftsSection').scrollIntoView({behavior:'smooth'})">
+      <div class="heritage-illus"><img src="/images/heritage/quran.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">التسميعات النشطة</h3>
+        <p class="heritage-desc">جلسات التسميع الجارية حالياً بانتظار المتابعة.</p>
+        <span class="heritage-count"><span id="statDrafts">0</span><small>جلسة</small></span>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('messagesPage')">
+      <div class="heritage-illus"><img src="/images/heritage/envelope.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">الرسائل</h3>
+        <p class="heritage-desc">رسائل الطلاب وأولياء الأمور والرد عليها.</p>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('filesPage')">
+      <div class="heritage-illus"><img src="/images/heritage/folder.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">الملفات المرفوعة</h3>
+        <p class="heritage-desc">ملفات إنشاء الاختبارات والمستندات المشتركة.</p>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('adminAIPage')">
+      <div class="heritage-illus"><img src="/images/heritage/lantern.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">المساعد الذكي</h3>
+        <p class="heritage-desc">محادثة ذكية للأسئلة الإدارية ومتابعة بيانات المنصة.</p>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('adminSettings')">
+      <div class="heritage-illus"><img src="/images/heritage/star.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">الإعدادات</h3>
+        <p class="heritage-desc">ضبط إعدادات النظام والحماية والخيارات العامة.</p>
+      </div>
+    </div>
   </div>
   <div id="activeDraftsSection"></div>
 
@@ -1279,6 +1346,48 @@ tr:hover { background: var(--table-hover); }
     </aside>
   </div>
   <div id="studentWelcome"></div>
+  <div class="heritage-section-title"><span></span>أدواتي<span></span></div>
+  <div class="heritage-grid">
+    <div class="heritage-card" role="button" tabindex="0" onclick="showStudentFullChart()">
+      <div class="heritage-illus"><img src="/images/heritage/growth.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">مخطط التقييم</h3>
+        <p class="heritage-desc">تابع تطوّر مستواك في الحفظ والتسميع عبر الزمن.</p>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('studentRecordsPage')">
+      <div class="heritage-illus"><img src="/images/heritage/mic.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">صندوق التسجيلات</h3>
+        <p class="heritage-desc">تسجيلاتك الصوتية للتسميع والمراجعة.</p>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('studentAIChat')">
+      <div class="heritage-illus"><img src="/images/heritage/lantern.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">المساعد الذكي</h3>
+        <p class="heritage-desc">اسأل عن القرآن أو استعن به لمراجعة حفظك.</p>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('studentInbox')">
+      <div class="heritage-illus"><img src="/images/heritage/envelope.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">الرسائل</h3>
+        <p class="heritage-desc">راسل المسؤول واطّلع على الردود الواردة إليك.</p>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('studentFilesPage')">
+      <div class="heritage-illus"><img src="/images/heritage/folder.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">الملفات</h3>
+        <p class="heritage-desc">الملفات والمستندات المرسلة إليك من المسؤول.</p>
+      </div>
+    </div>
+  </div>
   <section id="studentIslamicHub" data-isl-hub aria-label="القسم الإسلامي"></section>
   <div id="studentInfo"></div>
   <div id="studentDraftSection"></div>
@@ -1368,13 +1477,47 @@ tr:hover { background: var(--table-hover); }
       </div>
       <div class="side-sidebar-body">
         <button type="button" class="role-nav-item" onclick="showPage('parentInbox')"><span class="role-nav-icon" aria-hidden="true">💬</span><span>الرسائل</span></button>
-        <button type="button" class="role-nav-item" onclick="showPage('parentFilesPage')"><span class="role-nav-icon" aria-hidden="true">📁</span><span>الملفات</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('parentFilesPage')"><span class="role-nav-icon" aria-hidden="true">📁</span><span>الملف��ت</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('parentAIChat')"><span class="role-nav-icon" aria-hidden="true">✦</span><span>مساعد الذكاء الاصطناعي</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('parentChartPage')"><span class="role-nav-icon" aria-hidden="true">📈</span><span>المخطط</span></button>
       </div>
     </aside>
   </div>
   <div id="parentWelcome"></div>
+  <div class="heritage-section-title"><span></span>متابعة الأبناء<span></span></div>
+  <div class="heritage-grid">
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('parentChartPage')">
+      <div class="heritage-illus"><img src="/images/heritage/growth.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">مخطط التقدّم</h3>
+        <p class="heritage-desc">تابع مستوى ابنك/ابنتك في الحفظ والتسميع بيانياً.</p>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('parentAIChat')">
+      <div class="heritage-illus"><img src="/images/heritage/lantern.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">المساعد الذكي</h3>
+        <p class="heritage-desc">استفسر عن مستوى ابنك أو اطلب نصائح للمتابعة.</p>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('parentInbox')">
+      <div class="heritage-illus"><img src="/images/heritage/envelope.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">الرسائل</h3>
+        <p class="heritage-desc">تواصل مع المسؤول واطّلع على الردود والتنبيهات.</p>
+      </div>
+    </div>
+
+    <div class="heritage-card" role="button" tabindex="0" onclick="showPage('parentFilesPage')">
+      <div class="heritage-illus"><img src="/images/heritage/folder.png" alt="" aria-hidden="true" loading="lazy"></div>
+      <div class="heritage-body">
+        <h3 class="heritage-title">الملفات</h3>
+        <p class="heritage-desc">الملفات والمستندات المرسلة إليك من المسؤول.</p>
+      </div>
+    </div>
+  </div>
   <section id="parentIslamicHub" data-isl-hub aria-label="القسم الإسلامي"></section>
   <div id="parentInfo"></div>
 </div>
