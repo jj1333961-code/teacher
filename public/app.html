@@ -15,7 +15,7 @@
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700;900&display=swap"></noscript>
 <!-- الخدمات الثقيلة تُحمّل خارج مسار العرض الأول، وتُستدعى عند الحاجة فقط -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -657,12 +657,33 @@ tr:hover { background: var(--table-hover); }
   .thimar-footer .ayah { font-family:'Amiri','Traditional Arabic',serif; color:var(--thimar-ink); font-size:clamp(1rem,4.3vw,1.2rem); }
   .thimar-footer .ref { display:block; font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; color:var(--thimar-gold); font-size:.75rem; margin-top:6px; }
   #lockScreen.thimar-auth .btn:disabled { opacity:.7; }
+  /* الهوية الإسلامية التراثية الجديدة — نحافظ على أماكن البطاقات كما هي */
+  :root { --bg:#f4efe3; --card-bg:#fffdf7; --text:#203c32; --text-light:#65766b; --border:#d9c9a5; --primary:#1f5845; --primary-hover:#174334; --success:#477b61; --warning:#b38a43; --input-bg:#fffdf7; --table-header:#edf2e9; --table-hover:#f3f5ed; --shadow:0 12px 30px rgba(31,88,69,.12); --chart-bg:#fffdf7; --chart-grid:#ded6c4; --chart-text:#203c32; }
+  [data-theme="dark"] { --bg:#142c23; --card-bg:#1d3b30; --text:#f4efe3; --text-light:#bfd0c2; --border:#456858; --primary:#d3ad61; --primary-hover:#e1c177; --input-bg:#203f32; --table-header:#26493a; --table-hover:#2b5141; --shadow:0 14px 34px rgba(0,0,0,.28); --chart-bg:#1d3b30; --chart-grid:#3c5c4c; --chart-text:#f4efe3; }
+  * { font-family:'Cairo','Tajawal','Segoe UI',Tahoma,sans-serif; }
+  body { background-color:var(--bg); background-image:linear-gradient(rgba(31,88,69,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(179,138,67,.025) 1px,transparent 1px); background-size:34px 34px; }
+  .home-page h1 { color:var(--primary); text-shadow:none; font-weight:800; }
+  .home-page p { color:var(--text-light); }
+  .card { border:1px solid var(--border); background:var(--card-bg); box-shadow:var(--shadow); }
+  .card:hover { border-color:var(--warning); box-shadow:0 18px 38px rgba(31,88,69,.18); }
+  .card .icon { color:var(--primary); filter:drop-shadow(0 4px 5px rgba(179,138,67,.18)); }
+  .page, .chart-page { border-color:var(--border); box-shadow:var(--shadow); }
+  .page-header { border-bottom-color:var(--border); }
+  .btn-primary, .menu-btn { background:var(--primary); }
+  .btn-primary:hover { background:var(--primary-hover); }
+  .stat-box { background:var(--primary); border:1px solid rgba(179,138,67,.5); }
+  .menu-btn { border:1px solid rgba(179,138,67,.42); box-shadow:0 8px 18px rgba(31,88,69,.1); }
+  .menu-btn:hover { transform:translateY(-3px); box-shadow:0 14px 24px rgba(31,88,69,.16); }
+  .home-page::before, .page::before { content:''; position:absolute; pointer-events:none; inset:10px; border:1px solid rgba(179,138,67,.16); border-radius:inherit; }
+  .page { overflow:hidden; }
+  .form-group input, .form-group select, .form-group textarea, .search-box input { border-color:var(--border); }
+  .thimar-quran-wrap { filter:drop-shadow(0 12px 18px rgba(31,88,69,.13)); }
   </style>
 <script>
 /* الوضع الأخضر هو الافتراضي، والوضع الفاتح يُحفظ عند اختيار المستخدم له. */
 (function(){
   try {
-    if (localStorage.getItem('theme') !== 'light') document.documentElement.setAttribute('data-theme','dark');
+    if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');
   } catch(e) { document.documentElement.setAttribute('data-theme','dark'); }
   document.addEventListener('DOMContentLoaded', function(){
     var btn = document.querySelector('.theme-toggle');
@@ -940,7 +961,7 @@ tr:hover { background: var(--table-hover); }
   <div class="alert alert-info" style="margin-bottom:20px;">تفعيل Google مركزي ومتاح لجميع الأجهزة عبر إعداد GOOGLE_CLIENT_ID في بيئة Vercel.</div>
 
   <div class="form-row" style="margin-bottom:20px;">
-    <div class="form-group"><label>رقم الموبايل</label><input type="text" id="newAdminMobile" placeholder="رقم الموبايل (11 رقم)" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div class="form-group"><label>��قم الموبايل</label><input type="text" id="newAdminMobile" placeholder="رقم الموبايل (11 رقم)" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
     <div class="form-group"><label>الرقم السري</label><input type="password" id="newAdminPass" placeholder="الرقم السري"></div>
     <div class="form-group"><label>نوع المسؤول</label>
       <select id="newAdminType">
