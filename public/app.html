@@ -563,19 +563,6 @@ tr:hover { background: var(--table-hover); }
   body { -ms-overflow-style:none; }
   #lockScreen .btn:disabled { opacity:.75; cursor:wait; }
 
-  /* ================= لوحة المسؤول الحديثة ================= */
-  .admin-dashboard-page{display:flex;gap:0!important;padding:0!important;max-width:1440px!important;overflow:hidden;background:var(--card-bg);border:1px solid var(--border);min-height:760px}
-  .admin-sidebar{width:232px;flex:0 0 232px;background:linear-gradient(180deg,var(--table-header),var(--card-bg));border-inline-start:1px solid var(--border);padding:26px 16px;display:flex;flex-direction:column;gap:28px;order:2}
-  .admin-brand{display:flex;align-items:center;gap:11px;padding:4px 8px}.admin-brand-mark{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:var(--primary);color:var(--card-bg);font-size:1.5rem;font-weight:900}.admin-brand strong{display:block;color:var(--text);font-size:1rem}.admin-brand small{display:block;color:var(--text-light);font-size:.72rem;margin-top:3px}
-  .admin-nav{display:flex;flex-direction:column;gap:7px}.admin-nav-item{width:100%;display:flex;align-items:center;gap:11px;border:0;background:transparent;color:var(--text-light);padding:12px 13px;border-radius:12px;cursor:pointer;text-align:right;font:inherit;font-size:.92rem;transition:.2s}.admin-nav-item span{width:22px;text-align:center;color:var(--primary);font-size:1.25rem}.admin-nav-item:hover,.admin-nav-item.active{background:var(--primary);color:var(--card-bg)}.admin-nav-item:hover span,.admin-nav-item.active span{color:inherit}.admin-nav-badge{margin-inline-start:auto;background:var(--warning);color:var(--card-bg);border-radius:99px;padding:2px 7px;font-size:.7rem}.admin-sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:16px}
-  .admin-main{flex:1;min-width:0;padding:28px 30px;order:1}.admin-topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:26px}.admin-kicker{display:block;color:var(--primary);font-size:.76rem;font-weight:800;letter-spacing:.02em;margin-bottom:5px}.admin-topbar h2{margin:0;color:var(--text);font-size:1.35rem}.admin-top-actions{display:flex;align-items:center;gap:10px}.admin-search{display:flex;align-items:center;gap:7px;background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:0 12px;width:min(300px,28vw)}.admin-search span{color:var(--primary);font-size:1.4rem}.admin-search input{width:100%;min-height:42px;border:0;background:transparent;color:var(--text);outline:0;font:inherit}.admin-icon-btn{position:relative;width:42px;height:42px;border:1px solid var(--border);border-radius:12px;background:var(--card-bg);color:var(--primary);cursor:pointer;font-size:1.15rem}.admin-icon-btn b{position:absolute;top:-5px;right:-5px;background:var(--danger);color:#fff;border-radius:99px;font-size:.63rem;padding:2px 5px}.admin-profile{display:flex;align-items:center;gap:9px;border:0;background:transparent;color:var(--text);cursor:pointer;text-align:right}.admin-profile>span:first-child{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--success);color:#fff;font-weight:800}.admin-profile strong,.admin-profile small{display:block}.admin-profile strong{font-size:.82rem}.admin-profile small{color:var(--text-light);font-size:.68rem;margin-top:3px}
-  .admin-welcome{display:flex;align-items:center;justify-content:space-between;overflow:hidden;min-height:150px;padding:26px 30px;border-radius:20px;background:linear-gradient(110deg,var(--primary),var(--success));color:#fff;margin-bottom:20px}.admin-welcome h1{margin:0 0 8px;font-size:clamp(1.3rem,2.5vw,2rem)}.admin-welcome p{margin:0;opacity:.86;font-size:.9rem}.admin-welcome .admin-kicker{color:#fff;opacity:.8}.admin-welcome-art{font-size:8rem;line-height:1;color:rgba(255,255,255,.18);transform:rotate(-15deg)}
-  .admin-stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.admin-stat-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-height:145px;padding:18px;border:1px solid var(--border);border-radius:17px;background:var(--card-bg);color:var(--text);text-align:right;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.06);transition:.2s}.admin-stat-card:hover{transform:translateY(-3px);border-color:var(--primary)}.admin-stat-icon{align-self:flex-start;width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:rgba(255,255,255,.55);font-size:1.3rem}.admin-stat-label{color:var(--text-light);font-size:.82rem}.admin-stat-card strong{font-size:2rem;line-height:1.1}.admin-stat-card small{color:var(--primary);font-size:.72rem;margin-top:auto}.stat-green{border-top:4px solid var(--success)}.stat-gold{border-top:4px solid var(--warning)}.stat-blue{border-top:4px solid var(--info)}.stat-purple{border-top:4px solid #8b78bd}
-  .admin-panels-grid,.admin-lists-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;margin-top:14px}.admin-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:17px;padding:20px;min-width:0}.admin-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.admin-panel h3{margin:0;color:var(--text);font-size:1rem}.admin-empty-pill{border-radius:99px;padding:5px 9px;background:var(--table-header);color:var(--text-light);font-size:.7rem}.admin-chart{height:190px;display:flex;align-items:flex-end;justify-content:space-around;gap:8px;padding:20px 5px 4px;border-bottom:1px solid var(--border);background:repeating-linear-gradient(to bottom,transparent 0,transparent 45px,var(--border) 46px)}.admin-chart-bar{width:clamp(10px,4%,24px);border-radius:7px 7px 0 0;background:linear-gradient(180deg,var(--success),var(--primary));min-height:2px}.admin-chart-label{font-size:.6rem;color:var(--text-light);writing-mode:vertical-rl;transform:rotate(180deg);align-self:flex-end}.admin-donut-wrap{min-height:190px;display:flex;align-items:center;justify-content:center;gap:22px}.admin-donut{width:148px;height:148px;border-radius:50%;background:conic-gradient(var(--border) 0 100%);display:grid;place-items:center}.admin-donut:after{content:'0';width:92px;height:92px;display:grid;place-items:center;border-radius:50%;background:var(--card-bg);color:var(--text);font-size:1.7rem;font-weight:800}.admin-chart-empty{width:100%;text-align:center;color:var(--text-light);font-size:.85rem}.admin-empty-state{padding:30px 12px;text-align:center;color:var(--text-light);font-size:.85rem}.admin-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}.admin-row:last-child{border-bottom:0}.admin-avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:var(--table-header);color:var(--primary);font-weight:800}.admin-row-main{flex:1}.admin-row-main strong{display:block;color:var(--text);font-size:.85rem}.admin-row-main small{display:block;color:var(--text-light);font-size:.72rem;margin-top:3px}.admin-link-btn{border:0;background:transparent;color:var(--primary);cursor:pointer;font:inherit;font-size:.78rem}.admin-search-results{margin:-12px 0 14px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--table-header);color:var(--text)}
-  @media(max-width:1050px){.admin-sidebar{width:195px;flex-basis:195px}.admin-main{padding:22px 18px}.admin-topbar{align-items:flex-start;flex-direction:column}.admin-top-actions{width:100%}.admin-search{width:100%;order:-1}.admin-profile{margin-inline-start:auto}}
-  @media(max-width:760px){.admin-dashboard-page{display:block;min-height:auto}.admin-sidebar{width:auto;border:0;border-bottom:1px solid var(--border);padding:14px;display:block}.admin-brand{margin-bottom:13px}.admin-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.admin-nav-item{justify-content:center;flex-direction:column;gap:3px;padding:8px 4px;font-size:.68rem;text-align:center}.admin-nav-item span{font-size:1.1rem}.admin-sidebar-bottom{display:none}.admin-main{padding:16px 12px}.admin-topbar h2{font-size:1.1rem}.admin-top-actions{gap:6px}.admin-profile span:not(:first-child){display:none}.admin-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-panels-grid,.admin-lists-grid{grid-template-columns:1fr}.admin-welcome{padding:20px;min-height:135px}.admin-welcome-art{font-size:5rem}}
-  @media(max-width:420px){.admin-top-actions .admin-icon-btn{width:36px;height:36px}.admin-stats-grid{gap:8px}.admin-stat-card{padding:13px;min-height:125px}.admin-stat-card strong{font-size:1.65rem}.admin-welcome-art{display:none}}
-
   /* ================= هوية ثمار الجديدة — شاشة الدخول الرئيسية ================= */
   /* وضعان لشاشة الدخول: فاتح (افتراضي) وأخضر داكن */
   :root {
@@ -825,34 +812,40 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <!-- لوحة المسؤول -->
-<div id="adminDashboard" class="page hidden admin-dashboard-page">
-  <aside class="admin-sidebar" aria-label="التنقل الإداري">
-    <div class="admin-brand"><div class="admin-brand-mark">ث</div><div><strong>منصة ثمار</strong><small>لوحة الإدارة</small></div></div>
-    <nav class="admin-nav">
-      <button class="admin-nav-item active" onclick="showPage('adminDashboard')"><span>⌂</span>لوحة التحكم</button>
-      <button class="admin-nav-item" onclick="showPage('studentsList')"><span>♙</span>الطلاب</button>
-      <button class="admin-nav-item" onclick="showPage('subjectsPage')"><span>▣</span>المعلمون والمواد</button>
-      <button id="adminNavAdmins" class="admin-nav-item" onclick="showPage('adminsPage')"><span>♧</span>المسؤولون</button>
-      <button class="admin-nav-item" onclick="showPage('messagesPage')"><span>✉</span>الرسائل <b id="adminNavMsgBadge" class="admin-nav-badge">0</b></button>
-      <button class="admin-nav-item" onclick="showPage('filesPage')"><span>▤</span>الملفات</button>
-      <button class="admin-nav-item" onclick="showPage('adminSettings')"><span>⚙</span>الإعدادات</button>
-    </nav>
-    <div class="admin-sidebar-bottom"><button class="admin-nav-item" onclick="logout()"><span>↪</span>تسجيل الخروج</button></div>
-  </aside>
-  <div class="admin-main">
-    <header class="admin-topbar"><div><span class="admin-kicker">لوحة الإدارة</span><h2>مرحباً بك، <span id="adminGreetingName">المسؤول</span></h2></div><div class="admin-top-actions"><div class="admin-search"><span>⌕</span><input id="adminGlobalSearch" type="search" placeholder="ابحث في المنصة..." oninput="searchAdminDashboard(this.value)"></div><button class="admin-icon-btn" onclick="toggleTheme()" aria-label="تبديل الوضع">◐</button><button class="admin-icon-btn" onclick="showPage('messagesPage')" aria-label="الرسائل">✉<b id="adminTopMsgBadge">0</b></button><button class="admin-profile" onclick="showPage('adminSettings')"><span id="adminProfileInitial">م</span><span><strong id="adminProfileName">المسؤول</strong><small>مسؤول المنصة</small></span></button></div></header>
-    <div id="adminSearchResults" class="admin-search-results hidden"></div>
-    <section class="admin-welcome"><div><span class="admin-kicker">نظرة عامة</span><h1>إدارة منصتك القرآنية بكل وضوح</h1><p>تابع الطلاب والمعلمين والمواد من مكان واحد، وابدأ يومك بخطوة مباركة.</p></div><div class="admin-welcome-art">۞</div></section>
-    <section class="admin-stats-grid" aria-label="إحصائيات المنصة">
-      <button class="admin-stat-card stat-green" onclick="showPage('studentsList')"><span class="admin-stat-icon">♙</span><span class="admin-stat-label">إجمالي الطلاب</span><strong id="statStudents">0</strong><small>عرض قائمة الطلاب ←</small></button>
-      <button class="admin-stat-card stat-gold" onclick="showPage('subjectsPage')"><span class="admin-stat-icon">▣</span><span class="admin-stat-label">المعلمون والمواد</span><strong id="statTeachers">0</strong><small>إدارة المواد والمعلمين ←</small></button>
-      <button id="adminStatAdmins" class="admin-stat-card stat-blue" onclick="showPage('adminsPage')"><span class="admin-stat-icon">♧</span><span class="admin-stat-label">المسؤولون</span><strong id="statAdmins">0</strong><small>إدارة الصلاحيات ←</small></button>
-      <button class="admin-stat-card stat-purple" onclick="document.getElementById('activeDraftsSection').scrollIntoView({behavior:'smooth'})"><span class="admin-stat-icon">◷</span><span class="admin-stat-label">تسميعات نشطة</span><strong id="statDrafts">0</strong><small>قيد المتابعة الآن ←</small></button>
-    </section>
-    <section class="admin-panels-grid"><article class="admin-panel"><div class="admin-panel-head"><div><span class="admin-kicker">النشاط</span><h3>نشاط التسميع خلال الأيام الأخيرة</h3></div><span class="admin-empty-pill">بيانات حقيقية</span></div><div id="adminActivityChart" class="admin-chart" aria-label="رسم نشاط التسميع"></div></article><article class="admin-panel"><div class="admin-panel-head"><div><span class="admin-kicker">التوزيع</span><h3>توزيع الطلاب حسب المادة</h3></div></div><div id="adminDistributionChart" class="admin-donut-wrap"></div></article></section>
-    <section class="admin-lists-grid"><article class="admin-panel"><div class="admin-panel-head"><h3>أحدث الطلاب</h3><button class="admin-link-btn" onclick="showPage('studentsList')">عرض الكل</button></div><div id="adminRecentStudents"></div></article><article class="admin-panel"><div class="admin-panel-head"><h3>ملخص التنبيهات</h3><button class="admin-link-btn" onclick="showPage('messagesPage')">عرض الرسائل</button></div><div id="adminRecentAlerts"></div></article></section>
-    <section id="activeDraftsSection"></section>
+<div id="adminDashboard" class="page hidden">
+  <div class="page-header">
+    <h2>📊 لوحة تحكم المسؤول</h2>
+    <div>
+      <span id="adminDeviceInfo" style="color:var(--text-light); margin-left:15px; font-size:0.9rem"></span>
+      <button class="btn btn-outline" onclick="logout()">خروج</button>
+    </div>
   </div>
+  <button type="button" class="side-fab" onclick="openRoleSidebar('admin')" aria-label="فتح قائمة الأدوات" aria-controls="sidebar-admin" aria-expanded="false"><span></span><span></span><span></span></button>
+  <div id="sidebar-admin" class="side-sidebar-wrap">
+    <div class="side-sidebar-overlay" onclick="closeRoleSidebar('admin')"></div>
+    <aside class="side-sidebar" aria-label="أدوات المسؤول">
+      <div class="side-sidebar-head">
+        <h3>الأدوات</h3>
+        <button type="button" class="side-sidebar-close" onclick="closeRoleSidebar('admin')" aria-label="إغلاق القائمة">×</button>
+      </div>
+      <div class="side-sidebar-body">
+        <button type="button" class="role-nav-item" onclick="showPage('messagesPage')"><span class="role-nav-icon" aria-hidden="true">💬</span><span>الرسائل</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('adminSettings')"><span class="role-nav-icon" aria-hidden="true">⚙️</span><span>الإعدادات</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('filesPage')"><span class="role-nav-icon" aria-hidden="true">📁</span><span>الملفات المرفوعة</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('devAssistantPage')"><span class="role-nav-icon" aria-hidden="true">🛠️</span><span>مساعد تطوير الموقع</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('adminAIPage')"><span class="role-nav-icon" aria-hidden="true">✦</span><span>المحادثة مع الذكاء الاصطناعي</span></button>
+        <button type="button" class="role-nav-item" onclick="openGithubSync()"><span class="role-nav-icon" aria-hidden="true">🔗</span><span>مزامنة GitHub</span></button>
+      </div>
+    </aside>
+  </div>
+  <div class="stats">
+    <div class="stat-box" onclick="showPage('studentsList')" title="عرض قائمة الطلاب"><div class="num" id="statStudents">0</div><div class="label">عدد الطلاب</div><button class="stat-action" onclick="event.stopPropagation();showPage('addStudent')">➕ إضافة طالب جديد</button></div>
+    <div class="stat-box"><div class="num" id="statTeachers">0</div><div class="label">عدد المعلمين</div><button class="stat-action" onclick="showPage('subjectsPage')">📚 المواد والمعلمين</button></div>
+    <div class="stat-box"><div class="num" id="statAdmins">0</div><div class="label">المسؤولين</div><button class="stat-action" onclick="showPage('adminsPage')">👨‍💼 إدارة المسؤولين</button></div>
+    <div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num" id="statDrafts">0</div><div class="label">تسميعات نشطة</div></div>
+  </div>
+  <div id="activeDraftsSection"></div>
+
 </div>
 
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
