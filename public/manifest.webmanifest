@@ -1,0 +1,11 @@
+{
+  "name": "ثمار | منصة القرآن والتعليم",
+  "short_name": "ثمار",
+  "start_url": "/app.html",
+  "display": "standalone",
+  "background_color": "#f4efe3",
+  "theme_color": "#315c4b",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [{ "src": "/images/prayer-alert-reference.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }]
+}
