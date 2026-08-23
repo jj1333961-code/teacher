@@ -494,10 +494,10 @@ tr:hover { background: var(--table-hover); }
 @media(max-width:800px){.student-work-grid{grid-template-columns:1fr}.proctor-settings-grid{grid-template-columns:1fr}}
 @media(max-width:480px){.proctor-panel{padding:14px}.proctor-checks{grid-template-columns:1fr}.proctor-camera{aspect-ratio:16/11}.proctor-bar{align-items:stretch;flex-direction:column}.proctor-live-hold{width:100%}.student-work-dialog-body{padding:12px}}
   /* Thimar visual system — presentation only; existing IDs and actions remain untouched. */
-  :root { --bg: #f7faf7; --card-bg: #ffffff; --text: #18352b; --text-light: #62766d; --border: #dce9df; --primary: #28734f; --primary-hover: #1d5c3e; --success: #4f9467; --warning: #bc9450; --info: #4c7e83; --secondary: #718179; --input-bg: #fcfffc; --table-header: #f1f7f2; --table-hover: #f5faf6; --shadow: 0 18px 55px rgba(33, 86, 57, .10); }
-  [data-theme="dark"] { --bg:#12251d; --card-bg:#1b3328; --text:#edf7ef; --text-light:#b7cbbd; --border:#315344; --primary:#8fbd82; --primary-hover:#a6ce99; --success:#72aa7e; --warning:#d6b568; --info:#80b5b1; --secondary:#8ca49a; --input-bg:#213b2f; --table-header:#234336; --table-hover:#294c3d; --shadow:0 18px 55px rgba(0,0,0,.25); }
-  body { background:var(--bg); background-image:radial-gradient(circle at 10% 18%, rgba(40,115,79,.08) 0 1px, transparent 1px), linear-gradient(135deg, transparent 0 48%, rgba(188,148,80,.035) 48% 52%, transparent 52%); background-size:30px 30px, 96px 96px; }
-  body::after { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.35; background-image:linear-gradient(30deg, transparent 0 46%, rgba(40,115,79,.045) 46% 54%, transparent 54%), linear-gradient(150deg, transparent 0 46%, rgba(188,148,80,.035) 46% 54%, transparent 54%); background-size:160px 160px; }
+  :root { --bg: #063d35; --card-bg: #0b4a3d; --text: #f6f1e5; --text-light: #d5d0c1; --border: #c99b4c; --primary: #d9ab5c; --primary-hover: #e7c176; --success: #72aa7e; --warning: #d9ab5c; --info: #80b5b1; --secondary: #8ca49a; --input-bg: rgba(7, 48, 42, .72); --table-header: #123f35; --table-hover: #164d40; --shadow: 0 18px 55px rgba(0, 0, 0, .28); }
+  [data-theme="dark"] { --bg:#063d35; --card-bg:#0b4a3d; --text:#f6f1e5; --text-light:#d5d0c1; --border:#c99b4c; --primary:#d9ab5c; --primary-hover:#e7c176; --success:#72aa7e; --warning:#d9ab5c; --info:#80b5b1; --secondary:#8ca49a; --input-bg:rgba(7,48,42,.72); --table-header:#123f35; --table-hover:#164d40; --shadow:0 18px 55px rgba(0,0,0,.28); }
+  body { background:var(--bg); background-image:none; }
+  body::before, body::after { display:none; }
   .container { max-width:1440px; padding:24px clamp(16px, 3vw, 48px) 100px; }
   .display-controls { top:18px; left:18px; }
   .theme-toggle,.lang-toggle { width:42px; height:42px; min-width:42px; min-height:42px; border:1px solid var(--border); box-shadow:0 8px 24px rgba(33,86,57,.12); }
@@ -878,7 +878,7 @@ tr:hover { background: var(--table-hover); }
   <div id="adminsAlert"></div>
   <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
     <div class="form-group" style="margin-bottom:0;">
-      <label>رقم واتساب المسؤول لاستلام طلبات الانضمام</label>
+      <label>رقم واتساب المسؤول لاستلام طلبات الا��ضمام</label>
       <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
       <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة على واتساب (بصيغة الدولة، مثال: 201554542019)</small>
     </div>
@@ -1054,7 +1054,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-row">
     <div class="form-group"><label>تاريخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُحدد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
     <div class="form-group"><label>الجزء</label><input type="text" id="recordJuz" readonly style="background:var(--table-header)"></div>
-    <div class="form-group"><label>السورة الأساسية</label><input type="text" id="recordSurahName" readonly style="background:var(--table-header)"></div>
+    <div class="form-group"><label>السور�� الأساسية</label><input type="text" id="recordSurahName" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
@@ -1414,7 +1414,7 @@ tr:hover { background: var(--table-hover); }
   <div class="proctor-panel">
     <h2 id="proctorTitle">التحقق قبل بدء الجلسة</h2>
     <p>لن تُحفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
-    <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص للسماح بالكاميرا</div></div>
+    <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص للسماح بالكامير��</div></div>
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
     <div class="proctor-checks" aria-live="polite">
       <div id="proctorTouchCheck" class="proctor-check bad">شاشة لمس مطلوبة</div><div id="proctorLightCheck" class="proctor-check bad">الإضاءة غير مفحوصة</div>
