@@ -558,6 +558,19 @@
 
   function clean(t) { return String(t || "").split(" ")[0]; }
 
+  function syncPrayerWorker() {
+    if (!navigator.serviceWorker || !state.timings) return;
+    var day = new Date().toISOString().slice(0, 10), now = new Date();
+    var prayers = PRAYER_KEYS.filter(function (p) { return !p.info; }).map(function (p) {
+      var parts = String(state.timings[p.key] || '').split(':');
+      var at = new Date(now); at.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+      if (at <= now) at.setDate(at.getDate() + 1);
+      var ff = fmt12(state.timings[p.key]);
+      return { key: p.key, name: p.name, at: at.toISOString(), day: day, displayTime: ff.t + ' ' + ff.mer };
+    });
+    navigator.serviceWorker.ready.then(function (reg) { var worker = reg.active; if (worker) worker.postMessage({ type: 'schedule-prayers', prayers: prayers }); });
+  }
+
   function applyTimings(data, loc) {
     state.timings = {};
     PRAYER_KEYS.forEach(function (p) { state.timings[p.key] = clean(data.timings[p.key]); });
@@ -570,6 +583,7 @@
     computeNext();
     paintCards();
     startTick();
+    syncPrayerWorker();
   }
 
   function computeNext() {
@@ -644,8 +658,13 @@
     return h > 0 ? h + " س " + pad(m % 60) + " د" : pad(m) + " د " + pad(Math.floor((ms % 60000) / 1000)) + " ث";
   }
 
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) syncPrayerWorker();
+  });
+  window.addEventListener("focus", syncPrayerWorker);
+
   function startTick() {
-    if (state.tickTimer) return;
+  if (state.tickTimer) return;
     state.tickTimer = setInterval(function () {
       if (!state.next) return;
       if (new Date() >= state.next.at) {
@@ -673,7 +692,8 @@
     setTimeout(function () { athan.hidden = true; }, 30000);
     try {
       if (window.Notification && Notification.permission === "granted") {
-        new Notification("حان وقت الصلاة", { body: msg });
+        var notice = new Notification("حان وقت الصلاة: " + p.name, { body: msg, icon: "/images/prayer-alert-reference.png", tag: "prayer-" + p.key, requireInteraction: true });
+        notice.onclick = function () { window.focus(); notice.close(); try { athan._audio.play().catch(function () {}); } catch (e) {} };
       }
     } catch (e) {}
     try {
