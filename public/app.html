@@ -532,24 +532,6 @@ tr:hover { background: var(--table-hover); }
   @media(max-width:1000px){ .home-page .cards,.menu-grid,.stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media(max-width:620px){ .container { padding-inline:12px; } .home-page .cards,.menu-grid,.stats { grid-template-columns:1fr; } .home-page .card { min-height:150px; } .page { padding:18px; border-radius:18px; } .display-controls { top:10px; left:10px; } }
   @media(prefers-reduced-motion:reduce){ *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
-  /* شاشة ترحيب ثمار */
-  #thimarWelcome { position:fixed; inset:0; z-index:12000; display:flex; align-items:center; justify-content:center; overflow:auto; padding:24px; background:radial-gradient(circle at 50% 15%, rgba(191,153,74,.14), transparent 34%), linear-gradient(145deg,#f8fcf8 0%,#e7f1e8 100%); color:#1d4d39; transition:opacity .65s ease, visibility .65s ease; }
-  #thimarWelcome.is-hidden { opacity:0; visibility:hidden; pointer-events:none; }
-  #thimarWelcome::before,#thimarWelcome::after { content:''; position:absolute; width:240px; height:240px; border:1px solid rgba(191,153,74,.22); transform:rotate(45deg); pointer-events:none; }
-  #thimarWelcome::before { top:-100px; inset-inline-start:-100px; box-shadow:0 0 0 18px rgba(45,112,76,.035),0 0 0 36px rgba(191,153,74,.035); }
-  #thimarWelcome::after { bottom:-110px; inset-inline-end:-110px; box-shadow:0 0 0 18px rgba(45,112,76,.035),0 0 0 36px rgba(191,153,74,.035); }
-  .thimar-welcome-inner { width:min(760px,100%); text-align:center; padding:clamp(28px,6vw,68px) clamp(20px,6vw,72px); border:1px solid rgba(45,112,76,.18); border-radius:32px; background:rgba(255,255,255,.72); box-shadow:0 28px 80px rgba(35,88,54,.14); backdrop-filter:blur(12px); position:relative; }
-  .thimar-welcome-title { margin:0; color:#1d5038; font-family:'diwanltr','Diwani Letter','Traditional Arabic',serif; font-size:clamp(2.8rem,9vw,6rem); font-weight:900; letter-spacing:-.08em; line-height:1.1; text-shadow:0 2px 0 rgba(191,153,74,.25),0 10px 26px rgba(45,112,76,.13); }
-  .thimar-welcome-subtitle { margin:12px 0 26px; color:#587264; font-size:clamp(1.1rem,3vw,1.55rem); font-weight:700; }
-  .thimar-ayah { margin:0 auto 24px; max-width:650px; color:#254d3a; font-family:'Amiri','Traditional Arabic','Segoe UI',serif; font-size:clamp(1.45rem,4vw,2.45rem); line-height:2.05; text-shadow:0 0 18px rgba(191,153,74,.26); }
-  .thimar-ayah::before,.thimar-ayah::after { content:'۞'; color:#bf994a; font-family:serif; font-size:.8em; margin-inline:12px; }
-  .thimar-description { margin:0 auto 26px; color:#6a7f73; font-size:clamp(.95rem,2vw,1.15rem); }
-  .thimar-intention { margin:0 0 8px; color:#799084; font-size:.9rem; }
-  .thimar-prayer { margin:0 0 24px; color:#a17735; font-size:1rem; font-weight:700; }
-  .thimar-welcome-actions { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
-  .thimar-welcome-audio { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:18px; color:#72887b; font-size:.82rem; }
-  .thimar-welcome-audio button { border:0; background:transparent; color:#2d704c; cursor:pointer; font-weight:700; text-decoration:underline; }
-  @media(max-width:520px){ #thimarWelcome { padding:14px; } .thimar-welcome-inner { border-radius:24px; } .thimar-welcome-mark { width:66px; height:66px; font-size:1.5rem; } .thimar-ayah::before,.thimar-ayah::after { margin-inline:4px; } }
   /* شريط تنقل موحد داخل لوحات الأدوار (بدل الشريط الجانبي المنزلق) */
   .role-nav { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 22px; padding:14px; border:1px solid var(--border); border-radius:16px; background:var(--card-bg); box-shadow:var(--shadow); }
   .role-nav-item { display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border:1px solid var(--border); border-radius:12px; background:var(--table-header); color:var(--text); cursor:pointer; font-weight:700; font-size:.92rem; transition:border-color .15s ease, color .15s ease, background .15s ease; }
@@ -578,6 +560,64 @@ tr:hover { background: var(--table-hover); }
   html::-webkit-scrollbar, body::-webkit-scrollbar { width:0; height:0; display:none; }
   body { -ms-overflow-style:none; }
   #lockScreen .btn:disabled { opacity:.75; cursor:wait; }
+
+  /* ================= هوية ثمار الجديدة — شاشة الدخول الرئيسية ================= */
+  #lockScreen.thimar-auth {
+    position:relative; overflow:hidden; text-align:center;
+    max-width:470px; margin:clamp(10px,3vh,34px) auto 34px !important;
+    padding:clamp(26px,7vw,42px) clamp(16px,5vw,30px) clamp(22px,5vw,30px);
+    background:radial-gradient(125% 100% at 50% 6%, #17544a 0%, #0f3f36 42%, #072520 100%);
+    border:1px solid rgba(217,171,92,.30); border-radius:30px;
+    box-shadow:0 26px 60px rgba(0,0,0,.45);
+    color:#f2f7f2;
+  }
+  #lockScreen.thimar-auth::before, #lockScreen.thimar-auth::after { content:none !important; display:none !important; }
+  .thimar-arch { position:absolute; left:0; right:0; top:clamp(6px,2vw,14px); display:flex; justify-content:center; pointer-events:none; opacity:.9; }
+  .thimar-arch svg { width:min(100%,400px); height:auto; }
+  .thimar-inner { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:0; }
+  .thimar-leaf { width:clamp(46px,13vw,66px); height:auto; display:block; margin-bottom:-8px; filter:drop-shadow(0 6px 12px rgba(0,0,0,.35)); }
+  .thimar-logo { font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-weight:900; color:#fff; line-height:1; font-size:clamp(3.2rem,17vw,5rem); text-shadow:0 6px 22px rgba(0,0,0,.45); letter-spacing:0; }
+  .thimar-logo-en { font-family:'Segoe UI',Tahoma,sans-serif; color:#d9ab5c; letter-spacing:.42em; text-indent:.42em; font-size:clamp(1rem,4.6vw,1.5rem); font-weight:600; margin-top:6px; }
+  .thimar-tagline { font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; color:#eaf3ea; font-size:clamp(1rem,4.4vw,1.3rem); line-height:1.85; margin-top:clamp(14px,4vw,22px); text-wrap:balance; }
+  .thimar-ayah-wrap { display:flex; align-items:center; justify-content:center; gap:clamp(6px,2.5vw,14px); margin-top:clamp(16px,5vw,26px); width:100%; }
+  .thimar-orn { color:#c99b4e; font-size:clamp(1.2rem,5vw,1.7rem); line-height:1; opacity:.9; flex:0 0 auto; }
+  .thimar-ayah { font-family:'Amiri',serif; color:#f6f9f4; font-size:clamp(1rem,4.6vw,1.35rem); line-height:2.1; text-wrap:balance; }
+  .thimar-ayah-ref { display:block; color:#d9ab5c; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-size:clamp(.75rem,3.2vw,.9rem); margin-top:10px; }
+  .thimar-quran { width:min(100%,340px); height:auto; display:block; margin:clamp(6px,2vw,14px) auto clamp(10px,3vw,18px);
+    -webkit-mask-image:radial-gradient(105% 88% at 50% 44%, #000 34%, rgba(0,0,0,.55) 62%, transparent 88%);
+    mask-image:radial-gradient(105% 88% at 50% 44%, #000 34%, rgba(0,0,0,.55) 62%, transparent 88%);
+  }
+  #lockScreen.thimar-auth #unifiedLoginAlert { width:100%; }
+  #lockScreen.thimar-auth .alert { background:rgba(255,255,255,.08); border:1px solid rgba(217,171,92,.4); color:#fdf6e6; text-align:center; }
+  #lockScreen.thimar-auth .alert-danger { background:rgba(181,79,79,.22); border-color:rgba(233,150,150,.45); color:#ffdede; }
+  #lockScreen.thimar-auth .alert-success { background:rgba(77,123,94,.24); border-color:rgba(150,214,173,.45); color:#dcf6e3; }
+  .thimar-actions { width:100%; display:flex; flex-direction:column; gap:14px; margin-top:6px; }
+  .thimar-btn { width:100%; border-radius:999px; padding:clamp(13px,3.6vw,16px) 20px; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif;
+    font-size:clamp(1rem,4.2vw,1.12rem); font-weight:700; cursor:pointer; border:1px solid transparent; transition:.2s; }
+  .thimar-btn-gold { background:linear-gradient(180deg,#e8c079 0%,#d3a253 100%); color:#123a32; box-shadow:0 12px 26px rgba(0,0,0,.35); }
+  .thimar-btn-gold:hover { background:linear-gradient(180deg,#f0cd8d 0%,#dbae60 100%); }
+  .thimar-btn-ghost { background:transparent; border-color:rgba(217,171,92,.75); color:#f0e2c4; }
+  .thimar-btn-ghost:hover { background:rgba(217,171,92,.14); }
+  .thimar-field { position:relative; width:100%; }
+  .thimar-field + .thimar-field { margin-top:12px; }
+  .thimar-field input {
+    width:100%; padding:clamp(12px,3.4vw,15px) 20px clamp(12px,3.4vw,15px) 78px; border-radius:999px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(217,171,92,.7); color:#fff;
+    font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-size:clamp(.95rem,3.9vw,1.05rem); text-align:right;
+  }
+  .thimar-field input::placeholder { color:rgba(240,247,240,.62); }
+  .thimar-field input:focus { outline:none; border-color:#e8c079; background:rgba(255,255,255,.1); box-shadow:0 0 0 3px rgba(217,171,92,.16); }
+  .thimar-field-icon { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:#d9ab5c; font-size:1.05rem; line-height:1; pointer-events:none; }
+  .thimar-eye { position:absolute; left:46px; top:50%; transform:translateY(-50%); background:none; border:none; padding:0; cursor:pointer; font-size:1.05rem; line-height:1; color:#d9ab5c; }
+  .thimar-signup-row { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  .thimar-signup-row span { color:rgba(240,247,240,.65); font-size:.9rem; }
+  .thimar-signup-inline { background:transparent; border:1px solid rgba(217,171,92,.7); border-radius:999px; color:#f0e2c4; padding:9px 18px; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; }
+  .thimar-signup-inline:hover { background:rgba(217,171,92,.14); }
+  .thimar-footer { margin-top:clamp(20px,6vw,28px); padding-top:14px; border-top:1px solid rgba(217,171,92,.22); width:100%; }
+  .thimar-footer .lbl { display:block; font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; color:rgba(240,247,240,.6); font-size:.8rem; margin-bottom:6px; }
+  .thimar-footer .ayah { font-family:'Amiri','Traditional Arabic',serif; color:#f6f9f4; font-size:clamp(1rem,4.3vw,1.2rem); }
+  .thimar-footer .ref { display:block; font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; color:#d9ab5c; font-size:.75rem; margin-top:6px; }
+  #lockScreen.thimar-auth .btn:disabled { opacity:.7; }
   </style>
 </head>
 <body>
@@ -594,15 +634,68 @@ tr:hover { background: var(--table-hover); }
 <div class="container">
 
 <!-- شاشة القفل الموحدة -->
-<div id="lockScreen" class="page" style="max-width:480px; margin:40px auto;">
-  <div class="page-header"><h2>🔒 دخول النظام</h2></div>
-  <div id="unifiedLoginAlert"></div>
-  <div class="form-group"><label>اسم المستخدم</label><input type="text" id="unifiedUser" placeholder="اسم المستخدم (أو رقم الموبايل للمسؤول)" onkeypress="if(event.key==='Enter')unifiedLogin()"></div>
-  <div class="form-group"><label>الرقم السري</label><div style="position:relative;"><input type="password" id="unifiedPass" placeholder="أدخل الرقم السري" style="padding-left:45px;" onkeypress="if(event.key==='Enter')unifiedLogin()"><span onclick="togglePassVisibility('unifiedPass', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span></div></div>
-  <button class="btn btn-primary" onclick="unifiedLogin()" style="width:100%">🔓 دخول</button>
-  <div style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border); text-align:center;">
-    <p style="color:var(--text-light); margin-bottom:10px;">ليس لديك حساب؟ أرسل طلب انضمام للمسؤول.</p>
-    <button class="btn btn-success" onclick="startSignup()" style="width:100%">🆕 إنشاء حساب جديد</button>
+<div id="lockScreen" class="page thimar-auth">
+  <div class="thimar-arch" aria-hidden="true">
+    <svg viewBox="0 0 400 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 698 L18 300 C18 206 118 184 178 62 C193 30 207 30 222 62 C282 184 382 206 382 300 L382 698"
+        stroke="#d9ab5c" stroke-width="3" stroke-linejoin="round" opacity="0.85"/>
+      <path d="M34 698 L34 304 C34 216 128 196 186 78 C194 62 206 62 214 78 C272 196 366 216 366 304 L366 698"
+        stroke="#d9ab5c" stroke-width="1" stroke-linejoin="round" opacity="0.35"/>
+    </svg>
+  </div>
+
+  <div class="thimar-inner">
+    <img class="thimar-leaf" src="/images/thimar-leaves.png" alt="" aria-hidden="true">
+    <h1 class="thimar-logo">ثمار</h1>
+    <div class="thimar-logo-en">THIMAR</div>
+    <p class="thimar-tagline">منصة ثِمار<br>لحفظ القرآن الكريم</p>
+
+    <div class="thimar-ayah-wrap">
+      <span class="thimar-orn" aria-hidden="true">❁</span>
+      <p class="thimar-ayah">
+        أَلَمْ تَرَ كَيْفَ ضَرَبَ اللَّهُ مَثَلًا كَلِمَةً طَيِّبَةً كَشَجَرَةٍ طَيِّبَةٍ أَصْلُهَا ثَابِتٌ وَفَرْعُهَا فِي السَّمَاءِ
+        <span class="thimar-ayah-ref">(إبراهيم: 24)</span>
+      </p>
+      <span class="thimar-orn" aria-hidden="true">❁</span>
+    </div>
+
+    <img class="thimar-quran" src="/images/thimar-quran-rehl.png" alt="مصحف مفتوح على حامل خشبي">
+
+    <div id="unifiedLoginAlert"></div>
+
+    <!-- الواجهة الأولى: زرّا تسجيل الدخول وإنشاء حساب جديد -->
+    <div class="thimar-actions" id="thimarIntroActions">
+      <button type="button" class="thimar-btn thimar-btn-gold" onclick="thimarShowLoginForm()">تسجيل الدخول</button>
+      <button type="button" class="thimar-btn thimar-btn-ghost" onclick="startSignup()">إنشاء حساب جديد</button>
+    </div>
+
+    <!-- شاشة تسجيل الدخول (نفس الحقول والوظائف السابقة) -->
+    <div class="thimar-actions hidden" id="thimarLoginForm">
+      <div>
+        <div class="thimar-field">
+          <span class="thimar-field-icon" aria-hidden="true">👤</span>
+          <label class="sr-only" for="unifiedUser">اسم المستخدم</label>
+          <input type="text" id="unifiedUser" placeholder="اسم المستخدم" autocomplete="username" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
+        </div>
+        <div class="thimar-field">
+          <span class="thimar-field-icon" aria-hidden="true">🔒</span>
+          <label class="sr-only" for="unifiedPass">الرقم السري</label>
+          <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
+          <button type="button" class="thimar-eye" onclick="togglePassVisibility('unifiedPass', this)" aria-label="إظهار أو إخفاء الرقم السري">👁️</button>
+        </div>
+      </div>
+      <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
+      <div class="thimar-signup-row">
+        <span>ليس لديك حساب؟</span>
+        <button type="button" class="thimar-signup-inline" onclick="startSignup()">إنشاء حساب جديد</button>
+      </div>
+    </div>
+
+    <div class="thimar-footer">
+      <span class="lbl">قال تعالى:</span>
+      <span class="ayah">﴿ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴾</span>
+      <span class="ref">(المزمل: 4)</span>
+    </div>
   </div>
 </div>
 
@@ -734,7 +827,7 @@ tr:hover { background: var(--table-hover); }
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
   <div class="form-group">
     <label>طلب التطوير</label>
-    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر��د إضافته أو تعديله ف الموقع..."></textarea>
+    <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما تر����د إضافته أو تعديله ف الموقع..."></textarea>
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
@@ -1023,7 +1116,7 @@ tr:hover { background: var(--table-hover); }
     <div id="readingItems"></div>
   </div>
   <div class="form-group"><label>ملاحظات التسميع</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
-  <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حفظ مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, #764ba2, #667eea);">🔒 ءءفظ نهائي (لا يمكن التعديل)</button></div>
+  <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حف�� مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, #764ba2, #667eea);">🔒 ءءفظ نهائي (لا يمكن التعديل)</button></div>
 </div>
 
 <!-- سجل الطالب -->
@@ -1348,7 +1441,7 @@ function getAIModelLabel(){return 'Gemini / Groq';}
 function showToast(msg, type){
   if(!type){
     var t = String(msg);
-    type = (/(❌||فشل|طأ|لا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
+    type = (/(❌||فشل|طأ|��ا يمكن|يرجى|مسبق|غير|يجب|لم )/.test(t)) ? 'error' : 'success';
   }
   var box = document.getElementById('toastBox');
   if(!box){ box = document.createElement('div'); box.id='toastBox'; document.body.appendChild(box); }
@@ -1505,6 +1598,41 @@ window.alert = function(m){ showToast(m); };
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape') closeAllSidebars();
   });
+})();
+</script>
+<script>
+/* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة والتحقق القديم دون أي تغيير) */
+(function(){
+  function el(id){ return document.getElementById(id); }
+
+  window.thimarShowLoginForm = function(){
+    var intro = el('thimarIntroActions'), form = el('thimarLoginForm');
+    if(intro) intro.classList.add('hidden');
+    if(form){
+      form.classList.remove('hidden');
+      var u = el('unifiedUser');
+      if(u) setTimeout(function(){ try { u.focus(); } catch(e){} }, 60);
+    }
+  };
+
+  window.thimarResetAuthView = function(){
+    var intro = el('thimarIntroActions'), form = el('thimarLoginForm');
+    if(intro) intro.classList.remove('hidden');
+    if(form) form.classList.add('hidden');
+  };
+
+  /* عند العودة لشاشة الدخول (تسجيل الخروج مثلاً) نعيد عرض الأزرار الرئيسية */
+  (function patchShowPage(){
+    if(typeof window.showPage !== 'function') return setTimeout(patchShowPage, 60);
+    if(window.__thimarShowPagePatched) return;
+    window.__thimarShowPagePatched = true;
+    var original = window.showPage;
+    window.showPage = function(id){
+      var out = original.apply(this, arguments);
+      if(id === 'lockScreen') window.thimarResetAuthView();
+      return out;
+    };
+  })();
 })();
 </script>
  </body>
