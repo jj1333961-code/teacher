@@ -53,7 +53,17 @@
     }
   }
 
+  var notificationAudio = null;
+  function playNotificationSound() {
+    try {
+      if (!notificationAudio) { notificationAudio = new Audio("/audio/notification-chime.mp3"); notificationAudio.preload = "auto"; notificationAudio.volume = 0.65; }
+      notificationAudio.currentTime = 0;
+      var playback = notificationAudio.play();
+      if (playback && playback.catch) playback.catch(function () {});
+    } catch (e) {}
+  }
   function toast(msg, type) {
+    playNotificationSound();
     if (typeof window.showToast === "function") { window.showToast(msg, type || "info"); return; }
     console.log("[v0] isl:", msg);
   }
@@ -76,8 +86,32 @@
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>',
   };
 
+  var TASBEEH = [
+    "سُبْحَانَ اللهِ وَبِحَمْدِهِ",
+    "سُبْحَانَ اللهِ العَظِيمِ",
+    "سُبْحَانَ اللهِ وَالحَمْدُ لِلَّهِ",
+    "لَا إِلَهَ إِلَّا اللهُ",
+    "اللهُ أَكْبَرُ",
+    "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ",
+    "أَسْتَغْفِرُ اللهَ وَأَتُوبُ إِلَيْهِ",
+    "اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ عَلَى نَبِيِّنَا مُحَمَّدٍ",
+    "حَسْبِيَ اللهُ لَا إِلَهَ إِلَّا هُوَ، عَلَيْهِ تَوَكَّلْتُ",
+    "رَبِّ اغْفِرْ لِي وَارْحَمْنِي وَاهْدِنِي وَعَافِنِي وَارْزُقْنِي",
+    "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ",
+    "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ",
+    "اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ العَفْوَ فَاعْفُ عَنِّي",
+    "سُبْحَانَ ذِي المُلْكِ وَالمَلَكُوتِ",
+    "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ",
+    "رَضِيتُ بِاللهِ رَبًّا، وَبِالإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ نَبِيًّا",
+    "آمَنْتُ بِاللهِ وَحْدَهُ لَا شَرِيكَ لَهُ",
+    "اللَّهُمَّ بَارِكْ لَنَا فِي أَوْقَاتِنَا وَأَعْمَالِنَا",
+    "اللَّهُمَّ اجْعَلْنِي مِنَ التَّوَّابِينَ وَاجْعَلْنِي مِنَ المُتَطَهِّرِينَ",
+    "اللَّهُمَّ اهْدِنِي وَسَدِّدْنِي"
+  ];
+
   var TILES = [
     { id: "quran", label: "القرآن الكريم", icon: ICONS.quran },
+    { id: "tasbeeh", label: "التسبيح", icon: ICONS.adhkar },
     { id: "dua", label: "الدعاء", icon: ICONS.dua },
     { id: "hadith", label: "الأحاديث", icon: ICONS.hadith },
     { id: "adhkar", label: "الأذكار", icon: ICONS.adhkar },
@@ -155,7 +189,8 @@
   /* ============================================================
      الطبقة المشتركة: النافذة، المصحف، التنبيه
      ============================================================ */
-  var modal, sheetTitle, sheetBody, backBtn, mushaf, mushafCanvas, mushafClose, mushafLoader, athan;
+  var modal, sheetTitle, sheetBody, backBtn, mushaf, mushafCanvas, mushafClose, athan, mushafZoom;
+  var pdfDoc = null, pdfLib = null, rendering = false, pendingPage = null;
   var sheetStack = [];
 
   function ensureLayers() {
@@ -182,16 +217,15 @@
 
     mushaf = el(
       '<div class="isl-mushaf" hidden role="dialog" aria-modal="true" aria-label="المصحف الشريف">' +
-      '<div class="isl-mushaf-loader"><i></i><span>جاري تحميل المصحف…</span></div>' +
-      '<canvas class="isl-mushaf-canvas"></canvas>' +
-      '<button type="button" class="isl-mushaf-close" aria-label="إغلاق المصحف">&times;</button>' +
+      '<div class="isl-mushaf-stage"><canvas class="isl-mushaf-canvas"></canvas></div>' +
+      '<button type="button" class="isl-mushaf-close" aria-label="العودة إلى قائمة السور">&times;</button>' +
       "</div>"
     );
     document.body.appendChild(mushaf);
-    mushafCanvas = mushaf.querySelector("canvas");
+    mushafCanvas = mushaf.querySelector(".isl-mushaf-canvas");
     mushafClose = mushaf.querySelector(".isl-mushaf-close");
-    mushafLoader = mushaf.querySelector(".isl-mushaf-loader");
-    mushafClose.addEventListener("click", function (e) { e.stopPropagation(); closeMushaf(); });
+    mushafZoom = 1;
+    mushafClose.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); closeMushaf(); });
 
     athan = el(
       '<div class="isl-athan-toast" hidden role="status" aria-live="polite">' +
@@ -286,7 +320,7 @@
   }
 
   /* ---------------- عارض المصحف ---------------- */
-  var pdfDoc = null, pdfLib = null, pdfPage = 1, rendering = false, pendingPage = null, hideTimer = null;
+  var pdfPage = 1, hideTimer = null;
 
   async function loadPdfLib() {
     if (pdfLib) return pdfLib;
@@ -301,71 +335,74 @@
     pdfPage = s ? s.page : 1;
     mushaf.hidden = false;
     document.body.style.overflow = "hidden";
-    mushafLoader.hidden = false;
+    if (mushaf.requestFullscreen) mushaf.requestFullscreen().catch(function () {});
     showMushafClose();
-
     try {
       var lib = await loadPdfLib();
-      if (!pdfDoc) {
-        pdfDoc = await lib.getDocument({
-          url: D.mushafPath || "/quran/quran.pdf",
-          cMapUrl: "/vendor/pdfjs/cmaps/",
-          cMapPacked: true,
-        }).promise;
-      }
+      if (!pdfDoc) pdfDoc = await lib.getDocument({ url: D.mushafPath || "/quran/quran.pdf", cMapUrl: "/vendor/pdfjs/cmaps/", cMapPacked: true }).promise;
       await renderPage(pdfPage);
-    } catch (err) {
-      console.log("[v0] mushaf error:", err && err.message);
-      mushafLoader.innerHTML = "<span>تعذّر تحميل المصحف، حاول مرة أخرى.</span>";
-      return;
-    }
+    } catch (error) { console.log("[v0] Mushaf render failed", error); }
     bindMushafGestures();
   }
 
   async function renderPage(n) {
     if (!pdfDoc) return;
-    var total = pdfDoc.numPages || D.mushafPages || 604;
-    n = Math.min(Math.max(1, n), total);
-    pdfPage = n;
-    if (rendering) { pendingPage = n; return; }
+    pdfPage = Math.min(Math.max(1, n), pdfDoc.numPages);
+    if (rendering) { pendingPage = pdfPage; return; }
     rendering = true;
     try {
-      var page = await pdfDoc.getPage(n);
-      var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+      var page = await pdfDoc.getPage(pdfPage);
       var base = page.getViewport({ scale: 1 });
-      var scale = Math.min(window.innerWidth / base.width, window.innerHeight / base.height);
-      var vp = page.getViewport({ scale: scale * dpr });
-      mushafCanvas.width = Math.floor(vp.width);
-      mushafCanvas.height = Math.floor(vp.height);
-      mushafCanvas.style.width = Math.floor(vp.width / dpr) + "px";
-      mushafCanvas.style.height = Math.floor(vp.height / dpr) + "px";
-      await page.render({ canvasContext: mushafCanvas.getContext("2d"), viewport: vp }).promise;
-      mushafLoader.hidden = true;
-    } catch (err) {
-      console.log("[v0] render error:", err && err.message);
+      var availableWidth = Math.max(1, window.innerWidth - 8);
+      var availableHeight = Math.max(1, window.innerHeight - 8);
+      var scale = Math.min(availableWidth / base.width, availableHeight / base.height) * mushafZoom;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var viewport = page.getViewport({ scale: scale * dpr });
+      mushafCanvas.width = Math.floor(viewport.width);
+      mushafCanvas.height = Math.floor(viewport.height);
+      mushafCanvas.style.width = Math.floor(viewport.width / dpr) + "px";
+      mushafCanvas.style.height = Math.floor(viewport.height / dpr) + "px";
+      await page.render({ canvasContext: mushafCanvas.getContext("2d"), viewport: viewport }).promise;
+    } finally {
+      rendering = false;
+      if (pendingPage) { var next = pendingPage; pendingPage = null; renderPage(next); }
     }
-    rendering = false;
-    if (pendingPage != null) { var p = pendingPage; pendingPage = null; renderPage(p); }
   }
 
   var gesturesBound = false;
   function bindMushafGestures() {
     if (gesturesBound) return;
     gesturesBound = true;
-    var sx = 0, sy = 0, moved = false;
+    var sx = 0, sy = 0, moved = false, pinchStart = 0, zoomStart = 1;
 
     mushaf.addEventListener("touchstart", function (e) {
+      if (e.touches.length === 2) {
+        pinchStart = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        zoomStart = mushafZoom;
+        moved = true;
+        return;
+      }
       if (!e.touches.length) return;
       sx = e.touches[0].clientX; sy = e.touches[0].clientY; moved = false;
     }, { passive: true });
 
+    mushaf.addEventListener("touchmove", function (e) {
+      if (e.touches.length !== 2 || !pinchStart) return;
+      var distance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      var nextZoom = Math.min(2.5, Math.max(1, zoomStart * distance / pinchStart));
+      if (Math.abs(nextZoom - mushafZoom) < 0.02) return;
+      mushafZoom = nextZoom;
+      renderPage(pdfPage);
+    }, { passive: true });
+
     mushaf.addEventListener("touchend", function (e) {
+      if (pinchStart) { pinchStart = 0; return; }
       var t = e.changedTouches && e.changedTouches[0];
       if (!t) return;
       var dx = t.clientX - sx, dy = t.clientY - sy;
+      if (dy > 90 && Math.abs(dy) > Math.abs(dx)) { closeMushaf(); return; }
       if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
         moved = true;
-        // مصحف عربي: السحب لليمين ينقل للصفحة التالية
         renderPage(dx > 0 ? pdfPage + 1 : pdfPage - 1);
       }
       if (!moved) toggleMushafClose();
@@ -399,6 +436,7 @@
   function closeMushaf() {
     mushaf.hidden = true;
     clearTimeout(hideTimer);
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
     if (!modal || modal.hidden) document.body.style.overflow = "";
   }
 
@@ -608,8 +646,9 @@
   function announce(p) {
     ensureLayers();
     var f = fmt12(p.time);
-    var msg = "حان وقت صلاة " + p.name + " — " + f.t + " " + f.mer;
-    athan.querySelector("[data-athan-text]").innerHTML = "🕌 <b>" + esc(msg) + "</b>";
+  var msg = "حان وقت صلاة " + p.name + " — " + f.t + " " + f.mer;
+  playNotificationSound();
+  athan.querySelector("[data-athan-text]").innerHTML = "🕌 <b>" + esc(msg) + "</b>";
     athan.hidden = false;
     setTimeout(function () { athan.hidden = true; }, 30000);
     try {
@@ -705,12 +744,12 @@
   function askNotify() {
     if (!window.Notification) return toast("التنبيهات غير مدعومة في هذا المتصفح", "error");
     Notification.requestPermission().then(function (p) {
-      toast(p === "granted" ? "تم تشغيل تنبيه الصلاة" : "لم يتم السماح بالتنبيهات", p === "granted" ? "success" : "error");
+      toast(p === "granted" ? "تم ت��غيل تنبيه الصلاة" : "لم يتم السماح بالتنبيهات", p === "granted" ? "success" : "error");
     });
   }
 
   /* ============================================================
-     6) اتجاه القبلة
+     6) اتجاه القبل��
      ============================================================ */
   var compassHandler = null, qiblaBearing = null;
 
@@ -812,8 +851,26 @@
   /* ============================================================
      التوجيه
      ============================================================ */
+  function openTasbeeh() {
+    var html = '<div class="isl-tasbeeh-wrap"><label for="islTasbeehText">اختر التسبيحة</label><select id="islTasbeehText">' + TASBEEH.map(function (item, i) { return '<option value="' + i + '">' + esc(item) + '</option>'; }).join('') + '</select>' +
+      '<div class="isl-tasbeeh-count" data-tasbeeh-count>0</div><div class="isl-tasbeeh-progress"><span data-tasbeeh-progress></span></div>' +
+      '<div class="isl-tasbeeh-targets" role="group" aria-label="عدد التسبيحات"><button type="button" data-target="30">30</button><button type="button" data-target="50">50</button><button type="button" data-target="100">100</button><button type="button" data-target="1000">1000</button><input type="number" min="1" max="100000" value="100" aria-label="عدد مخصص" data-target-input></div>' +
+      '<button type="button" class="isl-tasbeeh-tap" data-tasbeeh-tap>اضغط للتسبيح</button><p class="isl-tasbeeh-label" data-tasbeeh-label>' + esc(TASBEEH[0]) + '</p><button type="button" class="isl-tasbeeh-reset" data-tasbeeh-reset>إعادة ضبط العداد</button></div>';
+    openSheet("التسبيح", html, function (root) {
+      var count = 0, target = 100, countEl = root.querySelector('[data-tasbeeh-count]'), progress = root.querySelector('[data-tasbeeh-progress]'), label = root.querySelector('[data-tasbeeh-label]'), select = root.querySelector('#islTasbeehText'), input = root.querySelector('[data-target-input]');
+      function paint() { countEl.textContent = count + ' / ' + target; progress.style.width = Math.min(100, count / target * 100) + '%'; label.textContent = TASBEEH[parseInt(select.value, 10) || 0]; }
+      root.querySelectorAll('[data-target]').forEach(function (b) { b.addEventListener('click', function () { target = parseInt(b.dataset.target, 10); input.value = target; count = 0; paint(); }); });
+      input.addEventListener('change', function () { target = Math.min(100000, Math.max(1, parseInt(input.value, 10) || 1)); input.value = target; count = 0; paint(); });
+      select.addEventListener('change', paint);
+      root.querySelector('[data-tasbeeh-tap]').addEventListener('click', function () { if (count < target) count++; paint(); if (count === target) toast('أحسنت، اكتمل العدد المحدد', 'success'); });
+      root.querySelector('[data-tasbeeh-reset]').addEventListener('click', function () { count = 0; paint(); });
+      paint();
+    });
+  }
+
   function openSection(id) {
     ensureLayers();
+    if (id === "tasbeeh") return openTasbeeh();
     if (id === "quran") return openQuran();
     if (id === "dua") return openGroups("الدعاء", D.duas || []);
     if (id === "adhkar") return openGroups("الأذكار", D.adhkar || []);
