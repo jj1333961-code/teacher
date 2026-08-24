@@ -1,0 +1,258 @@
+/* ============================================================
+   ثمار — الهوية الإسلامية التراثية لصفحات المسؤول والطالب وولي الأمر
+   خلفية عاجية، أخضر داكن وذهبي، خط Cairo/Tajawal، بطاقات رأسية كبيرة
+   ============================================================ */
+
+:root {
+  --hrt-green: #285340;
+  --hrt-green-deep: #1c3f30;
+  --hrt-green-soft: #4d7b5e;
+  --hrt-gold: #c39a52;
+  --hrt-gold-soft: #e3c98c;
+  --hrt-ivory: #f6f2e6;
+  --hrt-ivory-deep: #efe8d5;
+  --hrt-ink: #223b30;
+}
+
+/* الخط الأساسي عبر المنصة */
+body,
+button,
+input,
+select,
+textarea,
+.card,
+.page,
+.btn {
+  font-family: "Cairo", "Tajawal", "Segoe UI", Tahoma, sans-serif;
+}
+
+/* خلفية عاجية بزخرفة هندسية إسلامية خفيفة جداً على صفحات الأدوار الثلاث */
+body:has(#adminDashboard:not(.hidden)),
+body:has(#studentDashboard:not(.hidden)),
+body:has(#parentDashboard:not(.hidden)) {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(195, 154, 82, 0.10), transparent 45%),
+    linear-gradient(160deg, var(--hrt-ivory) 0%, var(--hrt-ivory-deep) 100%);
+}
+
+/* طبقة زخرفة نجمية إسلامية خفيفة خلف صفحات الأدوار */
+#adminDashboard::after,
+#studentDashboard::after,
+#parentDashboard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23285340' stroke-width='1' stroke-opacity='0.06'%3E%3Cpath d='M60 8 72 36 100 36 78 56 88 86 60 68 32 86 42 56 20 36 48 36z'/%3E%3Ccircle cx='60' cy='52' r='26'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 150px 150px;
+}
+[data-theme="dark"] #adminDashboard::after,
+[data-theme="dark"] #studentDashboard::after,
+[data-theme="dark"] #parentDashboard::after { opacity: 0.35; }
+
+/* ضمان ظهور المحتوى فوق الزخرفة */
+#adminDashboard > *,
+#studentDashboard > *,
+#parentDashboard > * { position: relative; z-index: 1; }
+
+/* عناوين الصفحات بطابع تراثي */
+#adminDashboard .page-header h2,
+#studentDashboard .page-header h2,
+#parentDashboard .page-header h2 {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- شبكة البطاقات الرأسية ---------- */
+.heritage-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 8px 0 10px;
+}
+@media (min-width: 900px) {
+  .heritage-grid { max-width: 760px; margin-inline: auto; }
+}
+
+/* ---------- البطاقة التراثية ---------- */
+.heritage-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  text-align: right;
+  padding: 24px 26px;
+  border-radius: 26px;
+  cursor: pointer;
+  border: 1px solid rgba(195, 154, 82, 0.45);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(246, 242, 230, 0.35)),
+    var(--card-bg, #fffdf7);
+  box-shadow: 0 14px 34px rgba(28, 63, 48, 0.10);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  font: inherit;
+  color: var(--hrt-ink);
+}
+[data-theme="dark"] .heritage-card {
+  color: var(--text);
+  border-color: rgba(211, 170, 91, 0.35);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent), var(--card-bg);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+}
+
+/* إطار ذهبي داخلي رقيق */
+.heritage-card::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(195, 154, 82, 0.28);
+  pointer-events: none;
+}
+
+/* قوس إسلامي زخرفي خفيف في أعلى البطاقة (جهة الذهب) */
+.heritage-card::after {
+  content: "";
+  position: absolute;
+  top: -34px;
+  left: -34px;
+  width: 120px;
+  height: 120px;
+  border-radius: 0 0 100% 0;
+  background: radial-gradient(circle at top left, rgba(195, 154, 82, 0.16), transparent 70%);
+  pointer-events: none;
+}
+
+.heritage-card:hover,
+.heritage-card:focus-visible {
+  transform: translateY(-4px);
+  border-color: var(--hrt-gold);
+  box-shadow: 0 22px 44px rgba(28, 63, 48, 0.18);
+  outline: none;
+}
+.heritage-card:active { transform: translateY(-1px) scale(0.995); }
+
+/* لوحة الرسمة التوضيحية الكبيرة */
+.heritage-illus {
+  position: relative;
+  flex: 0 0 auto;
+  width: 110px;
+  height: 110px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--hrt-ivory);
+  border: 2px solid rgba(195, 154, 82, 0.55);
+  box-shadow: 0 6px 16px rgba(28, 63, 48, 0.14), inset 0 0 0 4px rgba(255, 253, 247, 0.7);
+}
+[data-theme="dark"] .heritage-illus {
+  border-color: rgba(211, 170, 91, 0.5);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(246, 242, 230, 0.9);
+}
+.heritage-illus img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* جسم البطاقة: العنوان والوصف */
+.heritage-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.heritage-title {
+  margin: 0;
+  font-family: "Cairo", "Tajawal", sans-serif;
+  font-size: 1.32rem;
+  font-weight: 800;
+  color: var(--hrt-green);
+  line-height: 1.4;
+}
+[data-theme="dark"] .heritage-title { color: var(--hrt-gold-soft); }
+.heritage-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--text-light, #6c7d74);
+}
+
+/* شارة العدد الذهبية */
+.heritage-count {
+  align-self: flex-start;
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 15px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--hrt-green-deep), var(--hrt-green));
+  color: var(--hrt-ivory);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 6px 16px rgba(28, 63, 48, 0.22);
+}
+.heritage-count small { font-size: 0.72rem; font-weight: 600; opacity: 0.85; }
+
+/* زر ثانوي داخل البطاقة (مثل: إضافة طالب) */
+.heritage-action {
+  align-self: flex-start;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--hrt-gold);
+  background: transparent;
+  color: var(--hrt-green);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.heritage-action:hover { background: var(--hrt-gold); color: #fff; }
+[data-theme="dark"] .heritage-action { color: var(--hrt-gold-soft); }
+[data-theme="dark"] .heritage-action:hover { color: #1c3f30; }
+
+/* عنوان قسم صغير بطابع تراثي (فاصل بين المجموعات) */
+.heritage-section-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 26px auto 4px;
+  max-width: 760px;
+  color: var(--hrt-green);
+  font-family: "Cairo", "Tajawal", sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+[data-theme="dark"] .heritage-section-title { color: var(--hrt-gold-soft); }
+.heritage-section-title::before,
+.heritage-section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to left, transparent, rgba(195, 154, 82, 0.5), transparent);
+}
+.heritage-section-title span {
+  display: inline-flex;
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  background: var(--hrt-gold);
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 560px) {
+  .heritage-card { flex-direction: column; text-align: center; align-items: center; gap: 14px; padding: 22px 18px; }
+  .heritage-body { align-items: center; }
+  .heritage-count, .heritage-action, .heritage-title { align-self: center; }
+  .heritage-illus { width: 96px; height: 96px; }
+  .heritage-illus img { width: 72px; height: 72px; }
+}
