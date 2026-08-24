@@ -610,6 +610,10 @@ tr:hover { background: var(--table-hover); }
     color:var(--thimar-ink);
   }
   #lockScreen.thimar-auth::before, #lockScreen.thimar-auth::after { content:none !important; display:none !important; }
+  /* العودة إلى الصفحة الرئيسية القديمة: نموذج دخول مباشر بدل شاشة اختيار نظام إدارة الطلاب */
+  .thimar-arch, .thimar-leaf, .thimar-logo-en, .thimar-tagline, .thimar-ayah-wrap, .thimar-quran-wrap, .thimar-footer { display:none !important; }
+  #lockScreen.thimar-auth { max-width:480px; margin:40px auto !important; padding:34px 30px 30px; background:var(--card-bg); border:1px solid var(--border); color:var(--text); }
+  .thimar-logo { color:var(--primary); font-family:'Cairo','Tajawal',sans-serif; font-size:2rem; margin:0 0 22px; text-shadow:none; }
   .thimar-arch { position:absolute; left:0; right:0; top:clamp(6px,2vw,14px); display:flex; justify-content:center; pointer-events:none; opacity:.9; }
   .thimar-arch svg { width:min(100%,400px); height:auto; }
   .thimar-arch svg path { stroke:var(--thimar-gold); }
@@ -726,9 +730,9 @@ tr:hover { background: var(--table-hover); }
 
   <div class="thimar-inner">
     <img class="thimar-leaf" src="/images/thimar-leaves.png" alt="" aria-hidden="true">
-    <h1 class="thimar-logo">ثمار</h1>
-    <div class="thimar-logo-en">THIMAR</div>
-    <p class="thimar-tagline">منصة ثِمار<br>لحفظ القرآن الكريم</p>
+    <h1 class="thimar-logo">دخول النظام</h1>
+    <div class="thimar-logo-en" aria-hidden="true"></div>
+    <p class="thimar-tagline" aria-hidden="true"></p>
 
     <div class="thimar-ayah-wrap">
       <svg class="thimar-orn" viewBox="0 0 24 120" fill="none" aria-hidden="true">
@@ -775,33 +779,6 @@ tr:hover { background: var(--table-hover); }
       <span class="lbl">قال تعالى:</span>
       <span class="ayah">﴿ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴾</span>
       <span class="ref">(المزمل: 4)</span>
-    </div>
-  </div>
-</div>
-
-<!-- الصفحة الرئيسية -->
-<div id="homePage" class="home-page hidden">
-  <div class="home-orn" aria-hidden="true">
-    <svg viewBox="0 0 200 20" preserveAspectRatio="none"><path d="M0 10 H80 M120 10 H200" stroke="currentColor" stroke-width="1"/><circle cx="100" cy="10" r="5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M100 5 L102.3 8.5 L106 9.2 L103.4 12 L104 15.8 L100 14 L96 15.8 L96.6 12 L94 9.2 L97.7 8.5 Z" fill="currentColor"/></svg>
-  </div>
-  <h1>نظام إدارة الطلاب</h1>
-  <p>مرحباً بك — اختر طريقة استخدامك للموقع</p>
-  <div class="cards">
-    <div class="card" onclick="showPage('adminLogin')">
-      <div class="icon" aria-hidden="true"><svg viewBox="0 0 80 80" fill="none"><path d="M40 8 C25 18 25 30 40 36 C55 30 55 18 40 8 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><rect x="18" y="36" width="44" height="30" rx="2" stroke="currentColor" stroke-width="2.5"/><path d="M18 36 L40 22 L62 36" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><rect x="34" y="48" width="12" height="18" stroke="currentColor" stroke-width="2.2"/><path d="M12 66 H68" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="40" cy="14" r="2.4" fill="currentColor" class="icon-accent"/></svg></div>
-      <h3>المسؤول</h3><p>التحكم الكامل في النظام والطلاب</p>
-    </div>
-    <div class="card" onclick="showPage('studentLogin')">
-      <div class="icon" aria-hidden="true"><svg viewBox="0 0 80 80" fill="none"><path d="M40 20 C33 15 22 13 14 15 V54 C22 52 33 54 40 59 C47 54 58 52 66 54 V15 C58 13 47 15 40 20 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M40 20 V59" stroke="currentColor" stroke-width="2.2"/><path d="M20 24 H32 M20 31 H32 M48 24 H60 M48 31 H60" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M58 62 L60 66 L64 63.5 L62 68 L66 69.5 L61.5 71 L62 75.5 L58 72.5 L54 75.5 L54.5 71 L50 69.5 L54 68 L52 63.5 L56 66 Z" fill="currentColor" class="icon-accent"/></svg></div>
-      <h3>الطالب</h3><p>متابعة المواد والواجبات والحفظ</p>
-    </div>
-    <div class="card" onclick="showPage('parentLogin')">
-      <div class="icon" aria-hidden="true"><svg viewBox="0 0 80 80" fill="none"><path d="M52 12 C41 12 32 21 32 32 C32 39.5 35.9 46.1 41.8 50 C33.6 50.8 27 40.7 27 32 C27 18.7 37.7 8 51 8 C56 8 60.7 9.5 64.5 12.1 C60.9 12.7 56.9 12 52 12 Z" fill="currentColor" class="icon-accent"/><path d="M18 60 C18 50 25 44 31 44 C37 44 44 50 44 60" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="31" cy="34" r="9" stroke="currentColor" stroke-width="2.4"/><path d="M46 66 C46 58 51 53 56 53 C61 53 66 58 66 66" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="56" cy="46" r="7" stroke="currentColor" stroke-width="2"/></svg></div>
-      <h3>ولي الأمر</h3><p>متابعة ابنك/ابنتك والتقارير</p>
-    </div>
-    <div class="card" onclick="startSignup()">
-      <div class="icon" aria-hidden="true"><svg viewBox="0 0 80 80" fill="none"><path d="M40 10 L47 33 L70 33 L51 47 L58 70 L40 56 L22 70 L29 47 L10 33 L33 33 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="40" cy="40" r="6" fill="currentColor" class="icon-accent"/></svg></div>
-      <h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب إلى المسؤول</p>
     </div>
   </div>
 </div>
@@ -860,12 +837,12 @@ tr:hover { background: var(--table-hover); }
 
 <!-- دخول المسؤول -->
 <div id="adminLogin" class="page hidden" style="max-width:500px; margin:40px auto;">
-  <div class="page-header"><h2>🔐 دخول المسؤول</h2></div>
+  <div class="page-header"><h2>🔐 د��ول المسؤول</h2></div>
   <div id="adminLoginAlert"></div>
   <div class="form-group"><label>رقم الموبايل</label><input type="text" id="adminMobile" placeholder="أدخل رقم المو��ايل" maxlength="11"></div>
   <div class="form-group"><label>الرقم السري</label><input type="password" id="adminPass" placeholder="أدخل الرقم السري"></div>
   <button class="btn btn-primary" onclick="adminLogin()" style="width:100%">دخول</button>
-  <button class="btn btn-secondary" onclick="showPage('homePage')" style="width:100%; margin-top:10px">رجوع للرئيسية</button>
+  <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للرئيسية</button>
 </div>
 
 <!-- لوحة المسؤول -->
@@ -1229,7 +1206,7 @@ tr:hover { background: var(--table-hover); }
 <!-- صفحة المخطط الكامل -->
 <div id="fullChartPage" class="chart-page hidden">
   <div class="page-header">
-    <h2>📊 المخط�� الت��صيلي</h2>
+    <h2>📊 ا��مخط�� الت��صيلي</h2>
     <button class="btn btn-secondary" onclick="closeFullChart()">رجوع</button>
   </div>
   <div id="fullChartContainer" style="text-align:center;"></div>
@@ -1282,7 +1259,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group"><label>اسم المستخدم</label><input type="text" id="studentUsername" placeholder="أدخل اسم المستخدم"></div>
   <div class="form-group"><label>الرقم السري</label><input type="password" id="studentPassInput" placeholder="أدخل الرقم السري"></div>
   <button class="btn btn-primary" onclick="studentLogin()" style="width:100%">دخول</button>
-  <button class="btn btn-secondary" onclick="showPage('homePage')" style="width:100%; margin-top:10px">رجوع للرئيسية</button>
+  <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للرئيسية</button>
 </div>
 
 <!-- صفحة الطالب -->
@@ -1320,7 +1297,7 @@ tr:hover { background: var(--table-hover); }
   <div id="studentCompletedTasksSection"></div>
 </div>
 
-<!-- صندوق التسجيلات للطالب -->
+<!-- ��ندوق التسجيلات للطالب -->
 <div id="studentExamPage" class="page hidden">
   <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رجءءع</button></div>
   <div id="studentExamContent"></div>
@@ -1379,7 +1356,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group"><label>اسم ولي الأمر</label><input type="text" id="parentName" placeholder="أدخل اسمك كما سجله المسؤول"></div>
   <div class="form-group"><label>الرقم السري</label><input type="password" id="parentPass" placeholder="الرقم السري الخاص بك"></div>
   <button class="btn btn-primary" onclick="parentLogin()" style="width:100%">دخول</button>
-  <button class="btn btn-secondary" onclick="showPage('homePage')" style="width:100%; margin-top:10px">رجوع للرئيسية</button>
+  <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للرئيسية</button>
 </div>
 
 <!-- صفحة ولي الأمر -->
