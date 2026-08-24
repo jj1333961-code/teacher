@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#315c4b">
+<meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
   <link rel="preload" href="/quran/quran.pdf" as="fetch" type="application/pdf" crossorigin fetchpriority="high">
@@ -111,16 +111,21 @@ button:active { transform:scale(.98); }
 .home-page { text-align:center; padding-top:60px; }
 .home-page h1 { color:#fff; font-size:2.5rem; margin-bottom:10px; text-shadow:0 2px 10px rgba(0,0,0,0.3); }
 .home-page p { color:rgba(255,255,255,0.9); font-size:1.2rem; margin-bottom:40px; }
-.cards { display:flex; gap:25px; justify-content:center; flex-wrap:wrap; }
+.home-orn { display:none; }
+.cards { display:flex; flex-direction:column; gap:22px; align-items:center; max-width:640px; margin:0 auto; }
 .card {
-  background: var(--card-bg); border-radius:20px; padding:40px 30px; width:280px;
+  background: var(--card-bg); border-radius:24px; padding:26px 30px; width:100%;
   box-shadow: var(--shadow); cursor:pointer; transition:0.3s;
-  text-decoration:none; color: var(--text); text-align:center;
+  text-decoration:none; color: var(--text); text-align:right;
+  display:flex; align-items:center; gap:22px;
 }
-.card:hover { transform:translateY(-10px); box-shadow:0 25px 50px rgba(0,0,0,0.3); }
-.card .icon { font-size:4rem; margin-bottom:15px; }
-.card h3 { font-size:1.5rem; color: var(--primary); margin-bottom:8px; }
-.card p { color: var(--text-light); font-size:0.95rem; }
+.card:hover { transform:translateY(-6px); box-shadow:0 25px 50px rgba(0,0,0,0.18); }
+.card .icon { flex:0 0 auto; width:64px; height:64px; margin-bottom:0; }
+.card .icon svg { width:100%; height:100%; }
+.card .icon svg [stroke]:not(.icon-accent) { color:var(--primary); }
+.card .icon svg .icon-accent { color:var(--warning); }
+.card h3 { font-size:1.4rem; color: var(--primary); margin-bottom:6px; }
+.card p { color: var(--text-light); font-size:0.95rem; margin:0; }
 .page { background: color-mix(in srgb, var(--card-bg) 94%, transparent); border:1px solid var(--border); border-radius:22px; padding:30px; margin-top:20px; box-shadow:var(--shadow); position:relative; }
 #lockScreen { margin-top: clamp(28px, 9vh, 90px) !important; padding:clamp(24px, 4vw, 42px); }
 #lockScreen .page-header { align-items:flex-start; }
@@ -158,7 +163,7 @@ th, td { padding:12px; text-align:right; border-bottom:1px solid var(--border); 
 th { background: var(--table-header); font-weight:700; color: var(--primary); }
 tr:hover { background: var(--table-hover); }
 .stats { display:flex; gap:20px; margin-bottom:25px; flex-wrap:wrap; }
-.stat-box { background:linear-gradient(135deg, #667eea, #764ba2); color:#fff; padding:25px; border-radius:15px; flex:1; min-width:180px; text-align:center; }
+.stat-box { background:linear-gradient(135deg, var(--primary), var(--primary-hover)); color:#fff; padding:25px; border-radius:15px; flex:1; min-width:180px; text-align:center; }
 .stat-box .num { font-size:2.2rem; font-weight:bold; }
 .stat-box .label { opacity:0.9; margin-top:5px; }
 .stat-box[onclick] { cursor:pointer; transition:0.2s; }
@@ -180,13 +185,13 @@ tr:hover { background: var(--table-hover); }
 .msg-item .time { color: var(--text-light); font-size:0.85rem; }
 .msg-reply { margin-top:10px; padding:10px; background:#d4edda; border-radius:8px; color:#155724; }
 .file-upload { border:2px dashed var(--primary); border-radius:12px; padding:15px; text-align:center; cursor:pointer; transition:0.2s; background: var(--input-bg); margin-top:8px; }
-.file-upload:hover { background:rgba(102,126,234,0.1); }
+.file-upload:hover { background:rgba(31,88,69,0.08); }
 .subjects-select { min-height:120px; }
 .subjects-select option { padding:8px; }
 .msg-tabs { display:flex; gap:10px; margin-bottom:20px; border-bottom:2px solid var(--border); }
 .msg-tab { padding:12px 25px; cursor:pointer; border-bottom:3px solid transparent; font-weight:600; transition:0.2s; }
 .msg-tab.active { border-bottom-color: var(--primary); color: var(--primary); }
-.msg-tab:hover { background:rgba(102,126,234,0.05); }
+.msg-tab:hover { background:rgba(31,88,69,0.05); }
 .approval-btns { display:flex; gap:8px; margin-top:8px; }
 .approval-btns button { padding:6px 14px; border-radius:8px; border:none; cursor:pointer; font-size:0.85rem; }
 .btn-approve { background:var(--success); color:#fff; }
@@ -195,7 +200,7 @@ tr:hover { background: var(--table-hover); }
 .reading-section { background:linear-gradient(135deg, rgba(255,193,7,0.1), rgba(255,152,0,0.1)); border:2px solid var(--warning); border-radius:15px; padding:20px; margin:15px 0; }
 .add-item-btn { background:var(--success); color:#fff; border:none; border-radius:50%; width:30px; height:30px; font-size:1.2rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; margin-right:8px; }
 .add-item-btn:hover { transform:scale(1.1); }
-.welcome-msg { background:linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15)); border-radius:15px; padding:20px; margin-bottom:20px; border-right:4px solid var(--primary); }
+.welcome-msg { background:linear-gradient(135deg, rgba(31,88,69,0.1), rgba(179,138,67,0.12)); border-radius:15px; padding:20px; margin-bottom:20px; border-right:4px solid var(--primary); }
 .welcome-msg h4 { color:var(--primary); margin-bottom:10px; }
 .task-card { background:var(--table-header); border-radius:12px; padding:15px; margin-bottom:12px; border-right:4px solid var(--info); }
 .task-card h5 { color:var(--info); margin-bottom:8px; }
@@ -209,7 +214,7 @@ tr:hover { background: var(--table-hover); }
   margin-bottom: 15px;
   transition: 0.3s;
 }
-.record-element:hover { border-color: var(--primary); box-shadow: 0 5px 15px rgba(102,126,234,0.15); }
+.record-element:hover { border-color: var(--primary); box-shadow: 0 5px 15px rgba(31,88,69,0.15); }
 .record-element-header {
   display: flex;
   justify-content: space-between;
@@ -283,7 +288,7 @@ tr:hover { background: var(--table-hover); }
   margin-bottom: 20px;
 }
 .history-day-header {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--primary), var(--warning));
   color: #fff;
   padding: 15px 20px;
   border-radius: 10px;
@@ -322,7 +327,7 @@ tr:hover { background: var(--table-hover); }
 .admin-badge { position:relative; }
 .msg-count { position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border-radius:50%; width:22px; height:22px; font-size:0.75rem; display:flex; align-items:center; justify-content:center; font-weight:bold; }
 
-.score-badge { background:linear-gradient(135deg, #667eea, #764ba2); color:#fff; padding:8px 20px; border-radius:20px; font-size:1.3rem; font-weight:bold; display:inline-block; margin:5px; }
+.score-badge { background:linear-gradient(135deg, var(--primary), var(--warning)); color:#fff; padding:8px 20px; border-radius:20px; font-size:1.3rem; font-weight:bold; display:inline-block; margin:5px; }
 
 .draft-badge { background: var(--warning); color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; display: inline-block; margin-right: 5px; }
 .draft-section { background: linear-gradient(135deg, rgba(255,193,7,0.15), rgba(255,152,0,0.15)); border: 2px solid var(--warning); border-radius: 15px; padding: 20px; margin-bottom: 20px; }
@@ -330,7 +335,7 @@ tr:hover { background: var(--table-hover); }
 /* Back Button Fixed at Bottom */
   .back-btn-container, .back-btn, button[onclick="goBack()"], button[onclick^="showPage("][class*="btn-secondary"] { display:none !important; }
 .back-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   color: #fff;
   border: none;
   border-radius: 50px;
@@ -338,7 +343,7 @@ tr:hover { background: var(--table-hover); }
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+  box-shadow: 0 8px 25px rgba(31,88,69,0.35);
   transition: 0.3s;
   display: flex;
   align-items: center;
@@ -346,7 +351,7 @@ tr:hover { background: var(--table-hover); }
 }
 .back-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(102,126,234,0.5);
+  box-shadow: 0 12px 35px rgba(31,88,69,0.4);
 }
 .back-btn:active {
   transform: translateY(0);
@@ -389,8 +394,9 @@ tr:hover { background: var(--table-hover); }
 }
 
 @media(max-width:768px){
-  .cards { flex-direction:column; align-items:center; }
-  .card { width:90%; }
+  .cards { align-items:stretch; }
+  .card { width:100%; flex-direction:column; text-align:center; padding:24px 20px; }
+  .card .icon { margin:0 auto 12px; }
   .stats { flex-direction:column; }
   .display-controls { top:10px; left:10px; gap:8px; }
  .theme-toggle,.lang-toggle { flex-basis:40px; width:40px; height:40px; min-width:40px; min-height:40px; }
@@ -427,8 +433,8 @@ tr:hover { background: var(--table-hover); }
 /* Students Grid - Vertical Cards */
 .students-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-top: 20px; }
 .student-card { background: var(--card-bg); border: 2px solid var(--border); border-radius: 20px; overflow: hidden; transition: 0.3s; display: flex; flex-direction: column; box-shadow: var(--shadow); }
-.student-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 15px 40px rgba(102,126,234,0.2); }
-.student-card-header { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 20px; text-align: center; position: relative; }
+.student-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 15px 40px rgba(31,88,69,0.2); }
+.student-card-header { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: #fff; padding: 20px; text-align: center; position: relative; }
 .student-num { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.25); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem; }
 .student-name { font-size: 1.4rem; font-weight: bold; margin-top: 5px; }
 .student-card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
@@ -510,10 +516,10 @@ tr:hover { background: var(--table-hover); }
   .home-page::after { content:'منصة قرآنية للتعلّم، التسميع، والنمو بثبات'; display:block; max-width:560px; color:var(--text-light); font-size:clamp(1rem, 2vw, 1.25rem); line-height:1.8; margin-bottom:34px; }
   .home-page h1 { color:var(--text); text-shadow:none; font-size:clamp(1.6rem, 4vw, 3rem); margin-bottom:10px; }
   .home-page > p { color:var(--text-light); font-size:1rem; margin-bottom:30px; }
-  .home-page .cards { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px; justify-content:stretch; }
-  .home-page .card { width:auto; min-height:190px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; text-align:right; padding:24px; border:1px solid var(--border); border-radius:20px; box-shadow:0 10px 32px rgba(33,86,57,.07); }
+  .home-page .cards { display:flex; flex-direction:column; gap:22px; max-width:640px; margin:0 auto; }
+  .home-page .card { width:100%; min-height:0; display:flex; flex-direction:row; justify-content:flex-start; align-items:center; text-align:right; padding:28px 32px; border:1px solid var(--border); border-radius:24px; box-shadow:0 10px 32px rgba(33,86,57,.07); gap:24px; }
   .home-page .card:hover { transform:translateY(-5px); box-shadow:var(--shadow); border-color:var(--primary); }
-  .home-page .card .icon { font-size:2.7rem; margin-bottom:18px; } .home-page .card h3 { font-size:1.25rem; } .home-page .card p { line-height:1.7; }
+  .home-page .card .icon { width:68px; height:68px; margin-bottom:0; flex:0 0 auto; } .home-page .card h3 { font-size:1.3rem; margin-bottom:4px; } .home-page .card p { line-height:1.7; margin:0; }
   #adminDashboard .page-header, #studentDashboard .page-header, #parentDashboard .page-header { background:linear-gradient(135deg, rgba(40,115,79,.08), transparent); border:1px solid var(--border); border-radius:20px; padding:20px; }
   .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
   .stat-box { min-width:0; border-radius:18px; padding:22px; background:var(--primary); box-shadow:0 10px 28px rgba(33,86,57,.12); }
@@ -525,8 +531,8 @@ tr:hover { background: var(--table-hover); }
   .record-element,.homework-section,.reading-section { border:1px solid var(--border); border-radius:18px; box-shadow:0 8px 24px rgba(33,86,57,.05); }
   .record-element { background:var(--card-bg); } .homework-section { background:rgba(79,148,103,.07); } .reading-section { background:rgba(188,148,80,.08); }
   .msg-item { border-right:3px solid var(--primary); border-radius:14px; background:var(--table-header); }
-  @media(max-width:1000px){ .home-page .cards,.menu-grid,.stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-  @media(max-width:620px){ .container { padding-inline:12px; } .home-page .cards,.menu-grid,.stats { grid-template-columns:1fr; } .home-page .card { min-height:150px; } .page { padding:18px; border-radius:18px; } .display-controls { top:10px; left:10px; } }
+  @media(max-width:1000px){ .menu-grid,.stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media(max-width:620px){ .container { padding-inline:12px; } .menu-grid,.stats { grid-template-columns:1fr; } .home-page .card { flex-direction:column; text-align:center; padding:22px; } .home-page .card .icon { margin:0 auto 10px; } .page { padding:18px; border-radius:18px; } .display-controls { top:10px; left:10px; } }
   @media(prefers-reduced-motion:reduce){ *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
   /* شريط تنقل موحد داخل لوحات الأدوار (بدل الشريط الجانبي المنزلق) */
   .role-nav { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 22px; padding:14px; border:1px solid var(--border); border-radius:16px; background:var(--card-bg); box-shadow:var(--shadow); }
@@ -551,6 +557,13 @@ tr:hover { background: var(--table-hover); }
   .side-sidebar-close:hover { border-color:var(--danger); color:var(--danger); }
   .side-sidebar-body { display:flex; flex-direction:column; gap:10px; padding:18px 16px; }
   .side-sidebar-body .role-nav-item { width:100%; justify-content:flex-start; }
+  /* الشريط الجانبي المنبثق: تثبيت ألوانه بقيم ثابتة كي لا يتأثر بأي تغيير مستقبلي في نظام الألوان العام للموقع */
+  .side-fab, .side-sidebar, .side-sidebar-head, .side-sidebar-close, .side-sidebar-body .role-nav-item {
+    --border:#d9c9a5; --card-bg:#fffdf7; --primary:#1f5845; --text:#203c32; --table-header:#edf2e9; --input-bg:#fffdf7; --danger:#b54f4f;
+  }
+  [data-theme="dark"] .side-fab, [data-theme="dark"] .side-sidebar, [data-theme="dark"] .side-sidebar-head, [data-theme="dark"] .side-sidebar-close, [data-theme="dark"] .side-sidebar-body .role-nav-item {
+    --border:#456858; --card-bg:#1d3b30; --primary:#d3ad61; --text:#f4efe3; --table-header:#26493a; --input-bg:#203f32; --danger:#b54f4f;
+  }
   /* إخفاء الخط الجانبي (شريط التمرير) مع الإبقاء على إمكانية التمرير. */
   html { scrollbar-width:none; -ms-overflow-style:none; }
   html::-webkit-scrollbar, body::-webkit-scrollbar { width:0; height:0; display:none; }
@@ -652,12 +665,16 @@ tr:hover { background: var(--table-hover); }
   :root { --bg:#f4efe3; --card-bg:#fffdf7; --text:#203c32; --text-light:#65766b; --border:#d9c9a5; --primary:#1f5845; --primary-hover:#174334; --success:#477b61; --warning:#b38a43; --input-bg:#fffdf7; --table-header:#edf2e9; --table-hover:#f3f5ed; --shadow:0 12px 30px rgba(31,88,69,.12); --chart-bg:#fffdf7; --chart-grid:#ded6c4; --chart-text:#203c32; }
   [data-theme="dark"] { --bg:#142c23; --card-bg:#1d3b30; --text:#f4efe3; --text-light:#bfd0c2; --border:#456858; --primary:#d3ad61; --primary-hover:#e1c177; --input-bg:#203f32; --table-header:#26493a; --table-hover:#2b5141; --shadow:0 14px 34px rgba(0,0,0,.28); --chart-bg:#1d3b30; --chart-grid:#3c5c4c; --chart-text:#f4efe3; }
   * { font-family:'Cairo','Tajawal','Segoe UI',Tahoma,sans-serif; }
-  body { background-color:var(--bg); background-image:linear-gradient(rgba(31,88,69,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(179,138,67,.025) 1px,transparent 1px); background-size:34px 34px; }
+  body { background-color:var(--bg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%231f5845' stroke-opacity='0.05' stroke-width='1'%3E%3Crect x='14' y='14' width='56' height='56'/%3E%3Crect x='14' y='14' width='56' height='56' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='15' stroke='%23b38a43' stroke-opacity='0.06'/%3E%3C/g%3E%3C/svg%3E"); background-size:84px 84px; background-attachment:fixed; }
+  [data-theme="dark"] body { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23d3ad61' stroke-opacity='0.06' stroke-width='1'%3E%3Crect x='14' y='14' width='56' height='56'/%3E%3Crect x='14' y='14' width='56' height='56' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='15' stroke='%23d3ad61' stroke-opacity='0.05'/%3E%3C/g%3E%3C/svg%3E"); }
   .home-page h1 { color:var(--primary); text-shadow:none; font-weight:800; }
   .home-page p { color:var(--text-light); }
+  .home-orn { display:flex; justify-content:center; color:var(--warning); opacity:.75; margin:0 auto 18px; width:min(320px,80%); }
+  .home-orn svg { width:100%; height:20px; }
   .card { border:1px solid var(--border); background:var(--card-bg); box-shadow:var(--shadow); }
   .card:hover { border-color:var(--warning); box-shadow:0 18px 38px rgba(31,88,69,.18); }
   .card .icon { color:var(--primary); filter:drop-shadow(0 4px 5px rgba(179,138,67,.18)); }
+  .card .icon svg .icon-accent { color:var(--warning); }
   .page, .chart-page { border-color:var(--border); box-shadow:var(--shadow); }
   .page-header { border-bottom-color:var(--border); }
   .btn-primary, .menu-btn { background:var(--primary); }
@@ -764,13 +781,28 @@ tr:hover { background: var(--table-hover); }
 
 <!-- الصفحة الرئيسية -->
 <div id="homePage" class="home-page hidden">
-  <h1>📚 نظام إدارة الطلاب</h1>
+  <div class="home-orn" aria-hidden="true">
+    <svg viewBox="0 0 200 20" preserveAspectRatio="none"><path d="M0 10 H80 M120 10 H200" stroke="currentColor" stroke-width="1"/><circle cx="100" cy="10" r="5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M100 5 L102.3 8.5 L106 9.2 L103.4 12 L104 15.8 L100 14 L96 15.8 L96.6 12 L94 9.2 L97.7 8.5 Z" fill="currentColor"/></svg>
+  </div>
+  <h1>نظام إدارة الطلاب</h1>
   <p>مرحباً بك — اختر طريقة استخدامك للموقع</p>
   <div class="cards">
-    <div class="card" onclick="showPage('adminLogin')"><div class="icon">👨‍💼</div><h3>المسؤول</h3><p>التحكم الكامل في النظام والطلاب</p></div>
-    <div class="card" onclick="showPage('studentLogin')"><div class="icon">👨‍🎓</div><h3>الطالب</h3><p>متابعة المواد والواجبات والحفظ</p></div>
-    <div class="card" onclick="showPage('parentLogin')"><div class="icon">👨‍👩‍👧</div><h3>ولي الأمر</h3><p>متابعة ابنك/ابنتك والتقارير</p></div>
-    <div class="card" onclick="startSignup()"><div class="icon">🆕</div><h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب إلى المسؤول</p></div>
+    <div class="card" onclick="showPage('adminLogin')">
+      <div class="icon" aria-hidden="true"><svg viewBox="0 0 80 80" fill="none"><path d="M40 8 C25 18 25 30 40 36 C55 30 55 18 40 8 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><rect x="18" y="36" width="44" height="30" rx="2" stroke="currentColor" stroke-width="2.5"/><path d="M18 36 L40 22 L62 36" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><rect x="34" y="48" width="12" height="18" stroke="currentColor" stroke-width="2.2"/><path d="M12 66 H68" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="40" cy="14" r="2.4" fill="currentColor" class="icon-accent"/></svg></div>
+      <h3>المسؤول</h3><p>التحكم الكامل في النظام والطلاب</p>
+    </div>
+    <div class="card" onclick="showPage('studentLogin')">
+      <div class="icon" aria-hidden="true"><svg viewBox="0 0 80 80" fill="none"><path d="M40 20 C33 15 22 13 14 15 V54 C22 52 33 54 40 59 C47 54 58 52 66 54 V15 C58 13 47 15 40 20 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M40 20 V59" stroke="currentColor" stroke-width="2.2"/><path d="M20 24 H32 M20 31 H32 M48 24 H60 M48 31 H60" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M58 62 L60 66 L64 63.5 L62 68 L66 69.5 L61.5 71 L62 75.5 L58 72.5 L54 75.5 L54.5 71 L50 69.5 L54 68 L52 63.5 L56 66 Z" fill="currentColor" class="icon-accent"/></svg></div>
+      <h3>الطالب</h3><p>متابعة المواد والواجبات والحفظ</p>
+    </div>
+    <div class="card" onclick="showPage('parentLogin')">
+      <div class="icon" aria-hidden="true"><svg viewBox="0 0 80 80" fill="none"><path d="M52 12 C41 12 32 21 32 32 C32 39.5 35.9 46.1 41.8 50 C33.6 50.8 27 40.7 27 32 C27 18.7 37.7 8 51 8 C56 8 60.7 9.5 64.5 12.1 C60.9 12.7 56.9 12 52 12 Z" fill="currentColor" class="icon-accent"/><path d="M18 60 C18 50 25 44 31 44 C37 44 44 50 44 60" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="31" cy="34" r="9" stroke="currentColor" stroke-width="2.4"/><path d="M46 66 C46 58 51 53 56 53 C61 53 66 58 66 66" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="56" cy="46" r="7" stroke="currentColor" stroke-width="2"/></svg></div>
+      <h3>ولي الأمر</h3><p>متابعة ابنك/ابنتك والتقارير</p>
+    </div>
+    <div class="card" onclick="startSignup()">
+      <div class="icon" aria-hidden="true"><svg viewBox="0 0 80 80" fill="none"><path d="M40 10 L47 33 L70 33 L51 47 L58 70 L40 56 L22 70 L29 47 L10 33 L33 33 Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="40" cy="40" r="6" fill="currentColor" class="icon-accent"/></svg></div>
+      <h3>إنشاء حساب جديد</h3><p>تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب إلى المسؤول</p>
+    </div>
   </div>
 </div>
 
@@ -791,7 +823,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <!-- منطقة التسجيل برقم اءءءءهاتف: تظهر خانة الواتساب وكود التحقق فقط -->
   <div id="signupPhoneBox" style="display:none;">
-    <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupWhatsCountry" aria-label="كود دولة الواتساب" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupWhats" placeholder="رقم واتساب بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,''); updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational')" style="flex:1; direction:ltr;"></div><small id="signupWhatsInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupWhatsCountry" aria-label="كود دولة الواتساب" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">ا��كويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupWhats" placeholder="رقم واتساب بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,''); updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational')" style="flex:1; direction:ltr;"></div><small id="signupWhatsInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
     <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
@@ -927,7 +959,7 @@ tr:hover { background: var(--table-hover); }
   <!-- حذف ملف بتأكيد صريح -->
   <div id="githubDeleteBox" style="display:none; background:rgba(220,53,69,0.08); border:1px solid #dc3545; border-radius:10px; padding:14px 16px;">
     <h3 style="margin:0 0 8px; color:#dc3545;">🗑️ حذف ملف من المستودع</h3>
-    <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">ءءُءءشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأساسية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
+    <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">ءءُءءشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأسا��ية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
     <div class="form-group"><label>مسر الملف المراد حذفه</label><input id="githubDeletePath" placeholder="مثال: public/old-file.js" /></div>
     <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أنني أريد حذف هذا الملف نهائياً من المستودع</label>
     <button class="btn" style="background:#dc3545; color:#fff;" onclick="deleteGithubFile()">حذف الملف</button>
@@ -1134,7 +1166,7 @@ tr:hover { background: var(--table-hover); }
     </div>
     <button class="btn btn-info" onclick="saveManualBoardEdit()">💾 حفظ التعديل اليدوي</button>
   </div>
-  <div class="exam-builder-section" id="examBuilderSection" style="background:linear-gradient(135deg, rgba(102,126,234,.08), rgba(23,162,184,.08)); border:2px solid var(--primary); border-radius:15px; padding:20px; margin:15px 0;">
+  <div class="exam-builder-section" id="examBuilderSection" style="background:linear-gradient(135deg, rgba(31,88,69,.08), rgba(179,138,67,.08)); border:2px solid var(--primary); border-radius:15px; padding:20px; margin:15px 0;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
       <h4 style="color:var(--primary);margin:0">🧪 اختبار مستقل بعد السورة الأساسية</h4>
       <span class="badge badge-primary">لا يختلط بعناصر التسميع</span>
@@ -1169,7 +1201,7 @@ tr:hover { background: var(--table-hover); }
     <h4>📝 الواجب الإضافي <button class="add-item-btn" onclick="addHomeworkItem()">+</button></h4>
     <div id="homeworkItems"></div>
   </div>
-  <div class="homework-section" style="background:linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); border-color:var(--primary);">
+  <div class="homework-section" style="background:linear-gradient(135deg, rgba(31,88,69,0.08), rgba(179,138,67,0.1)); border-color:var(--primary);">
     <h4>🎙️ التسميع الإضافي <button class="add-item-btn" onclick="addExtraElement()">+</button></h4>
     <div id="extraElements"></div>
   </div>
@@ -1179,7 +1211,7 @@ tr:hover { background: var(--table-hover); }
     <div id="readingItems"></div>
   </div>
   <div class="form-group"><label>ملاحظات التسميع</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
-  <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حف�� مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, #764ba2, #667eea);">🔒 ءءفظ نهائي (لا يمكن التعديل)</button></div>
+  <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حفظ مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, var(--primary), var(--primary-hover));">🔒 حفظ نهائي (لا يمكن التعديل)</button></div>
 </div>
 
 <!-- سجل الطالب -->
@@ -1439,7 +1471,7 @@ tr:hover { background: var(--table-hover); }
     <div id="examFileUploadStatus" style="margin-top:10px;"></div>
     <div id="examFilesList" style="margin-top:15px;"></div>
   </section>
-  <div style="background:linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); border-radius:15px; padding:20px; margin-bottom:20px; border:2px solid var(--primary);">
+  <div style="background:linear-gradient(135deg, rgba(31,88,69,0.08), rgba(179,138,67,0.1)); border-radius:15px; padding:20px; margin-bottom:20px; border:2px solid var(--primary);">
     <h4 style="color:var(--primary); margin-bottom:15px;">⬆️ رفع ملف جديد</h4>
     <div class="form-row">
       <div class="form-group" style="flex:2;"><label>اسم الملف / الوصف</label><input type="text" id="fileDesc" placeholder="وصف الملف..."></div>
