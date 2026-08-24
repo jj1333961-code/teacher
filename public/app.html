@@ -690,7 +690,36 @@ tr:hover { background: var(--table-hover); }
   .page { overflow:hidden; }
   .form-group input, .form-group select, .form-group textarea, .search-box input { border-color:var(--border); }
   .thimar-quran-wrap { filter:drop-shadow(0 12px 18px rgba(31,88,69,.13)); }
-  </style>
+
+  /* الهوية الإسلامية الموحدة لكل الصفحات */
+  body {
+    background-color:var(--bg);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='none' stroke='%231f5845' stroke-opacity='.055' stroke-width='1'%3E%3Cpath d='M48 6L58 16L72 16L80 28L90 38L80 48L90 58L80 68L72 80L58 80L48 90L38 80L24 80L16 68L6 58L16 48L6 38L16 28L24 16L38 16Z'/%3E%3Cpath d='M48 22L58 32L74 32L64 48L74 64L58 64L48 74L38 64L22 64L32 48L22 32L38 32Z' stroke='%23a97b2c' stroke-opacity='.045'/%3E%3Ccircle cx='48' cy='48' r='5' stroke='%23a97b2c' stroke-opacity='.06'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:96px 96px;
+    background-attachment:fixed;
+  }
+  [data-theme="dark"] body { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='none' stroke='%23d9ab5c' stroke-opacity='.07' stroke-width='1'%3E%3Cpath d='M48 6L58 16L72 16L80 28L90 38L80 48L90 58L80 68L72 80L58 80L48 90L38 80L24 80L16 68L6 58L16 48L6 38L16 28L24 16L38 16Z'/%3E%3Cpath d='M48 22L58 32L74 32L64 48L74 64L58 64L48 74L38 64L22 64L32 48L22 32L38 32Z'/%3E%3C/g%3E%3C/svg%3E"); }
+  body, button, input, select, textarea { font-family:'Cairo','Tajawal','Noto Kufi Arabic',sans-serif; }
+  .page { background:var(--card-bg); border:1px solid var(--border); border-radius:24px; box-shadow:var(--shadow); }
+  .page-header { position:relative; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:24px; }
+  .page-header::after { content:'✦'; position:absolute; bottom:-10px; right:24px; padding:0 10px; color:var(--primary); background:var(--card-bg); font-size:.85rem; }
+  .page-header h2, .page h1, .page h3, .page h4 { color:var(--primary); font-family:'Cairo','Tajawal',sans-serif; }
+  .form-row, .form-grid { display:flex; flex-direction:column; gap:16px; }
+  .form-group { width:100%; }
+  .form-group label { color:var(--text); font-weight:700; }
+  .form-group input,.form-group select,.form-group textarea,.search-box input { background:var(--input-bg); border:1px solid var(--border); border-radius:14px; min-height:48px; }
+  .btn { border-radius:14px; min-height:46px; font-family:inherit; font-weight:700; }
+  .menu-grid, .student-work-grid { display:flex; flex-direction:column; gap:18px; }
+  .menu-btn, .student-work-card, .stat-box { border-radius:20px; border:1px solid var(--border); box-shadow:0 8px 24px rgba(24,59,50,.09); }
+  .menu-btn { min-height:92px; background:var(--card-bg) !important; color:var(--text); }
+  .menu-btn:hover { border-color:var(--primary); transform:translateY(-3px); }
+  .stat-box { background:var(--primary); }
+  .table-wrap, table, .data-table { border-radius:16px; overflow:hidden; }
+  th { background:var(--table-header); color:var(--primary); }
+  tr:hover { background:var(--table-hover); }
+  /* لا تتأثر الأدوات الجانبية بهوية الصفحات العامة */
+  @media(max-width:620px){ .page { border-radius:18px; padding:18px; } .page-header::after { right:12px; } .menu-btn { min-height:84px; } }
+ </style>
 <script>
 /* الوضع الأخضر هو الافتراضي، والوضع الفاتح يُحفظ عند اختيار المستخدم له. */
 (function(){
@@ -1351,7 +1380,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- دخول ولي الأمر -->
 <div id="parentLogin" class="page hidden" style="max-width:500px; margin:40px auto;">
-  <div class="page-header"><h2>👨‍👩‍👧 دخول ولي الأمر</h2></div>
+  <div class="page-header"><h2>👨‍👩‍👧 دخول ولي ��لأمر</h2></div>
   <div id="parentLoginAlert"></div>
   <div class="form-group"><label>اسم ولي الأمر</label><input type="text" id="parentName" placeholder="أدخل اسمك كما سجله المسؤول"></div>
   <div class="form-group"><label>الرقم السري</label><input type="password" id="parentPass" placeholder="الرقم السري الخاص بك"></div>
