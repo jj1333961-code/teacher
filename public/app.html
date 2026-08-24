@@ -751,13 +751,16 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  .quran-reader-page { max-width:1100px; margin:24px auto; padding:18px; }
-  .quran-reader-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-  .quran-reader-frame { height:min(78vh,900px); min-height:520px; overflow:hidden; border:1px solid var(--border); border-radius:18px; background:#29251e; box-shadow:0 14px 36px rgba(24,59,50,.16); }
-  .quran-reader-frame iframe { width:100%; height:100%; border:0; display:block; }
-  .quran-reader-close { position:fixed; top:14px; left:14px; z-index:10002; width:48px; height:48px; border-radius:50%; border:2px solid #fff; background:#1f5845; color:#fff; font-size:28px; line-height:1; cursor:pointer; box-shadow:0 6px 20px rgba(0,0,0,.35); }
-  .quran-reader-close:hover,.quran-reader-close:focus { background:#a97b2c; outline:3px solid rgba(217,171,92,.38); }
-  @media(max-width:620px){ .quran-reader-page { margin:10px; padding:12px; } .quran-reader-frame { min-height:calc(100vh - 150px); height:calc(100vh - 150px); } }
+  /* قارئ مستقل يملأ الشاشة بالكامل، مع إبقاء زر الإغلاق واضحًا فوق PDF */
+  .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#29251e; overflow:hidden; }
+  .quran-reader-toolbar { position:absolute; top:0; right:0; left:0; z-index:10001; min-height:64px; display:flex; align-items:center; justify-content:center; gap:10px; padding:10px 80px; margin:0; background:linear-gradient(180deg,rgba(16,45,36,.96),rgba(16,45,36,.55),transparent); color:#fff; pointer-events:none; }
+  .quran-reader-toolbar h2,.quran-reader-toolbar p { color:#fff; margin:0; text-shadow:0 1px 5px rgba(0,0,0,.65); }
+  .quran-reader-toolbar .btn { display:none; }
+  .quran-reader-frame { width:100%; height:100%; min-height:0; overflow:hidden; border:0; border-radius:0; background:#29251e; box-shadow:none; }
+  .quran-reader-frame iframe { width:100%; height:100%; border:0; display:block; touch-action:auto; }
+  .quran-reader-close { position:fixed; top:16px; left:16px; z-index:10002; display:flex; align-items:center; justify-content:center; width:56px; height:56px; padding:0; border:3px solid #fff; border-radius:50%; background:#163f32; color:#fff; font:700 34px/1 Arial,sans-serif; cursor:pointer; box-shadow:0 4px 18px rgba(0,0,0,.55),0 0 0 2px rgba(217,171,92,.75); }
+  .quran-reader-close:hover,.quran-reader-close:focus { background:#a97b2c; outline:3px solid #f2d18b; outline-offset:3px; }
+  @media(max-width:620px){ .quran-reader-close { top:12px; left:12px; width:52px; height:52px; font-size:32px; } .quran-reader-toolbar { min-height:60px; padding:8px 70px; } .quran-reader-toolbar h2 { font-size:1rem; } .quran-reader-toolbar p { font-size:.72rem; } }
  </style>
 <script>
 /* الوضع الأخضر هو الافتراضي، والوضع الفاتح يُحفظ عند اختيار المستخدم له. */
@@ -872,7 +875,7 @@ tr:hover { background: var(--table-hover); }
     <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-      <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
+      <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد ال��وية والمتابعة</button>
       <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 إعادة إرسال الكود</button>
     </div>
   </div>
@@ -1216,7 +1219,7 @@ tr:hover { background: var(--table-hover); }
       <h4 style="color:var(--primary);margin:0">🧪 اختبار مستقل بعد ال��ورة الأساسية</h4>
       <span class="badge badge-primary">لا يختلط بعناصر التسميع</span>
     </div>
-<p style="color:var(--text-light);margin:10px 0">اختبار قرآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
+<p style="color:var(--text-light);margin:10px 0">اختبار ��رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الناس.</small></div>
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
@@ -1365,7 +1368,7 @@ tr:hover { background: var(--table-hover); }
   <div id="studentCompletedTasksSection"></div>
 </div>
 
-<!-- ��ندوق التسجيلات للطالب -->
+<!-- ��ندوق التسجيلات ل��طالب -->
 <div id="studentExamPage" class="page hidden">
   <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رجءءع</button></div>
   <div id="studentExamContent"></div>
@@ -1750,7 +1753,7 @@ window.alert = function(m){ showToast(m); };
     window.closeQuranReader = function(){ if(typeof window.showPage === 'function') window.showPage('lockScreen'); };
   </script>
   <section id="quranReaderPage" class="page quran-reader-page hidden" aria-label="قارئ المصحف">
-    <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق قارئ المصحف" title="إغلاق">×</button>
+    <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق ��ارئ المصحف" title="إغلاق">×</button>
     <div class="quran-reader-toolbar"><div><h2>المصحف الشريف</h2><p>النسخة الأصلية كما وردت في ملف المصحف</p></div><button type="button" class="btn btn-secondary" onclick="closeQuranReader()">رجوع</button></div>
     <div class="quran-reader-frame"><iframe src="/quran/quran.pdf#toolbar=1&navpanes=1&view=FitH" title="صفحات المصحف الأصلية" allow="fullscreen"></iframe></div>
   </section>
