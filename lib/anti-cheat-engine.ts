@@ -11,6 +11,8 @@ export type AntiCheatConfig = {
   focus: boolean
   fullscreen: boolean
   singleTouch: boolean
+  eyeTracking?: boolean
+  warnOnAway?: boolean
   warningThreshold: number
   suspiciousThreshold: number
   cheatingThreshold: number
