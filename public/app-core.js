@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر����ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -464,7 +464,7 @@ function updateBackButton() {
 }
 
 // ====== DRAFT SYSTEM - Auto finalize after 24 hours ======
-// أرشفة ��هام اليوم في السجلات عند انتهاء ليوم (ولي الأمر والئالب والمسؤول)
+// ��رشفة ��هام اليوم في السجلات عند انتهاء ليوم (ولي الأمر والئالب والمسؤول)
 function archiveDailyTasks() {
   try {
     let students = getData('students');
@@ -1431,7 +1431,7 @@ async function saveStudent() {
   const alertBox = document.getElementById('addStudentAlert');
   const fail = function(msg) {
     alertBox.innerHTML = '<div class="alert alert-danger">❌ ' + msg + '</div>';
-    showToast('🚫 تم رفض تسجيل لطالب ��� ' + msg, 'error');
+    showToast('🚫 تم رفض تسجيل لط��لب ��� ' + msg, 'error');
   };
 
   const name = document.getElementById('stName').value.trim();
@@ -3607,15 +3607,14 @@ function renderStudentDashboard() {
   const welcomeMsgs = generateWelcomeMessages(s);
   document.getElementById('studentWelcome').innerHTML = '<div class="welcome-msg"><h4>🌟 '+welcomeMsgs.title+'</h4><p>'+welcomeMsgs.body+'</p></div>';
 
-  let html = '<div class="stats">';
-  html += '<div class="stat-box"><div class="num">'+s.name+'</div><div class="label">اسم الطالب</div></div>';
-  html += '<div class="stat-box" style="background:linear-gradient(135deg,#28a745,#20c997)"><div class="num">'+(s.age || '-')+'</div><div class="label">السن</div></div>';
-  html += '<div class="stat-box" style="background:linear-gradient(135deg,#ffc107,#ff9800)"><div class="num">'+(s.subjects ? s.subjects.map(sub=>sub.name).join('، ') : '-')+'</div><div class="label">المواد</div></div>';
+  let html = '<div class="student-identity-cards" aria-label="بيانات الطالب الأساسية">';
+  html += '<div class="student-identity-card"><div class="identity-value">'+escapeHtml(s.name || '-')+'</div><div class="identity-label">اسم الطالب</div></div>';
+  html += '<div class="student-identity-card"><div class="identity-value">'+escapeHtml(String(s.age || '-'))+'</div><div class="identity-label">سن الطالب</div></div>';
   html += '</div>';
 
   html += '<div style="display:flex; gap:20px; flex-wrap:wrap;"><div style="flex:1; min-width:300px;">';
   html += '<div class="page" style="margin-top:0;"><h4 style="color:var(--primary); margin-bottom:15px;">📋 البيانات</h4>';
-  html += '<p><strong>المدرسون:</strong> '+(s.subjects ? s.subjects.map(sub => sub.teacher+(sub.phone ? ' (📞 '+sub.phone+')' : '')).join('<br>') : '-')+'</p>';
+  html += '<p><strong>المدرس:</strong> '+(s.subjects ? s.subjects.map(sub => sub.teacher || '-').join('<br>') : '-')+'</p>';
   html += '<p><strong>رقم المدرس:</strong> '+(s.subjects && s.subjects[0] && s.subjects[0].phone ? s.subjects[0].phone : '-')+'</p>';
   html += '<p><strong>ولي الأمر:</strong> '+s.parent+'</p>';
   html += '<p><strong>تاريخ التسجيل:</strong> '+s.createdAt+'</p>';
@@ -3675,7 +3674,7 @@ function renderStudentCompletedTasks() {
   const s = currentUser;
   const completed = s.completedTasks || [];
   if(completed.length === 0) { document.getElementById('studentCompletedTasksSection').innerHTML = renderTaskArchiveHtml(s); return; }
-  // السجل اليومي يظهر أسفل المهام المنجزة
+  // السجل اليومي يظهر أسفل المهام الم��جزة
   let html = '<div class="page" style="margin-top:20px; border-right:5px solid var(--success);">';
   html += '<h4 style="color:var(--success); margin-bottom:15px;">✅ المهام المنجزة والمسجلة</h4>';
   completed.slice().reverse().forEach(task => {
@@ -4067,7 +4066,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
       'المطلوب: <strong>' + targetTxt + '</strong><br>' +
       'نسبة مطابقة المحتوى: <strong>' + rec.pct + '%</strong> (الحد الأدنى ' + RECITATION_MIN_PCT + '%)' + (rec.txtPct !== null && rec.txtPct !== undefined ? ' | مطابقة النص المنطوق: ' + rec.txtPct + '%' : '') + '<br>' +
       (rec.reason ? 'السبب: ' + rec.reason + '<br>' : '') +
-      '✋ لم تُرسل الرسالة للمسؤول — يرجى ��راءة المقطع المطلوب نفسه ورفع ملف تسجيل آخر.</div>';
+      '✋ لم تُرسل الرسالة ل��مسؤول — يرجى ��راءة المقطع المطلوب نفسه ورفع ملف تسجيل آخر.</div>';
     return false;
   }
 
@@ -4487,7 +4486,7 @@ function renderParentDashboard() {
     html += '<h4 style="color:var(--primary); margin-bottom:15px;">👨🎓 '+s.name+'</h4>';
     html += '<p><strong>السن:</strong> '+(s.age || '-')+' سنة</p>';
     html += '<p><strong>المادة:</strong> <span class="badge badge-primary">'+(s.subjects ? s.subjects.map(sub=>sub.name).join('، ') : '-')+'</span></p>';
-    html += '<p><strong>الم��رسون:</strong> '+(s.subjects ? s.subjects.map(sub => sub.teacher+(sub.phone ? ' (📞 '+sub.phone+')' : '')).join('<br>') : '-')+'</p>';
+    html += '<p><strong>المدرس:</strong> '+(s.subjects ? s.subjects.map(sub => sub.teacher || '-').join('<br>') : '-')+'</p>';
     html += '<hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">';
 
     if(isQuran) {
@@ -5046,7 +5045,7 @@ function generateAIResponse(text, student) {
     return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أ��عاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتءءل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
   }
   // تحفيز
-  if(has('تحفيز','همة','ملل','تعبان','زهقءءن','احبت','أح��طت')) {
+  if(has('تحفيز','همة','ملل','تعبا��','زهقءءن','احبت','أح��طت')) {
     const quotes = [
       '🌟 «وَلَقَدْ يَسَّرْنَا الْقُْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ فءءط.',
       '💚 قال ﷺ: «خيركم من تعلم القرآن وعلمه». أنت اليوم في أفضل طريق.',

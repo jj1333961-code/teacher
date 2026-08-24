@@ -747,6 +747,11 @@ tr:hover { background: var(--table-hover); }
   .stat-box:nth-child(2) { background:linear-gradient(135deg, #2f7257, #477b61); }
   .stat-box:nth-child(3) { background:linear-gradient(135deg, #35665d, #56877a); }
   .stat-box:nth-child(4) { background:linear-gradient(135deg, #9a742d, #c49a4e) !important; }
+  #studentInfo .student-identity-cards { display:flex; flex-direction:row; justify-content:flex-start; align-items:center; gap:14px; margin:0 0 20px; }
+  #studentInfo .student-identity-card { width:118px; height:118px; flex:0 0 118px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border-radius:50%; border:2px solid var(--warning); background:radial-gradient(circle at 35% 25%, #fbf7ed, var(--card-bg)); box-shadow:0 8px 20px rgba(31,88,69,.14); }
+  #studentInfo .student-identity-card .identity-value { color:var(--primary); font-weight:800; font-size:1rem; line-height:1.35; max-width:92px; overflow-wrap:anywhere; }
+  #studentInfo .student-identity-card .identity-label { color:var(--warning); font-size:.78rem; font-weight:700; margin-top:5px; }
+  @media(max-width:620px){ #studentInfo .student-identity-cards { justify-content:flex-start; } #studentInfo .student-identity-card { width:104px; height:104px; flex-basis:104px; } }
   table { background:var(--card-bg); border:1px solid rgba(169,123,44,.25); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
@@ -1095,7 +1100,7 @@ tr:hover { background: var(--table-hover); }
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
     <label style="font-size:1.05rem;">الإملاء الصوتي لبيانات الطالب</label>
-    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��واد القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ الخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ الخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
       <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
@@ -1363,9 +1368,9 @@ tr:hover { background: var(--table-hover); }
       </div>
     </aside>
   </div>
+  <div id="studentInfo"></div>
   <div id="studentWelcome"></div>
   <section id="studentIslamicHub" data-isl-hub aria-label="القسم الإسلامي"></section>
-  <div id="studentInfo"></div>
   <div id="studentDraftSection"></div>
   <div id="studentTasksSection"></div>
   <div id="studentSessionsSection"></div>
@@ -1474,7 +1479,7 @@ tr:hover { background: var(--table-hover); }
 <div id="parentInbox" class="page hidden">
   <div class="page-header"><h2>📬 صندوق الرسائل</h2></div>
   <div class="page" style="margin-top:0;">
-    <h4 style="color:var(--primary); margin-bottom:10px;">✉️ مراسلة المسؤول (نص أو رسالة صوتية)</h4>
+    <h4 style="color:var(--primary); margin-bottom:10px;">✉️ مراسلة المسؤول (نص ��و رسالة صوتية)</h4>
     <div class="form-group"><textarea id="parentMsgText" rows="3" placeholder="اكتب رسالتك للمسؤول..."></textarea></div>
     <div id="voiceBox_parent"></div>
     <button class="btn btn-primary" onclick="sendUserMessageToAdmin('parent')">📤 إرسال</button>
