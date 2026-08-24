@@ -610,10 +610,6 @@ tr:hover { background: var(--table-hover); }
     color:var(--thimar-ink);
   }
   #lockScreen.thimar-auth::before, #lockScreen.thimar-auth::after { content:none !important; display:none !important; }
-  /* العودة إلى الصفحة الرئيسية القديمة: نموذج دخول مباشر بدل شاشة اختيار نظام إدارة الطلاب */
-  .thimar-arch, .thimar-leaf, .thimar-logo-en, .thimar-tagline, .thimar-ayah-wrap, .thimar-quran-wrap, .thimar-footer { display:none !important; }
-  #lockScreen.thimar-auth { max-width:480px; margin:40px auto !important; padding:34px 30px 30px; background:var(--card-bg); border:1px solid var(--border); color:var(--text); }
-  .thimar-logo { color:var(--primary); font-family:'Cairo','Tajawal',sans-serif; font-size:2rem; margin:0 0 22px; text-shadow:none; }
   .thimar-arch { position:absolute; left:0; right:0; top:clamp(6px,2vw,14px); display:flex; justify-content:center; pointer-events:none; opacity:.9; }
   .thimar-arch svg { width:min(100%,400px); height:auto; }
   .thimar-arch svg path { stroke:var(--thimar-gold); }
@@ -920,7 +916,7 @@ tr:hover { background: var(--table-hover); }
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
 <div id="devAssistantPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده، ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده�� ويقرأ الملفات البرمجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة موافقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
     �� الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله الذكاء الاصطناعي ويقرأ الكو�� المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
   </div>
@@ -1235,7 +1231,7 @@ tr:hover { background: var(--table-hover); }
 <!-- صفحة المخطط الكامل -->
 <div id="fullChartPage" class="chart-page hidden">
   <div class="page-header">
-    <h2>📊 ا��مخط�� الت��صيلي</h2>
+    <h2>📊 ا��مخط�� الت���صيلي</h2>
     <button class="btn btn-secondary" onclick="closeFullChart()">رجوع</button>
   </div>
   <div id="fullChartContainer" style="text-align:center;"></div>
