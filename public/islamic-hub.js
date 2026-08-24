@@ -180,6 +180,14 @@
       if (btn && host.contains(btn)) openSection(btn.getAttribute("data-isl-open"));
     });
     paintCards();
+    // تحميل المصحف مسبقًا في الخلفية حتى يكون جاهزًا فور الدخول دون انتظار
+    scheduleWarmMushaf();
+  }
+
+  function scheduleWarmMushaf() {
+    var run = function () { try { warmMushaf(); } catch (e) {} };
+    if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(run, { timeout: 2500 });
+    else setTimeout(run, 1200);
   }
 
   function mountAll() {
@@ -189,8 +197,8 @@
   /* ============================================================
      الطبقة المشتركة: النافذة، المصحف، التنبيه
      ============================================================ */
-  var modal, sheetTitle, sheetBody, backBtn, mushaf, mushafCanvas, mushafClose, athan, mushafZoom;
-  var pdfDoc = null, pdfLib = null, rendering = false, pendingPage = null;
+  var modal, sheetTitle, sheetBody, backBtn, mushaf, mushafCanvas, mushafClose, athan;
+  var pdfDoc = null, pdfLib = null;
   var sheetStack = [];
 
   function ensureLayers() {
@@ -224,7 +232,6 @@
     document.body.appendChild(mushaf);
     mushafCanvas = mushaf.querySelector(".isl-mushaf-canvas");
     mushafClose = mushaf.querySelector(".isl-mushaf-close");
-    mushafZoom = 1;
     mushafClose.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); closeMushaf(); });
 
     athan = el(
@@ -320,7 +327,12 @@
   }
 
   /* ---------------- عارض المصحف ---------------- */
-  var pdfPage = 1, hideTimer = null;
+  var pdfPage = 1;
+  var mushafScale = 1;             // مستوى التكبير (عبر transform حتى تبقى الصفحة كأنها صورة)
+  var panX = 0, panY = 0;          // إزاحة الصفحة أثناء التكبير
+  var baseCssW = 0, baseCssH = 0;  // أبعاد الصفحة بحجم الملاءمة للشاشة
+  var renderToken = 0;             // لإلغاء عمليات الرسم القديمة عند التنقل السريع
+  var warmingStarted = false;
 
   async function loadPdfLib() {
     if (pdfLib) return pdfLib;
@@ -329,114 +341,206 @@
     return pdfLib;
   }
 
+  async function ensurePdfDoc() {
+    if (pdfDoc) return pdfDoc;
+    var lib = await loadPdfLib();
+    if (!pdfDoc) {
+      pdfDoc = await lib.getDocument({
+        url: D.mushafPath || "/quran/quran.pdf",
+        cMapUrl: "/vendor/pdfjs/cmaps/",
+        cMapPacked: true,
+      }).promise;
+    }
+    return pdfDoc;
+  }
+
+  // تحميل الملف مسبقًا وتجهيز أولى الصفحات حتى يفتح المصحف فورًا دون انتظار
+  async function warmMushaf() {
+    if (warmingStarted) return;
+    warmingStarted = true;
+    try {
+      await ensurePdfDoc();
+      prefetchPages(1);
+    } catch (e) { warmingStarted = false; }
+  }
+
+  // تجهيز الصفحات المجاورة مسبقًا حتى يكون التنقل جاهزًا بلا انتظار
+  function prefetchPages(center) {
+    if (!pdfDoc) return;
+    [center, center + 1, center - 1, center + 2, center - 2].forEach(function (p) {
+      if (p >= 1 && p <= pdfDoc.numPages) { try { pdfDoc.getPage(p); } catch (e) {} }
+    });
+  }
+
   async function openMushaf(surahNumber) {
     ensureLayers();
     var s = (D.surahs || []).find(function (x) { return x.number === surahNumber; });
     pdfPage = s ? s.page : 1;
+    resetZoom();
     mushaf.hidden = false;
     if (!history.state || !history.state.thimarMushaf) history.pushState({ thimarMushaf: true }, "", "#mushaf");
     document.body.style.overflow = "hidden";
     if (mushaf.requestFullscreen) mushaf.requestFullscreen().catch(function () {});
     showMushafClose();
-    try {
-      var lib = await loadPdfLib();
-      if (!pdfDoc) pdfDoc = await lib.getDocument({ url: D.mushafPath || "/quran/quran.pdf", cMapUrl: "/vendor/pdfjs/cmaps/", cMapPacked: true }).promise;
-      await renderPage(pdfPage);
-    } catch (error) { console.log("[v0] Mushaf render failed", error); }
     bindMushafGestures();
+    try {
+      await ensurePdfDoc();
+      await renderPage(pdfPage);
+      prefetchPages(pdfPage);
+    } catch (error) { console.log("[v0] Mushaf render failed", error); }
+  }
+
+  function resetZoom() {
+    mushafScale = 1; panX = 0; panY = 0;
+    applyTransform();
+  }
+
+  function applyTransform() {
+    if (!mushafCanvas) return;
+    mushafCanvas.style.transform = "translate3d(" + panX + "px," + panY + "px,0) scale(" + mushafScale + ")";
+  }
+
+  // منع خروج الصفحة عن حدود الشاشة أثناء التحريك في وضع التكبير
+  function clampPan() {
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var dispW = baseCssW * mushafScale, dispH = baseCssH * mushafScale;
+    var maxX = Math.max(0, (dispW - vw) / 2);
+    var maxY = Math.max(0, (dispH - vh) / 2);
+    panX = Math.min(maxX, Math.max(-maxX, panX));
+    panY = Math.min(maxY, Math.max(-maxY, panY));
   }
 
   async function renderPage(n) {
     if (!pdfDoc) return;
-    pdfPage = Math.min(Math.max(1, n), pdfDoc.numPages);
-    if (rendering) { pendingPage = pdfPage; return; }
-    rendering = true;
+    n = Math.min(Math.max(1, n), pdfDoc.numPages);
+    pdfPage = n;
+    var myToken = ++renderToken;
+    // رفع دقة الرسم عند التكبير حتى تبقى الآيات واضحة كأنها صورة عالية الجودة
+    var quality = Math.min(3, Math.max(1, mushafScale));
     try {
       var page = await pdfDoc.getPage(pdfPage);
+      if (myToken !== renderToken) return;
       var base = page.getViewport({ scale: 1 });
-      var availableWidth = Math.max(1, window.innerWidth - 8);
-      var availableHeight = Math.max(1, window.innerHeight - 8);
-      var scale = Math.min(availableWidth / base.width, availableHeight / base.height) * mushafZoom;
+      var availableWidth = Math.max(1, window.innerWidth);
+      var availableHeight = Math.max(1, window.innerHeight);
+      var fit = Math.min(availableWidth / base.width, availableHeight / base.height);
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var viewport = page.getViewport({ scale: scale * dpr });
+      var viewport = page.getViewport({ scale: fit * dpr * quality });
+      // الحجم الظاهر ثابت على مقاس الملاءمة، والتكبير يتم عبر transform لسلاسة الحركة
+      baseCssW = Math.floor(base.width * fit);
+      baseCssH = Math.floor(base.height * fit);
       mushafCanvas.width = Math.floor(viewport.width);
       mushafCanvas.height = Math.floor(viewport.height);
-      mushafCanvas.style.width = Math.floor(viewport.width / dpr) + "px";
-      mushafCanvas.style.height = Math.floor(viewport.height / dpr) + "px";
+      mushafCanvas.style.width = baseCssW + "px";
+      mushafCanvas.style.height = baseCssH + "px";
       await page.render({ canvasContext: mushafCanvas.getContext("2d"), viewport: viewport }).promise;
-    } finally {
-      rendering = false;
-      if (pendingPage) { var next = pendingPage; pendingPage = null; renderPage(next); }
-    }
+      if (myToken !== renderToken) return;
+      clampPan();
+      applyTransform();
+    } catch (error) { /* تجاهل إلغاء الرسم عند التنقل السريع */ }
+  }
+
+  function gotoPage(n) {
+    resetZoom();
+    renderPage(n);
+    prefetchPages(pdfPage);
   }
 
   var gesturesBound = false;
   function bindMushafGestures() {
     if (gesturesBound) return;
     gesturesBound = true;
-    var sx = 0, sy = 0, moved = false, pinchStart = 0, zoomStart = 1;
+    var sx = 0, sy = 0, moved = false;
+    var pinchStart = 0, scaleStart = 1;
+    var panStartX = 0, panStartY = 0, panning = false;
+    var lastTap = 0, sharpenTimer = null;
+
+    // إعادة الرسم بدقة أعلى بعد استقرار التكبير حتى تبقى الصفحة حادة
+    function scheduleSharpen() {
+      clearTimeout(sharpenTimer);
+      sharpenTimer = setTimeout(function () { if (!mushaf.hidden) renderPage(pdfPage); }, 200);
+    }
 
     mushaf.addEventListener("touchstart", function (e) {
+      showMushafClose();
       if (e.touches.length === 2) {
         pinchStart = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        zoomStart = mushafZoom;
+        scaleStart = mushafScale;
         moved = true;
         return;
       }
       if (!e.touches.length) return;
       sx = e.touches[0].clientX; sy = e.touches[0].clientY; moved = false;
+      if (mushafScale > 1.01) { panning = true; panStartX = panX; panStartY = panY; }
     }, { passive: true });
 
     mushaf.addEventListener("touchmove", function (e) {
-      if (e.touches.length !== 2 || !pinchStart) return;
-      var distance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      var nextZoom = Math.min(2.5, Math.max(1, zoomStart * distance / pinchStart));
-      if (Math.abs(nextZoom - mushafZoom) < 0.02) return;
-      mushafZoom = nextZoom;
-      renderPage(pdfPage);
+      if (e.touches.length === 2 && pinchStart) {
+        var distance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        mushafScale = Math.min(4, Math.max(1, scaleStart * distance / pinchStart));
+        if (mushafScale <= 1.01) { panX = 0; panY = 0; }
+        clampPan();
+        applyTransform();
+        return;
+      }
+      if (panning && e.touches.length === 1) {
+        var dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+        panX = panStartX + dx; panY = panStartY + dy;
+        clampPan();
+        applyTransform();
+      }
     }, { passive: true });
 
     mushaf.addEventListener("touchend", function (e) {
-      if (pinchStart) { pinchStart = 0; return; }
+      if (pinchStart) {
+        pinchStart = 0;
+        if (mushafScale <= 1.01) resetZoom();
+        scheduleSharpen();
+        return;
+      }
+      if (panning) { panning = false; if (moved) return; }
       var t = e.changedTouches && e.changedTouches[0];
       if (!t) return;
       var dx = t.clientX - sx, dy = t.clientY - sy;
-      if (dy > 70 && Math.abs(dy) > Math.abs(dx)) { showMushafClose(); return; }
-      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
-        moved = true;
-        renderPage(dx > 0 ? pdfPage + 1 : pdfPage - 1);
-      }
-      if (!moved) toggleMushafClose();
-    }, { passive: true });
 
-    mushaf.addEventListener("click", function (e) {
-      if (e.target === mushafClose) return;
-      toggleMushafClose();
-    });
+      // نقرة مزدوجة: تبديل بين التكبير والحجم الطبيعي لتوضيح الآية
+      if (!moved && Math.abs(dx) < 12 && Math.abs(dy) < 12) {
+        var now = Date.now();
+        if (now - lastTap < 300) {
+          lastTap = 0;
+          if (mushafScale > 1.01) { resetZoom(); renderPage(pdfPage); }
+          else { mushafScale = 2.4; clampPan(); applyTransform(); scheduleSharpen(); }
+          return;
+        }
+        lastTap = now;
+        return;
+      }
+
+      // التنقل بين الصفحات يمينًا ويسارًا (في الحجم الطبيعي فقط)
+      if (mushafScale <= 1.01 && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+        gotoPage(dx > 0 ? pdfPage + 1 : pdfPage - 1);
+      }
+    }, { passive: true });
 
     document.addEventListener("keydown", function (e) {
       if (mushaf.hidden) return;
-      if (e.key === "ArrowLeft") renderPage(pdfPage + 1);
-      if (e.key === "ArrowRight") renderPage(pdfPage - 1);
+      if (e.key === "ArrowLeft") gotoPage(pdfPage + 1);
+      if (e.key === "ArrowRight") gotoPage(pdfPage - 1);
     });
 
     window.addEventListener("resize", function () {
-      if (!mushaf.hidden) renderPage(pdfPage);
+      if (!mushaf.hidden) { resetZoom(); renderPage(pdfPage); }
     });
   }
 
+  // زر الإغلاق ثابت ودائم الظهور — لا يختفي أبدًا
   function showMushafClose() {
-    mushafClose.classList.remove("is-hidden");
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(function () { mushafClose.classList.add("is-hidden"); }, 3200);
-  }
-  function toggleMushafClose() {
-    if (mushafClose.classList.contains("is-hidden")) showMushafClose();
-    else { clearTimeout(hideTimer); mushafClose.classList.add("is-hidden"); }
+    if (mushafClose) mushafClose.classList.remove("is-hidden");
   }
   function closeMushaf() {
     mushaf.hidden = true;
-    clearTimeout(hideTimer);
+    resetZoom();
     if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
     if (!modal || modal.hidden) document.body.style.overflow = "";
   }
@@ -697,7 +801,7 @@
             "<b>" + f.t + " " + f.mer + "</b></div>"
           );
         }).join("")
-      : '<p class="isl-note">حدّد موقعك أولًا لعرض المواقيت.</p>';
+      : '<p class="isl-note">حدّد موقعك أولًا لعرض الموا��يت.</p>';
 
     var head = state.next
       ? '<p class="isl-note">الصلاة القادمة: <strong>' + esc(state.next.name) + "</strong> — متبقٍ " + remainText(state.next.at) + "</p>"
