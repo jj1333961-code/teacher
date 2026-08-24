@@ -749,12 +749,12 @@
   function askNotify() {
     if (!window.Notification) return toast("التنبيهات غير مدعومة في هذا المتصفح", "error");
     Notification.requestPermission().then(function (p) {
-      toast(p === "granted" ? "تم ت��غيل تنبيه الصلاة" : "لم يتم السماح بالتنبيهات", p === "granted" ? "success" : "error");
+      toast(p === "granted" ? "تم تشغيل تنبيه الصلاة" : "لم يتم السماح بالتنبيهات", p === "granted" ? "success" : "error");
     });
   }
 
   /* ============================================================
-     6) اتجاه القبل��
+     6) اتجاه القبلة
      ============================================================ */
   var compassHandler = null, qiblaBearing = null;
 
