@@ -334,6 +334,7 @@
     var s = (D.surahs || []).find(function (x) { return x.number === surahNumber; });
     pdfPage = s ? s.page : 1;
     mushaf.hidden = false;
+    if (!history.state || !history.state.thimarMushaf) history.pushState({ thimarMushaf: true }, "", "#mushaf");
     document.body.style.overflow = "hidden";
     if (mushaf.requestFullscreen) mushaf.requestFullscreen().catch(function () {});
     showMushafClose();
@@ -400,7 +401,7 @@
       var t = e.changedTouches && e.changedTouches[0];
       if (!t) return;
       var dx = t.clientX - sx, dy = t.clientY - sy;
-      if (dy > 90 && Math.abs(dy) > Math.abs(dx)) { closeMushaf(); return; }
+      if (dy > 70 && Math.abs(dy) > Math.abs(dx)) { showMushafClose(); return; }
       if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
         moved = true;
         renderPage(dx > 0 ? pdfPage + 1 : pdfPage - 1);
@@ -439,6 +440,10 @@
     if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
     if (!modal || modal.hidden) document.body.style.overflow = "";
   }
+
+  window.addEventListener("popstate", function () {
+    if (mushaf && !mushaf.hidden) closeMushaf();
+  });
 
   /* ============================================================
      2) الأدعية  3) الأذكار  4) الأحاديث
