@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, jsonb, boolean, primaryKey } from 'drizzle-orm/pg-core'
+import { pgTable, text, integer, timestamp, jsonb, boolean, primaryKey, bigserial } from 'drizzle-orm/pg-core'
 
 export const quizzes = pgTable('quizzes', {
   id: text('id').primaryKey(),
@@ -47,5 +47,12 @@ export const antiCheatEvents = pgTable('anti_cheat_events', {
 })
 
 export type AntiCheatItemType = 'recitation' | 'exam' | 'task'
+
+export const messages = pgTable('messages', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  senderId: text('sender_id').notNull(), senderName: text('sender_name').notNull(), senderRole: text('sender_role').notNull(),
+  recipientId: text('recipient_id').notNull(), recipientName: text('recipient_name').notNull(), recipientRole: text('recipient_role').notNull(),
+  body: text('body').notNull(), createdAt: timestamp('created_at').defaultNow().notNull(), readAt: timestamp('read_at'),
+})
 
 export type QuizData = { id: string; title: string; questions: QuizQuestion[] }
