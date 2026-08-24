@@ -190,7 +190,7 @@
      الطبقة المشتركة: النافذة، المصحف، التنبيه
      ============================================================ */
   var modal, sheetTitle, sheetBody, backBtn, mushaf, mushafCanvas, mushafClose, athan, mushafZoom;
-  var pdfDoc = null, pdfLib = null, rendering = false, pendingPage = null;
+  var pdfDoc = null, pdfLib = null, rendering = false, pendingPage = null, pdfLoading = null;
   var sheetStack = [];
 
   function ensureLayers() {
@@ -282,7 +282,8 @@
      1) القرآن الكريم — قاموس السور ثم المصحف
      ============================================================ */
   function openQuran() {
-    var list = D.surahs || [];
+  preloadMushaf();
+  var list = D.surahs || [];
     var html =
       '<input type="search" class="isl-search" placeholder="ابحث عن سورة بالاسم أو الرقم…" aria-label="بحث في السور">' +
       '<div class="isl-surah-list" data-surah-list>' +
@@ -320,13 +321,25 @@
   }
 
   /* ---------------- عارض المصحف ---------------- */
-  var pdfPage = 1, hideTimer = null;
+  var pdfPage = 1, hideTimer = null, pdfPreloadStarted = false;
 
   async function loadPdfLib() {
     if (pdfLib) return pdfLib;
     pdfLib = await import("/vendor/pdfjs/pdf.min.mjs");
     pdfLib.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.min.mjs";
     return pdfLib;
+  }
+
+  function loadPdfDocument(lib) {
+    if (pdfDoc) return Promise.resolve(pdfDoc);
+    if (!pdfLoading) pdfLoading = lib.getDocument({ url: D.mushafPath || "/quran/quran.pdf", cMapUrl: "/vendor/pdfjs/cmaps/", cMapPacked: true }).promise.then(function (doc) { pdfDoc = doc; return doc; });
+    return pdfLoading;
+  }
+
+  function preloadMushaf() {
+    if (pdfPreloadStarted) return;
+    pdfPreloadStarted = true;
+    loadPdfLib().then(loadPdfDocument).catch(function () { pdfPreloadStarted = false; });
   }
 
   async function openMushaf(surahNumber) {
@@ -340,7 +353,7 @@
     showMushafClose();
     try {
       var lib = await loadPdfLib();
-      if (!pdfDoc) pdfDoc = await lib.getDocument({ url: D.mushafPath || "/quran/quran.pdf", cMapUrl: "/vendor/pdfjs/cmaps/", cMapPacked: true }).promise;
+      await loadPdfDocument(lib);
       await renderPage(pdfPage);
     } catch (error) { console.log("[v0] Mushaf render failed", error); }
     bindMushafGestures();
@@ -697,7 +710,7 @@
             "<b>" + f.t + " " + f.mer + "</b></div>"
           );
         }).join("")
-      : '<p class="isl-note">حدّد موقعك أولًا لعرض المواقيت.</p>';
+      : '<p class="isl-note">حدّد موقعك أولًا لعرض الموا��يت.</p>';
 
     var head = state.next
       ? '<p class="isl-note">الصلاة القادمة: <strong>' + esc(state.next.name) + "</strong> — متبقٍ " + remainText(state.next.at) + "</p>"
