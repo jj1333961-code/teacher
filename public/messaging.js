@@ -63,7 +63,7 @@
   function contactButton(item, role) {
     var selected = activeContact[role] && activeContact[role].role === item.role && activeContact[role].id === item.id;
     return '<button type="button" class="messenger-contact'+(selected ? ' active' : '')+'" data-chat-role="'+esc(role)+'" data-contact-role="'+esc(item.role)+'" data-contact-id="'+esc(item.id)+'">'+
-      '<span class="messenger-avatar" aria-hidden="true">'+esc((item.name || "؟").trim().charAt(0))+'</span><span class="messenger-contact-copy"><span class="messenger-contact-name">'+esc(item.name)+'</span><span class="messenger-contact-role">'+esc(item.subtitle)+'</span></span></button>';
+      '<span class="messenger-avatar"><img src="/icon.svg" alt="شعار ثمار"></span><span class="messenger-contact-copy"><span class="messenger-contact-name">'+esc(item.name)+'</span><span class="messenger-contact-role">'+esc(item.subtitle)+'</span></span></button>';
   }
 
   function render(role) {
@@ -100,7 +100,7 @@
       var sent = item.fromRole === me.role && item.fromId === me.id;
       return '<article class="messenger-bubble '+(sent ? 'sent' : 'received')+'">'+(message.text ? '<p>'+esc(message.text)+'</p>' : '')+voiceAudioHTML(message)+attachmentHTML(message)+'<time>'+esc(message.time || "")+'</time></article>';
     }).join("") : '<div class="messenger-empty">لا توجد رسائل بعد. ابدأ المحادثة الآن.</div>';
-    return '<header class="messenger-chat-head"><button type="button" class="messenger-back" aria-label="العودة إلى المحادثات">رجوع</button><span class="messenger-avatar" aria-hidden="true">'+esc(contact.name.charAt(0))+'</span><div><strong>'+esc(contact.name)+'</strong><div class="messenger-contact-role">'+esc(contact.subtitle)+'</div></div></header><div class="messenger-thread" aria-live="polite">'+thread+'</div><div class="messenger-preview" hidden></div><div class="messenger-composer"><label class="messenger-icon-button" title="إرفاق ملف"><input class="messenger-file" type="file" hidden>إرفاق</label><button type="button" class="messenger-record" title="تسجيل صوتي">تسجيل صوتي</button><textarea rows="1" aria-label="نص الرسالة" placeholder="اكتب رسالة..."></textarea><button type="button" class="messenger-send">إرسال</button></div>';
+    return '<header class="messenger-chat-head"><button type="button" class="messenger-back" aria-label="العودة إلى المحادثات">رجوع</button><span class="messenger-avatar"><img src="/icon.svg" alt="شعار ثمار"></span><div><strong>'+esc(contact.name)+'</strong><div class="messenger-contact-role">'+esc(contact.subtitle)+'</div></div></header><div class="messenger-thread" aria-live="polite">'+thread+'</div><div class="messenger-preview" hidden></div><div class="messenger-composer"><label class="messenger-icon-button" title="إرفاق ملف"><input class="messenger-file" type="file" hidden>إرفاق</label><button type="button" class="messenger-record" title="تسجيل صوتي">تسجيل صوتي</button><textarea rows="1" aria-label="نص الرسالة" placeholder="اكتب رسالة..."></textarea><button type="button" class="messenger-send">إرسال</button></div>';
   }
 
   function bind(host, role) {
