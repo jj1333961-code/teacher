@@ -1730,17 +1730,47 @@ window.alert = function(m){ showToast(m); };
 </script>
   <script>
     (function(){
-      var currentPage = 1, totalPages = 604, pdfDocument = null, renderToken = 0, scaleFactor = 1.8;
+      var MUSHAF_URL = '/quran/quran.pdf';           /* ملف المصحف الأصلي المرفق بالمشروع — لا يُستبدل ولا يُعاد توليد محتواه */
+      var MUSHAF_CACHE = 'thimar-mushaf-v1';
+      var currentPage = 1, totalPages = 569, pdfDocument = null, renderToken = 0, scaleFactor = 1.8;
       var pdfLibPromise = null;
+      /* تخزين ملف المصحف محلياً في ذاكرة المتصفح حتى يفتح فوراً في الزيارات التالية دون انتظار تحميل */
+      function mushafBytes(){
+        if(!('caches' in window)) return fetch(MUSHAF_URL).then(function(r){ return r.arrayBuffer(); });
+        return caches.open(MUSHAF_CACHE).then(function(cache){
+          return cache.match(MUSHAF_URL).then(function(hit){
+            if(hit) return hit.arrayBuffer();
+            return fetch(MUSHAF_URL).then(function(response){
+              if(!response.ok) throw new Error('mushaf fetch failed');
+              try { cache.put(MUSHAF_URL, response.clone()); } catch(err){}
+              return response.arrayBuffer();
+            });
+          });
+        }).catch(function(){ return fetch(MUSHAF_URL).then(function(r){ return r.arrayBuffer(); }); });
+      }
       function loadPdf(){
         if(pdfDocument) return Promise.resolve(pdfDocument);
-        if(!pdfLibPromise) pdfLibPromise = import('/vendor/pdfjs/pdf.min.mjs').then(function(lib){
-          var pdfjs = lib.default || lib;
+        if(!pdfLibPromise) pdfLibPromise = Promise.all([
+          import('/vendor/pdfjs/pdf.min.mjs'),
+          mushafBytes()
+        ]).then(function(parts){
+          var pdfjs = parts[0].default || parts[0];
           pdfjs.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
-          return pdfjs.getDocument('/quran/quran.pdf').promise;
+          /* رسم الحروف من خطوط المصحف المدمجة داخل الملف نفسه (disableFontFace) لضمان تطابق الحروف والتشكيل حرفياً مع النسخة الأصلية */
+          return pdfjs.getDocument({
+            data: new Uint8Array(parts[1]),
+            cMapUrl: '/vendor/pdfjs/cmaps/',
+            cMapPacked: true,
+            standardFontDataUrl: '/vendor/pdfjs/standard_fonts/',
+            disableFontFace: true,
+            useSystemFonts: false
+          }).promise;
         });
         return pdfLibPromise.then(function(pdf){ pdfDocument=pdf; totalPages=pdf.numPages; return pdf; });
       }
+      /* تجهيز الملف والصفحة الأولى في الخلفية بعد فتح الموقع */
+      if(typeof window.requestIdleCallback === 'function') window.requestIdleCallback(function(){ loadPdf().catch(function(){}); }, { timeout: 4000 });
+      else setTimeout(function(){ loadPdf().catch(function(){}); }, 2000);
       function setPage(page){
         var requestedPage = parseInt(page, 10) || 1;
         if(requestedPage < 1 || (pdfDocument && requestedPage > totalPages)) return;
