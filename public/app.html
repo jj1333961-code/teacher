@@ -1748,7 +1748,7 @@ window.alert = function(m){ showToast(m); };
         if(typeof window.__quranResetZoom === 'function') window.__quranResetZoom();
         var canvas=document.getElementById('quranOriginalCanvas'), loading=document.getElementById('quranReaderLoading'), token=++renderToken;
         if(!canvas) return;
-        if(loading) loading.hidden=false;
+        if(loading) loading.hidden=true;
         loadPdf().then(function(pdf){ return pdf.getPage(currentPage); }).then(function(pageObj){
           if(token!==renderToken) return;
           var base=pageObj.getViewport({scale:1}), frame=document.querySelector('.quran-reader-frame'), maxW=frame.clientWidth-24, maxH=frame.clientHeight-24;
