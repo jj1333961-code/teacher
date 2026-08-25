@@ -759,10 +759,6 @@ tr:hover { background: var(--table-hover); }
   /* قارئ مستقل يملأ الشاشة بالكامل، مع إبقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#29251e; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
-  .quran-reader-arrow { position:fixed; top:50%; z-index:10002; transform:translateY(-50%); width:58px; height:86px; border:2px solid rgba(255,255,255,.8); border-radius:16px; background:rgba(22,63,50,.78); color:#fff; font:400 58px/1 Arial,sans-serif; cursor:pointer; box-shadow:0 4px 18px rgba(0,0,0,.45); }
-  .quran-reader-arrow:hover,.quran-reader-arrow:focus { background:#a97b2c; outline:3px solid #f2d18b; outline-offset:3px; }
-  .quran-reader-next { right:18px; }
-  .quran-reader-previous { left:18px; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
   .quran-reader-frame { width:100%; height:100%; min-height:0; overflow:hidden; border:0; border-radius:0; background:#29251e; box-shadow:none; }
   .quran-reader-pages { width:100%; height:100%; display:flex; direction:ltr; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; touch-action:pan-x pinch-zoom; scrollbar-width:none; }
@@ -771,9 +767,11 @@ tr:hover { background: var(--table-hover); }
   .quran-reader-page-slot canvas { max-width:100%; max-height:100%; width:auto; height:auto; background:#fffdf7; box-shadow:0 8px 28px rgba(0,0,0,.38); }
   .quran-reader-status { position:absolute; right:50%; bottom:14px; transform:translateX(50%); z-index:10001; padding:6px 14px; border-radius:999px; background:rgba(16,45,36,.86); color:#fff; font-size:.8rem; pointer-events:none; }
   .quran-reader-frame iframe { display:block; width:100%; height:100%; border:0; background:#29251e; }
+  .quran-swipe-surface { position:absolute; inset:0; z-index:10001; background:transparent; touch-action:pan-y; cursor:grab; }
+  .quran-swipe-surface:active { cursor:grabbing; }
   .quran-reader-close { position:fixed; top:16px; left:16px; z-index:10002; display:flex; align-items:center; justify-content:center; width:56px; height:56px; padding:0; border:3px solid #fff; border-radius:50%; background:#163f32; color:#fff; font:700 34px/1 Arial,sans-serif; cursor:pointer; box-shadow:0 4px 18px rgba(0,0,0,.55),0 0 0 2px rgba(217,171,92,.75); }
   .quran-reader-close:hover,.quran-reader-close:focus { background:#a97b2c; outline:3px solid #f2d18b; outline-offset:3px; }
-  @media(max-width:620px){ .quran-reader-close { top:12px; left:12px; width:52px; height:52px; font-size:32px; } .quran-reader-arrow { width:44px; height:72px; font-size:46px; border-radius:12px; } .quran-reader-next { right:8px; } .quran-reader-previous { left:8px; } }
+  @media(max-width:620px){ .quran-reader-close { top:12px; left:12px; width:52px; height:52px; font-size:32px; } }
  </style>
 <script>
 /* الوضع الأخضر هو الافتراضي، والوضع الفاتح يُحفظ عند اختيار المستخدم له. */
@@ -875,7 +873,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><button class="btn btn-outline" id="signupMethodGoogleBtn" onclick="setSignupMethod('google')" style="width:100%">🔵 التسجيل بحساب جوجل</button></div>
     <div class="form-group"><button class="btn btn-outline" id="signupMethodPhoneBtn" onclick="setSignupMethod('phone')" style="width:100%">🟢 التسجيل برقم الهاتف (واتساب)</button></div>
   </div>
-  <!-- منطقة التسجيل بحساب جوجل: تظهر حسابات جوجل الموجود�� على الجهاز للاختيار مباشرةً بدون تحقق واتساب -->
+  <!-- منطقة التسجيل بحساب جوجل: تظهر حسابات جوجل الموجود���� على الجهاز للاختيار مباشرةً بدون تحقق واتساب -->
   <div class="form-group" id="signupGoogleBox" style="display:none;">
     <label>اختر حساب جوجل لإكمال التسجيل *</label>
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
@@ -1102,7 +1100,7 @@ tr:hover { background: var(--table-hover); }
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
     <label style="font-size:1.05rem;">الإملاء الصوتي لبيانات الطالب</label>
-    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ الخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
       <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
@@ -1289,7 +1287,7 @@ tr:hover { background: var(--table-hover); }
 <!-- صفحة المخطط الكامل -->
 <div id="fullChartPage" class="chart-page hidden">
   <div class="page-header">
-    <h2>📊 ا��مخط���� الت���صيلي</h2>
+    <h2>📊 ا��م��ط���� الت���صيلي</h2>
     <button class="btn btn-secondary" onclick="closeFullChart()">رجوع</button>
   </div>
   <div id="fullChartContainer" style="text-align:center;"></div>
@@ -1780,9 +1778,7 @@ window.alert = function(m){ showToast(m); };
   </script>
   <section id="quranReaderPage" class="page quran-reader-page hidden" aria-label="قارئ المصحف">
     <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق قارئ المصحف" title="إغلاق">×</button>
-    <button type="button" class="quran-reader-arrow quran-reader-next" onclick="nextQuranPage()" aria-label="الصفحة التالية" title="الصفحة التالية">‹</button>
-    <button type="button" class="quran-reader-arrow quran-reader-previous" onclick="previousQuranPage()" aria-label="الصفحة السابقة" title="الصفحة السابقة">›</button>
-    <div class="quran-reader-frame"><iframe id="quranOriginalFrame" src="/quran/quran.pdf#page=1&zoom=100&toolbar=0&navpanes=0" title="النسخة الأصلية من المصحف" allow="fullscreen"></iframe></div>
+    <div class="quran-reader-frame"><iframe id="quranOriginalFrame" src="/quran/quran.pdf#page=1&zoom=100&toolbar=0&navpanes=0" title="النسخة الأصلية من المصحف" allow="fullscreen"></iframe><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اسحب للتنقل بين صفحات المصحف"></div></div>
   </section>
   <script>
 /* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة والتحقق القديم دون أي تغيير) */
