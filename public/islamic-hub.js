@@ -373,9 +373,13 @@
   }
 
   async function openMushaf(surahNumber) {
-    ensureLayers();
     var s = (D.surahs || []).find(function (x) { return x.number === surahNumber; });
     pdfPage = s ? s.page : 1;
+    if (typeof window.openQuranReader === "function") {
+      window.openQuranReader(pdfPage);
+      return;
+    }
+    ensureLayers();
     resetZoom();
     mushaf.hidden = false;
     if (!history.state || !history.state.thimarMushaf) history.pushState({ thimarMushaf: true }, "", "#mushaf");
