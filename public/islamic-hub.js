@@ -345,10 +345,14 @@
     if (pdfDoc) return pdfDoc;
     var lib = await loadPdfLib();
     if (!pdfDoc) {
+      // رسم الحروف من الخطوط المدمجة في ملف المصحف الأصلي (disableFontFace) حتى تظهر الحروف والتشكيل كما في النسخة المطبوعة
       pdfDoc = await lib.getDocument({
         url: D.mushafPath || "/quran/quran.pdf",
         cMapUrl: "/vendor/pdfjs/cmaps/",
         cMapPacked: true,
+        standardFontDataUrl: "/vendor/pdfjs/standard_fonts/",
+        disableFontFace: true,
+        useSystemFonts: false,
       }).promise;
     }
     return pdfDoc;
@@ -992,7 +996,7 @@
     if (id === "qibla") return openQibla();
   }
 
-  /* ---------------- تحديد الموقع تلقائيًا ---------------- */
+  /* ---------------- تحديد المو��ع تلقائيًا ---------------- */
   function autoLocate() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
