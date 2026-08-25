@@ -757,20 +757,17 @@ tr:hover { background: var(--table-hover); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
   /* قارئ مستقل يملأ الشاشة بالكامل، مع إبقاء زر الإغلاق واضحًا فوق PDF */
-  .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#29251e; overflow:hidden; }
-  .quran-reader-toolbar { position:absolute; top:0; right:0; left:0; z-index:10001; min-height:64px; display:flex; align-items:center; justify-content:center; gap:10px; padding:10px 80px; margin:0; background:linear-gradient(180deg,rgba(16,45,36,.96),rgba(16,45,36,.55),transparent); color:#fff; pointer-events:none; }
-  .quran-reader-toolbar h2,.quran-reader-toolbar p { color:#fff; margin:0; text-shadow:0 1px 5px rgba(0,0,0,.65); }
-  .quran-reader-toolbar .btn { display:none; }
-  .quran-reader-frame { width:100%; height:100%; min-height:0; overflow:hidden; border:0; border-radius:0; background:#29251e; box-shadow:none; }
-  .quran-reader-pages { width:100%; height:100%; display:flex; direction:ltr; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; touch-action:pan-x pinch-zoom; scrollbar-width:none; }
-  .quran-reader-pages::-webkit-scrollbar { display:none; }
-  .quran-reader-page-slot { flex:0 0 100%; width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; padding:72px 20px 24px; }
-  .quran-reader-page-slot canvas { max-width:100%; max-height:100%; width:auto; height:auto; background:#fffdf7; box-shadow:0 8px 28px rgba(0,0,0,.38); }
-  .quran-reader-status { position:absolute; right:50%; bottom:14px; transform:translateX(50%); z-index:10001; padding:6px 14px; border-radius:999px; background:rgba(16,45,36,.86); color:#fff; font-size:.8rem; pointer-events:none; }
-  .quran-reader-frame iframe { display:none; }
-  .quran-reader-close { position:fixed; top:16px; left:16px; z-index:10002; display:flex; align-items:center; justify-content:center; width:56px; height:56px; padding:0; border:3px solid #fff; border-radius:50%; background:#163f32; color:#fff; font:700 34px/1 Arial,sans-serif; cursor:pointer; box-shadow:0 4px 18px rgba(0,0,0,.55),0 0 0 2px rgba(217,171,92,.75); }
-  .quran-reader-close:hover,.quran-reader-close:focus { background:#a97b2c; outline:3px solid #f2d18b; outline-offset:3px; }
-  @media(max-width:620px){ .quran-reader-close { top:12px; left:12px; width:52px; height:52px; font-size:32px; } .quran-reader-toolbar { min-height:60px; padding:8px 70px; } .quran-reader-toolbar h2 { font-size:1rem; } .quran-reader-toolbar p { font-size:.72rem; } }
+  .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
+  .quran-reader-toolbar { display:none; }
+  .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
+  .quran-reader-frame { position:relative; width:100%; height:100%; min-height:0; overflow:hidden; border:0; border-radius:0; background:#29251e; box-shadow:none; display:flex; align-items:center; justify-content:center; }
+  .quran-reader-canvas { display:block; max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; background:#fff; user-select:none; -webkit-user-drag:none; }
+  .quran-swipe-surface { position:absolute; inset:0; z-index:10001; background:transparent; touch-action:pan-y; cursor:grab; }
+  .quran-swipe-surface:active { cursor:grabbing; }
+  .quran-reader-loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; pointer-events:none; }
+  .quran-reader-close { position:fixed; top:16px; left:16px; z-index:10002; display:flex; align-items:center; justify-content:center; width:50px; height:50px; padding:0; border:1px solid #d7d7d7; border-radius:50%; background:#fff; color:#111; font:400 30px/1 Arial,sans-serif; cursor:pointer; box-shadow:0 2px 12px rgba(0,0,0,.22); }
+  .quran-reader-close:hover,.quran-reader-close:focus { background:#fff; color:#111; outline:2px solid #111; outline-offset:3px; }
+  @media(max-width:620px){ .quran-reader-close { top:12px; left:12px; width:44px; height:44px; font-size:28px; } }
  </style>
 <script>
 /* الوضع الأخضر هو الافتراضي، والوضع الفاتح يُحفظ عند اختيار المستخدم له. */
@@ -872,7 +869,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><button class="btn btn-outline" id="signupMethodGoogleBtn" onclick="setSignupMethod('google')" style="width:100%">🔵 التسجيل بحساب جوجل</button></div>
     <div class="form-group"><button class="btn btn-outline" id="signupMethodPhoneBtn" onclick="setSignupMethod('phone')" style="width:100%">🟢 التسجيل برقم الهاتف (واتساب)</button></div>
   </div>
-  <!-- منطقة التسجيل بحساب جوجل: تظهر حسابات جوجل الموجودة على الجهاز للاختيار مباشرةً بدون تحقق واتساب -->
+  <!-- منطقة التسجيل بحساب جوجل: تظهر حسابات جوجل الموجود���� على الجهاز للاختيار مباشرةً بدون تحقق واتساب -->
   <div class="form-group" id="signupGoogleBox" style="display:none;">
     <label>اختر حساب جوجل لإكمال التسجيل *</label>
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
@@ -922,7 +919,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group"><label>رقم الموبايل</label><input type="text" id="adminMobile" placeholder="أدخل رقم المو��ايل" maxlength="11"></div>
   <div class="form-group"><label>الرقم السري</label><input type="password" id="adminPass" placeholder="أدخل الرقم السري"></div>
   <button class="btn btn-primary" onclick="adminLogin()" style="width:100%">دخول</button>
-  <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للرئيسية</button>
+  <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للر��يسية</button>
 </div>
 
 <!-- لوحة المسؤول -->
@@ -1005,7 +1002,7 @@ tr:hover { background: var(--table-hover); }
 <!-- مزامنة GitHub (للمسؤول فقط) -->
 <div id="githubSyncPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🔗 مزامنة المشروع مع GitHub</h2></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">المشروع مرتبط بمستودعك ا��شخصي فقط عبر متغيرات البيئة على الخادم (<code>GITHUB_TOKEN</code>, <code>GITHUB_OWNER</code>, <code>GITHUB_REPO</code>, <code>GITHUB_BRANCH</code>). كل إضافة أو تعديل يقوم به مساعد التطوير يُنشئ <b>Commit</b> ويُدفع تلقائياً إلى فرعك المحدد، مع الحفاظ على كامل تاريخ الإصدارات. ل�� يتم وضع أي مفتاح أو سرّ داخل الملفات أو في المتصفح.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">المشروع مرتبط بمستودعك ا��شخصي فقط عبر متغيرات البيئة على الخادم (<code>GITHUB_TOKEN</code>, <code>GITHUB_OWNER</code>, <code>GITHUB_REPO</code>, <code>GITHUB_BRANCH</code>). كل إضافة أو تعديل يقوم به مساعد ا��تطوير يُنشئ <b>Commit</b> ويُدفع تلقائياً إلى فرعك المحدد، مع الحفاظ على كامل تاريخ الإصدارات. ل�� يتم وضع أي مفتاح أو سرّ داخل الملفات أو في المتصفح.</p>
   <div id="githubSyncAlert"></div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
     <button class="btn btn-primary" id="githubSyncRefreshBtn" onclick="refreshGithubSync()">🔄 تحقق من حالة المزامنة</button>
@@ -1030,7 +1027,7 @@ tr:hover { background: var(--table-hover); }
   <div id="adminsAlert"></div>
   <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
     <div class="form-group" style="margin-bottom:0;">
-      <label>رقم واتساب المسؤول لاستلام طلبات الا��ضمام</label>
+      <label>رقم واتساب المسؤول لاستلام طلبات الا����مام</label>
       <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
       <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة على واتساب (بصيغة الدولة، مثال: 201554542019)</small>
     </div>
@@ -1098,8 +1095,8 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>➕ إضافة طالب جديد</h2></div>
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
-    <label style="font-size:1.05rem;">الإملاء الصوتي لبيانات الطالب</label>
-    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ الخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <label style="font-size:1.05rem;">الإ��لاء الصوتي لبيانات الطالب</label>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
       <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
@@ -1178,7 +1175,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم السري لولي الأمر</label><div style="position:relative;"><input type="password" id="editParentPass" style="padding-left:45px;" oninput="syncStudentPass('edit')"><span onclick="togglePassVisibility('editParentPass', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁��</span></div></div>
-    <div class="form-group"><label>المواد الدراسية</label><select id="editSubject" multiple class="subjects-select" onchange="toggleEditQuran()"></select></div>
+    <div class="form-group"><label>المواد الدرا��ية</label><select id="editSubject" multiple class="subjects-select" onchange="toggleEditQuran()"></select></div>
   </div>
   <div id="editQuranFields" class="quran-section hidden">
     <h4>📖 بيانات حفظ القرآن الكريم</h4>
@@ -1189,7 +1186,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-group" style="border:1px dashed var(--primary);padding:12px;border-radius:10px;">
     <label>🎙️ البصمة الصوتية</label>
-    <div id="editVoiceStatus" style="margin:6px 0;color:var(--text-light)">يمءءن استبدال البص��ة الصوتية الحالية بتسجيل جديد.</div>
+    <div id="editVoiceStatus" style="margin:6px 0;color:var(--text-light)">يمءءن استبدال البص���ة الصوتية الحالية بتسجيل جديد.</div>
     <button type="button" class="voice-record-btn" id="editVoiceBtn" onclick="toggleEditVoiceRecord()">🎙️</button>
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
@@ -1230,9 +1227,9 @@ tr:hover { background: var(--table-hover); }
     </div>
 <p style="color:var(--text-light);margin:10px 0">اختبار ��رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
-<div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الناس.</small></div>
- <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">الماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
- <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة ا��ناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدوياً قبل ءءقسيمه.</small></div>
+<div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة ال��اس.</small></div>
+ <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">ا��ماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قريب ونصف بعيد.</small></div>
+ <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة ا��ناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدويا�� قبل ءءقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
  <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.</small></div>
  <div class="form-group" id="examFileSourceGroup" style="display:none"><label for="examFileSource">ملف المرجع</label><select id="examFileSource"><option value="">اختر مرجعاً...</option></select><small style="color:var(--text-light)">يجب اختيار ملف عند استخدام «من الملفات».</small></div>
@@ -1286,7 +1283,7 @@ tr:hover { background: var(--table-hover); }
 <!-- صفحة المخطط الكامل -->
 <div id="fullChartPage" class="chart-page hidden">
   <div class="page-header">
-    <h2>📊 ا��مخط�� الت���صيلي</h2>
+    <h2>📊 ا��م��ط���� الت���صيلي</h2>
     <button class="btn btn-secondary" onclick="closeFullChart()">رجوع</button>
   </div>
   <div id="fullChartContainer" style="text-align:center;"></div>
@@ -1301,28 +1298,13 @@ tr:hover { background: var(--table-hover); }
 
 <!-- الرسائل -->
 <div id="messagesPage" class="page hidden">
-  <div class="page-header"><h2>💬 الرسائل</h2></div>
-  <div class="msg-tabs">
-    <div class="msg-tab active" onclick="switchMsgTab('inbox', this)">📥 الرسائل الواردة</div>
-    <div class="msg-tab" onclick="switchMsgTab('compose', this)">✉️ التواصل</div>
-  </div>
-  <div id="msgInboxSection">
-    <div id="messagesList"></div>
-  </div>
-  <div id="msgComposeSection" class="hidden">
-    <div class="form-row">
-      <div class="form-group"><label>إرسال إلى</label><select id="composeTarget" onchange="updateComposePersons()"><option value="">اختر...</option><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
-      <div class="form-group"><label>الشخص</label><select id="composePerson"><option value="">اختر أولاً نوع ��لمستلم</option></select></div>
-    </div>
-    <div class="form-group"><label>الرسالة</label><textarea id="composeText" rows="4" placeholder="اكتب رسالتك..."></textarea></div>
-    <div id="voiceBox_compose"></div>
-    <button class="btn btn-primary" onclick="sendComposeMessage()">📤 إرسال</button>
-  </div>
+  <div class="page-header"><h2>الرسائل</h2></div>
+  <div id="messagesList"></div>
 </div>
 
 <!-- المواد والمعلمين -->
 <div id="subjectsPage" class="page hidden">
-  <div class="page-header"><h2>📚 ��لمواد والمعلمين</h2></div>
+  <div class="page-header"><h2>📚 ��لمواد والمعلم��ن</h2></div>
   <div class="form-row" style="margin-bottom:20px;">
     <div class="form-group"><label>اسم امادة الجديدة</label><input type="text" id="newSubName"></div>
     <div class="form-group"><label>اسم المدرس</label><input type="text" id="newSubTeacher"></div>
@@ -1396,13 +1378,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- صندوق رسائل الطالب -->
 <div id="studentInbox" class="page hidden">
-  <div class="page-header"><h2>📬 صندوق الرسائل</h2></div>
-  <div class="page" style="margin-top:0;">
-    <h4 style="color:var(--primary); margin-bottom:10px;">✉️ مراسلة المسؤول (نص أو رسالة صوتية)</h4>
-    <div class="form-group"><textarea id="studentMsgText" rows="3" placeholder="اكتب رسالتك للمسؤول..."></textarea></div>
-    <div id="voiceBox_student"></div>
-    <button class="btn btn-primary" onclick="sendUserMessageToAdmin('student')">📤 إرس��ل</button>
-  </div>
+  <div class="page-header"><h2>الرسائل</h2></div>
   <div id="studentInboxList"></div>
 </div>
 
@@ -1476,13 +1452,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- صندوق رسائل ولي الأمر -->
 <div id="parentInbox" class="page hidden">
-  <div class="page-header"><h2>📬 صندوق الرسائل</h2></div>
-  <div class="page" style="margin-top:0;">
-    <h4 style="color:var(--primary); margin-bottom:10px;">✉️ مراسلة المسؤول (نص ��و رسالة صوتية)</h4>
-    <div class="form-group"><textarea id="parentMsgText" rows="3" placeholder="اكتب رسالتك للمسؤول..."></textarea></div>
-    <div id="voiceBox_parent"></div>
-    <button class="btn btn-primary" onclick="sendUserMessageToAdmin('parent')">📤 إرسال</button>
-  </div>
+  <div class="page-header"><h2>الرسائل</h2></div>
   <div id="parentInboxList"></div>
 </div>
 
@@ -1523,7 +1493,7 @@ tr:hover { background: var(--table-hover); }
   <div id="filesAlert"></div>
   <section style="background:var(--table-header);border:2px solid var(--primary);border-radius:15px;padding:20px;margin-bottom:20px;">
     <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
-    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها محلياً دون إرساله إلى Gemini وGroq.</p>
+    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها مح��ياً دون إرساله إلى Gemini وGroq.</p>
     <input id="examFileUpload" type="file" accept=".pdf,.docx,.txt" onchange="uploadExamFile(this)">
     <div id="examFileUploadStatus" style="margin-top:10px;"></div>
     <div id="examFilesList" style="margin-top:15px;"></div>
@@ -1575,7 +1545,7 @@ tr:hover { background: var(--table-hover); }
       <div id="proctorFaceCheck" class="proctor-check bad">الوجه غير مفحوص</div><div id="proctorGazeCheck" class="proctor-check bad">اتجاه النظر غير مفحوص</div>
     </div>
 <p id="proctorHelp">ضع الهاتف أمامك وانظر إلى الشاشة. استخدم الموقع بشكل طبيعي بلمسة واحدة في كل مرة؛ لا يلزم إبقاء الإصبع مضغوطًا أثناء الاختبار.</p>
-<div id="proctorGateHold" class="proctor-touch-zone" aria-disabled="true">بعد نجاح الفحص: ضع إصبع واحد هنا للبدء</div>
+<div id="proctorGateHold" class="proctor-touch-zone" aria-disabled="true">بع�� نجاح الفحص: ضع إصبع واحد هنا للبدء</div>
     <div class="proctor-actions"><button id="proctorScanBtn" type="button" class="btn btn-primary" onclick="startProctorScan()">تشغيل الفحص</button><button type="button" class="btn btn-secondary" onclick="closeProctorGate()">إلغاء</button></div>
   </div>
 </div>
@@ -1758,25 +1728,70 @@ window.alert = function(m){ showToast(m); };
 })();
 </script>
   <script>
-    window.quranPdfLoaded = false;
-    window.renderOriginalQuran = async function(){
-      var host=document.getElementById('quranReaderPages'), status=document.getElementById('quranReaderStatus');
-      if(!host || window.quranPdfLoaded) return;
-      try {
-        if(!window.pdfjsLib){ var s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'; document.head.appendChild(s); await new Promise(function(resolve,reject){s.onload=resolve;s.onerror=reject;}); }
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; var pdf=await window.pdfjsLib.getDocument('/quran/quran.pdf').promise;
-        host.innerHTML='';
-        for(var n=1;n<=pdf.numPages;n++){ var slot=document.createElement('div'); slot.className='quran-reader-page-slot'; var canvas=document.createElement('canvas'); slot.appendChild(canvas); host.appendChild(slot); var page=await pdf.getPage(n); var base=page.getViewport({scale:1}); var scale=Math.min((host.clientWidth-40)/base.width,(host.clientHeight-100)/base.height); var viewport=page.getViewport({scale:Math.max(scale,1)}); canvas.width=viewport.width; canvas.height=viewport.height; await page.render({canvasContext:canvas.getContext('2d'),viewport:viewport}).promise; }
-        window.quranPdfLoaded=true; if(status) status.textContent='اسحب يمينًا ويسارًا للتنقل بين الصفحات';
-      } catch(e){ if(status) status.textContent='تعذر تحميل المصحف الأصلي'; console.error('[v0] Quran PDF viewer error',e); }
-    };
-    window.openQuranReader = function(){ if(typeof window.showPage === 'function') window.showPage('quranReaderPage'); setTimeout(window.renderOriginalQuran,120); };
-    window.closeQuranReader = function(){ if(typeof window.showPage === 'function') window.showPage('lockScreen'); };
+    (function(){
+      var currentPage = 1, totalPages = 604, pdfDocument = null, renderToken = 0, scaleFactor = 1.8;
+      var pdfLibPromise = null;
+      function loadPdf(){
+        if(pdfDocument) return Promise.resolve(pdfDocument);
+        if(!pdfLibPromise) pdfLibPromise = import('/vendor/pdfjs/pdf.min.mjs').then(function(lib){
+          var pdfjs = lib.default || lib;
+          pdfjs.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
+          return pdfjs.getDocument('/quran/quran.pdf').promise;
+        });
+        return pdfLibPromise.then(function(pdf){ pdfDocument=pdf; totalPages=pdf.numPages; return pdf; });
+      }
+      function setPage(page){
+        var requestedPage = parseInt(page, 10) || 1;
+        if(requestedPage < 1 || (pdfDocument && requestedPage > totalPages)) return;
+        currentPage = Math.min(totalPages, Math.max(1, requestedPage));
+        var canvas=document.getElementById('quranOriginalCanvas'), loading=document.getElementById('quranReaderLoading'), token=++renderToken;
+        if(!canvas) return;
+        if(loading) loading.hidden=false;
+        loadPdf().then(function(pdf){ return pdf.getPage(currentPage); }).then(function(pageObj){
+          if(token!==renderToken) return;
+          var base=pageObj.getViewport({scale:1}), frame=document.querySelector('.quran-reader-frame'), maxW=frame.clientWidth-24, maxH=frame.clientHeight-24;
+          var fit=Math.min(maxW/base.width,maxH/base.height); var viewport=pageObj.getViewport({scale:Math.max(fit,0.1)*scaleFactor});
+          var ratio=window.devicePixelRatio||1; canvas.width=Math.ceil(viewport.width*ratio); canvas.height=Math.ceil(viewport.height*ratio); canvas.style.width=Math.ceil(viewport.width)+'px'; canvas.style.height=Math.ceil(viewport.height)+'px';
+          return pageObj.render({canvasContext:canvas.getContext('2d',{alpha:false}),viewport:viewport,transform:ratio!==1?[ratio,0,0,ratio,0,0]:null}).promise;
+        }).then(function(){if(loading) loading.hidden=true;}).catch(function(){if(loading) loading.textContent='تعذر تحميل صفحة المصحف';});
+      }
+      window.openQuranReader = function(page){
+        if(typeof window.showPage === 'function') window.showPage('quranReaderPage');
+        setPage(page || 1);
+        var reader = document.getElementById('quranReaderPage');
+        if(reader && reader.requestFullscreen) reader.requestFullscreen().catch(function(){});
+      };
+      window.nextQuranPage = function(){ setPage(currentPage + 1); };
+      window.previousQuranPage = function(){ setPage(currentPage - 1); };
+      window.closeQuranReader = function(){
+        if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){});
+        if(typeof window.showPage === 'function') window.showPage('lockScreen');
+      };
+      document.addEventListener('keydown', function(event){
+        var reader = document.getElementById('quranReaderPage');
+        if(!reader || reader.classList.contains('hidden')) return;
+        if(event.key === 'ArrowRight') { event.preventDefault(); nextQuranPage(); }
+        if(event.key === 'ArrowLeft') { event.preventDefault(); previousQuranPage(); }
+        if(event.key === 'Escape') { event.preventDefault(); closeQuranReader(); }
+      });
+      document.addEventListener('touchend', function(event){
+        var reader = document.getElementById('quranReaderPage');
+        if(!reader || reader.classList.contains('hidden')) return;
+        var start = reader._quranTouchStart;
+        if(!start || !event.changedTouches[0]) return;
+        var delta = event.changedTouches[0].clientX - start;
+        reader._quranTouchStart = null;
+        if(Math.abs(delta) > 55) delta < 0 ? nextQuranPage() : previousQuranPage();
+      }, {passive:true});
+      document.addEventListener('touchstart', function(event){
+        var reader = document.getElementById('quranReaderPage');
+        if(reader && !reader.classList.contains('hidden') && event.touches[0]) reader._quranTouchStart = event.touches[0].clientX;
+      }, {passive:true});
+    })();
   </script>
   <section id="quranReaderPage" class="page quran-reader-page hidden" aria-label="قارئ المصحف">
-    <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق ��ارئ المصحف" title="إغلاق">×</button>
-    <div class="quran-reader-toolbar"><div><h2>المصحف الشريف</h2><p>النسخة الأصلية كما وردت في ملف المصحف</p></div><button type="button" class="btn btn-secondary" onclick="closeQuranReader()">رجوع</button></div>
-    <div class="quran-reader-frame"><div id="quranReaderPages" class="quran-reader-pages" aria-label="صفحات المصحف، اسحب يمينًا ويسارًا"></div><div id="quranReaderStatus" class="quran-reader-status">جارٍ تحميل المصحف...</div><iframe src="/quran/quran.pdf#toolbar=1&navpanes=1&view=FitH" title="صفحات المصحف الأصلية" allow="fullscreen"></iframe></div>
+    <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق قارئ المصحف" title="إغلاق">×</button>
+    <div class="quran-reader-frame"><canvas id="quranOriginalCanvas" class="quran-reader-canvas" aria-label="صفحة المصحف الأصلية"></canvas><div id="quranReaderLoading" class="quran-reader-loading">جارٍ تحميل الصفحة...</div><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اسحب للتنقل بين صفحات المصحف"></div></div>
   </section>
   <script>
 /* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة والتحقق القديم دون أي تغيير) */
@@ -1810,7 +1825,9 @@ window.alert = function(m){ showToast(m); };
   })();
 })();
 </script>
+<link rel="stylesheet" href="/messaging.css">
 <script src="/legacy-i18n.js" defer></script>
 <script src="/islamic-hub.js" defer></script>
+<script src="/messaging.js" defer></script>
  </body>
 </html>

@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر��������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر����������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -286,7 +286,7 @@ function proctorLiveBar(){return ''}
 function bindLiveProctorHold(){}
 function proctorShowWarning(reason,startedAt){const grace=Math.ceil(getProctorSettings().gazeGraceMs/1000),left=Math.max(0,grace-Math.floor((Date.now()-startedAt)/1000)),w=document.getElementById('proctorWarning');if(w){w.textContent='تنبيه: '+reason+' — صحح الوضع خلال '+left+' ثانية';w.classList.remove('hidden')}}
 function proctorHandleLiveState(ok,reason){if(ok){proctor.warningAt=0;proctor.lastGoodAt=Date.now();if(proctor.blocked&&getProctorSettings().autoRestore&&Date.now()-proctor.stableSince>=1500){proctor.blocked=false;document.getElementById('proctorBlock')?.classList.add('hidden');document.getElementById('proctorWarning')?.classList.add('hidden');}if(!proctor.touchWarningAt)document.getElementById('proctorWarning')?.classList.add('hidden');return}proctor.stableSince=0;if(!proctor.warningAt)proctor.warningAt=Date.now();proctorShowWarning(reason,proctor.warningAt);if(Date.now()-proctor.warningAt>=getProctorSettings().gazeGraceMs)proctorBlockTask(reason)}
-function proctorBlockTask(reason){if(!proctor.active)return;proctor.blocked=true;proctor.stableSince=Date.now();const message=document.getElementById('proctorBlockMessage');if(message)message.textContent='تنبيه قابل للتفسير: '+reason+' — صحح الوضع أمام الشاشة. ستع��د عناصر التحكم تلقائياً عند استقرار الإشارات.';document.getElementById('proctorBlock')?.classList.remove('hidden');recordProctorIncident(reason+' (حجب مؤقت قابل للاسترجاع)')}
+function proctorBlockTask(reason){if(!proctor.active)return;proctor.blocked=true;proctor.stableSince=Date.now();const message=document.getElementById('proctorBlockMessage');if(message)message.textContent='تنبيه قابل للتفسير: '+reason+' — صحح الوضع أمام الشاشة. ��تع��د عناصر التحكم تلقائياً عند استقرار الإشارات.';document.getElementById('proctorBlock')?.classList.remove('hidden');recordProctorIncident(reason+' (حجب مؤقت قابل للاسترجاع)')}
 function proctorHandleTouches(e){if(!proctor.active||!getProctorSettings().touch)return;const touches=e&&e.touches?Array.from(e.touches):[];proctor.touches=new Set(touches.map(t=>t.identifier));const count=proctor.touches.size,tooMany=count>1,status=document.getElementById('proctorTouchStatus');proctor.holding=count===1;if(!tooMany){proctor.touchWarningAt=0;if(status){status.textContent=count===1?'إصبع واحد':'جاهز للمسة واحدة';status.className='badge badge-success'}return}if(!proctor.touchWarningAt)proctor.touchWarningAt=Date.now();const reason='استخدم إصبعًا واحدًا فقط';if(status){status.textContent='أزل اللمسات الإضافية';status.className='badge badge-warning'}proctorShowWarning(reason,proctor.touchWarningAt);if(Date.now()-proctor.touchWarningAt>=getProctorSettings().touchGraceMs)cancelProctoredTask(reason)}
 ['touchstart','touchmove','touchend','touchcancel'].forEach(type=>document.addEventListener(type,proctorHandleTouches,{passive:true,capture:true}));
 function recordProctorIncident(reason){if(!currentUser)return;const incident={id:'pi_'+Date.now(),studentId:currentUser.id,studentName:currentUser.name,taskType:proctor.context?.type||'unknown',taskId:proctor.context?.id||'',reason,time:new Date().toLocaleString('ar-EG'),timestamp:Date.now(),status:'cancelled'};const incidents=getData('proctoringIncidents',[]);incidents.unshift(incident);setData('proctoringIncidents',incidents.slice(0,500));const messages=getData('messages',[]);messages.push({type:'system',sender:'نظام المراقبة',senderId:0,receiverType:'admin',text:'تنبيه مخالفة مراقبة: '+currentUser.name+' — '+proctorTaskLabel(proctor.context)+' — '+reason+' — '+incident.time,time:incident.time,approved:true,read:false,proctorIncidentId:incident.id});setData('messages',messages);return incident}
@@ -2466,7 +2466,7 @@ async function recordStudentExamAudio(i){
   if(!btn||!status)return;
   if(btn.dataset.recording==='true')return;
   try{
-    const stream=await safeGetMic();const recorder=new MediaRecorder(stream),chunks=[];const asr=startArabicASR();btn.dataset.recording='true';btn.classList.add('recording');status.textContent='جاري التسجيل... اضغط مرة أخرى للإيقاف';
+    const stream=await safeGetMic();const recorder=new MediaRecorder(stream),chunks=[];const asr=startArabicASR();btn.dataset.recording='true';btn.classList.add('recording');status.textContent='جاري التسجيل... اضغط مر�� أخرى للإيقاف';
     recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
     recorder.onstop=async()=>{
       stream.getTracks().forEach(t=>t.stop());if(asr)asr.stop();await new Promise(r=>setTimeout(r,400));
@@ -3095,7 +3095,7 @@ async function runDevAssistant(){
     if(!confirmed){
       recordDevAudit({ status:'blocked', request, summary:'أُلغي بواسطة ءءلمسؤول قبل التنفيذ.', flagged:dangers });
       renderDevAudit();
-      showToast('🛑 تم إلغاء العملية الحسّاسة', 'info');
+      showToast('🛑 تم إلغاء ��لعملية الحسّاسة', 'info');
       return;
     }
   }
@@ -3233,7 +3233,7 @@ function renderDevPlan(plan){
     h += '</div>';
   } else {
     h += '<div style="background:rgba(255,193,7,0.12);border:1px solid #ffc107;border-radius:8px;padding:10px 12px;margin-top:14px;font-size:0.88rem;">'+
-         esc(plan.note || 'تم تحليل الطلب ولم يتم تطبيق تعديل تلقائي.')+'</div>';
+         esc(plan.note || 'تم تحليل الطل�� ولم يتم تطبيق تعديل تلقائي.')+'</div>';
   }
 
   h += '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">'+
@@ -3306,6 +3306,7 @@ async function syncCloudMessages() {
 }
 
 function renderMessages() {
+  if (typeof window.renderUnifiedMessenger === 'function') { window.renderUnifiedMessenger('admin'); return; }
   syncCloudMessages();
   const msgs = getData('messages');
   const adminMsgs = msgs.filter(m => m.receiverType === 'admin' || !m.receiverType);
@@ -4430,6 +4431,7 @@ function showStudentFullChart() {
 }
 
 function renderStudentInbox() {
+  if (typeof window.renderUnifiedMessenger === 'function') { window.renderUnifiedMessenger('student'); return; }
   const msgs = getData('messages');
   const myMsgs = msgs.filter(m => m.receiverType === 'student' && m.receiverId === currentUser.id);
   if(myMsgs.length === 0) { document.getElementById('studentInboxList').innerHTML = '<div class="alert alert-info">لا توجد رسائل</div>'; renderVoiceBox('student'); return; }
@@ -4571,6 +4573,7 @@ function renderParentDashboard() {
 }
 
 function renderParentInbox() {
+  if (typeof window.renderUnifiedMessenger === 'function') { window.renderUnifiedMessenger('parent'); return; }
   const msgs = getData('messages');
   const myMsgs = msgs.filter(m => m.receiverType === 'parent' && m.receiverName === currentUser[0].parent);
   if(myMsgs.length === 0) { document.getElementById('parentInboxList').innerHTML = '<div class="alert alert-info">لا توجد رسائل</div>'; renderVoiceBox('parent'); return; }
@@ -4709,7 +4712,7 @@ function renderParentPendingTasks() {
     } else {
       approvedToday.slice().reverse().forEach(task => {
         html += '<div class="task-card" style="border-right-color:var(--success);">';
-        html += '<h5 style="color:var(--success);">✅ '+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '📖 قراءة' : '🎙️ تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
+        html += '<h5 style="color:var(--success);">✅ '+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '📖 قراءة' : '🎙��� تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
         if(task.surah) html += '<p><strong>السورة:</strong> '+task.surah+' | <strong>من آية:</strong> '+(task.from || '-')+' | <strong>إلى آية:</strong> '+(task.to || '-')+'</p>';
         html += '<p style="color:var(--text-light); font-size:0.9rem;">🕐 '+(task.approvedAt || '')+'</p>';
         if(task.sourceMsgId) html += '<button class="btn btn-sm btn-info" onclick="openMessageFileById(\''+task.sourceMsgId+'\', true)">👁️ الاطلاع على الملف (عرض فقط)</button>';
