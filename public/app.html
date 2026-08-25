@@ -1186,7 +1186,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-group" style="border:1px dashed var(--primary);padding:12px;border-radius:10px;">
     <label>🎙️ البصمة الصوتية</label>
-    <div id="editVoiceStatus" style="margin:6px 0;color:var(--text-light)">يمءءن استبدال البص��ة الصوتية الحالية بتسجيل جديد.</div>
+    <div id="editVoiceStatus" style="margin:6px 0;color:var(--text-light)">يمءءن استبدال البص���ة الصوتية الحالية بتسجيل جديد.</div>
     <button type="button" class="voice-record-btn" id="editVoiceBtn" onclick="toggleEditVoiceRecord()">🎙️</button>
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
@@ -1304,7 +1304,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- المواد والمعلمين -->
 <div id="subjectsPage" class="page hidden">
-  <div class="page-header"><h2>📚 ��لمواد والمعلمين</h2></div>
+  <div class="page-header"><h2>📚 ��لمواد والمعلم��ن</h2></div>
   <div class="form-row" style="margin-bottom:20px;">
     <div class="form-group"><label>اسم امادة الجديدة</label><input type="text" id="newSubName"></div>
     <div class="form-group"><label>اسم المدرس</label><input type="text" id="newSubTeacher"></div>
@@ -1741,14 +1741,16 @@ window.alert = function(m){ showToast(m); };
         return pdfLibPromise.then(function(pdf){ pdfDocument=pdf; totalPages=pdf.numPages; return pdf; });
       }
       function setPage(page){
-        currentPage = Math.min(totalPages, Math.max(1, parseInt(page, 10) || 1));
+        var requestedPage = parseInt(page, 10) || 1;
+        if(requestedPage < 1 || (pdfDocument && requestedPage > totalPages)) return;
+        currentPage = Math.min(totalPages, Math.max(1, requestedPage));
         var canvas=document.getElementById('quranOriginalCanvas'), loading=document.getElementById('quranReaderLoading'), token=++renderToken;
         if(!canvas) return;
         if(loading) loading.hidden=false;
         loadPdf().then(function(pdf){ return pdf.getPage(currentPage); }).then(function(pageObj){
           if(token!==renderToken) return;
           var base=pageObj.getViewport({scale:1}), frame=document.querySelector('.quran-reader-frame'), maxW=frame.clientWidth-24, maxH=frame.clientHeight-24;
-          var fit=Math.min(maxW/base.width,maxH/base.height); var viewport=pageObj.getViewport({scale:Math.max(fit*scaleFactor,1)});
+          var fit=Math.min(maxW/base.width,maxH/base.height); var viewport=pageObj.getViewport({scale:Math.max(fit,0.1)*scaleFactor});
           var ratio=window.devicePixelRatio||1; canvas.width=Math.ceil(viewport.width*ratio); canvas.height=Math.ceil(viewport.height*ratio); canvas.style.width=Math.ceil(viewport.width)+'px'; canvas.style.height=Math.ceil(viewport.height)+'px';
           return pageObj.render({canvasContext:canvas.getContext('2d',{alpha:false}),viewport:viewport,transform:ratio!==1?[ratio,0,0,ratio,0,0]:null}).promise;
         }).then(function(){if(loading) loading.hidden=true;}).catch(function(){if(loading) loading.textContent='تعذر تحميل صفحة المصحف';});
@@ -1762,8 +1764,6 @@ window.alert = function(m){ showToast(m); };
       window.nextQuranPage = function(){ setPage(currentPage + 1); };
       window.previousQuranPage = function(){ setPage(currentPage - 1); };
       window.closeQuranReader = function(){
-        var frame = document.getElementById('quranOriginalFrame');
-        if(frame) frame.src = '/quran/quran.pdf#page=1&zoom=100&toolbar=0&navpanes=0';
         if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){});
         if(typeof window.showPage === 'function') window.showPage('lockScreen');
       };
