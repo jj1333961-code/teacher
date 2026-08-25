@@ -765,7 +765,6 @@ tr:hover { background: var(--table-hover); }
   .quran-reader-canvas { display:block; max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; background:#fff; user-select:none; -webkit-user-drag:none; }
   .quran-swipe-surface { position:absolute; inset:0; z-index:10001; background:transparent; touch-action:none; cursor:grab; }
   .quran-swipe-surface:active { cursor:grabbing; }
-  .quran-reader-loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; pointer-events:none; }
   .quran-reader-close { position:fixed; top:16px; left:16px; z-index:10002; display:flex; align-items:center; justify-content:center; width:50px; height:50px; padding:0; border:1px solid #d7d7d7; border-radius:50%; background:#fff; color:#111; font:400 30px/1 Arial,sans-serif; cursor:pointer; box-shadow:0 2px 12px rgba(0,0,0,.22); }
   .quran-reader-close:hover,.quran-reader-close:focus { background:#fff; color:#111; outline:2px solid #111; outline-offset:3px; }
   @media(max-width:620px){ .quran-reader-close { top:12px; left:12px; width:44px; height:44px; font-size:28px; } }
@@ -870,7 +869,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><button class="btn btn-outline" id="signupMethodGoogleBtn" onclick="setSignupMethod('google')" style="width:100%">🔵 التسجيل بحساب جو��ل</button></div>
     <div class="form-group"><button class="btn btn-outline" id="signupMethodPhoneBtn" onclick="setSignupMethod('phone')" style="width:100%">🟢 التسجيل برقم الهاتف (واتساب)</button></div>
   </div>
-  <!-- منطقة التسجيل بحساب جوجل: تظ��ر حسابات جوجل الموجود���� على الجهاز للاختيار مباشرةً بدون تحقق واتساب -->
+  <!-- منطقة التسجيل بحساب جوجل: ��ظ��ر حسابات جوجل الموجود���� على الجهاز للاختيار مباشرةً بدون تحقق واتساب -->
   <div class="form-group" id="signupGoogleBox" style="display:none;">
     <label>اختر حساب جوجل لإكمال التسجيل *</label>
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
@@ -1003,7 +1002,7 @@ tr:hover { background: var(--table-hover); }
 <!-- مزامنة GitHub (للمسؤول فقط) -->
 <div id="githubSyncPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🔗 مزامنة المشروع مع GitHub</h2></div>
-  <p style="color:var(--text-light); margin-bottom:12px;">المشروع مرتبط بمستودعك ا��شخصي فقط عبر متغيرات البيئة على الخادم (<code>GITHUB_TOKEN</code>, <code>GITHUB_OWNER</code>, <code>GITHUB_REPO</code>, <code>GITHUB_BRANCH</code>). كل إضافة أو تعديل يقوم به مساعد ا��تطوير يُنشئ <b>Commit</b> ويُدفع تلقائياً إلى فرعك المحدد، مع الحفاظ على كامل تاريخ الإصدارات. ل�� يتم وضع أي مفتاح أو سرّ داخل الملفات أو في المتصفح.</p>
+  <p style="color:var(--text-light); margin-bottom:12px;">المشروع مرتبط بمستودعك ا��شخصي فقط عبر متغيرات البيئة عل�� الخادم (<code>GITHUB_TOKEN</code>, <code>GITHUB_OWNER</code>, <code>GITHUB_REPO</code>, <code>GITHUB_BRANCH</code>). كل إضافة أو تعديل يقوم به مساعد ا��تطوير يُنشئ <b>Commit</b> ويُدفع تلقائياً إلى فرعك المحدد، مع الحفاظ على كامل تاريخ الإصدارات. ل�� يتم وضع أي مفتاح أو سرّ داخل الملفات أو في المتصفح.</p>
   <div id="githubSyncAlert"></div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
     <button class="btn btn-primary" id="githubSyncRefreshBtn" onclick="refreshGithubSync()">🔄 تحقق من حالة المزامنة</button>
@@ -1097,7 +1096,7 @@ tr:hover { background: var(--table-hover); }
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
     <label style="font-size:1.05rem;">الإ��لاء الصوتي لبيانات الطالب</label>
-    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعربي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم المستخدم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعر��ي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
       <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
@@ -1339,7 +1338,7 @@ tr:hover { background: var(--table-hover); }
     <aside class="side-sidebar" aria-label="أدوات الطالب">
       <div class="side-sidebar-head">
         <h3>الأدوات</h3>
-        <button type="button" class="side-sidebar-close" onclick="closeRoleSidebar('student')" aria-label="إغلاق القائمة">×</button>
+        <button type="button" class="side-sidebar-close" onclick="closeRoleSidebar('student')" aria-label="إغلاق الق��ئمة">×</button>
       </div>
       <div class="side-sidebar-body">
         <button type="button" class="role-nav-item" onclick="showPage('studentInbox')"><span class="role-nav-icon" aria-hidden="true">💬</span><span>الرسائل</span></button><button type="button" class="role-nav-item" onclick="openQuranReader()"><span class="role-nav-icon" aria-hidden="true">📖</span><span>المصحف الشريف</span></button>
@@ -1776,16 +1775,15 @@ window.alert = function(m){ showToast(m); };
         if(requestedPage < 1 || (pdfDocument && requestedPage > totalPages)) return;
         currentPage = Math.min(totalPages, Math.max(1, requestedPage));
         if(typeof window.__quranResetZoom === 'function') window.__quranResetZoom();
-        var canvas=document.getElementById('quranOriginalCanvas'), loading=document.getElementById('quranReaderLoading'), token=++renderToken;
+        var canvas=document.getElementById('quranOriginalCanvas'), token=++renderToken;
         if(!canvas) return;
-        if(loading) loading.hidden=false;
         loadPdf().then(function(pdf){ return pdf.getPage(currentPage); }).then(function(pageObj){
           if(token!==renderToken) return;
           var base=pageObj.getViewport({scale:1}), frame=document.querySelector('.quran-reader-frame'), maxW=frame.clientWidth-24, maxH=frame.clientHeight-24;
           var fit=Math.min(maxW/base.width,maxH/base.height); var viewport=pageObj.getViewport({scale:Math.max(fit,0.1)*scaleFactor});
           var ratio=window.devicePixelRatio||1; canvas.width=Math.ceil(viewport.width*ratio); canvas.height=Math.ceil(viewport.height*ratio); canvas.style.width=Math.ceil(viewport.width)+'px'; canvas.style.height=Math.ceil(viewport.height)+'px';
           return pageObj.render({canvasContext:canvas.getContext('2d',{alpha:false}),viewport:viewport,transform:ratio!==1?[ratio,0,0,ratio,0,0]:null}).promise;
-        }).then(function(){if(loading) loading.hidden=true;}).catch(function(){if(loading) loading.textContent='تعذر تحميل صفحة المصحف';});
+        }).catch(function(){});
       }
       window.openQuranReader = function(page){
         if(typeof window.showPage === 'function') window.showPage('quranReaderPage');
