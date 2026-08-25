@@ -79,6 +79,18 @@
     scrollThread(host);
   }
 
+  function voiceAudioHTML(message) {
+    if (!message.attachment || String(message.attachment.type || "").indexOf("audio/") !== 0) return "";
+    return '<audio class="messenger-audio" controls preload="metadata" src="'+message.attachment.data+'"></audio>';
+  }
+
+  function attachmentHTML(message) {
+    if (!message.attachment || !message.attachment.data) return "";
+    var file = message.attachment;
+    var media = String(file.type || "").indexOf("image/") === 0 ? '<img class="messenger-attachment-image" src="'+file.data+'" alt="'+esc(file.name)+'">' : '';
+    return '<div class="messenger-attachment">'+media+'<a href="'+file.data+'" download="'+esc(file.name)+'" target="_blank" rel="noopener">'+esc(file.name)+'<span>'+esc(file.type || "ملف")+'</span></a></div>';
+  }
+
   function chatHtml(role) {
     var contact = activeContact[role];
     if (!contact) return '<div class="messenger-placeholder">اختر شخصًا لبدء المحادثة</div>';
@@ -87,9 +99,9 @@
     var thread = messages.length ? messages.map(function (message) {
       var item = normalized(message);
       var sent = item.fromRole === me.role && item.fromId === me.id;
-      return '<article class="messenger-bubble '+(sent ? 'sent' : 'received')+'"><p>'+esc(message.text || "رسالة صوتية")+'</p>'+voiceAudioHTML(message)+'<time>'+esc(message.time || "")+'</time></article>';
+      return '<article class="messenger-bubble '+(sent ? 'sent' : 'received')+'">'+(message.text ? '<p>'+esc(message.text)+'</p>' : '')+voiceAudioHTML(message)+attachmentHTML(message)+'<time>'+esc(message.time || "")+'</time></article>';
     }).join("") : '<div class="messenger-empty">لا توجد رسائل بعد. ابدأ المحادثة الآن.</div>';
-    return '<header class="messenger-chat-head"><button type="button" class="messenger-back" aria-label="العودة إلى المحادثات">رجوع</button><span class="messenger-avatar" aria-hidden="true">'+esc(contact.name.charAt(0))+'</span><div><strong>'+esc(contact.name)+'</strong><div class="messenger-contact-role">'+esc(contact.subtitle)+'</div></div></header><div class="messenger-thread" aria-live="polite">'+thread+'</div><div class="messenger-composer"><textarea rows="1" aria-label="نص الرسالة" placeholder="اكتب رسالة..."></textarea><button type="button" class="messenger-send">إرسال</button></div>';
+    return '<header class="messenger-chat-head"><button type="button" class="messenger-back" aria-label="العودة إلى المحادثات">رجوع</button><span class="messenger-avatar" aria-hidden="true">'+esc(contact.name.charAt(0))+'</span><div><strong>'+esc(contact.name)+'</strong><div class="messenger-contact-role">'+esc(contact.subtitle)+'</div></div></header><div class="messenger-thread" aria-live="polite">'+thread+'</div><div class="messenger-preview" hidden></div><div class="messenger-composer"><label class="messenger-icon-button" title="إرفاق ملف"><input class="messenger-file" type="file" hidden>إرفاق</label><button type="button" class="messenger-record" title="تسجيل صوتي">تسجيل صوتي</button><textarea rows="1" aria-label="نص الرسالة" placeholder="اكتب رسالة..."></textarea><button type="button" class="messenger-send">إرسال</button></div>';
   }
 
   function bind(host, role) {
@@ -103,16 +115,40 @@
     if (back) back.addEventListener("click", function () { host.querySelector(".messenger-shell").classList.remove("chat-open"); });
     var textarea = host.querySelector(".messenger-composer textarea");
     var send = host.querySelector(".messenger-send");
-    if (send) send.addEventListener("click", function () { sendDirect(role, textarea); });
+    var fileInput = host.querySelector(".messenger-file");
+    var recordButton = host.querySelector(".messenger-record");
+    var preview = host.querySelector(".messenger-preview");
+    var pendingAttachment = null;
+    if (fileInput) fileInput.addEventListener("change", function () {
+      var file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      if (file.size > 8 * 1024 * 1024) { showToast("حجم الملف يجب ألا يتجاوز 8 ميجابايت", "error"); fileInput.value = ""; return; }
+      var reader = new FileReader();
+      reader.onload = function () { pendingAttachment = { name: file.name, type: file.type || "application/octet-stream", data: reader.result }; if (preview) { preview.textContent = "الملف جاهز للإرسال: " + file.name; preview.hidden = false; } };
+      reader.readAsDataURL(file);
+    });
+    if (recordButton) recordButton.addEventListener("click", function () { toggleRecording(recordButton, preview, function (audio) { pendingAttachment = audio; }); });
+    if (send) send.addEventListener("click", function () { sendDirect(role, textarea, pendingAttachment, fileInput); });
     if (textarea) textarea.addEventListener("keydown", function (event) {
       if (event.key === "Enter" && !event.shiftKey && !event.isComposing && event.keyCode !== 229) { event.preventDefault(); sendDirect(role, textarea); }
     });
   }
 
-  function sendDirect(role, textarea) {
+  function toggleRecording(button, preview, onDone) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { showToast("تسجيل الصوت غير مدعوم في هذا المتصفح", "error"); return; }
+    if (button._recorder) { button._recorder.stop(); return; }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      var chunks = [], recorder = new MediaRecorder(stream); button._recorder = recorder; button.textContent = "إيقاف التسجيل"; button.classList.add("recording");
+      recorder.ondataavailable = function (event) { if (event.data.size) chunks.push(event.data); };
+      recorder.onstop = function () { stream.getTracks().forEach(function (track) { track.stop(); }); button._recorder = null; button.textContent = "تسجيل صوتي"; button.classList.remove("recording"); var blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" }); if (blob.size > 8 * 1024 * 1024) return showToast("التسجيل كبير جدًا", "error"); var reader = new FileReader(); reader.onload = function () { onDone({ name: "رسالة صوتية.webm", type: blob.type, data: reader.result }); if (preview) { preview.textContent = "التسجيل جاهز للإرسال"; preview.hidden = false; } }; reader.readAsDataURL(blob); };
+      recorder.start();
+    }).catch(function () { showToast("تعذر الوصول إلى الميكروفون", "error"); });
+  }
+
+  function sendDirect(role, textarea, attachment, fileInput) {
     var text = textarea ? textarea.value.trim() : "";
     var contact = activeContact[role];
-    if (!text || !contact) return;
+    if ((!text && !attachment) || !contact) return;
     var me = actor(role);
     var messages = getData("messages") || [];
     messages.push({
@@ -121,10 +157,11 @@
       receiverType: contact.role, receiverId: contact.role === "parent" ? undefined : contact.id,
       receiverName: contact.role === "parent" ? contact.id : undefined,
       recipientRole: contact.role, recipientId: contact.id, recipientName: contact.name,
-      text: text, time: new Date().toLocaleString("ar-EG"), read: false, approved: true
+      text: text, attachment: attachment || null, time: new Date().toLocaleString("ar-EG"), read: false, approved: true
     });
     setData("messages", messages);
     textarea.value = "";
+    if (fileInput) fileInput.value = "";
     render(role);
     showToast("تم إرسال الرسالة", "success");
   }
