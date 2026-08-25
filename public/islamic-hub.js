@@ -56,15 +56,15 @@
   var notificationAudio = null;
   function playNotificationSound() {
     try {
-      if (!notificationAudio) { notificationAudio = new Audio("/audio/notification-chime.mp3"); notificationAudio.preload = "auto"; notificationAudio.volume = 0.65; }
+      if (!notificationAudio) { notificationAudio = new Audio("/sounds/notification-droplet.mp3"); notificationAudio.preload = "auto"; notificationAudio.volume = 0.65; }
       notificationAudio.currentTime = 0;
       var playback = notificationAudio.play();
       if (playback && playback.catch) playback.catch(function () {});
     } catch (e) {}
   }
   function toast(msg, type) {
-    playNotificationSound();
-    if (typeof window.showToast === "function") { window.showToast(msg, type || "info"); return; }
+  if (typeof window.showToast === "function") { window.showToast(msg, type || "info"); return; }
+  playNotificationSound();
     console.log("[v0] isl:", msg);
   }
 
@@ -996,7 +996,7 @@
     if (id === "qibla") return openQibla();
   }
 
-  /* ---------------- تحديد المو��ع تلقائيًا ---------------- */
+  /* ---------------- تحديد المو���ع تلقائيًا ---------------- */
   function autoLocate() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
