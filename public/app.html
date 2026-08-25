@@ -758,9 +758,12 @@ tr:hover { background: var(--table-hover); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
   /* قارئ مستقل يملأ الشاشة بالكامل، مع إبقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#29251e; overflow:hidden; }
-  .quran-reader-toolbar { position:absolute; top:0; right:0; left:0; z-index:10001; min-height:64px; display:flex; align-items:center; justify-content:center; gap:10px; padding:10px 80px; margin:0; background:linear-gradient(180deg,rgba(16,45,36,.96),rgba(16,45,36,.55),transparent); color:#fff; pointer-events:none; }
-  .quran-reader-toolbar h2,.quran-reader-toolbar p { color:#fff; margin:0; text-shadow:0 1px 5px rgba(0,0,0,.65); }
-  .quran-reader-toolbar .btn { display:none; }
+  .quran-reader-toolbar { display:none; }
+  .quran-reader-arrow { position:fixed; top:50%; z-index:10002; transform:translateY(-50%); width:58px; height:86px; border:2px solid rgba(255,255,255,.8); border-radius:16px; background:rgba(22,63,50,.78); color:#fff; font:400 58px/1 Arial,sans-serif; cursor:pointer; box-shadow:0 4px 18px rgba(0,0,0,.45); }
+  .quran-reader-arrow:hover,.quran-reader-arrow:focus { background:#a97b2c; outline:3px solid #f2d18b; outline-offset:3px; }
+  .quran-reader-next { right:18px; }
+  .quran-reader-previous { left:18px; }
+  .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
   .quran-reader-frame { width:100%; height:100%; min-height:0; overflow:hidden; border:0; border-radius:0; background:#29251e; box-shadow:none; }
   .quran-reader-pages { width:100%; height:100%; display:flex; direction:ltr; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; touch-action:pan-x pinch-zoom; scrollbar-width:none; }
   .quran-reader-pages::-webkit-scrollbar { display:none; }
@@ -770,7 +773,7 @@ tr:hover { background: var(--table-hover); }
   .quran-reader-frame iframe { display:block; width:100%; height:100%; border:0; background:#29251e; }
   .quran-reader-close { position:fixed; top:16px; left:16px; z-index:10002; display:flex; align-items:center; justify-content:center; width:56px; height:56px; padding:0; border:3px solid #fff; border-radius:50%; background:#163f32; color:#fff; font:700 34px/1 Arial,sans-serif; cursor:pointer; box-shadow:0 4px 18px rgba(0,0,0,.55),0 0 0 2px rgba(217,171,92,.75); }
   .quran-reader-close:hover,.quran-reader-close:focus { background:#a97b2c; outline:3px solid #f2d18b; outline-offset:3px; }
-  @media(max-width:620px){ .quran-reader-close { top:12px; left:12px; width:52px; height:52px; font-size:32px; } .quran-reader-toolbar { min-height:60px; padding:8px 70px; } .quran-reader-toolbar h2 { font-size:1rem; } .quran-reader-toolbar p { font-size:.72rem; } }
+  @media(max-width:620px){ .quran-reader-close { top:12px; left:12px; width:52px; height:52px; font-size:32px; } .quran-reader-arrow { width:44px; height:72px; font-size:46px; border-radius:12px; } .quran-reader-next { right:8px; } .quran-reader-previous { left:8px; } }
  </style>
 <script>
 /* الوضع الأخضر هو الافتراضي، والوضع الفاتح يُحفظ عند اختيار المستخدم له. */
@@ -922,7 +925,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group"><label>رقم الموبايل</label><input type="text" id="adminMobile" placeholder="أدخل رقم المو��ايل" maxlength="11"></div>
   <div class="form-group"><label>الرقم السري</label><input type="password" id="adminPass" placeholder="أدخل الرقم السري"></div>
   <button class="btn btn-primary" onclick="adminLogin()" style="width:100%">دخول</button>
-  <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للرئيسية</button>
+  <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للر��يسية</button>
 </div>
 
 <!-- لوحة المسؤول -->
@@ -1731,18 +1734,39 @@ window.alert = function(m){ showToast(m); };
 })();
 </script>
   <script>
-    window.openQuranReader = function(page){
-      if(typeof window.showPage === 'function') window.showPage('quranReaderPage');
-      var frame=document.getElementById('quranOriginalFrame');
-      var target=Math.max(1,parseInt(page,10)||1);
-      if(frame) frame.src='/quran/quran.pdf#page='+target+'&zoom=100&toolbar=1&navpanes=1';
-    };
-    window.closeQuranReader = function(){ if(typeof window.showPage === 'function') window.showPage('lockScreen'); };
+    (function(){
+      var currentPage = 1;
+      var totalPages = 604;
+      function setPage(page){
+        currentPage = Math.min(totalPages, Math.max(1, parseInt(page, 10) || 1));
+        var frame = document.getElementById('quranOriginalFrame');
+        if(frame) frame.src = '/quran/quran.pdf#page=' + currentPage + '&zoom=100&toolbar=0&navpanes=0';
+      }
+      window.openQuranReader = function(page){
+        if(typeof window.showPage === 'function') window.showPage('quranReaderPage');
+        setPage(page || 1);
+      };
+      window.nextQuranPage = function(){ setPage(currentPage + 1); };
+      window.previousQuranPage = function(){ setPage(currentPage - 1); };
+      window.closeQuranReader = function(){
+        var frame = document.getElementById('quranOriginalFrame');
+        if(frame) frame.src = '/quran/quran.pdf#page=1&zoom=100&toolbar=0&navpanes=0';
+        if(typeof window.showPage === 'function') window.showPage('lockScreen');
+      };
+      document.addEventListener('keydown', function(event){
+        var reader = document.getElementById('quranReaderPage');
+        if(!reader || reader.classList.contains('hidden')) return;
+        if(event.key === 'ArrowRight') { event.preventDefault(); nextQuranPage(); }
+        if(event.key === 'ArrowLeft') { event.preventDefault(); previousQuranPage(); }
+        if(event.key === 'Escape') { event.preventDefault(); closeQuranReader(); }
+      });
+    })();
   </script>
   <section id="quranReaderPage" class="page quran-reader-page hidden" aria-label="قارئ المصحف">
-    <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق ��ارئ المصحف" title="إغلاق">×</button>
-    <div class="quran-reader-toolbar"><div><h2>المصحف الشريف</h2><p>النسخة الأصلية كما وردت في ملف المصحف</p></div><button type="button" class="btn btn-secondary" onclick="closeQuranReader()">رجوع</button></div>
-    <div class="quran-reader-frame"><iframe id="quranOriginalFrame" src="/quran/quran.pdf#page=1&zoom=100&toolbar=1&navpanes=1" title="النسخة الأصلية من المصحف" allow="fullscreen"></iframe></div>
+    <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق قارئ المصحف" title="إغلاق">×</button>
+    <button type="button" class="quran-reader-arrow quran-reader-next" onclick="nextQuranPage()" aria-label="الصفحة التالية" title="الصفحة التالية">‹</button>
+    <button type="button" class="quran-reader-arrow quran-reader-previous" onclick="previousQuranPage()" aria-label="الصفحة السابقة" title="الصفحة السابقة">›</button>
+    <div class="quran-reader-frame"><iframe id="quranOriginalFrame" src="/quran/quran.pdf#page=1&zoom=100&toolbar=0&navpanes=0" title="النسخة الأصلية من المصحف" allow="fullscreen"></iframe></div>
   </section>
   <script>
 /* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة والتحقق القديم دون أي تغيير) */
