@@ -70,11 +70,10 @@
     var host = document.getElementById(role === "admin" ? "messagesList" : role + "InboxList");
     if (!host) return;
     var groups = contacts(role);
-    if (!activeContact[role]) activeContact[role] = allContacts(role)[0] || null;
     var list = groups.map(function (group) {
       return '<div class="messenger-group-title">'+esc(group.title)+'</div>'+group.items.map(function (item) { return contactButton(item, role); }).join("");
     }).join("");
-    host.innerHTML = '<div class="messenger-shell'+(activeContact[role] ? ' chat-open' : '')+'" data-messenger="'+role+'"><aside class="messenger-contacts"><div class="messenger-contacts-head"><h3>المحادثات</h3></div>'+list+'</aside><section class="messenger-chat">'+chatHtml(role)+'</section></div>';
+    host.innerHTML = '<div class="messenger-shell'+(activeContact[role] ? ' has-selection' : '')+'" data-messenger="'+role+'"><aside class="messenger-contacts"><div class="messenger-contacts-head"><h3>المحادثات</h3><p>اختر محادثة لبدء الدردشة</p></div>'+list+'</aside><section class="messenger-chat">'+(activeContact[role] ? chatHtml(role) : '<div class="messenger-placeholder">اختر محادثة من القائمة لعرض الرسائل</div>')+'</section></div>';
     bind(host, role);
     scrollThread(host);
   }
@@ -109,6 +108,8 @@
       button.addEventListener("click", function () {
         activeContact[role] = allContacts(role).find(function (item) { return item.role === button.dataset.contactRole && item.id === button.dataset.contactId; }) || null;
         render(role);
+        var shell = host.querySelector('.messenger-shell');
+        if (shell) shell.classList.add('chat-open');
       });
     });
     var back = host.querySelector(".messenger-back");

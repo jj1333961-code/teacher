@@ -1,7 +1,7 @@
 .messenger-shell{display:flex;min-height:32rem;max-height:calc(100vh - 10rem);overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--card-bg)}
 .messenger-contacts{display:flex;width:20rem;flex:0 0 20rem;flex-direction:column;border-left:1px solid var(--border);background:var(--table-header)}
 .messenger-contacts-head{padding:16px;border-bottom:1px solid var(--border)}
-.messenger-contacts-head h3{margin:0;color:var(--text);font-size:1.05rem}
+.messenger-contacts-head h3{margin:0;color:var(--text);font-size:1.05rem}.messenger-contacts-head p{margin:4px 0 0;color:var(--text-light);font-size:.8rem}
 .messenger-group-title{padding:12px 16px 6px;color:var(--text-light);font-size:.82rem;font-weight:700}
 .messenger-contact{display:flex;width:100%;align-items:center;gap:12px;border:0;border-bottom:1px solid var(--border);padding:12px 16px;background:transparent;color:var(--text);text-align:right;cursor:pointer}
 .messenger-contact:hover,.messenger-contact.active{background:color-mix(in srgb,var(--primary) 12%,transparent)}
