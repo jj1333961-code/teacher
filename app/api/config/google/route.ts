@@ -7,6 +7,6 @@ export async function GET() {
   const configured = Boolean(clientId)
   return NextResponse.json(
     { configured, clientId, redirectUri: 'https://teacher-three-ashen.vercel.app/api/auth/google' },
-    { status: configured ? 200 : 503, headers: { 'Cache-Control': 'no-store' } },
+    { status: 200, headers: { 'Cache-Control': 'no-store' } },
   )
 }
