@@ -118,19 +118,22 @@
     var fileInput = host.querySelector(".messenger-file");
     var recordButton = host.querySelector(".messenger-record");
     var preview = host.querySelector(".messenger-preview");
-    var pendingAttachment = null;
+    var pendingAttachment = null, attachmentReady = true;
     if (fileInput) fileInput.addEventListener("change", function () {
       var file = fileInput.files && fileInput.files[0];
       if (!file) return;
       if (file.size > 8 * 1024 * 1024) { showToast("حجم الملف يجب ألا يتجاوز 8 ميجابايت", "error"); fileInput.value = ""; return; }
+      attachmentReady = false; pendingAttachment = null; if (send) send.disabled = true;
       var reader = new FileReader();
-      reader.onload = function () { pendingAttachment = { name: file.name, type: file.type || "application/octet-stream", data: reader.result }; if (preview) { preview.textContent = "الملف جاهز للإرسال: " + file.name; preview.hidden = false; } };
+      reader.onprogress = function (event) { if (preview && event.lengthComputable) { preview.hidden = false; preview.innerHTML = '<div>جاري تجهيز الملف: <strong>'+Math.round(event.loaded / event.total * 100)+'%</strong></div><progress max="100" value="'+Math.round(event.loaded / event.total * 100)+'"></progress>'; } };
+      reader.onload = function () { attachmentReady = true; if (send) send.disabled = false; pendingAttachment = { name: file.name, type: file.type || "application/octet-stream", data: reader.result }; if (preview) { preview.innerHTML = "<strong>100%</strong> — الملف جاهز للإرسال: " + esc(file.name); preview.hidden = false; } };
+      reader.onerror = function () { attachmentReady = true; if (send) send.disabled = false; showToast("تعذر تجهيز الملف", "error"); };
       reader.readAsDataURL(file);
     });
     if (recordButton) recordButton.addEventListener("click", function () { toggleRecording(recordButton, preview, function (audio) { pendingAttachment = audio; }); });
-    if (send) send.addEventListener("click", function () { sendDirect(role, textarea, pendingAttachment, fileInput); });
+    if (send) send.addEventListener("click", function () { if (attachmentReady) sendDirect(role, textarea, pendingAttachment, fileInput); });
     if (textarea) textarea.addEventListener("keydown", function (event) {
-      if (event.key === "Enter" && !event.shiftKey && !event.isComposing && event.keyCode !== 229) { event.preventDefault(); sendDirect(role, textarea); }
+      if (event.key === "Enter" && !event.shiftKey && !event.isComposing && event.keyCode !== 229) { event.preventDefault(); if (attachmentReady) sendDirect(role, textarea, pendingAttachment, fileInput); }
     });
   }
 
