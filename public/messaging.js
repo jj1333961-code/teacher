@@ -122,12 +122,14 @@
     if (fileInput) fileInput.addEventListener("change", function () {
       var file = fileInput.files && fileInput.files[0];
       if (!file) return;
-      if (file.size > 8 * 1024 * 1024) { showToast("حجم الملف يجب ألا يتجاوز 8 ميجابايت", "error"); fileInput.value = ""; return; }
+      var allowed = file.type && (file.type.indexOf("image/") === 0 || file.type.indexOf("audio/") === 0 || file.type === "application/pdf" || file.type === "text/plain" || file.type.indexOf("application/zip") === 0 || file.type.indexOf("application/vnd.") === 0);
+      if (!allowed) { showToast("صيغة الملف غير مدعومة. استخدم صورة أو صوتًا أو PDF أو مستندًا معروفًا", "error"); fileInput.value = ""; return; }
+      if (file.size > 3 * 1024 * 1024) { showToast("الملف أكبر من الحد الآمن للتخزين المحلي (3 ميجابايت)", "error"); fileInput.value = ""; return; }
       attachmentReady = false; pendingAttachment = null; if (send) send.disabled = true;
       var reader = new FileReader();
       reader.onprogress = function (event) { if (preview && event.lengthComputable) { preview.hidden = false; preview.innerHTML = '<div>جاري تجهيز الملف: <strong>'+Math.round(event.loaded / event.total * 100)+'%</strong></div><progress max="100" value="'+Math.round(event.loaded / event.total * 100)+'"></progress>'; } };
       reader.onload = function () { attachmentReady = true; if (send) send.disabled = false; pendingAttachment = { name: file.name, type: file.type || "application/octet-stream", data: reader.result }; if (preview) { preview.innerHTML = "<strong>100%</strong> — الملف جاهز للإرسال: " + esc(file.name); preview.hidden = false; } };
-      reader.onerror = function () { attachmentReady = true; if (send) send.disabled = false; showToast("تعذر تجهيز الملف", "error"); };
+      reader.onerror = function () { attachmentReady = true; if (send) send.disabled = false; if (preview) { preview.hidden = false; preview.textContent = "فشل تجهيز الملف، حاول اختيار الملف مرة أخرى"; } showToast("تعذر تجهيز الملف", "error"); };
       reader.readAsDataURL(file);
     });
     if (recordButton) recordButton.addEventListener("click", function () { toggleRecording(recordButton, preview, function (audio) { pendingAttachment = audio; }); });
@@ -152,6 +154,10 @@
     var text = textarea ? textarea.value.trim() : "";
     var contact = activeContact[role];
     if ((!text && !attachment) || !contact) return;
+    if (attachment && attachment.data && attachment.data.length > 3900000) {
+      showToast("هذا الملف أكبر من سعة التخزين المحلي المتاحة، اختر ملفًا أصغر", "error");
+      return;
+    }
     var me = actor(role);
     var messages = getData("messages") || [];
     messages.push({
@@ -162,7 +168,13 @@
       recipientRole: contact.role, recipientId: contact.id, recipientName: contact.name,
       text: text, attachment: attachment || null, time: new Date().toLocaleString("ar-EG"), read: false, approved: true
     });
-    setData("messages", messages);
+    try {
+      setData("messages", messages);
+    } catch (error) {
+      console.error("[v0] Message attachment persistence failed", error);
+      showToast("تعذر إرسال الملف: مساحة التخزين المحلية ممتلئة. احذف بعض الرسائل أو اختر ملفًا أصغر", "error");
+      return;
+    }
     textarea.value = "";
     if (fileInput) fileInput.value = "";
     render(role);
