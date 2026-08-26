@@ -78,13 +78,11 @@ function togglePassVisibility(id, button) {
 function injectRecoveryUi() {
   if (!document.getElementById('recoveryUiStyles')) { const style=document.createElement('style'); style.id='recoveryUiStyles'; style.textContent='.thimar-password-wrap{position:relative}.thimar-password-wrap input{padding-left:52px!important}.thimar-password-toggle{position:absolute;left:10px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--thimar-gold,#a97b2c);font-size:1.25rem;cursor:pointer;padding:6px}.thimar-forgot-link{display:block;margin:10px auto 0;border:0;background:transparent;color:var(--thimar-gold,#a97b2c);cursor:pointer;text-decoration:underline;font:inherit}.recovery-modal{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;background:rgba(7,37,32,.72)}.recovery-modal.hidden{display:none}.recovery-card{position:relative;width:min(100%,480px);max-height:92vh;overflow:auto;background:var(--card-bg,#fffdf7);color:var(--text,#203c32);border:1px solid var(--border,#d9c9a5);border-radius:22px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.28)}.recovery-card h2{color:var(--primary,#1f5845);margin-bottom:8px}.recovery-card p{color:var(--text-light);margin-bottom:18px}.recovery-card label{display:block;font-weight:700;margin:12px 0;color:var(--text)}.recovery-card input,.recovery-card select{display:block;width:100%;margin-top:6px;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font:inherit}.recovery-card .btn{width:100%;margin-top:12px}.recovery-close{position:absolute;top:10px;left:12px;border:0;background:transparent;color:var(--text);font-size:1.8rem;cursor:pointer}'; document.head.appendChild(style); }
   const form = document.getElementById('thimarLoginForm');
-  if (!form) return;
-  if (!document.getElementById('forgotPasswordLink')) {
-    const link = document.createElement('button');
-    link.id = 'forgotPasswordLink'; link.type = 'button'; link.className = 'thimar-forgot-link';
-    link.textContent = 'هل نسيت الرقم السري؟'; link.onclick = openRecoveryModal;
-    form.appendChild(link);
-  }
+  if (!form || document.getElementById('forgotPasswordLink')) return;
+  const link = document.createElement('button');
+  link.id = 'forgotPasswordLink'; link.type = 'button'; link.className = 'thimar-forgot-link';
+  link.textContent = 'هل نسيت الرقم السري؟'; link.onclick = openRecoveryModal;
+  form.appendChild(link);
   const modal = document.createElement('div');
   modal.id = 'accountRecoveryModal'; modal.className = 'recovery-modal hidden';
   modal.innerHTML = `<div class="recovery-card" role="dialog" aria-modal="true" aria-labelledby="recoveryTitle"><button type="button" class="recovery-close" onclick="closeRecoveryModal()" aria-label="إغلاق">×</button><h2 id="recoveryTitle">استرجاع الحساب</h2><p>أدخل بياناتك، وسيصل طلبك إلى تنبيهات المسؤول.</p><div id="recoveryAlert"></div><label>نوع الحساب<select id="recoveryType"><option value="student">طالب</option><option value="parent">ولي الأمر</option><option value="teacher">معلم</option></select></label><label>الاسم<input id="recoveryName" autocomplete="name" required></label><label>الرقم القومي<input id="recoveryNationalId" inputmode="numeric" required></label><label>رقم الهاتف<input id="recoveryPhone" inputmode="tel" required></label><button type="button" class="btn btn-primary" onclick="submitAccountRecovery()">استرجاع الحساب</button></div>`;
@@ -102,12 +100,8 @@ async function submitAccountRecovery(){
   if(values.slice(1).some(value=>!value)){ alertBox.innerHTML='<div class="alert alert-danger">يرجى استكمال جميع البيانات.</div>'; return; }
   const request={type:values[0],name:values[1],nationalId:values[2],phone:values[3],createdAt:new Date().toISOString(),status:'new',id:'recovery-'+Date.now()};
   const requests=getData('accountRecoveryRequests',[]); requests.unshift(request); setData('accountRecoveryRequests',requests);
-  let whatsappReady = false;
-  try { const response=await fetch('/api/whatsapp/recovery',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)}); whatsappReady = response.ok; } catch(error) { console.warn('[v0] WhatsApp recovery notification unavailable', error); }
-  alertBox.innerHTML = whatsappReady
-    ? '<div class="alert alert-success">تم استلام طلبك وإرسال التنبيه إلى المسؤول.</div>'
-    : '<div class="alert alert-info">تم حفظ طلبك في تنبيهات المسؤول. إرسال واتساب التلقائي غير مُفعّل حاليًا.</div>';
-  setTimeout(closeRecoveryModal,1800);
+  try { const response=await fetch('/api/whatsapp/recovery',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)}); if(!response.ok) throw new Error('whatsapp-not-configured'); } catch(error) { console.warn('[v0] WhatsApp recovery notification unavailable', error); }
+  alertBox.innerHTML='<div class="alert alert-success">تم استلام طلبك وسيقوم المسؤول بمراجعته.</div>'; setTimeout(closeRecoveryModal,1800);
 }
 document.addEventListener('DOMContentLoaded', injectRecoveryUi);
 // الوضع الأخضر (الداكن) هو الافتراضي، والفاتح يُطبَّق فقط عند اختيار المستخدم له.
@@ -156,7 +150,7 @@ const LANG_DICT = {
   '👨‍💼 إدارة المسؤولين': '👨‍💼 Manage Admins',
   '📁 الملفات المرفوعة': '📁 Uploaded Files',
   '🛠️ مساعد تطوير الموقع': '🛠️ Site Development Assistant',
-  '��� مزامنة GitHub': '🔗 GitHub Sync',
+  '🔗 مزامنة GitHub': '🔗 GitHub Sync',
   'رجوع': 'Back',
   'رقم الموبايل': 'Mobile number',
   'رقم الواتساب لاستلام كود التحقق *': 'WhatsApp number to receive the verification code *',
@@ -2210,7 +2204,7 @@ function generateLocalFileQuestions(file,plans){const sentences=String(file.text
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
   const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الطالب';
-  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|م��حبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكن���� مساعدتك؟';
+  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|م��حبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنن�� مساعدتك؟';
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
@@ -2997,7 +2991,7 @@ async function toggleVoiceMsg(key) {
       voiceMsgStore[key] = await blobToDataURL(blob);
       delete voiceMsgRecorders[key];
       renderVoiceBox(key);
-      showToast('🎙️ تم تسجيل الرسالة الصوتية — اضغط ��رسال', 'success');
+      showToast('🎙️ تم تسجيل الرسالة الصوتية — اضغط إرسال', 'success');
     };
     recorder.start();
     registerAudioRecorder('message-'+key,recorder,stream,{statusId:'vmStatus_'+key,buttonId:'vmBtn_'+key,maxMs:180000});
@@ -3589,7 +3583,7 @@ function approveMessage(idx, approved) {
         msgs.push({
           type:'admin', sender:'المسؤول', senderId:0,
           receiverType: 'parent', receiverName: students[sIdx].parent,
-          text: '❌ تم رفض ملف '+students[sIdx].name+' من المسؤول. يرجى مت��بعة ابنك لإعادة الإرسال.',
+          text: '❌ تم رفض ملف '+students[sIdx].name+' من المسؤول. يرجى متابعة ابنك لإعادة الإرسال.',
           sourceMsgId: srcId,
           reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false
         });
@@ -3760,7 +3754,7 @@ function renderStudentDashboard() {
   html += '</div>';
 
   html += '<div style="display:flex; gap:20px; flex-wrap:wrap;"><div style="flex:1; min-width:300px;">';
-  html += '<div class="page" style="margin-top:0;"><h4 style="color:var(--primary); margin-bottom:15px;">���� البيانات</h4>';
+  html += '<div class="page" style="margin-top:0;"><h4 style="color:var(--primary); margin-bottom:15px;">📋 البيانات</h4>';
   html += '<p><strong>المدرس:</strong> '+(s.subjects ? s.subjects.map(sub => sub.teacher || '-').join('<br>') : '-')+'</p>';
   html += '<p><strong>رقم المدرس:</strong> '+(s.subjects && s.subjects[0] && s.subjects[0].phone ? s.subjects[0].phone : '-')+'</p>';
   html += '<p><strong>ولي الأمر:</strong> '+s.parent+'</p>';
@@ -4160,7 +4154,7 @@ async function analyzeRecitationContent(blob, task, transcript) {
     dur=audio.duration;const win=Math.floor(sr*.03);let voiced=0,frames=0;
     for(let i=0;i+win<data.length;i+=win){let e=0;for(let j=0;j<win;j++)e+=data[i+j]*data[i+j];e=Math.sqrt(e/win);frames++;if(e>.012)voiced++}
     voicedRatio=frames?voiced/frames:0;await ctx.close();
-  }catch(e){/* نكمل حتى لو تعذّر التحليل المحلي، لأن الخادم هو ا��مصدر الأساسي */}
+  }catch(e){/* نكمل حتى لو تعذّر التحليل المحلي، لأن الخادم هو المصدر الأساسي */}
   // Gemini على الخادم هو المصدر الوحيد لتفريغ الصوت وتصحيحه.
   let aiResult=await serverRecitationAnalysis(blob, task);
   const serverError=aiResult&&aiResult.analysisError?aiResult.analysisError:'';
@@ -4180,7 +4174,7 @@ async function analyzeRecitationContent(blob, task, transcript) {
 // التحءءق الكامل (بصمة صوتية + محتوى ائتلاوة) ثم الإرسال أو الرفض
 async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiBoxId, statusEl, fileName) {
   const aiBox = document.getElementById(aiBoxId);
-  if(aiBox) aiBox.innerHTML = '<div class="alert alert-info">🤖 ج��ري تحليل التسجيل بالذكاء الاصطناعي...</div>';
+  if(aiBox) aiBox.innerHTML = '<div class="alert alert-info">🤖 جاري تحليل التسجيل بالذكاء الاصطناعي...</div>';
   const task = currentUser.tasks[taskIdx];
   const identity = await verifyVoiceIdentity(blob, currentUser);
   let matchPct = identity ? identity.pct : null;
@@ -5216,7 +5210,7 @@ function generateAIResponse(text, student) {
   }
   // افتراضي ذكي
   let r = '🤖 أهلاً '+name+'، لم فهم ءءؤالك تماماً، لكني أستطيع مساعدتك فوراً في:<br>';
-  r += '• <strong>مستواي</strong> — تحليل آخر تقييم<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآي��ت</strong> — كيف تعرض آيات التسءءيع كصورة<br>• <strong>تحف��ز</strong> — كلمة تشدّ همتك';
+  r += '• <strong>مستواي</strong> — تحليل آخر تقييم<br>• <strong>مهامي</strong> — الواجبات والتسجيلات<br>• <strong>تقدمي</strong> — إحصائيات وتطورك<br>• <strong>خطة</strong> — جدول حفظ يومي<br>• <strong>الآي��ت</strong> — كيف تعرض آيات التسءءيع كصورة<br>• <strong>تحفيز</strong> — كلمة تشدّ همتك';
   if(pending.length > 0) r += '<br><br>📌 تذ��ير: لديك '+pending.length+' مهمة لم تُعتمد بعد.';
   return r;
 }
