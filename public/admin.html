@@ -917,7 +917,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🔐 د��ول المسؤول</h2></div>
   <div id="adminLoginAlert"></div>
   <div class="form-group"><label>رقم الموبايل</label><input type="text" id="adminMobile" placeholder="��دخل رقم المو��ايل" maxlength="11"></div>
-  <div class="form-group"><label>الرقم السري</label><input type="password" id="adminPass" placeholder="أدخل الرقم السري"></div>
+  <div class="form-group"><label>��لرقم السري</label><input type="password" id="adminPass" placeholder="أدخل الرقم السري"></div>
   <button class="btn btn-primary" onclick="adminLogin()" style="width:100%">دخول</button>
   <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للر��يسية</button>
 </div>
@@ -1096,7 +1096,7 @@ tr:hover { background: var(--table-hover); }
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
     <label style="font-size:1.05rem;">الإ��لاء الصوتي لبيانات الطالب</label>
-    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم ال����ت���دم ahmed، الرقم اءءقومي...، الها��ف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعر��ي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم ال����ت����دم ahmed، الرقم اءءقومي...، الها��ف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعر��ي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
       <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
@@ -1647,7 +1647,7 @@ window.alert = function(m){ showToast(m); };
     });
   }
 
-  ['unifiedLogin','startSignup'].forEach(function(name){
+  ['unifiedLogin','startSignup','showPage'].forEach(function(name){
     wrappers[name] = function(){
       var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : null;
       return runWhenCoreReady(name, arguments, btn);
