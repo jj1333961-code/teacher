@@ -88,6 +88,7 @@
   function stopV2Camera() {
     state.generation += 1;
     state.frameCount = 0;
+    state.lastVideoTime = -1;
     state.frameReady = false;
     state.playSucceeded = false;
     state.stableSince = 0;
@@ -95,6 +96,28 @@
     state.holdStartedAt = 0;
     state.activePointers.clear();
     Object.keys(state.checks).forEach((key) => { state.checks[key] = false; });
+    const stream = window.proctor && window.proctor.stream;
+    if (stream) {
+      stream.getTracks().forEach((track) => {
+        track.onended = null;
+        track.onmute = null;
+        try { track.stop(); } catch (_) {}
+      });
+      window.proctor.stream = null;
+    }
+    const video = byId('proctorVideo');
+    if (video) {
+      video.pause();
+      video.srcObject = null;
+      video.classList.remove('is-live');
+    }
+    if (window.proctor) {
+      clearInterval(window.proctor.scanTimer);
+      window.proctor.scanTimer = null;
+      window.proctor.detector = null;
+      window.proctor.detectorType = '';
+      window.proctor.faceMeshResults = null;
+    }
   }
 
   async function waitForMetadata(video, generation) {
@@ -149,14 +172,22 @@
       if (!window.isSecureContext) throw Object.assign(new Error('insecure-context'), { name: 'SecurityError' });
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw Object.assign(new Error('unsupported'), { name: 'NotSupportedError' });
       if (window.proctor.stream) window.proctor.stream.getTracks().forEach((track) => track.stop());
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' }, width: { ideal: 640, min: 320 }, height: { ideal: 480, min: 240 }, frameRate: { ideal: 24, min: 10 } }, audio: false });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' }, width: { ideal: 640, min: 320 }, height: { ideal: 480, min: 240 }, frameRate: { ideal: 24, min: 10 } }, audio: false });
+      } catch (error) {
+        if (error && error.name === 'OverconstrainedError') {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        } else throw error;
+      }
       if (generation !== state.generation) { stream.getTracks().forEach((track) => track.stop()); return; }
       const track = stream.getVideoTracks()[0];
       if (!track || track.readyState !== 'live') throw Object.assign(new Error('track-not-live'), { name: 'NotReadableError' });
       window.proctor.stream = stream;
-      track.addEventListener('ended', () => failLiveCamera('توقفت الكاميرا أو فُصلت من الجهاز.'));
-      track.addEventListener('mute', () => failLiveCamera('توقفت إطارات الكاميرا مؤقتًا.'));
-      video.autoplay = true; video.muted = true; video.playsInline = true; video.setAttribute('playsinline', ''); video.srcObject = stream;
+      track.addEventListener('ended', () => { if (generation === state.generation) failLiveCamera('توقفت الكاميرا أو فُصلت من الجهاز.'); });
+      track.addEventListener('mute', () => { if (generation === state.generation) failLiveCamera('توقفت إطارات الكاميرا مؤقتًا.'); });
+      track.addEventListener('unmute', () => { if (generation === state.generation) { state.checks.camera = true; updateReadyState(); } });
+      video.autoplay = true; video.muted = true; video.playsInline = true; video.setAttribute('playsinline', ''); video.setAttribute('webkit-playsinline', ''); video.srcObject = stream;
       await waitForMetadata(video, generation);
       try { await video.play(); state.playSucceeded = true; } catch (error) { throw Object.assign(error || new Error('play-failed'), { name: 'VideoPlaybackError' }); }
       await waitForFrames(video, generation);
