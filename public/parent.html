@@ -1096,7 +1096,7 @@ tr:hover { background: var(--table-hover); }
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
     <label style="font-size:1.05rem;">الإ��لاء الصوتي لبيانات الطالب</label>
-    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم الم��ت��دم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعر��ي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم الم��ت����دم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعر��ي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
       <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
@@ -1538,13 +1538,14 @@ tr:hover { background: var(--table-hover); }
   <div class="proctor-panel">
     <h2 id="proctorTitle">التحقق قبل بدء الجلسة</h2>
     <p>لن تُحفظ صورة أو فيديو. يجري الفحص على جهازك، ويُرسل للمسؤول سبب المخالفة ووقتها فقط.</p>
-    <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص ل��سماح بالكامير��</div></div>
+    <div class="proctor-camera"><video id="proctorVideo" autoplay playsinline muted></video><div id="proctorCameraStatus" class="proctor-camera-status">اضغط تشغيل الفحص ل����سماح بالكامير��</div></div>
     <canvas id="proctorCanvas" width="160" height="120" hidden></canvas>
     <div class="proctor-checks" aria-live="polite">
       <div id="proctorTouchCheck" class="proctor-check bad">شاشة لمس مطلوبة</div><div id="proctorLightCheck" class="proctor-check bad">الإضاءة غير مفحوصة</div>
-      <div id="proctorFaceCheck" class="proctor-check bad">الوجه غير مفحوص</div><div id="proctorGazeCheck" class="proctor-check bad">اتجاه النظر غير مفحوص</div>
+      <div id="proctorCameraCheck" class="proctor-check bad">الكاميرا غير متاحة</div><div id="proctorFrameCheck" class="proctor-check bad">بانتظار إطارات فعلية</div><div id="proctorFaceCheck" class="proctor-check bad">الوجه غير مفحوص</div><div id="proctorEyeCheck" class="proctor-check bad">العينان غير مفحو��تين</div><div id="proctorGazeCheck" class="proctor-check bad">اتجاه النظر غير مفحوص</div><div id="proctorReadyCheck" class="proctor-check bad">الفحص غير مكتمل</div>
     </div>
 <p id="proctorHelp">ضع الهاتف أمامك وانظر إلى الشاشة. استخدم الموقع بشكل طبيعي بلمسة واحدة في كل مرة؛ لا يلزم إبقاء الإصبع مضغوطًا أثناء الاختبار.</p>
+<details id="proctorDiagnostics" hidden><summary>تشخيص الكاميرا للمطور</summary><dl class="proctor-diagnostics"><dt>Permission</dt><dd id="proctorDiagPermission">unknown</dd><dt>Video devices</dt><dd id="proctorDiagDevices">0</dd><dt>Stream</dt><dd id="proctorDiagStream">no</dd><dt>Track</dt><dd id="proctorDiagTrack">none</dd><dt>Video</dt><dd id="proctorDiagVideo">none</dd><dt>play()</dt><dd id="proctorDiagPlay">no</dd><dt>Frames</dt><dd id="proctorDiagFrames">no</dd><dt>Error</dt><dd id="proctorDiagError">none</dd></dl></details>
 <div id="proctorGateHold" class="proctor-touch-zone" aria-disabled="true">بع�� نجاح الفحص: ضع إصبع واحد هنا للبدء</div>
     <div class="proctor-actions"><button id="proctorScanBtn" type="button" class="btn btn-primary" onclick="startProctorScan()">تشغيل الفحص</button><button type="button" class="btn btn-secondary" onclick="closeProctorGate()">إلغاء</button></div>
   </div>
@@ -1608,7 +1609,7 @@ window.alert = function(m){ showToast(m); };
       const s = document.createElement('script');
       s.src = '/app-core.js';
       s.async = false;
-      s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
+      s.onload = function(){ window.__thimarAppCoreLoaded = true; const p=document.createElement('script'); p.src='/proctoring-v2.js'; p.onload=resolve; p.onerror=reject; document.head.appendChild(p); };
       s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
       document.head.appendChild(s);
     });
