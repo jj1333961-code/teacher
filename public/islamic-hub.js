@@ -672,6 +672,8 @@
     computeNext();
     paintCards();
     startTick();
+    // إن كان وقت إحدى الصلوات قد دخل خلال آخر 5 دقائق (الصفحة كانت مغلقة) نعرض الشاشة فورًا
+    catchUpMissedPrayer();
     // إعادة جدولة منبهات الأذان في الطبقة الأصلية (Android) عند تحديث المواقيت/تغيّر الموقع
     try {
       if (window.THIMAR_PRAYER_SCREEN && typeof window.THIMAR_PRAYER_SCREEN.scheduleNative === "function") {
@@ -750,6 +752,25 @@
     if (ms < 0) ms = 0;
     var m = Math.floor(ms / 60000), h = Math.floor(m / 60);
     return h > 0 ? h + " س " + pad(m % 60) + " د" : pad(m) + " د " + pad(Math.floor((ms % 60000) / 1000)) + " ث";
+  }
+
+  /* إن دخل وقت صلاة خلال آخر 5 دقائق ولم تُعرض شاشتها بعد (كانت الصفحة مغلقة)
+     نعرض الشاشة ونشغّل الأذان تلقائيًا — منع التكرار يتم داخل شاشة الصلاة نفسها. */
+  var CATCH_UP_WINDOW_MS = 5 * 60 * 1000;
+  function catchUpMissedPrayer() {
+    if (!state.timings) return;
+    var now = new Date();
+    var due = null;
+    PRAYER_KEYS.filter(function (p) { return !p.info; }).forEach(function (p) {
+      var t = state.timings[p.key];
+      if (!t) return;
+      var parts = t.split(":");
+      var d = new Date(now);
+      d.setHours(parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+      var diff = now - d;
+      if (diff >= 0 && diff <= CATCH_UP_WINDOW_MS) due = { key: p.key, name: p.name, at: d, time: t };
+    });
+    if (due) announce(due);
   }
 
   function startTick() {
@@ -1014,7 +1035,7 @@
   }
 
   /* ============================================================
-     التوجيه
+     التو��يه
      ============================================================ */
   function openTasbeeh() {
     var html = '<div class="isl-tasbeeh-wrap"><label for="islTasbeehText">اختر التسبيحة</label><select id="islTasbeehText">' + TASBEEH.map(function (item, i) { return '<option value="' + i + '">' + esc(item) + '</option>'; }).join('') + '</select>' +
