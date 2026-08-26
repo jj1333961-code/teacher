@@ -843,7 +843,10 @@ tr:hover { background: var(--table-hover); }
         <div class="thimar-field">
           <span class="thimar-field-icon" aria-hidden="true">🔒</span>
           <label class="sr-only" for="unifiedPass">الرقم السري</label>
-          <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
+          <div class="thimar-password-wrap">
+            <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
+            <button type="button" class="thimar-password-toggle" onclick="togglePassVisibility('unifiedPass', this)" aria-label="إظهار الرقم السري" title="إظهار الرقم السري">◉̸</button>
+          </div>
         </div>
       </div>
       <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
@@ -916,7 +919,7 @@ tr:hover { background: var(--table-hover); }
 <div id="adminLogin" class="page hidden" style="max-width:500px; margin:40px auto;">
   <div class="page-header"><h2>🔐 د��ول المسؤول</h2></div>
   <div id="adminLoginAlert"></div>
-  <div class="form-group"><label>��قم الموبايل</label><input type="text" id="adminMobile" placeholder="��دخل رقم المو��ايل" maxlength="11"></div>
+  <div class="form-group"><label>��قم الموبايل</label><input type="text" id="adminMobile" placeholder="��دخل ��قم المو��ايل" maxlength="11"></div>
   <div class="form-group"><label>الرقم السري</label><input type="password" id="adminPass" placeholder="أدخل الرقم السري"></div>
   <button class="btn btn-primary" onclick="adminLogin()" style="width:100%">دخول</button>
   <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للر��يسية</button>
@@ -1096,7 +1099,7 @@ tr:hover { background: var(--table-hover); }
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
     <label style="font-size:1.05rem;">الإ��لاء الصوتي لبيانات الطالب</label>
-    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم الم��ت����دم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعر��ي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم الم��ت������دم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعر��ي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
       <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
@@ -1544,7 +1547,7 @@ tr:hover { background: var(--table-hover); }
       <div id="proctorTouchCheck" class="proctor-check bad">شاشة لمس مطلوبة</div><div id="proctorLightCheck" class="proctor-check bad">الإضاءة غير مفحوصة</div>
       <div id="proctorCameraCheck" class="proctor-check bad">الكاميرا غير متاحة</div><div id="proctorFrameCheck" class="proctor-check bad">بانتظار إطارات فعلية</div><div id="proctorFaceCheck" class="proctor-check bad">الوجه غير مفحوص</div><div id="proctorEyeCheck" class="proctor-check bad">العينان غير مفحو��تين</div><div id="proctorGazeCheck" class="proctor-check bad">اتجاه النظر غير مفحوص</div><div id="proctorReadyCheck" class="proctor-check bad">الفحص غير مكتمل</div>
     </div>
-<p id="proctorHelp">ضع الهاتف أمامك وانظر إلى الشاشة. استخدم الموقع بشكل طبيعي بلمسة واحدة في كل مرة؛ لا يلزم إبقاء الإصبع مضغوطًا أثناء الاختبار.</p>
+<p id="proctorHelp">ضع الهاتف أمامك وانظر إلى الشاشة. استخدم الموقع بشكل طبيعي بلمسة واحدة في كل مرة؛ لا يلزم إبقاء الإصبع مض��وطًا أثناء الاختبار.</p>
 <details id="proctorDiagnostics" hidden><summary>تشخيص الكاميرا للمطور</summary><dl class="proctor-diagnostics"><dt>Permission</dt><dd id="proctorDiagPermission">unknown</dd><dt>Video devices</dt><dd id="proctorDiagDevices">0</dd><dt>Stream</dt><dd id="proctorDiagStream">no</dd><dt>Track</dt><dd id="proctorDiagTrack">none</dd><dt>Video</dt><dd id="proctorDiagVideo">none</dd><dt>play()</dt><dd id="proctorDiagPlay">no</dd><dt>Frames</dt><dd id="proctorDiagFrames">no</dd><dt>Error</dt><dd id="proctorDiagError">none</dd></dl></details>
 <div id="proctorGateHold" class="proctor-touch-zone" aria-disabled="true">بع�� نجاح الفحص: ضع إصبع واحد هنا للبدء</div>
     <div class="proctor-actions"><button id="proctorScanBtn" type="button" class="btn btn-primary" onclick="startProctorScan()">تشغيل الفحص</button><button type="button" class="btn btn-secondary" onclick="closeProctorGate()">إلغاء</button></div>

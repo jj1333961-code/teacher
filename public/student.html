@@ -843,7 +843,10 @@ tr:hover { background: var(--table-hover); }
         <div class="thimar-field">
           <span class="thimar-field-icon" aria-hidden="true">🔒</span>
           <label class="sr-only" for="unifiedPass">الرقم السري</label>
-          <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
+          <div class="thimar-password-wrap">
+            <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
+            <button type="button" class="thimar-password-toggle" onclick="togglePassVisibility('unifiedPass', this)" aria-label="إظهار الرقم السري" title="إظهار الرقم السري">◉̸</button>
+          </div>
         </div>
       </div>
       <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
@@ -877,7 +880,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <!-- منطقة التسجيل برقم اءءءءهاتف: تظهر خانة الواتساب وكود التحقق فقط -->
   <div id="signupPhoneBox" style="display:none;">
-    <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupWhatsCountry" aria-label="كود دولة الواتساب" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">ا��كويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupWhats" placeholder="رقم واتساب بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,''); updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational')" style="flex:1; direction:ltr;"></div><small id="signupWhatsInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupWhatsCountry" aria-label="كود دولة الواتساب" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">ا��كويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupWhats" placeholder="رقم واتساب بدون كود الد��لة" oninput="this.value=this.value.replace(/\D/g,''); updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational')" style="flex:1; direction:ltr;"></div><small id="signupWhatsInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
     <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
@@ -1228,11 +1231,11 @@ tr:hover { background: var(--table-hover); }
 <p style="color:var(--text-light);margin:10px 0">اختبار ��رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة ال��اس.</small></div>
- <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">ا��ماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف ق��يب ونص�� بعيد.</small></div>
+ <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">ا��ماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف ق����يب ونص�� بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة ا��ناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدويا�� قبل ءءقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
  <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.</small></div>
- <div class="form-group" id="examFileSourceGroup" style="display:none"><label for="examFileSource">ملف المرجع</label><select id="examFileSource"><option value="">اختر مرجع��ً...</option></select><small style="color:var(--text-light)">يجب اختيار ملف عند استخدام «من الملفات».</small></div>
+ <div class="form-group" id="examFileSourceGroup" style="display:none"><label for="examFileSource">ملف المرجع</label><select id="examFileSource"><option value="">اختر مر��ع��ً...</option></select><small style="color:var(--text-light)">يجب اختيار ملف عند استخدام «من الملفات».</small></div>
  </div>
  <div class="alert alert-info"><strong>مصدر حصري وواضح:</strong> اختر الذكاء الاصطناعي لأسئلة قرآنية صعبة ومتنوعة، أو اختر ملفاً واحداً ليكون مصدر الدفعة كاملة. كل ضغطة توليد تضيف أسئلة جديدة ولا تمسح السابقة.</div>
     <div id="examPlanRows"></div>
@@ -1582,7 +1585,7 @@ document.addEventListener('pointerdown', requestThimarNotificationPermission, {o
 function showToast(msg, type){
   playThimarNotificationSound();
   if(document.hidden && 'Notification' in window && Notification.permission === 'granted'){
-    try{ new Notification('ثمار', {body:String(msg), icon:'/favicon.ico', tag:'thimar-site-alert'}); }catch(e){}
+    try{ new Notification('ثم��ر', {body:String(msg), icon:'/favicon.ico', tag:'thimar-site-alert'}); }catch(e){}
   }
   if(!type){
     var t = String(msg);
@@ -1742,7 +1745,7 @@ window.alert = function(m){ showToast(m); };
     var item = e.target.closest && e.target.closest('.side-sidebar-body .role-nav-item');
     if(item){ setTimeout(closeAllSidebars, 0); }
   });
-  /* إغلاق الشريط بمفتاح Esc */
+  /* ��غلاق الشريط بمفتاح Esc */
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape') closeAllSidebars();
   });
