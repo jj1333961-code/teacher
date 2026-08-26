@@ -118,7 +118,7 @@ const LANG_DICT = {
   '💾 حفظ الرقم': '💾 Save Number',
   '🆕 إنشاء حساب — التحقق من الهوية': '🆕 Create Account — Identity Verification',
   'اختر طريقة التسجيل، وسيتم إرسال رسالة تحقق على واتساب للتأكد من هويتك قبل إدخال البيانات.': 'Choose a sign-up method; a WhatsApp verification message will confirm your identity before entering your data.',
-  '🔵 التسجيل بحساب جوجل': '🔵 Sign up with Google',
+  '���� التسجيل بحساب جوجل': '🔵 Sign up with Google',
   '🟢 التسجيل برقم الهاتف (واتساب)': '🟢 Sign up with phone (WhatsApp)',
   'بريد حساب جوجل *': 'Google account email *',
   '📩 إرسال كود التحقق على واتساب': '��� Send verification code on WhatsApp',
@@ -142,7 +142,7 @@ const LANG_DICT = {
   '⚙️ إعدادات المسؤول': '⚙️ Admin Settings',
   'الاختبارات': 'Exams', 'المهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل الصوتي': 'Audio recording',
   'مكافحة الغش': 'Anti-cheat', 'تحليل التسجيل': 'Analyze recording', 'جاري التحليل...': 'Analyzing...',
-  'تعذر تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
+  'تعذ�� تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
   'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا تو��د بيانات': 'No data available',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'حذف': 'Delete', 'تعديل': 'Edit', 'إضافة': 'Add',
   'إرسال': 'Send', 'تحميل': 'Loading', 'جار التحميل...': 'Loading...', 'تأكيد': 'Confirm',
@@ -261,24 +261,49 @@ if(!localStorage.getItem('initialized_v7')) {
   // سجل محلي دائم للطالب عثمان — يُضاف مرة واحدة فقط دون المساس بالسجلات الموجودة.
   (function ensureDefaultStudent() {
     const students = getData('students', []);
-    const alreadyExists = students.some(function(student) {
-      return String(student.username || '').trim() === 'عثمان' || String(student.nationalId || '').trim() === '778888889999999900';
+    const existing = students.find(function(student) {
+      return String(student.username || '').trim() === 'عثمان' || String(student.nationalId || student.national || '').trim() === '778888889999999900';
     });
-    if (alreadyExists) return;
+    // تطبيع السجل السابق إن كان قد أُنشئ بإسماء حقول قديمة، حتى ينجح تسجيل الدخول دائمًا.
+    if (existing) {
+      let changed = false;
+      const normalize = function(key, value) { if (!existing[key] && value) { existing[key] = value; changed = true; } };
+      normalize('studentPass', existing.password || 'واحد');
+      normalize('national', existing.nationalId || '778888889999999900');
+      normalize('birth', existing.birthDate || '2006-12-12');
+      normalize('parent', existing.parentName || 'شعبان');
+      normalize('parentPass', 'واحد');
+      if (!Array.isArray(existing.subjectIds) || !existing.subjectIds.length) { existing.subjectIds = [1]; changed = true; }
+      if (!Array.isArray(existing.subjects) || !existing.subjects.length || typeof existing.subjects[0] === 'string') {
+        existing.subjects = [{id: 1, name: 'القرآن الكريم', teacher: 'ش/أحمد شعبان'}];
+        changed = true;
+      }
+      ['sessions', 'tasks', 'completedTasks'].forEach(function(key) {
+        if (!Array.isArray(existing[key])) { existing[key] = []; changed = true; }
+      });
+      if (changed) setData('students', students);
+      return;
+    }
     students.push({
       id: 'student_othman_local',
       name: 'عثمان',
       username: 'عثمان',
+      national: '778888889999999900',
       nationalId: '778888889999999900',
+      phone: '',
+      birth: '2006-12-12',
       birthDate: '2006-12-12',
       age: 19,
-      studentPassword: 'واحد',
+      studentPass: 'واحد',
       password: 'واحد',
+      parent: 'شعبان',
       parentName: 'شعبان',
-      parentPassword: 'واحد',
-      subjects: ['القرآن الكريم'],
+      parentPass: 'واحد',
+      subjectIds: [1],
+      subjects: [{id: 1, name: 'القرآن الكريم', teacher: 'ش/أحمد شعبان'}],
       subject: 'القرآن الكريم',
-      createdAt: new Date().toISOString(),
+      notes: '',
+      createdAt: new Date().toLocaleString('ar-EG'),
       localSeed: true
     });
     setData('students', students);
@@ -4125,7 +4150,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   if(matchPct !== null && matchPct < VOICE_MATCH_THRESHOLD) {
     showToast('❌ فشل التحقق من البصمة الصوتية (' + matchPct + '%) — لم يتم حفظ أو إرسال التءءجيل', 'error');
     if(statusEl) statusEl.textContent = 'غير مطابق — أعد التسجيل ❌';
-    if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 التحقق الأمني:</strong><br>البصمة الصوتية غير مطابقة لصوت الطال (' + matchPct + '%).<br>لم يتم حفظ التسجيل أو إرساله للمسؤول أو ولي الأمر.</div>';
+    if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 التحقق الأ��ني:</strong><br>البصمة الصوتية غير مطابقة لصوت الطال (' + matchPct + '%).<br>لم يتم حفظ التسجيل أو إرساله للمسؤول أو ولي الأمر.</div>';
     return false;
   }
 
@@ -5088,7 +5113,7 @@ function generateAIResponse(text, student) {
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
-    let r = '📈 <strong>تحليل تقدمك:</strong><br>• عدد التسميعات النهائية: '+scores.length+'<br>• المتوسط العام: '+avg+' من 16<br>• أعلى درجة: '+Math.max.apply(null,scores)+'<br>• أقل درجة: '+Math.min.apply(null,scores)+'<br>';
+    let r = '📈 <strong>تحليل تقدمك:</strong><br>• عدد التسميعات النهائية: '+scores.length+'<br>• ال��توسط العام: '+avg+' من 16<br>• أعلى درجة: '+Math.max.apply(null,scores)+'<br>• أقل درجة: '+Math.min.apply(null,scores)+'<br>';
     r += '• آخ تغيّر: '+(diff>0?('ارتفاع بمقدار '+diff+' درجة 🎉'):(diff<0?('انخفاض بمقدار '+Math.abs(diff)+' درجة — لا بأس، عوّضها بمراجعة إضافية 💪'):'ثبات في المستوى '));
     return r;
   }
