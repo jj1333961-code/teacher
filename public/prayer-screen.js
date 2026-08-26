@@ -308,7 +308,8 @@
     // 2) مسار الويب: بناء وإظهار الواجهة الديناميكية
     build();
 
-    els.title.textContent = "الصلاة";
+    // العنوان الرئيسي يتغير ديناميكيًا لكل صلاة: الفجر، الظهر، العصر، المغرب، العشاء
+    els.title.textContent = name;
     els.name.textContent = name;
     els.time.innerHTML = "<span>" + esc(f.t) + "</span>" + (f.mer ? "<small>" + esc(f.mer) + "</small>" : "");
     els.message.innerHTML = esc(data.prayerMessage || content.message) +
