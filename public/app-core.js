@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر��������������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر����������������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -169,7 +169,12 @@ const LANG_DICT = {
   'ليس لديك حساب؟': "Don't have an account?",
   'مصحف مفتوح على حامل خشبي': 'An open Quran on a wooden stand',
   'إعدادات العرض': 'Display settings',
-  'تبديل الوضع': 'Toggle theme'
+  'تبديل الوضع': 'Toggle theme',
+  'هل نسيت الرقم السري؟': 'Forgot your password?',
+  'استرجاع الحساب': 'Account recovery',
+  'التنبيهات': 'Notifications',
+  'تمييز الكل كمقروء': 'Mark all as read',
+  'لا توجد تنبيهات حالياً': 'There are no notifications right now'
 };
 let currentLang = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
 const LANG_ATTRS = ['placeholder','title','aria-label','alt'];
@@ -429,7 +434,7 @@ function pageFromUrl() {
 
 function pageAllowedForUser(id) {
   if (!id) return true;
-  if (id.startsWith('admin') || ['studentsList','messagesPage','subjectsPage','adminsPage','addStudent','filesPage','adminSettings'].includes(id)) return currentType === 'admin';
+  if (id.startsWith('admin') || ['studentsList','messagesPage','notificationsPage','subjectsPage','adminsPage','addStudent','filesPage','adminSettings'].includes(id)) return currentType === 'admin';
   if (id.startsWith('student')) return currentType === 'student';
   if (id.startsWith('parent')) return currentType === 'parent';
   return true;
@@ -470,9 +475,10 @@ function showPage(id, options = {}) {
   checkAndFinalizeDrafts();
   updateBackButton();
 
-  if(id === 'adminDashboard') { renderAdminStats(); updateMsgBadge(); renderActiveDrafts(); }
+  if(id === 'adminDashboard') { renderAdminStats(); updateMsgBadge(); updateNotificationBadge(); renderActiveDrafts(); }
   if(id === 'studentsList') renderStudents();
   if(id === 'messagesPage') { renderMessages(); markAdminMessagesRead(); }
+  if(id === 'notificationsPage') renderNotifications();
   if(id === 'subjectsPage') renderSubjects();
   if(id === 'adminsPage') renderAdmins();
   if(id === 'addStudent') { renderSubjectSelect(); initJuzSelect(); voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null; document.getElementById('voicePreview').style.display='none'; document.getElementById('voiceRecordStatus').textContent='اضغط للتسجيءء (20 ثانية)'; }
@@ -757,7 +763,7 @@ function updateSurahSelect() {
 // ====== إنشاء حساب جديد (طلب انضمام) ======
 let signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
 
-// ====== إعداد تسجيل الدخول بحساب جوجل (Google Identity Services) ======
+// ====== إعداد تسجيل الدخو�� بحساب جوجل (Google Identity Services) ======
 // معرّف العميل (OAuth Client ID) ��ُدار من إعدادات المسؤول > إدارة المسؤولين
 let googleGsiInited = false;
 let currentGoogleClientId = '';
@@ -932,7 +938,7 @@ function sendSignupCode() {
   const text = 'طلب كود تحقق لحساب جديد في نظام إدارة الطلاب\n'
     + 'رقم واتساب مقدّم الطلب: ' + whats + '\n'
     + 'كود التحقق: ' + signupState.code + '\n'
-    + 'يرجى إرسال هذا الكود لمقدّم الطلب لإكمال التسجيل.';
+    + 'يرجى ��رسال هذا الكود لمقدّم الطلب لإكمال التسجيل.';
   const link = buildWaLink(adminWa, text);
   document.getElementById('signupVerifyBox').classList.remove('hidden');
   box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق لإرسالها إلى المسؤول (' + adminWa + '). <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال الكود إلى واتساب المسؤول</strong></a> ثم أدخل الكود بالأسفل بعد استلامه من المسؤول.</div>';
@@ -1214,7 +1220,85 @@ function getAdminWhatsapp() {
   const num = String(v || '').replace(/\D/g, '');
   return num || DEFAULT_ADMIN_WHATSAPP;
 }
-function saveAdminWhatsapp() {
+  function setLocalOnlyData(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+  window.dispatchEvent(new CustomEvent('thimar-local-alerts-changed'));
+  }
+  function toggleUnifiedPassword() {
+  const input = document.getElementById('unifiedPass');
+  const button = document.getElementById('unifiedPassToggle');
+  if(!input || !button) return;
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  button.classList.toggle('is-visible', !showing);
+  button.setAttribute('aria-pressed', String(!showing));
+  button.setAttribute('aria-label', showing ? 'إظهار الرقم السري' : 'إخفاء الرقم السري');
+  }
+  function openAccountRecovery() {
+  ['recoveryName','recoveryNationalId','recoveryPhone'].forEach(function(id){ const el=document.getElementById(id); if(el) el.value=''; });
+  const role=document.getElementById('recoveryRole'); if(role) role.value='student';
+  const box=document.getElementById('recoveryAlert'); if(box) box.innerHTML='';
+  const fallback=document.getElementById('recoveryWhatsappFallback'); if(fallback) fallback.classList.add('hidden');
+  showPage('accountRecoveryPage');
+  }
+  function submitAccountRecovery() {
+  const box=document.getElementById('recoveryAlert');
+  const role=document.getElementById('recoveryRole').value;
+  const name=document.getElementById('recoveryName').value.trim();
+  const nationalId=document.getElementById('recoveryNationalId').value.replace(/\D/g,'');
+  const phone=document.getElementById('recoveryPhone').value.replace(/\D/g,'');
+  if(!name || !nationalId || !phone) { box.innerHTML='<div class="alert alert-danger">يرجى ملء جميع البيانات المطلوبة.</div>'; return; }
+  if(nationalId.length !== 14) { box.innerHTML='<div class="alert alert-danger">الرقم القومي يجب أن يتكون من 14 رقمًا.</div>'; return; }
+  if(phone.length < 10 || phone.length > 15) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال رقم هاتف صحيح.</div>'; return; }
+  const roleLabels={admin:'مسؤول',student:'طالب',parent:'ولي أمر'};
+  const now=new Date();
+  const request={id:'recovery_'+Date.now(),type:'account_recovery',role:role,name:name,nationalId:nationalId,phone:phone,status:'new',read:false,time:now.toLocaleString('ar-EG'),timestamp:now.getTime()};
+  const requests=getData('accountRecoveryRequests',[]);
+  requests.unshift(request);
+  setLocalOnlyData('accountRecoveryRequests',requests.slice(0,200));
+  const message='طلب استرجاع حساب جديد في منصة ثمار\n\nنوع الحساب: '+roleLabels[role]+'\nالاسم: '+name+'\nالرقم القومي: '+nationalId+'\nرقم الهاتف: '+phone+'\nوقت الطلب: '+request.time+'\n\nيرجى مراجعة البيانات والتواصل مع صاحب الحساب.';
+  const link=buildWaLink(getAdminWhatsapp(),message);
+  const fallback=document.getElementById('recoveryWhatsappFallback');
+  if(fallback){ fallback.href=link; fallback.classList.remove('hidden'); }
+  box.innerHTML='<div class="alert alert-success">تم تسجيل طلب استرجاع الحساب محليًا وإضافته إلى تنبيهات المسؤول. تم تجهيز رسالة واتساب، اضغط على الرابط أدناه لإرسالها يدويًا.</div>';
+  updateNotificationBadge();
+  const popup=window.open(link,'_blank','noopener');
+  if(!popup && fallback) fallback.focus();
+  }
+  function notificationItems() {
+  const recoveries=getData('accountRecoveryRequests',[]).map(function(item){return Object.assign({},item,{kind:'recovery',title:'طلب استرجاع حساب',detail:'الاسم: '+item.name+' — نوع الحساب: '+({admin:'مسؤول',student:'طالب',parent:'ولي أمر'}[item.role]||item.role)+' — الرقم القومي: '+item.nationalId+' — الهاتف: '+item.phone});});
+  const incidents=getData('proctoringIncidents',[]).map(function(item){return Object.assign({},item,{kind:'warning',read:Boolean(item.notificationRead),title:'تنبيه مراقبة',detail:'الطالب: '+(item.studentName||'غير محدد')+' — السبب: '+(item.reason||'مخالفة غير محددة'),timestamp:item.timestamp||0});});
+  return recoveries.concat(incidents).sort(function(a,b){return Number(b.timestamp||0)-Number(a.timestamp||0)});
+  }
+  function updateNotificationBadge() {
+  const count=notificationItems().filter(function(item){return !item.read;}).length;
+  document.querySelectorAll('[data-notification-badge]').forEach(function(badge){ badge.textContent=String(count); badge.classList.toggle('hidden',count===0); });
+  }
+  function markNotificationRead(kind,id) {
+  const key=kind==='recovery'?'accountRecoveryRequests':'proctoringIncidents';
+  const items=getData(key,[]); const item=items.find(function(entry){return String(entry.id)===String(id);});
+  if(item){ if(kind==='recovery') item.read=true; else item.notificationRead=true; setLocalOnlyData(key,items); }
+  renderNotifications();
+  }
+  function markAllNotificationsRead() {
+  const requests=getData('accountRecoveryRequests',[]).map(function(item){item.read=true;return item;});
+  const incidents=getData('proctoringIncidents',[]).map(function(item){item.notificationRead=true;return item;});
+  setLocalOnlyData('accountRecoveryRequests',requests);
+  setLocalOnlyData('proctoringIncidents',incidents);
+  renderNotifications();
+  }
+  function renderNotifications() {
+  const list=document.getElementById('notificationsList'); if(!list) return;
+  const items=notificationItems();
+  updateNotificationBadge();
+  if(!items.length){ list.innerHTML='<div class="notifications-empty">لا توجد تنبيهات حالياً</div>'; return; }
+  list.innerHTML=items.map(function(item){const unread=!item.read;return '<article class="notification-card '+(unread?'is-unread':'')+'"><div class="notification-card-head"><span class="notification-kind '+item.kind+'">'+(item.kind==='recovery'?'استرجاع حساب':'تنبيه مراقبة')+'</span><time>'+escapeHtml(item.time||'')+'</time></div><h3>'+escapeHtml(item.title)+'</h3><p>'+escapeHtml(item.detail)+'</p>'+(unread?'<button type="button" class="btn btn-outline btn-xs" onclick="markNotificationRead(\''+item.kind+'\',\''+escapeHtml(String(item.id))+'\')">تمييز كمقروء</button>':'<span class="notification-read">تمت القراءة</span>')+'</article>';}).join('');
+  }
+  window.addEventListener('thimar-local-alerts-changed',updateNotificationBadge);
+  window.addEventListener('storage',function(event){if(['accountRecoveryRequests','proctoringIncidents'].includes(event.key))updateNotificationBadge();});
+  document.addEventListener('DOMContentLoaded',updateNotificationBadge);
+
+  function saveAdminWhatsapp() {
   const input = document.getElementById('adminWhatsInput');
   const num = String(input.value || '').replace(/\D/g, '');
   const box = document.getElementById('adminsAlert');
@@ -2159,7 +2243,7 @@ async function uploadExamFile(input){const file=input.files&&input.files[0];if(!
 async function deleteExamFile(id){const file=examFilesCache.find(f=>f.id===id);if(!file||!confirm('هل تريد حذف هذا الملف نهائياً؟'))return;try{const res=await fetch('/api/exam-files',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({pathname:file.pathname,metadataPathname:file.metadataPathname})});await readApiJson(res,'تعذر حذف الملف');await loadExamFiles()}catch(e){alert(e.message||'تعذر الحذف')}}
 function toggleExamSource(){loadExamFiles().catch(e=>showExamAlert(e.message,'danger'))}
 function shuffled(values){return values.slice().sort(()=>Math.random()-.5)}
-function generateLocalFileQuestions(file,plans){const sentences=String(file.text||'').split(/[.!؟\n]+/).map(s=>s.trim()).filter(s=>s.length>=25&&s.length<=260);if(sentences.length<6)throw new Error('لا يحتوي الملف على جمل كافية لإنشاء اختبار متنوع.');const words=shuffled(Array.from(new Set(sentences.join(' ').split(/\s+/).filter(w=>w.length>4))));let cursor=0;const output=[];plans.forEach(plan=>{for(let i=0;i<plan.count;i++){const sentence=sentences[(cursor++)%sentences.length],type=plan.type;let q={id:'file_'+Date.now()+'_'+output.length,type,level:plan.level,surah:'',prompt:'',stem:sentence,options:[],correct:'',from:1,to:1,timeLimit:plan.timeLimit,completeAyahs:1,reciteAyahs:1,audioShareWithParent:false,points:1,rejected:false,weakened:false,source:'file',sourceFileId:file.id,sourceFileName:file.name,optionsCount:plan.optionsCount||4};if(type==='truefalse'){const truthful=Math.random()>.5;q.prompt='صح أم خطأ: هل العبارة المعروضة مطابقة لما ورد في الملف؟';q.stem=truthful?sentence:sentences[(cursor+2)%sentences.length].split(' ').reverse().join(' ');q.options=['صح','خطأ'];q.correct=truthful?'صح':'خطأ'}else if(type==='complete'){const candidates=sentence.split(/\s+/).filter(w=>w.length>4);const answer=candidates[Math.floor(Math.random()*candidates.length)]||words[0];q.prompt='أكمل الجزء ال��اقص اعتماداً علئ النص المثبت';q.correct=answer;q.stem=sentence.replace(answer,'_____')}else if(type==='audio'){q.prompt='اقرأ النص المعروض بصوت واضح';q.correct=sentence;q.audioShareWithParent=plan.audioShareWithParent!==false}else{const correct=(sentence.split(/\s+/).filter(w=>w.length>4)[0]||words[0]);q.prompt='اختر الكلمة التي وردت في النص المعروض';q.correct=correct;q.options=shuffled([correct].concat(words.filter(w=>w!==correct).slice(0,Math.max(1,(plan.optionsCount||4)-1))))}output.push(q)}});return output}
+function generateLocalFileQuestions(file,plans){const sentences=String(file.text||'').split(/[.!؟\n]+/).map(s=>s.trim()).filter(s=>s.length>=25&&s.length<=260);if(sentences.length<6)throw new Error('لا يحتوي الملف على جمل كافية لإنشاء اختبار متنوع.');const words=shuffled(Array.from(new Set(sentences.join(' ').split(/\s+/).filter(w=>w.length>4))));let cursor=0;const output=[];plans.forEach(plan=>{for(let i=0;i<plan.count;i++){const sentence=sentences[(cursor++)%sentences.length],type=plan.type;let q={id:'file_'+Date.now()+'_'+output.length,type,level:plan.level,surah:'',prompt:'',stem:sentence,options:[],correct:'',from:1,to:1,timeLimit:plan.timeLimit,completeAyahs:1,reciteAyahs:1,audioShareWithParent:false,points:1,rejected:false,weakened:false,source:'file',sourceFileId:file.id,sourceFileName:file.name,optionsCount:plan.optionsCount||4};if(type==='truefalse'){const truthful=Math.random()>.5;q.prompt='صح أم خطأ: هل العبارة المعروضة مطابقة لما ورد في الملف؟';q.stem=truthful?sentence:sentences[(cursor+2)%sentences.length].split(' ').reverse().join(' ');q.options=['صح','خطأ'];q.correct=truthful?'صح':'خطأ'}else if(type==='complete'){const candidates=sentence.split(/\s+/).filter(w=>w.length>4);const answer=candidates[Math.floor(Math.random()*candidates.length)]||words[0];q.prompt='أكمل الجزء ال��اقص اعتماداً علئ النص المثبت';q.correct=answer;q.stem=sentence.replace(answer,'_____')}else if(type==='audio'){q.prompt='اقرأ النص المعروض بصوت واضح';q.correct=sentence;q.audioShareWithParent=plan.audioShareWithParent!==false}else{const correct=(sentence.split(/\s+/).filter(w=>w.length>4)[0]||words[0]);q.prompt='اختر الكلمة التي وردت في النص ��لمعروض';q.correct=correct;q.options=shuffled([correct].concat(words.filter(w=>w!==correct).slice(0,Math.max(1,(plan.optionsCount||4)-1))))}output.push(q)}});return output}
 
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
@@ -2384,7 +2468,7 @@ function renderExamQuestions(){
     '<div class="form-group"><label>لمستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>ءءعب</option></select></div>'+
     '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
     (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
-    (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
+    (q.type==='audio'?'<div class="form-group"><label>التسجيل ��ولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
     '<div class="form-group"><label>فحص الغش لهذا السؤال</label><select onchange="updateExamQuestion('+i+',\'proctorEnabled\',this.value===\'true\')"><option value="true" '+(q.proctorEnabled!==false?'selected':'')+'>مفعّل</option><option value="false" '+(q.proctorEnabled===false?'selected':'')+'>غير مفعّل</option></select></div></div>'+
     '<div class="form-group"><label>تعليمات السؤال (ئن دون الإجابة)</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+ 
     '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآيات محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
@@ -4427,7 +4511,7 @@ function buildAyatImagesHTML(surah, from, to, width) {
     html += '<div style="background:#fffdf5; border:1px solid #e6dcc3; border-radius:10px; padding:10px; margin-bottom:10px; overflow:auto;">' +
       '<img loading="lazy" src="' + ayahImageUrl(sNum, a) + '" alt="الآية ' + a + ' من سورة ' + surah + '" ' +
       'style="width:' + w + '%; max-width:none; height:auto;">' +
-      '<div style="font-size:0.8rem; color:var(--text-light); margin-top:6px;">﴿ ' + a + ' ﴾</div></div>';
+      '<div style="font-size:0.8rem; color:var(--text-light); margin-top:6px;">﴿ ' + a + ' ���</div></div>';
   }
   html += '</div>';
   return html;
