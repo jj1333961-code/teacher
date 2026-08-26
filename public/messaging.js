@@ -73,9 +73,10 @@
     var list = groups.map(function (group) {
       return '<div class="messenger-group-title">'+esc(group.title)+'</div>'+group.items.map(function (item) { return contactButton(item, role); }).join("");
     }).join("");
-    host.innerHTML = '<div class="messenger-shell'+(activeContact[role] ? ' has-selection' : '')+'" data-messenger="'+role+'"><aside class="messenger-contacts"><div class="messenger-contacts-head"><h3>المحادثات</h3><p>اختر محادثة لبدء الدردشة</p></div>'+list+'</aside><section class="messenger-chat">'+(activeContact[role] ? chatHtml(role) : '<div class="messenger-placeholder">اختر محادثة من القائمة لعرض الرسائل</div>')+'</section></div>';
+    host.innerHTML = '<div class="messenger-shell'+(activeContact[role] ? ' has-selection' : '')+'" data-messenger="'+role+'"><aside class="messenger-contacts"><div class="messenger-contacts-head"><h3>المحادثات <span class="messenger-unread-summary" data-message-badge="'+(role === "admin" ? "admin" : "student")+'" hidden></span></h3><p>اختر محادثة لبدء الدردشة</p></div>'+list+'</aside><section class="messenger-chat">'+(activeContact[role] ? chatHtml(role) : '<div class="messenger-placeholder">اختر محادثة من القائمة لعرض الرسائل</div>')+'</section></div>';
     bind(host, role);
     scrollThread(host);
+    updateBadges();
   }
 
   function voiceAudioHTML(message) {
@@ -83,22 +84,67 @@
     return '<audio class="messenger-audio" controls preload="metadata" src="'+message.attachment.data+'"></audio>';
   }
 
-  function attachmentHTML(message) {
+  function attachmentHTML(message, role) {
     if (!message.attachment || !message.attachment.data) return "";
     var file = message.attachment;
-    var media = String(file.type || "").indexOf("image/") === 0 ? '<img class="messenger-attachment-image" src="'+file.data+'" alt="'+esc(file.name)+'">' : '';
-    return '<div class="messenger-attachment">'+media+'<a href="'+file.data+'" download="'+esc(file.name)+'" target="_blank" rel="noopener">'+esc(file.name)+'<span>'+esc(file.type || "ملف")+'</span></a></div>';
+    var type = String(file.type || "");
+    var media = type.indexOf("image/") === 0 ? '<img class="messenger-attachment-image" src="'+file.data+'" alt="'+esc(file.name)+'">' : type.indexOf("audio/") === 0 ? '<audio class="messenger-audio" controls preload="metadata" src="'+file.data+'"></audio>' : type === "application/pdf" ? '<iframe class="messenger-attachment-pdf" title="'+esc(file.name)+'" src="'+file.data+'"></iframe>' : '<div class="messenger-file-preview">معاينة داخلية غير متاحة لهذا النوع</div>';
+    var status = message.attachmentStatus || (message.senderRole === "student" ? "pending" : "approved");
+    var statusText = status === "pending" ? "بانتظار مراجعة المسؤول" : status === "approved" ? "تم قبول الملف" : "تم رفض الملف";
+    var review = role === "admin" && status === "pending" ? '<div class="messenger-review-actions"><button type="button" class="messenger-approve" data-review="approved" data-message-id="'+esc(message.id)+'">موافقة</button><button type="button" class="messenger-reject" data-review="rejected" data-message-id="'+esc(message.id)+'">رفض</button></div>' : '';
+    return '<div class="messenger-attachment"><div class="messenger-attachment-preview">'+media+'</div><div class="messenger-attachment-meta"><strong>'+esc(file.name)+'</strong><span>'+esc(file.type || "ملف")+'</span><span class="messenger-file-status '+status+'">'+statusText+'</span><button type="button" class="messenger-view-file" data-view-file="'+esc(message.id)+'">عرض داخل الموقع</button></div></div>'+review;
+  }
+
+  function messageForId(id) {
+    return (getData("messages") || []).find(function (message) { return String(message.id) === String(id); });
+  }
+
+  function addStatusMessage(source, status) {
+    var messages = getData("messages") || [];
+    var recipientRole = source.senderRole || source.type || "student";
+    var recipientId = String(source.senderId || source.sender || "");
+    var text = status === "approved" ? "تم قبول الملف المرسل واعتماده بنجاح." : "تم رفض الملف. يرجى إرسال ملف آخر للمراجعة.";
+    if (messages.some(function (message) { return message.sourceMessageId === source.id && message.attachmentStatus === status; })) return;
+    messages.push({ id: "status-" + source.id + "-" + status, senderRole: "admin", senderId: "admin", sender: "المسؤول", recipientRole: recipientRole, recipientId: recipientId, receiverType: recipientRole, receiverId: recipientId, text: text, sourceMessageId: source.id, attachmentStatus: status, read: false, time: new Date().toLocaleString("ar-EG") });
+    setData("messages", messages);
+  }
+
+  function reviewAttachment(id, status) {
+    var messages = getData("messages") || [], message = messageForId(id);
+    if (!message || !message.attachment) return;
+    message.attachmentStatus = status;
+    message.approved = status === "approved";
+    message.rejected = status === "rejected";
+    addStatusMessage(message, status);
+    setData("messages", messages);
+    render("admin");
+    showToast(status === "approved" ? "تم قبول الملف وإرسال إشعار للطالب" : "تم رفض الملف وإرسال إشعار للطالب", status === "approved" ? "success" : "error");
+  }
+
+  function markVisibleMessagesRead(role, contact) {
+    var me = actor(role), messages = getData("messages") || [], changed = false;
+    messages.forEach(function (message) { if (isBetween(message, me, contact) && normalized(message).toRole === me.role && !message.read) { message.read = true; changed = true; } });
+    if (changed) setData("messages", messages);
+  }
+
+  function updateBadges() {
+    var messages = getData("messages") || [];
+    var adminUnread = messages.filter(function (m) { return (m.recipientRole === "admin" || m.receiverType === "admin" || !m.receiverType) && !m.read; }).length;
+    var studentUnread = currentUser && currentType === "student" ? messages.filter(function (m) { return String(m.recipientId || m.receiverId) === String(currentUser.id) && !m.read; }).length : 0;
+    document.querySelectorAll("[data-message-badge]").forEach(function (badge) { var count = badge.dataset.messageBadge === "admin" ? adminUnread : studentUnread; badge.textContent = count; badge.hidden = count === 0; });
+    var legacy = document.getElementById("msgBadge"); if (legacy) { legacy.textContent = adminUnread; legacy.classList.toggle("hidden", adminUnread === 0); }
   }
 
   function chatHtml(role) {
     var contact = activeContact[role];
     if (!contact) return '<div class="messenger-placeholder">اختر شخصًا لبدء المحادثة</div>';
     var me = actor(role);
+    markVisibleMessagesRead(role, contact);
     var messages = (getData("messages") || []).filter(function (message) { return isBetween(message, me, contact); });
     var thread = messages.length ? messages.map(function (message) {
       var item = normalized(message);
       var sent = item.fromRole === me.role && item.fromId === me.id;
-      return '<article class="messenger-bubble '+(sent ? 'sent' : 'received')+'">'+(message.text ? '<p>'+esc(message.text)+'</p>' : '')+voiceAudioHTML(message)+attachmentHTML(message)+'<time>'+esc(message.time || "")+'</time></article>';
+      return '<article class="messenger-bubble '+(sent ? 'sent' : 'received')+'">'+(message.text ? '<p>'+esc(message.text)+'</p>' : '')+voiceAudioHTML(message)+attachmentHTML(message, role)+'<time>'+esc(message.time || "")+'</time></article>';
     }).join("") : '<div class="messenger-empty">لا توجد رسائل بعد. ابدأ المحادثة الآن.</div>';
     return '<header class="messenger-chat-head"><button type="button" class="messenger-back" aria-label="العودة إلى المحادثات">رجوع</button><span class="messenger-avatar" aria-hidden="true">'+esc(contact.name.charAt(0))+'</span><div><strong>'+esc(contact.name)+'</strong><div class="messenger-contact-role">'+esc(contact.subtitle)+'</div></div></header><div class="messenger-thread" aria-live="polite">'+thread+'</div><div class="messenger-preview" hidden></div><div class="messenger-composer"><label class="messenger-icon-button" title="إرفاق ملف"><input class="messenger-file" type="file" hidden>إرفاق</label><button type="button" class="messenger-record" title="تسجيل صوتي">تسجيل صوتي</button><textarea rows="1" aria-label="نص الرسالة" placeholder="اكتب رسالة..."></textarea><button type="button" class="messenger-send">إرسال</button></div>';
   }
@@ -119,6 +165,8 @@
     var fileInput = host.querySelector(".messenger-file");
     var recordButton = host.querySelector(".messenger-record");
     var preview = host.querySelector(".messenger-preview");
+    host.querySelectorAll("[data-review]").forEach(function (button) { button.addEventListener("click", function () { reviewAttachment(button.dataset.messageId, button.dataset.review); }); });
+    host.querySelectorAll("[data-view-file]").forEach(function (button) { button.addEventListener("click", function () { var message = messageForId(button.dataset.viewFile); if (message && message.attachment) { var type = String(message.attachment.type || ""); if (type.indexOf("image/") === 0 || type.indexOf("audio/") === 0 || type === "application/pdf") { window.open(message.attachment.data, "_blank", "noopener"); } else { showToast("هذا النوع لا يدعم المعاينة الداخلية", "info"); } } }); });
     var pendingAttachment = null, attachmentReady = true;
     if (fileInput) fileInput.addEventListener("change", function () {
       var file = fileInput.files && fileInput.files[0];
@@ -167,7 +215,7 @@
       receiverType: contact.role, receiverId: contact.role === "parent" ? undefined : contact.id,
       receiverName: contact.role === "parent" ? contact.id : undefined,
       recipientRole: contact.role, recipientId: contact.id, recipientName: contact.name,
-      text: text, attachment: attachment || null, time: new Date().toLocaleString("ar-EG"), read: false, approved: true
+      text: text, attachment: attachment || null, attachmentStatus: attachment && me.role === "student" ? "pending" : "approved", time: new Date().toLocaleString("ar-EG"), read: false, approved: !(attachment && me.role === "student")
     });
     try {
       setData("messages", messages);
