@@ -10,6 +10,7 @@
   <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="/islamic-hub.css">
+  <link rel="stylesheet" href="/prayer-screen.css">
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -915,7 +916,7 @@ tr:hover { background: var(--table-hover); }
 <div id="adminLogin" class="page hidden" style="max-width:500px; margin:40px auto;">
   <div class="page-header"><h2>🔐 د��ول المسؤول</h2></div>
   <div id="adminLoginAlert"></div>
-  <div class="form-group"><label>رقم الموبايل</label><input type="text" id="adminMobile" placeholder="��دخل رقم المو��ايل" maxlength="11"></div>
+  <div class="form-group"><label>��قم الموبايل</label><input type="text" id="adminMobile" placeholder="��دخل رقم المو��ايل" maxlength="11"></div>
   <div class="form-group"><label>الرقم السري</label><input type="password" id="adminPass" placeholder="أدخل الرقم السري"></div>
   <button class="btn btn-primary" onclick="adminLogin()" style="width:100%">دخول</button>
   <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للر��يسية</button>
@@ -1948,6 +1949,7 @@ window.alert = function(m){ showToast(m); };
 </script>
 <link rel="stylesheet" href="/messaging.css">
 <script src="/legacy-i18n.js" defer></script>
+<script src="/prayer-screen.js" defer></script>
 <script src="/islamic-hub.js" defer></script>
 <script src="/messaging.js" defer></script>
  </body>

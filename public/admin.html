@@ -10,6 +10,7 @@
   <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="/islamic-hub.css">
+  <link rel="stylesheet" href="/prayer-screen.css">
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1095,7 +1096,7 @@ tr:hover { background: var(--table-hover); }
   <div id="addStudentAlert"></div>
   <div class="form-group" style="border:2px solid var(--primary);padding:16px;border-radius:12px;background:var(--table-header);">
     <label style="font-size:1.05rem;">الإ��لاء الصوتي لبيانات الطالب</label>
-    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم ال����ت��دم ahmed، الرقم اءءقومي...، الهاتف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعر��ي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
+    <p style="color:var(--text-light);margin:6px 0 12px;">اذكر البي��نات في جملة واحدة، مثال: اسم الطالب أحمد، اسم ال����ت��دم ahmed، الرقم اءءقومي...، الها��ف...، تاريخ الميلاد...، ولي الأمر...، ال��و��د القرآن والعر��ي، الجزء الأول، سورة البقرة. ستُملأ ��لخانات للمراجعة ولن يتم الحفظ تلقائياً.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button type="button" id="studentSpeechBtn" class="btn btn-outline" onclick="toggleStudentSpeech()" aria-pressed="false" aria-describedby="studentSpeechStatus">🎤 إدخال البيانات بالصوت</button>
       <span id="studentSpeechStatus" aria-live="polite">جاهز</span>
@@ -1185,7 +1186,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-group" style="border:1px dashed var(--primary);padding:12px;border-radius:10px;">
     <label>🎙️ البصمة الصوتية</label>
-    <div id="editVoiceStatus" style="margin:6px 0;color:var(--text-light)">يمءءن استبدال البص����ة الصوتية الحالية بتسجيل جديد.</div>
+    <div id="editVoiceStatus" style="margin:6px 0;color:var(--text-light)">يمءءن استبدال البص������ الصوتية الحالية بتسجيل جديد.</div>
     <button type="button" class="voice-record-btn" id="editVoiceBtn" onclick="toggleEditVoiceRecord()">🎙️</button>
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
@@ -1948,6 +1949,7 @@ window.alert = function(m){ showToast(m); };
 </script>
 <link rel="stylesheet" href="/messaging.css">
 <script src="/legacy-i18n.js" defer></script>
+<script src="/prayer-screen.js" defer></script>
 <script src="/islamic-hub.js" defer></script>
 <script src="/messaging.js" defer></script>
  </body>

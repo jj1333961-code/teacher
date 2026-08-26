@@ -180,7 +180,7 @@
       if (btn && host.contains(btn)) openSection(btn.getAttribute("data-isl-open"));
     });
     paintCards();
-    // تحميل المصحف مسبقًا في الخلفية حتى يكون جاهزًا فور الدخول دون انتظار
+    // تحميل المصحف مسبقًا في الخلفية حتى يكون جاهزًا فور ال��خول دون انتظار
     scheduleWarmMushaf();
   }
 
@@ -672,6 +672,12 @@
     computeNext();
     paintCards();
     startTick();
+    // إعادة جدولة منبهات الأذان في الطبقة الأصلية (Android) عند تحديث المواقيت/تغيّر الموقع
+    try {
+      if (window.THIMAR_PRAYER_SCREEN && typeof window.THIMAR_PRAYER_SCREEN.scheduleNative === "function") {
+        window.THIMAR_PRAYER_SCREEN.scheduleNative(state.timings, state.loc);
+      }
+    } catch (e) {}
   }
 
   function computeNext() {
@@ -761,6 +767,20 @@
   }
 
   function announce(p) {
+    // شاشة الصلاة الكاملة + الأذان (مكوّن ديناميكي واحد) إن كان متاحًا
+    if (window.THIMAR_PRAYER_SCREEN && typeof window.THIMAR_PRAYER_SCREEN.show === "function") {
+      try {
+        window.THIMAR_PRAYER_SCREEN.show({
+          prayerKey: p.key,
+          prayerName: "صلاة " + p.name,
+          prayerTime: p.time,
+        });
+        // الشاشة الكاملة تتكفّل بالأذان والإشعار والاهتزاز — نكتفي بها
+        return;
+      } catch (e) { console.log("[v0] prayer screen failed", e); }
+    }
+
+    // مسار احتياطي: التنبيه المصغّر القديم
     ensureLayers();
     var f = fmt12(p.time);
   var msg = "حان وقت صلاة " + p.name + " — " + f.t + " " + f.mer;
@@ -789,6 +809,25 @@
           useCity(input && input.value, body);
         }
         if (e.target.closest("[data-notify]")) askNotify();
+        if (e.target.closest("[data-adhan-toggle]")) {
+          if (window.THIMAR_PRAYER_SCREEN) {
+            window.THIMAR_PRAYER_SCREEN.setAdhanEnabled(!window.THIMAR_PRAYER_SCREEN.isAdhanEnabled());
+            var tb = e.target.closest("[data-adhan-toggle]");
+            if (tb) tb.textContent = adhanToggleLabel();
+            toast(adhanEnabled() ? "تم تفعيل الأذان" : "تم تعطيل الأذان", "info");
+          }
+        }
+        if (e.target.closest("[data-preview-prayer]")) {
+          if (window.THIMAR_PRAYER_SCREEN) {
+            var nx = state.next || { key: "Asr", name: "العصر", time: (state.timings && state.timings.Asr) || "15:45" };
+            window.THIMAR_PRAYER_SCREEN.show({
+              prayerKey: nx.key,
+              prayerName: "صلاة " + nx.name,
+              prayerTime: nx.time,
+              dedupe: false,
+            });
+          }
+        }
       });
       body.addEventListener("keypress", function (e) {
         if (e.key === "Enter" && !e.nativeEvent?.isComposing && e.keyCode !== 229 && e.target.matches("[data-city-input]")) {
@@ -796,6 +835,13 @@
         }
       });
     });
+  }
+
+  function adhanEnabled() {
+    return !window.THIMAR_PRAYER_SCREEN || window.THIMAR_PRAYER_SCREEN.isAdhanEnabled();
+  }
+  function adhanToggleLabel() {
+    return adhanEnabled() ? "🔊 الأذان مُفعَّل (اضغط للتعطيل)" : "🔇 الأذان مُعطَّل (اضغط للتفعيل)";
   }
 
   function renderTimesBody(body) {
@@ -826,7 +872,9 @@
       head +
       '<div class="isl-times">' + rows + "</div>" +
       '<button type="button" class="isl-btn ghost" data-notify style="margin-top:12px">تشغيل تنبيه وقت الصلاة</button>' +
-      '<p class="isl-note">المواقيت محسوبة بطريقة الهيئة المصرية العامة للمساحة عبر واجهة Aladhan، ويمكنك عرض مواقيت أي مدينة أخرى بكتابة اسمها.</p>';
+      '<button type="button" class="isl-btn ghost" data-adhan-toggle style="margin-top:12px">' + adhanToggleLabel() + "</button>" +
+      '<button type="button" class="isl-btn ghost" data-preview-prayer style="margin-top:12px">معاينة شاشة الصلاة</button>' +
+      '<p class="isl-note">المواقيت محسوبة بطريقة الهيئة المصرية العامة للمساحة عبر واجهة Aladhan، ويمكنك عرض مواقيت أي مدينة أخرى بكتابة اسمها. عند دخول وقت الصلاة تظهر شاشة الصلاة الكاملة ويُشغَّل الأذان تلقائيًا.</p>';
   }
 
   function useGps(body) {
