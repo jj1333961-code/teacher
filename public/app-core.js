@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر��������������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر������������������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -860,8 +860,141 @@ function handleGoogleCredential(resp) {
   showPage('signupStep2');
 }
 
+// ====== COUNTRY-AWARE IDENTITY AND PHONE FIELDS ======
+const THIMAR_COUNTRY_LIST = Array.isArray(window.THIMAR_COUNTRIES) ? window.THIMAR_COUNTRIES : [];
+const THIMAR_COUNTRY_BY_CODE = Object.fromEntries(THIMAR_COUNTRY_LIST.map(function(country){ return [country.code, country]; }));
+function countryOptionHtml(selectedCode, useDialValues) {
+  return THIMAR_COUNTRY_LIST.map(function(country){
+    const value=useDialValues?(country.dial||country.code):country.code;
+    const selected=useDialValues?(country.code===selectedCode||country.dial===selectedCode):(country.code===selectedCode);
+    return '<option value="'+value+'" '+(selected?'selected':'')+'>'+escapeHtml(country.name)+' ('+country.code+(country.dial?' / +'+country.dial:'')+')</option>';
+  }).join('');
+}
+function getFieldCountrySelect(input) {
+  return document.getElementById(input.dataset.countrySelect || (input.id+'CountryISO'));
+}
+function isInternationalPhoneField(input) {
+  const text=(input.id+' '+(input.name||'')+' '+(input.placeholder||'')+' '+(input.closest('.form-group')?.querySelector('label')?.textContent||'')).toLowerCase();
+  return /(phone|mobile|whats|هاتف|موبايل|واتس)/.test(text) && !/(code|كود)/.test(text);
+}
+function isInternationalIdentityField(input) {
+  const text=(input.id+' '+(input.name||'')+' '+(input.placeholder||'')+' '+(input.closest('.form-group')?.querySelector('label')?.textContent||'')).toLowerCase();
+  return /(national|nid|قومي|هوية)/.test(text) && input.id!=='searchStudent';
+}
+function countryFieldHelp(input, country, type) {
+  let help=document.getElementById(input.id+'CountryHelp');
+  if(!help){ help=document.createElement('small'); help.id=input.id+'CountryHelp'; help.className='country-field-help'; input.parentElement.insertAdjacentElement('afterend',help); }
+  if(type==='phone') help.textContent='رقم هاتف '+country.name+' — سيتم التحقق من الصيغة الرسمية وحفظه دولياً'+(country.dial?' (+'+country.dial+')':'');
+  else help.textContent=(country.identityLengths.length===15?'رقم الهوية/جواز السفر':'هوية '+country.name)+' — الأطوال المقبولة: '+country.identityLengths.join('، ')+' '+(country.identityType==='numeric'?'رقماً':'حرفاً أو رقماً');
+}
+function configureCountryField(input, countryCode, clearValue) {
+  const country=THIMAR_COUNTRY_BY_CODE[countryCode] || THIMAR_COUNTRY_BY_CODE.EG;
+  const type=input.dataset.countryType;
+  if(clearValue) input.value='';
+  if(type==='identity') {
+    input.inputMode=country.identityType==='numeric'?'numeric':'text';
+    input.maxLength=Math.max.apply(null,country.identityLengths);
+    input.placeholder=country.identityType==='numeric'?'أدخل رقم الهوية':'أدخل رقم الهوية أو جواز السفر';
+  } else {
+    input.inputMode='tel'; input.maxLength=17; input.placeholder='رقم الهاتف بدون كود الدولة';
+  }
+  countryFieldHelp(input,country,type);
+}
+function enhanceCountryField(input) {
+  if(!input.id || input.dataset.countryReady==='true') return;
+  const type=isInternationalIdentityField(input)?'identity':(isInternationalPhoneField(input)?'phone':'');
+  if(!type) return;
+  input.dataset.countryReady='true'; input.dataset.countryType=type;
+  input.removeAttribute('oninput'); input.removeAttribute('maxlength');
+  let select=null;
+  const existingId=type==='phone' && input.id==='recoveryPhone'?'recoveryCountry':type==='phone' && input.id==='signupPhone'?'signupPhoneCountry':type==='phone' && input.id==='signupWhats'?'signupWhatsCountry':'';
+  if(existingId) select=document.getElementById(existingId);
+  if(select) {
+    const oldDial=String(select.value||'20');
+    const byDial=THIMAR_COUNTRY_LIST.find(function(item){return item.dial===oldDial});
+    select.innerHTML=countryOptionHtml(byDial?.code||'EG',true); select.value=byDial?.dial||'20';
+  } else {
+    select=document.createElement('select'); select.id=input.id+'CountryISO'; select.className='country-select'; select.setAttribute('aria-label','اختر البلد'); select.innerHTML=countryOptionHtml('EG');
+    const row=document.createElement('div'); row.className='country-field-row'; input.parentNode.insertBefore(row,input); row.appendChild(select); row.appendChild(input);
+  }
+  input.dataset.countrySelect=select.id;
+  select.dataset.linkedInput=input.id;
+  select.addEventListener('change',function(){ configureCountryField(input,select.value,true); input.dispatchEvent(new Event('input',{bubbles:true})); });
+  input.addEventListener('input',function(){
+    input.value=type==='phone'?input.value.replace(/[^0-9]/g,''):input.value.toUpperCase().replace(type==='identity' && (THIMAR_COUNTRY_BY_CODE[select.value]?.identityType==='numeric')?/[^0-9]/g:/[^0-9A-Z]/g,'');
+    input.setCustomValidity('');
+    if(type==='phone') updateCountryPhonePreview(input);
+  });
+  configureCountryField(input,select.value,false);
+}
+function initializeCountryFields(root) {
+  if(!document.getElementById('countryFieldStyles')) {
+    const style=document.createElement('style'); style.id='countryFieldStyles';
+    style.textContent='.country-field-row{display:flex;align-items:stretch;gap:8px;direction:ltr;width:100%}.country-field-row input{flex:1;min-width:0}.country-select{width:min(48%,220px);min-width:130px;direction:rtl}.country-field-help{display:block;color:var(--text-light);line-height:1.6;margin-top:6px}.country-field-row:focus-within{outline:2px solid color-mix(in srgb,var(--primary) 35%,transparent);outline-offset:3px;border-radius:8px}@media(max-width:520px){.country-field-row{flex-direction:column}.country-select{width:100%;max-width:none!important}}';
+    document.head.appendChild(style);
+  }
+  (root||document).querySelectorAll('input').forEach(enhanceCountryField);
+  (root||document).querySelectorAll('#recoveryCountry,#signupPhoneCountry,#signupWhatsCountry').forEach(function(select){
+    if(select.options.length !== THIMAR_COUNTRY_LIST.length) {
+      const current=select.value||'20';
+      const match=THIMAR_COUNTRY_LIST.find(function(country){return country.dial===current});
+      select.innerHTML=countryOptionHtml(match?.code||'EG',true); select.value=match?.dial||'20';
+    }
+  });
+}
+function getCountryCodeForInput(inputId) {
+  const input=document.getElementById(inputId); const select=input&&getFieldCountrySelect(input);
+  if(!select) return 'EG';
+  if(select.id==='recoveryCountry'||select.id==='signupPhoneCountry'||select.id==='signupWhatsCountry') return (THIMAR_COUNTRY_LIST.find(function(country){return country.dial===select.value})||{}).code||'EG';
+  return select.value||'EG';
+}
+function getCountryName(code) { return (THIMAR_COUNTRY_BY_CODE[code]||{}).name||code||'مصر'; }
+function validateCountryField(input, showMessage) {
+  if(!input || !input.value) return true;
+  const code=getCountryCodeForInput(input.id), country=THIMAR_COUNTRY_BY_CODE[code]||THIMAR_COUNTRY_BY_CODE.EG;
+  let valid=false, message='';
+  if(input.dataset.countryType==='phone') {
+    try { const parsed=window.libphonenumber.parsePhoneNumber(input.value,code); valid=parsed.isValid(); } catch(error) { valid=false; }
+    message='رقم الهاتف لا يطابق الصيغة الرسمية في '+country.name+'.';
+  } else {
+    const value=input.value.replace(/[^0-9A-Z]/g,'');
+    valid=country.identityLengths.includes(value.length) && (country.identityType!=='numeric' || /^\d+$/.test(value));
+    message='رقم الهوية غير صحيح لـ '+country.name+'. الأطوال المقبولة: '+country.identityLengths.join('، ')+'.';
+  }
+  input.setCustomValidity(valid?'':message);
+  if(!valid && showMessage) { input.reportValidity(); input.focus(); }
+  return valid;
+}
+function validateVisibleCountryFields(container) {
+  const root=container||document; const inputs=Array.from(root.querySelectorAll('input[data-country-ready="true"]')).filter(function(input){return input.offsetParent!==null && input.value});
+  return inputs.every(function(input){return validateCountryField(input,true)});
+}
+function updateCountryPhonePreview(input) {
+  const code=getCountryCodeForInput(input.id), help=document.getElementById(input.id+'CountryHelp');
+  if(!help || !input.value) return;
+  try { const parsed=window.libphonenumber.parsePhoneNumber(input.value,code); help.textContent='الرقم الدولي: '+parsed.number+(parsed.isValid()?' — صحيح':' — غير مكتمل'); } catch(error) {}
+}
+function getInternationalPhone(inputId) {
+  const input=document.getElementById(inputId); if(!input||!input.value) return '';
+  const code=getCountryCodeForInput(inputId);
+  try { return window.libphonenumber.parsePhoneNumber(input.value,code).number.replace('+',''); } catch(error) { const country=THIMAR_COUNTRY_BY_CODE[code]; return (country?.dial||'')+input.value.replace(/^0+/,''); }
+}
+function installCountryValidationGuard() {
+  document.addEventListener('click',function(event){
+    const button=event.target.closest('button[onclick]'); if(!button || button.dataset.skipCountryValidation==='true') return;
+    const action=button.getAttribute('onclick')||'';
+    if(!/(save|submit|send|login|update|addSubject|AdminWhatsapp)/i.test(action)) return;
+    const page=button.closest('.page')||document;
+    if(!validateVisibleCountryFields(page)){ event.preventDefault(); event.stopImmediatePropagation(); }
+  },true);
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){initializeCountryFields(document);installCountryValidationGuard()}); else {initializeCountryFields(document);installCountryValidationGuard()}
+new MutationObserver(function(mutations){mutations.forEach(function(mutation){mutation.addedNodes.forEach(function(node){if(node.nodeType===1){if(node.matches?.('input'))enhanceCountryField(node);initializeCountryFields(node)}})})}).observe(document.documentElement,{childList:true,subtree:true});
+
 function getInternationalNumber(inputId, countryId) {
-  const raw = String(document.getElementById(inputId)?.value || '').replace(/\D/g, '');
+  const input=document.getElementById(inputId);
+  if(input?.dataset.countryReady==='true') return getInternationalPhone(inputId);
+  const raw = String(input?.value || '').replace(/\D/g, '');
   const country = String(document.getElementById(countryId)?.value || '20').replace(/\D/g, '');
   return country + raw.replace(/^0+/, '');
 }
@@ -904,6 +1037,7 @@ function openAccountRecovery() {
   ['recoveryName','recoveryNid','recoveryPhone'].forEach(function(id){ const el=document.getElementById(id); if(el) el.value=''; });
   const role=document.getElementById('recoveryRole'); if(role) role.value='student';
   const country=document.getElementById('recoveryCountry'); if(country) country.value='20';
+  const nidCountry=getFieldCountrySelect(document.getElementById('recoveryNid')); if(nidCountry) nidCountry.value='EG';
   const result=document.getElementById('recoveryResult'); if(result) result.innerHTML='';
   updateSignupInternationalNumber('recoveryPhone','recoveryCountry','recoveryPhoneInternational');
   showPage('accountRecoveryPage');
@@ -920,16 +1054,21 @@ function submitAccountRecovery() {
   const box=document.getElementById('recoveryResult');
   const role=document.getElementById('recoveryRole')?.value || 'student';
   const name=document.getElementById('recoveryName')?.value.trim() || '';
-  const nid=String(document.getElementById('recoveryNid')?.value || '').replace(/\D/g,'');
+  const nid=String(document.getElementById('recoveryNid')?.value || '').toUpperCase().replace(/[^0-9A-Z]/g,'');
+  const nationalCountry=getCountryCodeForInput('recoveryNid');
+  const phoneCountry=getCountryCodeForInput('recoveryPhone');
   const phone=getInternationalNumber('recoveryPhone','recoveryCountry');
-  if(!name || !nid || phone.length < 8) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال نوع الحساب والاسم والرقم القومي ورقم الهاتف بصورة صحيحة.</div>'; return; }
+  if(!name || !nid || !validateCountryField(document.getElementById('recoveryNid'),true) || !validateCountryField(document.getElementById('recoveryPhone'),true)) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال الهوية والهاتف وفق قواعد البلد المختار.</div>'; return; }
   const students=getData('students', []);
   const matched=students.find(function(student){
     const expectedName=role === 'student' ? student.name : (student.parent || student.parentName);
     const expectedNid=role === 'student' ? (student.national || student.nationalId) : (student.parentNational || student.parentNationalId || student.national || student.nationalId);
     const expectedPhone=role === 'student' ? student.phone : (student.parentPhone || student.phone);
+    const expectedNationalCountry=role === 'student' ? (student.nationalCountry||'EG') : (student.parentNationalCountry||student.nationalCountry||'EG');
+    const expectedPhoneCountry=role === 'student' ? (student.phoneCountry||'EG') : (student.parentPhoneCountry||student.phoneCountry||'EG');
     return normalizeRecoveryText(expectedName) === normalizeRecoveryText(name)
-      && String(expectedNid || '').replace(/\D/g,'') === nid
+      && String(expectedNid || '').toUpperCase().replace(/[^0-9A-Z]/g,'') === nid
+      && expectedNationalCountry === nationalCountry && expectedPhoneCountry === phoneCountry
       && recoveryPhoneMatches(expectedPhone, phone);
   });
   if(!matched) { box.innerHTML='<div class="alert alert-danger">لا يوجد بيانات مسجلة بهذا الشكل</div>'; return; }
@@ -938,7 +1077,7 @@ function submitAccountRecovery() {
   lastRecoverySignature=signature; lastRecoveryAt=now;
   const time=new Date().toLocaleString('ar-EG');
   const roleLabel=role === 'student' ? 'طالب' : 'ولي أمر';
-  const notification={id:'notification_'+now,type:'account_recovery',category:'استرجاع حساب',title:'طلب استرجاع حساب',message:'طلب استرجاع حساب '+roleLabel+' باسم '+name,role:role,roleLabel:roleLabel,name:name,nationalId:nid,phone:phone,time:time,createdAt:new Date().toISOString(),read:false};
+  const notification={id:'notification_'+now,type:'account_recovery',category:'استرجاع حساب',title:'طلب استرجاع حساب',message:'طلب استرجاع حساب '+roleLabel+' باسم '+name,role:role,roleLabel:roleLabel,name:name,nationalId:nid,nationalCountry:nationalCountry,phone:phone,phoneCountry:phoneCountry,time:time,createdAt:new Date().toISOString(),read:false};
   const notifications=getData('notifications', []); notifications.unshift(notification); setData('notifications',notifications);
   const message='طلب استرجاع حساب في منصة ثمار\nنوع الحساب: '+roleLabel+'\nالاسم: '+name+'\nالرقم القومي: '+nid+'\nرقم الهاتف الدولي: +'+phone+'\nوقت الطلب: '+time+'\n\nيرجى مراجعة البيانات والتواصل مع صاحب الحساب لتعيين رقم سري جديد.';
   const link=buildWaLink(getAdminWhatsapp(),message);
@@ -1056,8 +1195,8 @@ function submitSignupRequest() {
   const surah = document.getElementById('signupSurah').value;
   const notes = document.getElementById('signupNotes').value.trim();
   if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
-  if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هاتف صحيحًا مع اختيار كود الدولة</div>'; return; }
-  if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يكون 14 رقم</div>'; return; }
+  if(!validateCountryField(document.getElementById('signupPhone'), true)) { box.innerHTML = '<div class="alert alert-danger">رقم الهاتف لا يطابق البلد المختار.</div>'; return; }
+  if(!validateCountryField(document.getElementById('signupNid'), true)) { box.innerHTML = '<div class="alert alert-danger">رقم الهوية لا يطابق البلد المختار.</div>'; return; }
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
   const time = new Date().toLocaleString('ar-EG');
   const details = '📋 طلب ئنشاء حساب جديد\n'
@@ -1074,7 +1213,7 @@ function submitSignupRequest() {
     + 'وقت الطلب: ' + time;
 
   const requests = getData('joinRequests');
-  requests.push({ id: 'jr' + Date.now(), role: role, name: name, guardianName: role === 'student' ? relationshipName : '', studentName: role === 'parent' ? relationshipName : '', relationshipName: relationshipName, nid: nid, phone: phone, whats: signupState.whats, email: signupState.email, method: signupState.method, juz: juz, surah: surah, notes: notes, status: 'pending', time: time });
+  requests.push({ id: 'jr' + Date.now(), role: role, name: name, guardianName: role === 'student' ? relationshipName : '', studentName: role === 'parent' ? relationshipName : '', relationshipName: relationshipName, nid: nid, nationalCountry: getCountryCodeForInput('signupNid'), phone: phone, phoneCountry: getCountryCodeForInput('signupPhone'), whats: signupState.whats, whatsCountry: getCountryCodeForInput('signupWhats'), email: signupState.email, method: signupState.method, juz: juz, surah: surah, notes: notes, status: 'pending', time: time });
   setData('joinRequests', requests);
 
   const msgs = getData('messages');
@@ -1294,10 +1433,11 @@ function getAdminWhatsapp() {
 }
 function saveAdminWhatsapp() {
   const input = document.getElementById('adminWhatsInput');
-  const num = String(input.value || '').replace(/\D/g, '');
+  const num = getInternationalPhone('adminWhatsInput');
   const box = document.getElementById('adminsAlert');
-  if(num.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح بصيغة الدولة (مثال: 201554542019)</div>'; return; }
+  if(!validateCountryField(input,true)) { box.innerHTML = '<div class="alert alert-danger">رقم واتساب لا يطابق البلد المختار.</div>'; return; }
   setData('adminWhatsapp', num);
+  setData('adminWhatsappCountry', getCountryCodeForInput('adminWhatsInput'));
   input.value = num;
   box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب المسؤول: ' + num + '</div>';
 }
@@ -1316,14 +1456,16 @@ function renderAdmins() {
 }
 
 function addAdmin() {
-  const mobile = document.getElementById('newAdminMobile').value.trim();
+  const mobileInput = document.getElementById('newAdminMobile');
+  const mobile = getInternationalPhone('newAdminMobile');
+  const mobileCountry = getCountryCodeForInput('newAdminMobile');
   const pass = document.getElementById('newAdminPass').value.trim();
   const type = document.getElementById('newAdminType').value;
   if(!mobile || !pass) return alert('يرجى ملء جميع الحقول');
-  if(mobile.length !== 11) return alert('رقئ الموبايل يجب أن يكون 11 رقم');
+  if(!validateCountryField(mobileInput,true)) return;
   const admins = getData('admins');
-  if(admins.find(a => a.mobile === mobile)) return alert('هذا الرقم مسجل مسبقاً');
-  admins.push({id: Date.now(), mobile, password: pass, isMain: type === 'main'});
+  if(admins.find(a => normalizeWaNumber(a.mobile) === mobile)) return alert('هذا الرقم مسجل مسبقاً');
+  admins.push({id: Date.now(), mobile, mobileCountry, password: pass, isMain: type === 'main'});
   setData('admins', admins);
   document.getElementById('newAdminMobile').value = '';
   document.getElementById('newAdminPass').value = '';
@@ -1339,7 +1481,7 @@ function editAdmin(id) {
   if(newMobile === null) return;
   const newPass = prompt('الرقم السري الجديد:', a.password);
   if(newPass === null) return;
-  const newType = confirm('هل تريد جعله مسؤول رئيسي؟ (موافق = رئيسي، إ��غاء = فرعي)');
+  const newType = confirm('هل تريد جعله مسؤول رئيسي؟ (م��افق = رئيسي، إ��غاء = فرعي)');
   if(newMobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
   if(admins.find(x => x.id !== id && x.mobile === newMobile)) return alert('هذا الرقم مسجل لمسؤول آخر');
   a.mobile = newMobile; a.password = newPass; a.isMain = newType;
@@ -1354,10 +1496,10 @@ function deleteAdmin(id) {
 }
 
 function adminLogin() {
-  const mobile = document.getElementById('adminMobile').value.trim();
+  const mobile = getInternationalPhone('adminMobile');
   const pass = document.getElementById('adminPass').value;
   const admins = getData('admins');
-  const admin = admins.find(a => a.mobile === mobile && a.password === pass);
+  const admin = admins.find(a => normalizeWaNumber(a.mobile) === mobile && a.password === pass && (a.mobileCountry||'EG')===getCountryCodeForInput('adminMobile'));
   if(admin) {
     currentUser = admin; currentType = 'admin'; currentAdminId = admin.id;
     saveSessionState();
@@ -1604,8 +1746,8 @@ async function saveStudent() {
   const selectedSubjects = Array.from(subjectSelect.selectedOptions).map(o => parseInt(o.value));
 
   if(!name || !username || !national || !birth || !parent || !parentPass || !studentPass || selectedSubjects.length === 0) return fail('يرجى ملء جميع الحقول المطلوبة');
-  if(national.length !== 14) return fail('الرقم القومي يجب أن يكون 14 رقم بالضبط');
-  if(phone && phone.length !== 11) return fail('رقم الهاتف يجب أن يكون 11 رقم');
+  if(!validateCountryField(document.getElementById('stNational'), true)) return fail('تحقق من رقم الهوية والبلد المختار');
+  if(phone && !validateCountryField(document.getElementById('stPhone'), true)) return fail('تحقق من رقم الهاتف والبلد المختار');
 
   const students = getData('students');
   if(students.find(s => s.national === national)) return fail('هذا الرقم القومي مسجل مسبقاً');
@@ -1634,8 +1776,9 @@ async function saveStudent() {
   }
 
   const newStudent = {
-    id: Date.now(), name, username, national, phone, birth, age, studentPass, parent, parentPass,
-    subjectIds: selectedSubjects, subjects: selectedSubData,
+  id: Date.now(), name, username, national, phone, birth, age, studentPass, parent, parentPass,
+  nationalCountry: getCountryCodeForInput('stNational'), phoneCountry: getCountryCodeForInput('stPhone'),
+  subjectIds: selectedSubjects, subjects: selectedSubData,
     notes, createdAt: new Date().toLocaleString('ar-EG'),
     juz: isQuran ? (document.getElementById('stJuz').value || '') : '',
     surah: isQuran ? document.getElementById('stSurah').value : '',
@@ -1666,6 +1809,10 @@ function openEdit(id) {
   document.getElementById('editId').value = id;
   document.getElementById('editName').value = s.name;
   document.getElementById('editUsername').value = s.username || '';
+  const editNationalCountry=getFieldCountrySelect(document.getElementById('editNational')); if(editNationalCountry) editNationalCountry.value=s.nationalCountry||'EG';
+  const editPhoneCountry=getFieldCountrySelect(document.getElementById('editPhone')); if(editPhoneCountry) editPhoneCountry.value=s.phoneCountry||'EG';
+  configureCountryField(document.getElementById('editNational'),s.nationalCountry||'EG',false);
+  configureCountryField(document.getElementById('editPhone'),s.phoneCountry||'EG',false);
   document.getElementById('editNational').value = s.national;
   document.getElementById('editPhone').value = s.phone || '';
   document.getElementById('editBirth').value = s.birth || '';
@@ -1725,14 +1872,16 @@ function updateStudent() {
   const phone = document.getElementById('editPhone').value.trim();
   const studentPass = document.getElementById('editStudentPass').value;
   const parentPass = document.getElementById('editParentPass').value.trim();
-  if(national.length !== 14) return alert('الرقم القومي يجب أن يكون 14 رقم');
-  if(phone && phone.length !== 11) return alert('رقم الهاتف يجب أن يكون 11 رقم');
+  if(!validateCountryField(document.getElementById('editNational'), true)) return;
+  if(phone && !validateCountryField(document.getElementById('editPhone'), true)) return;
   // ✅ مسموح تابق الرقم السري للطالب مع ولي الأمر
 
   students[idx].name = document.getElementById('editName').value.trim();
   students[idx].username = document.getElementById('editUsername').value.trim();
   students[idx].national = national;
   students[idx].phone = phone;
+  students[idx].nationalCountry = getCountryCodeForInput('editNational');
+  students[idx].phoneCountry = getCountryCodeForInput('editPhone');
   students[idx].birth = document.getElementById('editBirth').value;
   students[idx].age = document.getElementById('editAge').value;
   students[idx].studentPass = document.getElementById('editStudentPass').value;
@@ -1782,7 +1931,7 @@ function renderStudents() {
     html += '<div class="student-card-body">';
     html += '<div class="student-field"><span class="field-label">اسم المستخدم:</span> <span class="field-value">'+s.username+'</span></div>';
     html += '<div class="student-field"><span class="field-label">الرقم القومي:</span> <span class="field-value">'+s.national+'</span></div>';
-    html += '<div class="student-field"><span class="field-label">السن:</span> <span class="field-value">'+(s.age || '-')+' سنة</span></div>';
+    html += '<div class="student-field"><span class="field-label">ال��ن:</span> <span class="field-value">'+(s.age || '-')+' سنة</span></div>';
     html += '<div class="student-field"><span class="field-label">رقم الاتف:</span> <span class="field-value">'+(s.phone || '-')+'</span></div>';
     html += '<div class="student-field"><span class="field-label">ولي الأمر:</span> <span class="field-value">'+s.parent+'</span></div>';
     html += '<div class="student-field"><span class="field-label">المواد:</span> <span class="badge badge-primary">'+subNames+'</span></div>';
@@ -1940,7 +2089,7 @@ function renderRecordElementHTML(el, i, num) {
     ALL_SURAHS_ORDERED.forEach(sur => { html += '<option value="'+sur+'" '+(el.surah===sur?'selected':'')+'>'+sur+'</option>'; });
     html += '</select>';
     html += '<small style="color:var(--text-light)">تُحدد تلقائياً من بيانات ��لطالب ويمكن للمسؤول تغييرها يدوياً.</small>';
-  } else if(el.name === 'الماضي القريب' || el.name === 'الماضي البعيد') {
+  } else if(el.name === 'الماضي القر��ب' || el.name === 'الماضي البعيد') {
     const mainSurahIndex = ALL_SURAHS_ORDERED.indexOf(mainSurah);
     let afterSurahs = [];
     if(mainSurahIndex !== -1 && mainSurahIndex < ALL_SURAHS_ORDERED.length - 1) {
@@ -2020,7 +2169,7 @@ function renderRecordElementHTML(el, i, num) {
   html += '<div class="record-option"><input type="checkbox" id="hw_'+i+'" '+(el.isHomework?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'isHomework' + "'" + ', this.checked)"><label for="hw_'+i+'">📝 واجب</label></div>';
   html += '<div class="record-option"><input type="checkbox" id="voice_'+i+'" '+(el.isVoice?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'isVoice' + "'" + ', this.checked)"><label for="voice_'+i+'">🎙️ تسجيل صوتئ</label></div>';
   html += '<div class="record-option"><input type="checkbox" id="showay_'+i+'" '+(el.showAyat?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'showAyat' + "'" + ', this.checked)"><label for="showay_'+i+'">👁️ إظهار الآيات للطالب</label></div>';
-  html += '<div class="record-option"><input type="checkbox" id="proctor_'+i+'" '+(el.proctorEnabled!==false?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'proctorEnabled' + "'" + ', this.checked)"><label for="proctor_'+i+'">🛡️ فحص الغش لهذا العنصر</label></div>';
+  html += '<div class="record-option"><input type="checkbox" id="proctor_'+i+'" '+(el.proctorEnabled!==false?'checked':'')+' onchange="updateRecordElement('+i+', ' + "'" + 'proctorEnabled' + "'" + ', this.checked)"><label for="proctor_'+i+'">🛡️ فحص الغش لهذا ا��عنصر</label></div>';
 
 html += '</div>';
 
@@ -2408,7 +2557,7 @@ function startExamGenerationProgress(questionCount){
   const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينءءقئ الذكاء الاصطناعي أسئلة المتشابهاتت ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
   update();examGenerationTimer=setInterval(update,1000);
 }
-function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'اكتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
+function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'��كتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
 function takeExamPlanCount(plans,wanted){let remaining=Math.max(0,wanted),out=[];for(const plan of plans){if(!remaining)break;const count=Math.min(remaining,Math.max(0,parseInt(plan.count)||0));if(count){out.push(Object.assign({},plan,{count}));remaining-=count}}return out}
 function expandExamPlans(plans){const out=[];plans.forEach(plan=>{for(let i=0;i<plan.count;i++)out.push(plan)});return out}
 function examQuestionFingerprint(q){return [q.type||'',q.surah||'',parseInt(q.from)||0,parseInt(q.to)||0,normalizeExamText(q.prompt||''),normalizeExamText(q.correct||'')].join('|')}
@@ -2420,7 +2569,7 @@ async function generateExamQuestions(){
   if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على الأقل.','danger');return}
   const btns=document.querySelectorAll('#examBuilderSection button');btns.forEach(b=>b.disabled=true);
   const requestedTotal=plans.reduce((n,r)=>n+(parseInt(r.count)||0),0),sourceMode=getExamSourceMode();let generationSucceeded=false;
-  startExamGenerationProgress(requestedTotal);showExamAlert('جاري إنشاء دفعة جديدة من '+(sourceMode==='file'?'الملف المحدد':'الذكاء الاصطناعي مع التحقق القرآني')+'...','info');
+  startExamGenerationProgress(requestedTotal);showExamAlert('جاري إنشاء دفعة جديدة من '+(sourceMode==='file'?'الملف المحدد':'ال��كاء الاصطناعي مع التحقق القرآني')+'...','info');
   try{
     if(sourceMode==='file'&&!examFilesCache.length)await loadExamFiles();
     const file=examFilesCache.find(f=>f.id===document.getElementById('examFileSource')?.value);if(sourceMode==='file'&&!file)throw new Error('اختر ملف المرجع أولاً.');
@@ -2432,7 +2581,7 @@ async function generateExamQuestions(){
       raw=Array.isArray(ai)?ai:(ai&&Array.isArray(ai.questions)?ai.questions:[])
     }catch(aiError){
       if(sourceMode==='file')throw aiError;
-      raw=await generateLocalQuranQuestions(range.start,range.end,expandedPlans);showExamAlert('استخدم النظام المولد القرآني الاحتياطي بعد تعذر مزودي الذكاء الاصطناعي.','warning')
+      raw=await generateLocalQuranQuestions(range.start,range.end,expandedPlans);showExamAlert('استخدم النظام المولد القرآني الاحتياطي بعد ��عذر مزودي الذكاء الاصطناعي.','warning')
     }
     const unique=[];for(const q of raw.map(cleanExamQuestion).filter(q=>q.prompt&&q.correct!==undefined)){const fingerprint=examQuestionFingerprint(q);if(existingSet.has(fingerprint))continue;existingSet.add(fingerprint);unique.push(q);if(unique.length===requestedTotal)break}
     if(!unique.length)throw new Error('لم تُنتج ادفعة أسئلة جديدة غير مكررة. غيّر النطاق أو الخطة ثم أعد المحاولة.');
@@ -2779,7 +2928,7 @@ function renderAdminExamHistory(s) {
     const submitted=ex.submittedAt||ex.reviewedAt||ex.createdAt||ex.date;
     const range=Array.from(new Set(questions.map(function(q){return q&&q.surah}).filter(Boolean))).join('، ')||'غير محدد';
     h+='<article class="history-day" style="border-right:5px solid var(--info)">';
-    h+='<div class="history-day-header" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span>اءءتبار '+(exams.length-examIndex)+' — '+formatExamDate(submitted)+'</span><span class="score-badge">'+score+' / '+maxScore+' ('+percent+'٪)</span></div>';
+    h+='<div class="history-day-header" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span>ا��ءتبار '+(exams.length-examIndex)+' — '+formatExamDate(submitted)+'</span><span class="score-badge">'+score+' / '+maxScore+' ('+percent+'٪)</span></div>';
     h+='<div class="history-element-details" style="margin:12px 0"><div class="history-detail"><strong>الحالة:</strong> '+examStatusLabel(ex)+'</div><div class="history-detail"><strong>الأسئلة:</strong> '+questions.length+'</div><div class="history-detail"><strong>السور:</strong> '+escapeHtml(range)+'</div><div class="history-detail"><strong>المدة:</strong> '+(Number(ex.totalDurationSeconds)||0)+' ثانية</div></div>';
     h+='<details><summary style="cursor:pointer;font-weight:700;color:var(--primary)">سجل الاختبار: عرض الإجابات والملحقات</summary>';
     if(!questions.length)h+='<div class="alert alert-info" style="margin-top:10px">لا تتوفر تفاصيل الأسئلة لهذه النتيجة القديمة.</div>';
@@ -3031,7 +3180,7 @@ async function toggleVoiceMsg(key) {
       voiceMsgStore[key] = await blobToDataURL(blob);
       delete voiceMsgRecorders[key];
       renderVoiceBox(key);
-      showToast('🎙️ تم تسجيل الرسالة الصوتية — اضغط إرسال', 'success');
+      showToast('🎙️ ت�� تسجيل الرسالة الصوتية — اضغط إرسال', 'success');
     };
     recorder.start();
     registerAudioRecorder('message-'+key,recorder,stream,{statusId:'vmStatus_'+key,buttonId:'vmBtn_'+key,maxMs:180000});
@@ -3685,11 +3834,12 @@ function renderSubjects() {
 function addSubject() {
   const name = document.getElementById('newSubName').value.trim();
   const teacher = document.getElementById('newSubTeacher').value.trim();
-  const phone = document.getElementById('newSubPhone').value.trim();
+  const phoneInput = document.getElementById('newSubPhone');
+  const phone = phoneInput.value.trim();
   if(!name || !teacher) return alert('يرجى ملء اسم المادة والمدرس');
-  if(phone && phone.length !== 11) return alert('رقم الهاتف يجب أن يكون 11 رقم');
+  if(phone && !validateCountryField(phoneInput,true)) return;
   const subjects = getData('subjects');
-  subjects.push({id: Date.now(), name, teacher, phone, isAdmin: false});
+  subjects.push({id: Date.now(), name, teacher, phone, phoneCountry:getCountryCodeForInput('newSubPhone'), isAdmin: false});
   setData('subjects', subjects);
   document.getElementById('newSubName').value = '';
   document.getElementById('newSubTeacher').value = '';
@@ -3855,7 +4005,7 @@ function renderStudentCompletedTasks() {
   const s = currentUser;
   const completed = s.completedTasks || [];
   if(completed.length === 0) { document.getElementById('studentCompletedTasksSection').innerHTML = renderTaskArchiveHtml(s); return; }
-  // السجل اليومي يظهر أسفل المهام الم��جزة
+  // السجل اليومي يظه�� أسفل المهام الم��جزة
   let html = '<div class="page" style="margin-top:20px; border-right:5px solid var(--success);">';
   html += '<h4 style="color:var(--success); margin-bottom:15px;">��� المهام المنجزة والمسجلة</h4>';
   completed.slice().reverse().forEach(task => {
@@ -4194,7 +4344,7 @@ async function analyzeRecitationContent(blob, task, transcript) {
     dur=audio.duration;const win=Math.floor(sr*.03);let voiced=0,frames=0;
     for(let i=0;i+win<data.length;i+=win){let e=0;for(let j=0;j<win;j++)e+=data[i+j]*data[i+j];e=Math.sqrt(e/win);frames++;if(e>.012)voiced++}
     voicedRatio=frames?voiced/frames:0;await ctx.close();
-  }catch(e){/* نكمل حتى لو تعذّر التحليل المحلي، لأن الخادم هو المصدر الأساسي */}
+  }catch(e){/* نكمل حتى لو تعذّر التحلي�� المحلي، لأن الخادم هو المصدر الأساسي */}
   // Gemini على الخادم هو المصدر الوحيد لتفريغ الصوت وتصحيحه.
   let aiResult=await serverRecitationAnalysis(blob, task);
   const serverError=aiResult&&aiResult.analysisError?aiResult.analysisError:'';
@@ -4412,7 +4562,7 @@ const VOICE_DUPLICATE_THRESHOLD = 93;  // نسبة اعتبار البصمة م�
 // ====== جميناي هو المسؤوئ الوحيد عن البصمة الصوتية والتحقق من هوية المتحدث ======
 async function voiceAudioPayload(blob){
   // Gemini يدعم WAV/MP3/OGG/MP4، بينما تسجيل المتصفح يكون غالباً WebM/Opus.
-  // نحول WebM وOpus دائماً إلى WAV قبل الإرسال حتى لا يفشل Gemini ثم يسقط الطلب بالكامل.
+  // نحول WebM وOpus دائماً إلى WAV قبل الإرسال حتى لا يفشل Gemini ثم يسقط ال��لب بالكامل.
   const supported=/^audio\/(wav|x-wav|mpeg|mp3|mp4|x-m4a|m4a|ogg)(;|$)/i.test(blob.type||'');
   let audioBlob=blob;
   if(!supported){audioBlob=await blobToWav(blob);}
