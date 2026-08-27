@@ -8,6 +8,8 @@
 <meta name="referrer" content="no-referrer-when-downgrade">
   <link rel="preload" href="/quran/quran.pdf" as="fetch" type="application/pdf" crossorigin fetchpriority="high">
   <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
+  <script src="/country-data.js"></script>
+  <script src="/vendor/libphonenumber-max.js"></script>
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="/islamic-hub.css">
   <link rel="stylesheet" href="/prayer-screen.css">
@@ -1276,7 +1278,7 @@ tr:hover { background: var(--table-hover); }
     <div id="examPlanRows"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
       <button class="btn btn-info" onclick="addExamPlanRow()">➕ مستوى/نوع جديد</button>
-      <button class="btn btn-primary" onclick="generateExamQuestions()">🤖 توليد الأسئلة تلقائياً</button>
+      <button class="btn btn-primary" onclick="generateExamQuestions()">🤖 تولي�� الأسئلة تلقائياً</button>
       <button class="btn btn-success" onclick="addManualExamQuestion()">✍️ إضافة سؤال يدوي</button>
       <button class="btn btn-secondary" onclick="clearExamQuestions()">🗑ءءء مسح ااختبار</button>
     </div>
@@ -1399,7 +1401,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ��ندوق التسجيلات ل��طالب -->
 <div id="studentExamPage" class="page hidden">
-  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رجءءع</button></div>
+  <div class="page-header"><h2>🧪 ال��ختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رجءءع</button></div>
   <div id="studentExamContent"></div>
 </div>
 
