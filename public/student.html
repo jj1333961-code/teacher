@@ -1165,7 +1165,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري لولي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
+    <div class="form-group"><label>الرقم السري لولي الأمر *</label><input type="password" id="stParentPass" placeholder="رق�� سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
     <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
@@ -1244,7 +1244,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
+  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة ��ن إشارة واحدة منفردة.</p>
   <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
@@ -1958,7 +1958,7 @@ window.alert = function(m){ showToast(m); };
 (function(){
   function el(id){ return document.getElementById(id); }
 
-  /* حقول الدخول ظاهرة دائماً في الشاشة الرئيسية (كما في التصميم) */
+  /* حق��ل الدخول ظاهرة دائماً في الشاشة الرئيسية (كما في التصميم) */
   window.thimarShowLoginForm = function(){
     var form = el('thimarLoginForm');
     if(form) form.classList.remove('hidden');
@@ -1987,7 +1987,6 @@ window.alert = function(m){ showToast(m); };
 </script>
 <link rel="stylesheet" href="/messaging.css">
 <script src="/country-fields.js" defer></script>
-<script src="/legacy-i18n.js" defer></script>
 <script src="/prayer-screen.js" defer></script>
 <script src="/islamic-hub.js" defer></script>
 <script src="/messaging.js" defer></script>

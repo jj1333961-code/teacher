@@ -171,6 +171,8 @@ const LANG_DICT = {
   'إعدادات العرض': 'Display settings',
   'تبديل الوضع': 'Toggle theme'
 };
+const BROKEN_ARABIC = {'الر��م السري':'الرقم السري','��يس لديك حساب؟':'أليس لديك حساب؟','الن��اق':'النطاق','ال��وية':'الهوية','د��ول':'دخول','المو��ايل':'الموبايل','ا��كويت':'الكويت','��قم':'رقم','الموبا��ل':'الموبايل','البي��نات':'البيانات','اءءقومي':'القومي','تءءديل':'تعديل','التحق':'التحقق','البص��ة':'البصمة','ا��شخصي':'الشخصي','ل�� يتم':'لن يتم','الكو��':'الكود','مزوده��':'مزوده','تغّرت':'تغيرت','مسر الملف':'مسار الملف','ا��ضمام':'الانضمام','يمءءن':'يمكن','اءءُءءشئ':'ينشئ'};
+function repairArabic(value) { let result = value || ''; Object.keys(BROKEN_ARABIC).forEach(function(key){ result = result.split(key).join(BROKEN_ARABIC[key]); }); return result.replace(/��/g, ''); }
 let currentLang = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
 const LANG_ATTRS = ['placeholder','title','aria-label','alt'];
 function langTextNodes() {
@@ -196,7 +198,7 @@ function applyLangToDom() {
   document.documentElement.lang = currentLang;
   document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
   langTextNodes().forEach(function(node){
-    if(node.__arText === undefined) node.__arText = node.nodeValue;
+    if(node.__arText === undefined) node.__arText = repairArabic(node.nodeValue);
     const source = node.__arText;
     node.nodeValue = currentLang === 'en' ? translateValue(source) : source;
   });
@@ -204,7 +206,7 @@ function applyLangToDom() {
     LANG_ATTRS.forEach(function(attr){
       if(!el.hasAttribute(attr)) return;
       const key = 'data-ar-' + attr;
-      if(!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr));
+      if(!el.hasAttribute(key)) el.setAttribute(key, repairArabic(el.getAttribute(attr)));
       const source = el.getAttribute(key) || '';
       el.setAttribute(attr, currentLang === 'en' ? translateValue(source) : source);
     });
@@ -757,7 +759,7 @@ function updateSurahSelect() {
 // ====== إنشاء حساب جديد (طلب انضمام) ======
 let signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
 
-// ====== إعداد تسجيل الدخو�� بحساب جوجل (Google Identity Services) ======
+// ====== إعد��د تسجيل الدخو�� بحساب جوجل (Google Identity Services) ======
 // معرّف العميل (OAuth Client ID) ��ُدار من إعدادات المسؤول > إدارة المسؤولين
 let googleGsiInited = false;
 let currentGoogleClientId = '';
@@ -1942,7 +1944,7 @@ function renderRecordElementHTML(el, i, num) {
     html += '<span class="record-element-title" style="text-decoration:line-through;">'+num+'. '+el.name+'</span>';
     html += '<button class="btn btn-xs btn-success" onclick="restoreRecordElement('+i+')" title="استرجاع العنصر">↩ استرجاع</button>';
     html += '</div>';
-    html += '<div style="color:var(--text-light); font-size:0.9rem;">تم حذ هذا العنصر — لن يُحفظ ضمن التسميع.</div>';
+    html += '<div style="color:var(--text-light); font-size:0.9rem;">تم حذ هذا العنصر — لن ��ُحفظ ضمن التسميع.</div>';
     html += '</div>';
     return html;
   }
@@ -2443,7 +2445,7 @@ async function generateExamQuestions(){
   if(!base){showExamAlert('حدّد آخر سورة محفوظة للطالب أولاً.','danger');return}
   const topic='اختبار قرآني متنوع من النطاق والخطة المحددين';
   const plans=examPlanRows.filter(r=>(parseInt(r.count)||0)>0);
-  if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على الأقل.','danger');return}
+  if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على ال��قل.','danger');return}
   const btns=document.querySelectorAll('#examBuilderSection button');btns.forEach(b=>b.disabled=true);
   const requestedTotal=plans.reduce((n,r)=>n+(parseInt(r.count)||0),0),sourceMode=getExamSourceMode();let generationSucceeded=false;
   startExamGenerationProgress(requestedTotal);showExamAlert('جاري إنشاء دفعة جديدة من '+(sourceMode==='file'?'الملف المحدد':'الذكاء الاصطناعي مع التحقق القرآني')+'...','info');
@@ -4596,7 +4598,7 @@ function renderStudentChart() {
     document.getElementById('studentChartSection').innerHTML = '<div class="page" style="margin-top:20px;"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط التقييم</h4><div class="alert alert-info">لا توجد تقييمات نهائية مسجلة بعد. سيتم ظهور المخطط بعد إغلاق أول تسميع.</div></div>'; return;
   }
   const canvasId = 'chart_' + s.id;
-  document.getElementById('studentChartSection').innerHTML = '<div class="chart-container"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط تقييم حفظ القرآن الكريم</h4><canvas id="'+canvasId+'" width="1100" height="550" style="max-width:100%; height:auto;"></canvas><div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:#6f42c1"></div><span>المجموع</span></div></div><div style="margin-top:15px;"><button class="btn btn-info" onclick="showStudentFullChart()">ءءءء عرض المخطط الكامل في صفحة منفصة</button></div></div>';
+  document.getElementById('studentChartSection').innerHTML = '<div class="chart-container"><h4 style="color:var(--primary); margin-bottom:15px;">📊 مخطط تقييم حفظ القرآن الكريم</h4><canvas id="'+canvasId+'" width="1100" height="550" style="max-width:100%; height:auto;"></canvas><div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:#6f42c1"></div><span>المجموع</span></div></div><div style="margin-top:15px;"><button class="btn btn-info" onclick="showStudentFullChart()">ء��ءء عرض المخطط الكامل في صفحة منفصة</button></div></div>';
   setTimeout(() => drawTotalOnlyChart(canvasId, finalizedSessions), 100);
 }
 
