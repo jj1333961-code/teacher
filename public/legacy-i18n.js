@@ -1,21 +1,73 @@
 (function () {
   'use strict';
-  var dictionary = {
-    'تسجيل الدخول':'Log in','تسجيل الخروج':'Log out','أليس لديك حساب؟':'Don\'t have an account?','أDon\'t have an account?':'Don\'t have an account?','منصة ثمار':'Thimar Platform','منصة ثِمار':'Thimar Platform','لحفظ القرآن الكريم':'for memorizing the Holy Quran','قال تعالى:':'Allah Almighty said:','إنشاء حساب جديد':'Create new account','تغيير اللغة / Change language':'Change language','تبديل الوضع':'Toggle theme','محادثة':'Chat','الرئيسية':'Home','تسجيل الدخول':'Log in','تسجيل الخروج':'Log out','اسم المستخدم':'Username','الرقم السري':'Password','المسؤول':'Admin','الطالب':'Student','المعلم':'Teacher','ولي الأمر':'Parent','الإعدادات':'Settings','الرسائل':'Messages','المصحف الشريف':'Holy Quran','حفظ':'Save','إلغاء':'Cancel','حذف':'Delete','تعديل':'Edit','إضافة':'Add','رجوع':'Back','إرسال':'Send','تحديث':'Refresh','بحث':'Search','التالي':'Next','السابق':'Previous','إغلاق':'Close','تأكيد':'Confirm','تحميل':'Loading','جار التحميل...':'Loading...','لا توجد بيانات':'No data available','حدث خطأ':'An error occurred','نجح':'Succeeded','فشل':'Failed','الطلاب':'Students','المعلمين':'Teachers','أولياء الأمور':'Parents','الاختبارات':'Exams','الواجبات':'Homework','التقارير':'Reports','الحضور والغياب':'Attendance','المواد الدراسية':'Subjects','الاسم':'Name','رقم الهاتف':'Phone number','تاريخ الميلاد':'Date of birth','الصف الدراسي':'Grade','القرآن الكريم':'The Holy Quran','الرئيسية':'Home','لوحة التحكم':'Dashboard','نعم':'Yes','لا':'No','مفتوح':'Open','مغلق':'Closed'
+
+  var dictionaries = {
+    en: {
+      'منصة ثمار': 'Thimar Platform', 'منصة ثِمار': 'Thimar Platform', 'لحفظ القرآن الكريم': 'for memorizing the Holy Quran',
+      'تسجيل الدخول': 'Log in', 'تسجيل الخروج': 'Log out', 'إنشاء حساب جديد': 'Create account', 'ليس لديك حساب؟': "Don't have an account?", 'أليس لديك حساب؟': "Don't have an account?",
+      'اسم المستخدم': 'Username', 'الرقم السري': 'Password', 'رقم الهاتف': 'Phone number', 'تاريخ الميلاد': 'Date of birth', 'الصف الدراسي': 'Grade',
+      'المسؤول': 'Admin', 'الطالب': 'Student', 'المعلم': 'Teacher', 'ولي الأمر': 'Parent', 'الطلاب': 'Students', 'المعلمين': 'Teachers', 'أولياء الأمور': 'Parents',
+      'الرئيسية': 'Home', 'لوحة التحكم': 'Dashboard', 'الإعدادات': 'Settings', 'الرسائل': 'Messages', 'محادثة': 'Chat', 'الإشعارات': 'Notifications',
+      'المصحف الشريف': 'Holy Quran', 'القرآن الكريم': 'The Holy Quran', 'الاختبارات': 'Exams', 'قائمة الاختبار': 'Exam list', 'توليد الأسئلة بالذكاء الاصطناعي': 'Generate questions with AI',
+      'الواجبات': 'Homework', 'التقارير': 'Reports', 'الحضور والغياب': 'Attendance', 'المواد الدراسية': 'Subjects', 'الملفات': 'Files',
+      'حفظ': 'Save', 'إلغاء': 'Cancel', 'حذف': 'Delete', 'تعديل': 'Edit', 'إضافة': 'Add', 'رجوع': 'Back', 'إرسال': 'Send', 'تحديث': 'Refresh', 'بحث': 'Search',
+      'التالي': 'Next', 'السابق': 'Previous', 'إغلاق': 'Close', 'تأكيد': 'Confirm', 'إعادة المحاولة': 'Try again', 'إعادة تشغيل الكاميرا': 'Restart camera',
+      'جار التحميل...': 'Loading...', 'جارٍ التحميل...': 'Loading...', 'لا توجد بيانات': 'No data available', 'حدث خطأ': 'An error occurred', 'نجح': 'Succeeded', 'فشل': 'Failed',
+      'تم الحفظ بنجاح': 'Saved successfully', 'تعذر الحفظ': 'Could not save', 'نعم': 'Yes', 'لا': 'No', 'مفتوح': 'Open', 'مغلق': 'Closed', 'الاسم': 'Name',
+      'الكاميرا غير متاحة': 'Camera unavailable', 'تم رفض صلاحية الكاميرا': 'Camera permission was denied', 'الكاميرا مستخدمة بواسطة تطبيق آخر': 'Camera is being used by another app',
+      'المتصفح لا يدعم الكاميرا': 'This browser does not support the camera', 'حدث خطأ أثناء تشغيل الكاميرا': 'An error occurred while starting the camera',
+      'البصمة الصوتية': 'Voiceprint', 'بدء التسجيل': 'Start recording', 'إيقاف التسجيل': 'Stop recording', 'تسجيل الصوت': 'Record audio',
+      'إعدادات العرض': 'Display settings', 'تبديل الوضع': 'Toggle theme', 'تغيير اللغة / Change language': 'Change language', 'فتح قائمة الأدوات': 'Open tools menu', 'إغلاق القائمة': 'Close menu',
+      'قال تعالى:': 'Allah Almighty said:', 'مصحف مفتوح على حامل خشبي': 'An open Quran on a wooden stand', 'الأدوات': 'Tools', 'الوقت المتبقي': 'Time remaining', 'النتيجة': 'Result'
+    }
   };
-  var broken = {'الرقم السري':'الرقم السري','أليس لديك حساب؟':'أليس لديك حساب؟','النطاق':'النطاق','الهوية':'الهوية','دخول':'دخول','الموبايل':'الموبايل','الكويت':'الكويت','رقم':'رقم','الموبايل':'الموبايل','البيانات':'البيانات','اءءقومي':'القومي','تءءديل':'تعديل','التحق':'التحقق','البصمة':'البصمة','الشخصي':'الشخصي','لن يتم':'لن يتم','الكود':'الكود','مزوده':'مزوده','تغّرت':'تغيرت','مسر الملف':'مسار الملف','الانضمام':'الانضمام','يمءءن':'يمكن','اءءُءءشئ':'ينشئ'};
+  var religiousSelector = '[data-no-translate],.quran-text,.ayah,.hadith,.dhikr,[lang="ar-QA"]';
   var locale = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
-  function fix(value) { Object.keys(broken).forEach(function (key) { value = value.split(key).join(broken[key]); }); return value.replace(//g, ''); }
-  function translate(value) { if (locale === 'ar') return value; var keys = Object.keys(dictionary).sort(function(a,b){return b.length-a.length;}); keys.forEach(function(key){value=value.split(key).join(dictionary[key]);}); return value; }
+  var originals = new WeakMap();
+
+  function isProtected(node) {
+    var parent = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+    return !parent || !!parent.closest('script,style,code,pre,' + religiousSelector);
+  }
+  function dictionary() { return dictionaries[locale] || {}; }
+  function translate(value) {
+    if (locale === 'ar' || !value) return value;
+    var result = value;
+    Object.keys(dictionary()).sort(function(a,b){ return b.length-a.length; }).forEach(function(key){ result = result.split(key).join(dictionary()[key]); });
+    return result;
+  }
   function apply(root) {
     if (!root) return;
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), node;
-    while ((node = walker.nextNode())) { if (!node.nodeValue.trim() || node.parentElement.closest('script,style,code,pre')) continue; if (!node.__i18nOriginal) node.__i18nOriginal = fix(node.nodeValue); node.nodeValue = translate(node.__i18nOriginal); }
-    root.querySelectorAll && root.querySelectorAll('input,textarea,select,button,[title],[aria-label]').forEach(function(el){['placeholder','title','aria-label'].forEach(function(a){if(el.hasAttribute(a)){var k='data-i18n-original-'+a;if(!el.hasAttribute(k))el.setAttribute(k,fix(el.getAttribute(a)));el.setAttribute(a,translate(el.getAttribute(k)));}});});
-    document.documentElement.lang=locale; document.documentElement.dir=locale==='en'?'ltr':'rtl';
-    var btn=document.getElementById('langToggleBtn'); if(btn) btn.textContent=locale==='en'?'AR':'EN';
+    while ((node = walker.nextNode())) {
+      if (!node.nodeValue.trim() || isProtected(node)) continue;
+      if (!originals.has(node)) originals.set(node, node.nodeValue);
+      node.nodeValue = locale === 'ar' ? originals.get(node) : translate(originals.get(node));
+    }
+    if (root.querySelectorAll) root.querySelectorAll('input,textarea,button,[title],[aria-label],[alt]').forEach(function(el){
+      if (el.matches(religiousSelector) || el.closest(religiousSelector)) return;
+      ['placeholder','title','aria-label','alt','value'].forEach(function(attr){
+        if (!el.hasAttribute(attr) || (attr === 'value' && !['button','submit','reset'].includes((el.type || '').toLowerCase()))) return;
+        var key = 'data-i18n-source-' + attr;
+        if (!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr));
+        var source = el.getAttribute(key) || '';
+        el.setAttribute(attr, locale === 'ar' ? source : translate(source));
+      });
+    });
+    document.documentElement.lang = locale;
+    document.documentElement.dir = locale === 'en' ? 'ltr' : 'rtl';
+    var button = document.getElementById('langToggleBtn');
+    if (button) button.textContent = locale === 'en' ? 'ع' : 'EN';
   }
-  window.addEventListener('languagechange', function(){ locale=localStorage.getItem('lang')==='en'?'en':'ar'; apply(document.body); });
-  var observer = new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(n){if(n.nodeType===1)apply(n);});});});
-  document.addEventListener('DOMContentLoaded',function(){apply(document.body);observer.observe(document.body,{childList:true,subtree:true});});
+  function setLocale(next) {
+    locale = next === 'en' ? 'en' : 'ar';
+    localStorage.setItem('lang', locale);
+    apply(document.body);
+  }
+  window.ThimarI18n = { apply: apply, setLocale: setLocale, t: translate, getLocale: function(){ return locale; } };
+  window.addEventListener('languagechange', function(){ setLocale(localStorage.getItem('lang')); });
+  var observer = new MutationObserver(function(records){
+    records.forEach(function(record){ record.addedNodes.forEach(function(added){ if (added.nodeType === 1 || added.nodeType === 3) apply(added.nodeType === 3 ? added.parentElement : added); }); });
+  });
+  document.addEventListener('DOMContentLoaded', function(){ apply(document.body); observer.observe(document.body, { childList: true, subtree: true }); });
 })();
