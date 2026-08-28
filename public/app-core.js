@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر��������������������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر����������������������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -126,12 +126,19 @@ const LANG_DICT = {
   '✅ تأكيد الهوية والمتابعة': '✅ Verify identity and continue',
   '🔁 إعادة إرسال الكود': '🔁 Resend code',
   '📝 بيانات طلب الانضمام': '📝 Join Request Details',
+  'نوع الحساب': 'Account type',
   'نوع الحساب *': 'Account type *',
   'طالب': 'Student',
+  'الطالب': 'Student',
   'ولي أمر': 'Parent',
+  'الاسم الكامل': 'Full name',
+  'الاسم بالكامل': 'Full name',
   'الاسم بالكامل *': 'Full name *',
+  'الرقم القومي': 'National ID',
   'الرقم القومي *': 'National ID *',
-  '��قم الهاتف *': 'Phone number *',
+  'رقم الهاتف': 'Phone Number',
+  'رقم الهاتف *': 'Phone Number *',
+  '��قم الهاتف *': 'Phone Number *',
   'الجزء': 'Juz',
   'السورة': 'Surah',
   'ملاحظات': 'Notes',
@@ -2190,7 +2197,7 @@ async function recordReadingAudio(idx) {
     recorder.start();
     registerAudioRecorder('reading-'+idx,recorder,stream,{statusId:'readAudioStatus_'+idx,buttonId:'readAudioBtn_'+idx,maxMs:120000});
     if(btn) { btn.dataset.recording = 'true'; btn.classList.add('recording'); btn.onclick = function(){ if(recorder.state!=='inactive') recorder.stop(); }; }
-    if(status) status.textContent = 'جاري التسجيل... (اضغط للإيقاف)';
+    if(status) status.textContent = 'جاري التسجيل... (اضغط للإيقا��)';
   } catch(err) { showToast('❌ لا يمكن الوصول للميكروفون', 'error'); }
 }
 function clearReadingAudio(idx) { readingItems[idx].audio = ''; renderReadingItems(); showToast('🗑️ تم حذف التسجيل الصوتي', 'error'); }
@@ -2280,7 +2287,7 @@ function localSmartChatReply(message,role){
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
-      return 'ملخص ا��بيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
+      return 'ملخص ا��بيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانت��ار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
     }
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
@@ -2797,7 +2804,7 @@ function formatExamDate(value) {
 function examStatusLabel(ex) {
   if(ex.status==='pending_audio_review')return 'بانتظار مراجع�� التسجيل';
   if(ex.status==='graded')return 'مكتمل ومصحح';
-  if(ex.autoSubmitted)return 'أُرسل تلقائياً بعد انتهاء الوقت';
+  if(ex.autoSubmitted)return 'أُرسل ��لقائياً بعد انتهاء الوقت';
   return escapeHtml(ex.status||'مكتمل');
 }
 function renderAdminExamHistory(s) {
@@ -3431,7 +3438,7 @@ function renderDevPlan(plan){
 }
 
 function approveDevPlan(){
-  showToast('ℹ️ التعديل يتم تلقائياً بعد إرسال الطلب', 'info');
+  showToast('ℹ️ التعديل يتم تلقائياً بعد إرسال ا��طلب', 'info');
 }
 
 function rejectDevPlan(){
@@ -4291,7 +4298,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   if(!task.originalTaskIndex && task.originalTaskIndex !== 0) task.originalTaskIndex = taskIdx;
   messages.push({
     type: 'student', sender: currentUser.name, senderId: currentUser.id,
-    receiverType: 'admin', text: 'تم إرسال تسجيل صوتي من الطالب ' + currentUser.name + '. ' + (task.name || task.text || ''),
+    receiverType: 'admin', text: 'تم إرسال تس��يل صوتي من الطالب ' + currentUser.name + '. ' + (task.name || task.text || ''),
     fileData: dataUrl, fileName: fileName || 'voice_recording.webm', fileType: 'voice',
     voiceMatch: matchPct, recitationMatch: rec.pct, recitationTarget: targetTxt,
     aiReport: 'مئابقة البصمة: ' + (matchPct !== null ? matchPct + '%' : 'غير متاحة') + ' | مطابقة التلاوة: ' + rec.pct + '%' + (rec.reason ? ' | ' + rec.reason : ''),
@@ -5157,7 +5164,7 @@ function generateWelcomeMessages(student) {
   const templates = [
     {title: 'هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من شيء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر ��ن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
-    {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية وسترى الفرق في حياتك.'},
+    {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به ��آية وسترى الفرق في حياتك.'},
     {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجع�� قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
     {title: 'يوم مبارك يا '+student.name+'! ✨', body: 'حافظ على الاستمرارية في الحفظ، فالقرآن يُحفظ بالتكرار والمراجعة. ثق بالله، فهو معك في كل خطوة.'}
   ];
@@ -5249,7 +5256,7 @@ function generateAIResponse(text, student) {
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صءءت','ميكروفون','تحق')) {
-    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوءءك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واض��.';
+    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ��لا يُقبل التسجيل إلا إذا كان صوءءك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واض��.';
   }
   // خطة الحفظ
   if(has('خطة','جدول','تنظيم','وقت','كيف احفظ','كيف أحفظ')) {
