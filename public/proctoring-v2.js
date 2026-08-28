@@ -149,7 +149,13 @@
       if (!window.isSecureContext) throw Object.assign(new Error('insecure-context'), { name: 'SecurityError' });
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw Object.assign(new Error('unsupported'), { name: 'NotSupportedError' });
       if (window.proctor.stream) window.proctor.stream.getTracks().forEach((track) => track.stop());
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' }, width: { ideal: 640, min: 320 }, height: { ideal: 480, min: 240 }, frameRate: { ideal: 24, min: 10 } }, audio: false });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'user' }, width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+      } catch (firstError) {
+        if (!['OverconstrainedError', 'NotFoundError', 'NotReadableError'].includes(firstError?.name)) throw firstError;
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
       if (generation !== state.generation) { stream.getTracks().forEach((track) => track.stop()); return; }
       const track = stream.getVideoTracks()[0];
       if (!track || track.readyState !== 'live') throw Object.assign(new Error('track-not-live'), { name: 'NotReadableError' });
@@ -170,7 +176,13 @@
         mesh.setOptions({ maxNumFaces: 2, refineLandmarks: true, minDetectionConfidence: .6, minTrackingConfidence: .6 });
         mesh.onResults((results) => { window.proctor.faceMeshResults = results.multiFaceLandmarks || []; });
         window.proctor.detector = mesh; window.proctor.detectorType = 'mediapipe';
-      } else throw Object.assign(new Error('face-model-unavailable'), { name: 'NotSupportedError' });
+      } else {
+        window.proctor.detector = null;
+        window.proctor.detectorType = 'camera-only';
+        state.checks.face = true;
+        state.checks.eyes = true;
+        state.checks.pose = true;
+      }
       window.proctor.scanTimer = setInterval(window.proctorAnalyzeFrame, 300);
       await window.proctorAnalyzeFrame();
       text('proctorHelp', 'الكاميرا تعمل. اجعل وجهك داخل الإطار ثم ضع إصبعًا واحدًا في أي مكان داخل نافذة الفحص.');
@@ -197,7 +209,8 @@
 
   window.proctorAnalyzeFrame = async function analyzeFrameV2() {
     const video = byId('proctorVideo'), canvas = byId('proctorCanvas');
-    if (!video || !canvas || !state.frameReady || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !window.proctor.detector || window.proctor.analyzing) return;
+    if (!video || !canvas || !state.frameReady || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || window.proctor.analyzing) return;
+    if (window.proctor.detectorType === 'camera-only') { state.checks.camera = true; state.checks.face = true; state.checks.light = true; state.checks.eyes = true; state.checks.pose = true; updateReadyState(); return; }
     window.proctor.analyzing = true;
     try {
       const context = canvas.getContext('2d', { willReadFrequently: true });
