@@ -72,12 +72,12 @@ function fieldKind(input) {
   return '';
 }
 
-function addMessage(input) {
+function addMessage(input, afterElement = input) {
   const message = document.createElement('small');
   message.className = 'country-field-message';
   message.id = `${input.id}-country-message`;
   message.setAttribute('aria-live', 'polite');
-  input.insertAdjacentElement('afterend', message);
+  afterElement.insertAdjacentElement('afterend', message);
   input.setAttribute('aria-describedby', [input.getAttribute('aria-describedby'), message.id].filter(Boolean).join(' '));
   return message;
 }
@@ -108,7 +108,11 @@ function enhance(input, kind) {
   select.dataset.legacyDialValue = existing ? 'true' : 'false';
   select.innerHTML = options('', Boolean(existing));
   select.value = '';
-  const message = addMessage(input);
+  if (existing) {
+    existing.parentElement.classList.add('country-phone-row');
+    input.classList.add('country-phone-input');
+  }
+  const message = addMessage(input, existing ? existing.parentElement : input);
   const validate = () => validateField(input, select, message, false);
   select.addEventListener('change', () => { updateFieldGuide(input, select, message); validate(); });
   input.addEventListener('blur', validate);
@@ -178,7 +182,7 @@ function validateVisiblePage() {
 function init() {
   document.querySelectorAll('input').forEach((input) => { const kind = fieldKind(input); if (kind) enhance(input, kind); });
   const style = document.createElement('style');
-  style.textContent = `.country-field-select{width:100%;margin-bottom:8px;direction:rtl}.country-field-message{display:block;margin-top:6px;color:var(--text-light);font-size:.82rem;line-height:1.5}.country-field-message.is-error{color:var(--danger,#dc3545);font-weight:700}input:invalid[data-country-enhanced=true]{border-color:var(--danger,#dc3545)!important}`;
+  style.textContent = `.country-field-select{width:100%;margin-bottom:8px;direction:rtl}.country-phone-row{align-items:stretch!important;flex-wrap:nowrap}.country-phone-row>.country-field-select{flex:0 0 42%;width:42%;min-width:0;margin-bottom:0;max-width:none!important}.country-phone-row>.country-phone-input{flex:1 1 auto;width:auto!important;min-width:0}.country-field-message{display:block;margin-top:6px;color:var(--text-light);font-size:.82rem;line-height:1.5}.country-field-message.is-error{color:var(--danger,#dc3545);font-weight:700}input:invalid[data-country-enhanced=true]{border-color:var(--danger,#dc3545)!important}@media(max-width:420px){.country-phone-row{gap:6px!important}.country-phone-row>.country-field-select{flex-basis:44%;width:44%;font-size:.84rem;padding-inline:8px}.country-phone-row>.country-phone-input{padding-inline:8px}}`;
   document.head.appendChild(style);
   document.addEventListener('click', (event) => {
     const button = event.target.closest('button[onclick]');
