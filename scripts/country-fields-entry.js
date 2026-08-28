@@ -95,7 +95,11 @@ function enhance(input, kind) {
   input.oninput = null;
   input.setAttribute('autocomplete', kind === 'phone' ? 'tel-national' : 'off');
   input.setAttribute('inputmode', kind === 'phone' ? 'tel' : 'text');
-  const existing = kind === 'phone' ? document.getElementById(`${input.id}Country`) : null;
+  const existing = kind === 'phone'
+    ? document.getElementById(`${input.id}Country`)
+      || input.closest('.form-group')?.querySelector('select')
+      || input.parentElement?.querySelector('select')
+    : null;
   const select = existing || document.createElement('select');
   select.classList.add('country-field-select');
   if (!existing) {
