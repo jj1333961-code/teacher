@@ -16,8 +16,8 @@ function safeAudioLog(event: string, details: Record<string, unknown> = {}) {
 const GEMINI = {
   label: "Google Gemini",
   endpoint: "https://generativelanguage.googleapis.com/v1beta/models",
-  models: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"],
-  model: "gemini-2.5-flash",
+  models: Array.from(new Set([(process.env.GEMINI_MODEL || "").trim(), "gemini-2.5-flash", "gemini-2.0-flash"])).filter(Boolean),
+  model: (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim(),
   get key() {
     return (process.env.GEMINI_API_KEY || "").trim()
   },
@@ -26,7 +26,7 @@ const GROQ = {
   label: "Groq",
   endpoint: "https://api.groq.com/openai/v1",
   // النموذج المتاح حاليًا في Groq؛ النموذج القديم كان يعيد 404 ويؤخر كل ردود الدردشة.
-  model: "qwen/qwen3.6-27b",
+  model: (process.env.GROQ_MODEL || "qwen/qwen3.6-27b").trim(),
   transcriptionModel: "whisper-large-v3-turbo",
   get key() {
     return (process.env.GROQ_API_KEY || "").trim()
@@ -299,7 +299,7 @@ async function geminiText(prompt: string, system: string, temperature: number, a
       if (!audio || !/404|400|not found|unsupported|model/i.test(audioErrorMessage(error))) throw error
     }
   }
-  throw lastError instanceof Error ? lastError : new Error("Gemini: لم يُرجع نموذج الصوت نتيجة")
+  throw lastError instanceof Error ? lastError : new Error("Gemini: لم يُرجع موذج الصوت نتيجة")
 }
 
 async function runText(prompt: string, system: string, temperature: number) {
@@ -415,7 +415,7 @@ const SYS_VOICE_PRINT = `أنت محرك بصمة صوتية. تستمع إلى 
 {"speaker":{"gender":"male|female|unknown","ageRange":"child|teen|adult|senior|unknown","pitch":"very-low|low|medium|high|very-high","pitchHz":number,"timbre":"وصف موجز","speed":"slow|medium|fast","nasality":"low|medium|high","breathiness":"low|medium|high","accent":"وصف موجز","distinctiveTraits":["سمات مميزة موجزة"]},"quality":"good|noisy|too-short","usable":true/false,"reason":"سبب موجز بالعربية"}`
 
 const SYS_VOICE_MATCH = `أنت محرك تحقق من هوية المتحدث بالبصمة الصوتية. لديك تسجيل صوتي حديث، ووصف بصمة صوتية مرجعية محفوظة لنفس الشخص المتوقع (referenceProfile)، وقد يصلك تسجيل مرجعي أيضاً.
-حلّل خصائص الصوت في التسجيل الحديث ثم قارنها بالمرجع: الطبقة، اللون الصوتي، الجرس، الأنفية، السرعة، اللكنة.
+حلّل خصائص الصوت في التسجيل الحديث ثم قارنها بالمرجع: الطبقة، الون الصوتي، الجرس، الأنفية، السرعة، اللكنة.
 تجاهل اختلاف الكلمات أو النص المقرءءء تماماً؛ المقارنة على الصوت فقط. راعِ اختلاف الميكروفون والضجيج.
 أعد JSON فقط بلا markdown:
 {"sameSpeaker":true/false,"matchPercent":number,"confidence":"low|medium|high","quality":"good|noisy|too-short","reason":"سبب موجز بالعربية","profile":{"gender":"male|female|unknown","pitch":"very-low|low|medium|high|very-high","pitchHz":number,"timbre":"وصف موجز","speed":"slow|medium|fast"}}`
@@ -755,7 +755,7 @@ async function buildDevPatches(request: string, plan: any, files: Array<{path:st
 - لا تُرجع ملفاً لم يتغير فعلاً.
 - لا تُرجع أي مسار غير موجود في الملفات المعطاة إلا إذا كانت الخطة تقول create وكان إنشاء الملف ضرورياً.
 - لا تنشئ أو تعل ملفات الأسرار مثل .env.
-- إذا كان الطلب غير آمن أو غير واضح أو يخالف القيود، أعد patches=[] واشرح السبب في summary.
+- إذا كان الطلب غير آمن أو غير واض أو يخالف القيود، أعد patches=[] واشرح السبب في summary.
 
 أعد JSON فقط بالشكل التالي (بدون أي نص خارجه):
 {"summary":"وصف عربي واضح لما تم تعديله فعلياً وكيف","patches":[{"path":"...","content":"المحتوى الكامل الجديد للملف","reason":"سبب التعديل وما تغيّر في هذا الملف بالتحديد"}],"tests":["ملاحظة تحقق أو خطوة اختبار يدوي مقترحة"]}`
@@ -973,10 +973,10 @@ export async function POST(req: Request) {
         const from = Math.max(1, Math.min(source.verses.length, Number(question?.from) || 1))
         const to = Math.max(from, Math.min(source.verses.length, Number(question?.to) || from))
         const type = ["mcq", "truefalse", "complete", "audio"].includes(question?.type) ? question.type : "mcq"
-        const complete = type === "complete"
-        const correct = complete
-          ? source.verses.slice(from - 1, to).map((verse: { text: string }) => verse.text).join(" ")
-          : String(question?.correct || "")
+        const referenceAnswer = source.verses.slice(from - 1, to).map((verse: { text: string }) => verse.text).join(" ")
+        const correct = type === "complete" || type === "audio"
+          ? referenceAnswer
+          : String(question?.correct || "").trim()
         const defaultPrompts: Record<string, string> = {
           mcq: "اختر الإجابة الصحيحة اعتماداً على المقطع المصور من المصحف",
           truefalse: "حدّد ما إذا كانت العبارة صحيحة أم خاطئة اعتماداً على المقطع المصوّر من المصحف",
@@ -1005,8 +1005,17 @@ export async function POST(req: Request) {
           const expectedOptions = Math.max(2, Math.min(6, Number(plan[questionIndex]?.optionsCount) || 4))
           options = options.slice(0, expectedOptions)
           if (options.length !== expectedOptions || !correct || options.filter((option: string) => option === correct).length !== 1) return null
+          const normalizedSurah = normalizeQuranText(source.surah)
+          const answerIsReferenced = normalizedCorrect === normalizedSurah || source.verses.some((verse: { text: string }) => {
+            const normalizedVerse = normalizeQuranText(verse.text)
+            return normalizedVerse === normalizedCorrect || normalizedVerse.includes(normalizedCorrect) || normalizedCorrect.includes(normalizedVerse)
+          })
+          if (!answerIsReferenced) return null
         }
+        if (type === "truefalse" && !options.includes(correct)) return null
         if (!prompt || from > to || !correct) return null
+        const fingerprint = [type, source.surahNumber, from, to, normalizeQuranText(prompt), normalizeQuranText(correct)].join("|")
+        if (previousQuestionFingerprints.includes(fingerprint)) return null
 
         return {
           ...question,
@@ -1023,6 +1032,8 @@ export async function POST(req: Request) {
           source: sourceFile ? "file" : "مرجع قرآني موثوق",
           sourceFileId: sourceFile?.id || "",
           sourceFileName: sourceFile?.name || "",
+          fingerprint,
+          validated: true,
         }
       }).filter(Boolean)
       if (!safeQuestions.length) return json({ error: "لم تجتز الأسئلة فحص الجودة والوضوح. جرّب توسيع النطاق أو زيادة دقة الموضوع.", diagnostics }, 502)

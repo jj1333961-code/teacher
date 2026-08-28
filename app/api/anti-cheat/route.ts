@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       if (!session || session.status !== 'active' || session.studentId !== String(event.studentId) || session.itemId !== String(event.itemId) || session.itemType !== String(event.itemType)) return NextResponse.json({ error: 'جلسة المراقبة غير صالحة' }, { status: 403 })
       const resolved = await resolveConfig(session.itemId, session.itemType)
       const rawSignals = Array.isArray(event.signals) ? event.signals.filter((signal: unknown) => signal && typeof signal === 'object').slice(0, 20) : []
-      const signals = rawSignals.map((signal: Record<string, unknown>) => ({ type: String(signal.type || 'unknown').slice(0, 64), active: Boolean(signal.active), durationMs: clamp(signal.durationMs, 0, 86400000), frequency: clamp(signal.frequency, 0, 100) }))
+      const signals: Array<{ type: string; active: boolean; durationMs: number; frequency: number }> = rawSignals.map((signal: Record<string, unknown>) => ({ type: String(signal.type || 'unknown').slice(0, 64), active: Boolean(signal.active), durationMs: clamp(signal.durationMs, 0, 86400000), frequency: clamp(signal.frequency, 0, 100) }))
       const riskScore = clamp(calculateRiskScore(signals, session.riskScore)), severity = severityFor(riskScore, resolved.config)
       const riskDelta = riskScore - session.riskScore
       const reason = String(event.reason || 'تم رصد إشارة قابلة للتفسير من مجموعة الفحوص').slice(0, 300)
