@@ -1,10 +1,11 @@
 import { getCountries, getCountryCallingCode, parsePhoneNumberFromString } from 'libphonenumber-js/max';
+import { COUNTRY_DOCUMENT_RULES, FALLBACK_DOCUMENT_RULE } from '../lib/country-rules';
 
 const locale = document.documentElement.lang || 'ar';
 const names = new Intl.DisplayNames([locale, 'ar', 'en'], { type: 'region' });
 const countries = getCountries().map((iso) => ({ iso, name: names.of(iso) || iso, dial: getCountryCallingCode(iso) })).sort((a, b) => a.name.localeCompare(b.name, locale));
 
-const nationalIdRules = {
+const legacyNationalIdRules = {
   EG: { label: 'الرقم القومي المصري', pattern: /^\d{14}$/, hint: '14 رقمًا', example: '29801011234567' },
   SA: { label: 'رقم الهوية الوطنية أو الإقامة', pattern: /^[12]\d{9}$/, hint: '10 أرقام ويبدأ بـ 1 للمواطن أو 2 للمقيم' },
   AE: { label: 'رقم الهوية الإماراتية', pattern: /^784[- ]?\d{4}[- ]?\d{7}[- ]?\d$/, hint: '15 رقمًا يبدأ بـ 784، ويمكن كتابة الشرطات' },
@@ -47,12 +48,27 @@ const nationalIdRules = {
   IL: { label: 'رقم الهوية الإسرائيلية', pattern: /^\d{9}$/, hint: '9 أرقام' }
 };
 
+const nationalIdRules = Object.fromEntries(Object.entries({ ...legacyNationalIdRules, ...COUNTRY_DOCUMENT_RULES }).map(([iso, rule]) => [iso, {
+  ...rule,
+  label: rule.labelAr,
+  hint: rule.hintAr,
+  pattern: rule.pattern,
+  example: rule.example,
+  fallback: rule.fallback,
+}]));
+
 const passportPreferredCountries = new Set(['US','GB','CA','AU','NZ','IE','DE','FR','NL','BE','CH','AT','PT','GR','IS','LU','LI','MC','VA','SM','AD']);
 
 function documentRule(iso) {
   if (nationalIdRules[iso]) return nationalIdRules[iso];
-  if (passportPreferredCountries.has(iso)) return { label: 'رقم جواز السفر أو وثيقة الهوية الرسمية', fallback: true, hint: 'من 4 إلى 30 حرفًا أو رقمًا كما يظهر في الوثيقة' };
-  return { label: 'رقم الهوية الشخصية أو جواز السفر', fallback: true, hint: 'من 4 إلى 30 حرفًا أو رقمًا كما يظهر في الوثيقة الرسمية' };
+  if (passportPreferredCountries.has(iso)) return { ...FALLBACK_DOCUMENT_RULE, label: FALLBACK_DOCUMENT_RULE.labelAr, hint: FALLBACK_DOCUMENT_RULE.hintAr };
+  return { ...FALLBACK_DOCUMENT_RULE, label: FALLBACK_DOCUMENT_RULE.labelAr, hint: FALLBACK_DOCUMENT_RULE.hintAr };
+}
+
+function displayDocumentRule(iso) {
+  const source = COUNTRY_DOCUMENT_RULES[iso];
+  if (locale.startsWith('en') && source) return { ...documentRule(iso), label: source.labelEn, hint: source.hintEn };
+  return documentRule(iso);
 }
 
 function options(selected = '', useDialValue = false) {
@@ -131,9 +147,9 @@ function updateFieldGuide(input, select, message) {
   if (input.dataset.countryKind === 'phone') {
     input.placeholder = `رقم محلي صالح في ${country.name}`;
     input.setAttribute('inputmode', 'tel');
-    message.textContent = `أدخل الرقم المحلي لـ ${country.name} بدون كود الدولة (+${country.dial})؛ الطول يتحدد تلقائيًا حسب شبكة البلد.`;
+    message.textContent = `أدخل الرقم المحلي لـ ${country.name} ��دون كود الدولة (+${country.dial})؛ الطول يتحدد تلقائيًا حسب شبكة البلد.`;
   } else {
-    const rule = documentRule(country.iso);
+    const rule = displayDocumentRule(country.iso);
     input.placeholder = rule.label;
     input.setAttribute('inputmode', /^\^?\\d|رقمًا/.test(String(rule.pattern || rule.hint)) && !/[A-Z]/.test(String(rule.pattern || '')) ? 'numeric' : 'text');
     const label = input.closest('.form-group')?.querySelector('label');
@@ -176,7 +192,7 @@ function validateVisiblePage() {
   const page = [...document.querySelectorAll('.page:not(.hidden)')].pop() || document;
   const fields = [...page.querySelectorAll('input[data-country-enhanced="true"]')];
   for (const input of fields) {
-    const select = document.getElementById(`${input.id}Country`);
+    const select = document.getElementById(`${input.id}Country`) || document.querySelector(`select[data-country-for="${input.id}"]`);
     const message = document.getElementById(`${input.id}-country-message`);
     if (select && message && !validateField(input, select, message, true)) return false;
   }
@@ -197,7 +213,7 @@ function init() {
     validateVisiblePage,
     validate(id) {
       const input = document.getElementById(id);
-      const select = document.getElementById(`${id}Country`);
+      const select = document.getElementById(`${id}Country`) || document.querySelector(`select[data-country-for="${id}"]`);
       const message = document.getElementById(`${id}-country-message`);
       return Boolean(input && select && message && validateField(input, select, message, true));
     },
@@ -207,7 +223,7 @@ function init() {
       return input?.dataset.internationalValue || '';
     },
     getCountryCode(id) {
-      const select = document.getElementById(`${id}Country`);
+      const select = document.getElementById(`${id}Country`) || document.querySelector(`select[data-country-for="${id}"]`);
       return select ? selectedIso(select) : '';
     },
     getDocumentLabel(id) {
@@ -216,7 +232,7 @@ function init() {
     },
     setCountry(id, iso) {
       const input = document.getElementById(id);
-      const select = document.getElementById(`${id}Country`);
+      const select = document.getElementById(`${id}Country`) || document.querySelector(`select[data-country-for="${id}"]`);
       if (!input || !select || !iso) return;
       const option = [...select.options].find((item) => item.dataset.iso === iso);
       if (option) {
