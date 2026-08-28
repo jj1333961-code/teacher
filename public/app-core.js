@@ -11,7 +11,7 @@ const quranData = {
   9: ["الأعراف", "الأنفال"],
   10: ["الأنفال", "التوبة"],
   11: ["التوبة", "يونس", "هود"],
-  12: ["هود", "يسف"],
+  12: ["هود", "يوسف"],
   13: ["يوسف", "الرعد", "إبراهيم"],
   14: ["الحجر", "النحل"],
   15: ["الإسراء", "الكهف"],
@@ -97,13 +97,13 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر��ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
   'عدد الطلاب': 'Students',
   'عدد المعلمين': 'Teachers',
-  'المسؤولءءن': 'Admins',
+  'المسؤولون': 'Admins',
   'تسميعات نشطة': 'Active recitations',
   '➕ إضافة طالب جديد': '➕ Add New Student',
   '📚 المواد والمعلمين': '📚 Subjects & Teachers',
@@ -142,7 +142,8 @@ const LANG_DICT = {
   '⚙️ إعدادات المسؤول': '⚙️ Admin Settings',
   'الاختبارات': 'Exams', 'المهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل الصوتي': 'Audio recording',
   'مكافحة الغش': 'Anti-cheat', 'تحليل التسجيل': 'Analyze recording', 'جاري التحليل...': 'Analyzing...',
-  'تعذ تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
+  'الكاميرا غير متاحة': 'Camera unavailable', 'تم رفض صلاحية الكاميرا': 'Camera permission was denied', 'الكاميرا مستخدمة بواسطة تطبيق آخر': 'Camera is being used by another app', 'المتصفح لا يدعم الكاميرا': 'This browser does not support the camera', 'حدث خطأ أثناء تشغيل الكاميرا': 'An error occurred while starting the camera', 'إعادة تشغيل الكاميرا': 'Restart camera',
+  'تع�� تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
   'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا تود بيانات': 'No data available',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'حذف': 'Delete', 'تعديل': 'Edit', 'إضافة': 'Add',
   'إرسال': 'Send', 'تحميل': 'Loading', 'جار التحميل...': 'Loading...', 'تأكيد': 'Confirm',
@@ -177,7 +178,8 @@ function langTextNodes() {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const nodes = []; let node;
   while((node = walker.nextNode())) {
-    if(node.parentElement && ['SCRIPT','STYLE','NOSCRIPT'].includes(node.parentElement.tagName)) continue;
+    if(node.parentElement && ['SCRIPT','STYLE','NOSCRIPT','CODE','PRE'].includes(node.parentElement.tagName)) continue;
+    if(node.parentElement && node.parentElement.closest('[data-no-translate],.quran-text,.ayah,.hadith,.dhikr,[lang="ar-QA"]')) continue;
     if(node.nodeValue && node.nodeValue.trim()) nodes.push(node);
   }
   return nodes;
@@ -334,7 +336,7 @@ async function proctorDetectFaces(video){if(proctor.detectorType==='native')retu
 function proctorAverage(list){return list.length?list.reduce((a,b)=>a+b,0)/list.length:0}
 function proctorEyeRatio(points,upper,lower,left,right){if(!points||!points[upper]||!points[lower]||!points[left]||!points[right])return null;const vertical=Math.hypot(points[upper].x-points[lower].x,points[upper].y-points[lower].y),horizontal=Math.max(.001,Math.hypot(points[left].x-points[right].x,points[left].y-points[right].y));return vertical/horizontal}
 async function proctorAnalyzeFrame(){const video=document.getElementById('proctorVideo'),canvas=document.getElementById('proctorCanvas');if(!video||video.readyState<2||!proctor.detector||proctor.analyzing)return;proctor.analyzing=true;try{const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,0,canvas.width,canvas.height);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;let sum=0;for(let i=0;i<pixels.length;i+=16)sum+=(pixels[i]+pixels[i+1]+pixels[i+2])/3;const light=sum/(pixels.length/16),lightOk=light>=42&&light<=240;let faces=[];try{faces=await proctorDetectFaces(video)}catch(e){}const oneFace=faces.length===1;let gazeOk=false,faceOk=false,eyesOk=true;if(oneFace){const face=faces[0],b=face.boundingBox,cx=(b.x+b.width/2)/video.videoWidth,cy=(b.y+b.height/2)/video.videoHeight,ratio=b.width/video.videoWidth;faceOk=ratio>.16&&ratio<.78&&cy>.23&&cy<.78;proctor.gazeSamples.push({cx,cy,ratio});if(proctor.gazeSamples.length>7)proctor.gazeSamples.shift();const smooth={cx:proctorAverage(proctor.gazeSamples.map(x=>x.cx)),cy:proctorAverage(proctor.gazeSamples.map(x=>x.cy)),ratio:proctorAverage(proctor.gazeSamples.map(x=>x.ratio))};if(!proctor.baseline&&faceOk&&lightOk)proctor.baseline=smooth;if(face.landmarks){const left=proctorEyeRatio(face.landmarks,159,145,33,133),right=proctorEyeRatio(face.landmarks,386,374,362,263),eye=(left!==null&&right!==null)?(left+right)/2:null;if(eye!==null){proctor.eyeSamples.push(eye);if(proctor.eyeSamples.length>9)proctor.eyeSamples.shift();const smoothEye=proctorAverage(proctor.eyeSamples),adaptiveFloor=Math.max(.035,Math.min(.095,(proctor.baseline?.eye||smoothEye)*.48));if(proctor.baseline&&!proctor.baseline.eye&&proctor.eyeSamples.length>=5)proctor.baseline.eye=smoothEye;eyesOk=smoothEye>=adaptiveFloor}}if(proctor.baseline)gazeOk=eyesOk&&Math.abs(smooth.cx-proctor.baseline.cx)<.14&&Math.abs(smooth.cy-proctor.baseline.cy)<.14&&Math.abs(smooth.ratio-proctor.baseline.ratio)<.2}setProctorCheck('proctorLightCheck',lightOk,lightOk?'الإضاءة مناسبة':'عدّل الإضاءة أمام الوجه');setProctorCheck('proctorFaceCheck',faceOk,faceOk?'وجه واحد واضح':'اجعل وجهاً واحداً كاملاً في المنتصف');setProctorCheck('proctorGazeCheck',gazeOk,gazeOk?'تركيز العينين ثابت على ائشاشة':'انظر مباشرة إلى الشاشة وافتح عينيك بصورة طبيعية');const allOk=isTouchDevice()&&lightOk&&faceOk&&gazeOk;if(allOk){if(!proctor.stableSince)proctor.stableSince=Date.now()}else proctor.stableSince=0;const stable=allOk&&Date.now()-proctor.stableSince>=1800;const hold=document.getElementById('proctorGateHold');if(hold)hold.setAttribute('aria-disabled',String(!stable));document.getElementById('proctorCameraStatus').textContent=stable?'جميع الشروط مستوفاة — ضع إصبع واحد للبدء':'يتم تثبيت التركيز على العينين...';if(proctor.active)proctorHandleLiveState(allOk,lightOk?'أبعدت وجهك أو نظرك عن الشاشة':'الإضاءة غير مناسبة')}finally{proctor.analyzing=false}}
-function setupProctorHold(zone){if(!zone||zone.dataset.proctorBound)return;zone.dataset.proctorBound='1';const sync=function(e){e.preventDefault();proctor.touches=new Set(Array.from(e.touches||[]).map(t=>t.identifier));proctor.holding=proctor.touches.size===1;zone.classList.toggle('holding',proctor.holding);zone.textContent=proctor.holding?'تم رصد إصبع واحد — بدء المهمة':(proctor.touches.size>1?'استخدم إصبعًا واحد��ا فقط':'ضع إصبعًا واحدًا هنا للبدء');if(proctor.holding&&zone.getAttribute('aria-disabled')==='false'&&proctor.onReady){const cb=proctor.onReady,ctx=proctor.context;proctor.onReady=null;document.getElementById('proctorGate').classList.add('hidden');proctor.active=true;proctor.context=ctx;proctor.screenWidth=screen.width;proctor.screenHeight=screen.height;proctor.warningAt=0;proctor.touchWarningAt=0;proctor.leaveAt=0;proctor.lastGoodAt=Date.now();if(getProctorSettings().fullscreen&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});cb()}};zone.addEventListener('touchstart',sync,{passive:false});zone.addEventListener('touchmove',sync,{passive:false});zone.addEventListener('touchend',sync,{passive:false});zone.addEventListener('touchcancel',sync,{passive:false})}
+function setupProctorHold(zone){if(!zone||zone.dataset.proctorBound)return;zone.dataset.proctorBound='1';const sync=function(e){e.preventDefault();proctor.touches=new Set(Array.from(e.touches||[]).map(t=>t.identifier));proctor.holding=proctor.touches.size===1;zone.classList.toggle('holding',proctor.holding);zone.textContent=proctor.holding?'تم رصد إصبع واحد — بدء المهمة':(proctor.touches.size>1?'استخدم إصبعًا واحدًا فقط':'ضع إصبعًا واحدًا هنا للبدء');if(proctor.holding&&zone.getAttribute('aria-disabled')==='false'&&proctor.onReady){const cb=proctor.onReady,ctx=proctor.context;proctor.onReady=null;document.getElementById('proctorGate').classList.add('hidden');proctor.active=true;proctor.context=ctx;proctor.screenWidth=screen.width;proctor.screenHeight=screen.height;proctor.warningAt=0;proctor.touchWarningAt=0;proctor.leaveAt=0;proctor.lastGoodAt=Date.now();if(getProctorSettings().fullscreen&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});cb()}};zone.addEventListener('touchstart',sync,{passive:false});zone.addEventListener('touchmove',sync,{passive:false});zone.addEventListener('touchend',sync,{passive:false});zone.addEventListener('touchcancel',sync,{passive:false})}
 function proctorLiveBar(){return ''}
 function bindLiveProctorHold(){}
 function proctorShowWarning(reason,startedAt){const grace=Math.ceil(getProctorSettings().gazeGraceMs/1000),left=Math.max(0,grace-Math.floor((Date.now()-startedAt)/1000)),w=document.getElementById('proctorWarning');if(w){w.textContent='تنبيه: '+reason+' — صحح الوضع خلال '+left+' ثانية';w.classList.remove('hidden')}}
@@ -479,7 +481,7 @@ function showPage(id, options = {}) {
   if(id === 'messagesPage') { renderMessages(); markAdminMessagesRead(); }
   if(id === 'subjectsPage') renderSubjects();
   if(id === 'adminsPage') renderAdmins();
-  if(id === 'addStudent') { renderSubjectSelect(); initJuzSelect(); voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null; document.getElementById('voicePreview').style.display='none'; document.getElementById('voiceRecordStatus').textContent='اضغط للتسجيءء (20 ثانية)'; }
+  if(id === 'addStudent') { renderSubjectSelect(); initJuzSelect(); voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null; document.getElementById('voicePreview').style.display='none'; document.getElementById('voiceRecordStatus').textContent='اضغط للتسجيل (20 ثانية)'; }
   if(id === 'adminSettings') loadAdminSettings();
   if(id === 'studentDashboard' && currentType === 'student') { renderStudentDashboard(); updateStudentMsgBadge(); }
   if(id === 'studentInbox') { renderStudentInbox(); markStudentMessagesRead(); }
@@ -1017,7 +1019,7 @@ function sendSignupCode() {
     + 'يرجى إرسال هذا الكود لمقدّم الطلب لإكمال التسجيل.';
   const link = buildWaLink(adminWa, text);
   document.getElementById('signupVerifyBox').classList.remove('hidden');
-  box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق لإرسالها إلى المسؤول (' + adminWa + '). <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال الكود إلى واتساب المسؤول</strong></a> ثم أدخل الكود بالأسفل بعد استلامه من المسؤول.</div>';
+  box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق لإرسالها إلى المسؤول (' + adminWa + '). <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال الكود إلى واتساب المسؤول</strong></a> ثم أدخل الكود بالأسفل بعد استلام�� من المسؤول.</div>';
   window.open(link, '_blank', 'noopener');
 }
 function verifySignupCode() {
@@ -1175,7 +1177,7 @@ function renderStudentSpeechPreview(parsed,filled){
   const box=document.getElementById('studentIntakeResult'); if(!box)return;
   const labels={name:'اسم الطالب',username:'اسم المستخدم',national:'الرقم القومي',phone:'رقم الهاتف',birth:'تاريخ الميلا',parent:'اسم ولي الأمر',notes:'الملاحظات'};
   const rows=Object.keys(parsed.fields).map(function(k){return '<div>✓ '+escapeHtml(labels[k]||k)+': <strong>'+escapeHtml(parsed.fields[k])+'</strong></div>'}).join('');
-  box.innerHTML='<div class="alert alert-success">تم التعرف على النص. راجع الخانات قبل الحفظ اليدوي.<br>'+rows+'<small>النص الكامل: '+escapeHtml(parsed.text)+'</small></div>';
+  box.innerHTML='<div class="alert alert-success">تم التعرف على النص. راجع الخانات قبل ا��حفظ اليدوي.<br>'+rows+'<small>النص الكامل: '+escapeHtml(parsed.text)+'</small></div>';
 }
 function speechErrorMessage(error){const code=error&&error.error;if(code==='not-allowed'||code==='service-not-allowed')return currentLang==='en'?'Microphone permission was denied.':'تم رفض إذن الميكروفون.';if(code==='no-speech')return currentLang==='en'?'No speech was detected. Try again.':'لم يتم التعرف على الصوت، حاول مرة أخرى.';if(code==='audio-capture')return currentLang==='en'?'No microphone was found.':'لم يتم العثور على ميكروفون.';return currentLang==='en'?'Voice input is unavailable in this browser.':'الإدخال الصوتي غير متاح في هذا المتصفح.'}
 function stopStudentSpeech(){if(studentSpeechRecognition){try{studentSpeechRecognition.stop()}catch(e){}}studentSpeechListening=false;const btn=document.getElementById('studentSpeechBtn');if(btn){btn.disabled=false;btn.setAttribute('aria-pressed','false');btn.textContent='🎤 إدخال البيانات بالصوت'}const status=document.getElementById('studentSpeechStatus');if(status)status.textContent='تم التعرف'}
@@ -1183,7 +1185,7 @@ function toggleStudentSpeech(){
   const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition, btn=document.getElementById('studentSpeechBtn'), status=document.getElementById('studentSpeechStatus'), transcript=document.getElementById('studentSpeechTranscript');
   if(studentSpeechListening){stopStudentSpeech();return}
   if(!Recognition){
-    if(status)status.textContent=currentLang==='en'?'Browser speech recognition is unavailable; recording fallback is ready.':'التعرف المباشر غير متاح؛ سيتم استخدام التسجيل الصوتي كبديل آمن.';
+    if(status)status.textContent=currentLang==='en'?'Browser speech recognition is unavailable; recording fallback is ready.':'التعرف المباشر غير متاح؛ سيتم استخدام ال��سجيل الصوتي كبديل آمن.';
     if(transcript){transcript.classList.remove('hidden');transcript.textContent=currentLang==='en'?'Press the recording button below, then analyze the same recording.':'اضغط زر التسجيل بالأسفل، ثم حلّل التسجيل نفسه.'}
     const recorderBtn=document.getElementById('studentIntakeRecordBtn');
     if(recorderBtn){recorderBtn.focus();}
@@ -1368,7 +1370,7 @@ function adminLogin() {
     const devices = getData('devices');
     devices.push({type:'admin', user:mobile, time:new Date().toLocaleString('ar-EG'), agent:navigator.userAgent});
     localStorage.setItem('devices', JSON.stringify(devices));
-    document.getElementById('adminDeviceInfo').textContent = '📱 جهازك مسجل: ' + new Date().toLocaleString('ar-EG');
+    document.getElementById('adminDeviceInfo').textContent = '��� جهازك مسجل: ' + new Date().toLocaleString('ar-EG');
     showPage('adminDashboard');
     updateNotificationBadges();
     document.getElementById('adminLoginAlert').innerHTML = '';
@@ -2211,7 +2213,7 @@ function renderReadingItems() {
   container.innerHTML = html;
 }
 
-// ====== الاختبار الذكي المستقل ======
+// ====== الاختبار الذ��ي المستقل ======
 let examQuestions=[]; let examPlanRows=[]; let examEditorActiveIndex=0; let studentExamTimer=null; let studentExamQuestionTimer=null; let proctorExamAuthorizedId='';
 let studentExamQuestionRemaining=[]; let studentExamQuestionStartedAt=[]; let studentExamQuestionElapsed=[]; let studentExamSessionId=''; let studentExamCurrentIndex=0; let studentExamViewIndex=0; let studentExamLockedIndices={};
 
@@ -2248,7 +2250,7 @@ function generateLocalFileQuestions(file,plans){const sentences=String(file.text
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
   const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الطالب';
-  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|محبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنن مساعدتك؟';
+  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته �� هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|محبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنن مساعدتك؟';
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
@@ -2442,7 +2444,7 @@ async function generateExamQuestions(){
       raw=await generateLocalQuranQuestions(range.start,range.end,expandedPlans);showExamAlert('استخدم النظام المولد القرآني الاحتياطي بعد تعذر مزودي الذكاء الاصطناعي.','warning')
     }
     const unique=[];for(const q of raw.map(cleanExamQuestion).filter(q=>q.prompt&&q.correct!==undefined)){const fingerprint=examQuestionFingerprint(q);if(existingSet.has(fingerprint))continue;existingSet.add(fingerprint);unique.push(q);if(unique.length===requestedTotal)break}
-    if(!unique.length)throw new Error('لم تُنتج ادفعة أسئلة جديدة غير مكررة. غيّر النطاق أو الخطة ثم أعد المحاولة.');
+    if(!unique.length)throw new Error('لم تُنتج دفعة أسئلة جديدة غير مكررة. غيّر النطاق أو الخطة ثم أعد المحاولة.');
     const stamp=Date.now(),added=unique.map((q,index)=>{const plan=expandedPlans[index]||normalizedPlans[0];return {id:'exam_'+stamp+'_'+index,type:plan.type,level:plan.level,surah:q.surah||base,prompt:q.prompt||'',stem:q.stem||'',options:Array.isArray(q.options)?q.options:[],correct:q.correct||'',from:parseInt(q.from)||1,to:parseInt(q.to)||parseInt(q.from)||1,surahNumber:parseInt(q.surahNumber)||0,timeLimit:plan.timeLimit,completeAyahs:plan.completeAyahs,reciteAyahs:plan.reciteAyahs,audioShareWithParent:plan.audioShareWithParent!==false,proctorEnabled:plan.proctorEnabled!==false,points:typeof q.points==='number'?q.points:1,rejected:false,weakened:false,source:q.source||(sourceMode==='file'?'file':'ai-verified'),sourceFileId:q.sourceFileId||'',sourceFileName:q.sourceFileName||'',questionImage:q.questionImage||'',optionsCount:plan.optionsCount||4,pastScope:range.scope}});
     const previousCount=examQuestions.length;examQuestions=examQuestions.concat(added);examEditorActiveIndex=previousCount;
     const now=Date.now(),historyByFingerprint=new Map(savedHistory.map(item=>[String(item.fingerprint),item]));
@@ -2472,7 +2474,7 @@ function renderExamQuestions(){
     '<div class="exam-question-header"><strong>السؤال '+(i+1)+' من '+examQuestions.length+' — '+examLevelLabel(q.level)+'</strong>'+(q.rejected?'<button class="btn btn-xs btn-warning" onclick="restoreExamQuestion('+i+')">استرجاع</button>':'<button class="btn btn-xs btn-danger" onclick="rejectExamQuestion('+i+')">رفض السؤال</button>')+'</div>'+
     quranQuestionMediaHtml(q,i)+
     '<div class="form-row"><div class="form-group"><label>النوع</label><select onchange="updateExamQuestion('+i+',\'type\',this.value);renderExamQuestions()"><option value="mcq" '+(q.type==='mcq'?'selected':'')+'>اختياري</option><option value="truefalse" '+(q.type==='truefalse'?'selected':'')+'>صح/خطأ</option><option value="complete" '+(q.type==='complete'?'selected':'')+'>أكمل</option><option value="audio" '+(q.type==='audio'?'selected':'')+'>تسجيل صوت</option></select></div>'+ 
-    '<div class="form-group"><label>لمستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>ءءعب</option></select></div>'+
+    '<div class="form-group"><label>لمستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>صعب</option></select></div>'+
     '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
     (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
     (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
@@ -2494,7 +2496,7 @@ function saveExamDraft(){
   students[i].activeExam={id:'exam_'+Date.now(),date:document.getElementById('recordDate').value||new Date().toISOString().split('T')[0],questions:JSON.parse(JSON.stringify(qs)),totalSeconds,status:'pending',createdAt:Date.now(),deadlineAt,baseSurah:currentRecordMainSurah,lastSurah};
   setData('students',students);
   notifyStudentExam(students[i]);
-  showExamAlert(' تم إرسال الاختبار للطالب ع أزمنة منفصلة لكل سؤال.','success');showToast('🧪 تم إرسال الاختبار للطالب','success');
+  showExamAlert('تم إرسال الاختبار للطالب بأزمنة منفصلة لكل سؤال.','success');showToast('🧪 تم إرسال الاختبار للطالب','success');
 }
 function cancelExamDraft(){const id=parseInt(document.getElementById('recordStudentId').value);let students=getData('students');const i=students.findIndex(s=>s.id===id);if(i>=0){students[i].activeExam=null;setData('students',students)}showExamAlert('تم إلغاء الاختبار الحالي.','info')}
 
@@ -3257,7 +3259,7 @@ async function runDevAssistant(){
   if(dangers.length){
     const confirmed = confirm(
       '⚠️ تحذير: قد يتضمن هذا الطلب عملية حسّاسة:\n\n- '+dangers.join('\n- ')+
-      '\n\nهذه العمليات قد تؤثر على البيانات أئ الأمان أو المستخدمين. لن يُنفَّذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتابعة والتنفيذ التلقائي؟'
+      '\n\nهذه العمليات قد تؤثر على البيانات أئ الأمان أو المستخدمين. لن يُنفَ��ذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتابعة والتنفيذ التلقائي؟'
     );
     if(!confirmed){
       recordDevAudit({ status:'blocked', request, summary:'أُلغي بواسطة ءءلمسؤول قبل التنفيذ.', flagged:dangers });
@@ -5199,7 +5201,7 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلا','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الواجبءءءت والتسجيلات المطلوبة<br>• <em>لآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الو��جبءءءت والتسجيلات المطلوبة<br>• <em>لآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
@@ -5258,7 +5260,7 @@ function generateAIResponse(text, student) {
   if(has('تحفيز','همة','ملل','تعبا','زهقءءن','احبت','أحطت')) {
     const quotes = [
       '🌟 «وَلَقَدْ يَسَّرْنَا الْقُْآنَ لِلذِّكْرِ فهَلْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ فءءط.',
-      '💚 قال ﷺ: «خيركم من تعلم القرآن وعلمه». أنت اليوم في أفضل طريق.',
+      '💚 قال ﷺ: «خيركم من تعلم القرآن وعلم��». أنت اليوم في أفضل طريق.',
       '🚀 كل صفحة تحفظها اليوم هي درة ترتف بها غداً. لا تستهن بالاختباريل.'
     ];
     return quotes[Math.floor(Math.random()*quotes.length)];
