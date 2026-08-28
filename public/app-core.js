@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر������������������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر��������������������ال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -228,6 +228,7 @@ let langObserver = new MutationObserver(function(){
   langObserver._running = false;
 });
 function initLanguage(){ applyLangToDom(); langObserver.observe(document.body,{childList:true,subtree:true}); }
+window.addEventListener('languagechange', function(){ const next = localStorage.getItem('lang'); if(next === 'ar' || next === 'en') { currentLang = next; applyLangToDom(); } });
 
 let neonSaveTimer = null;
 const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests','notifications'];
@@ -2363,7 +2364,7 @@ async function generateLocalQuranQuestions(base,lastSurah,plans){
   for(let left=0,right=range.length-1;left<=right;left++,right--){sourceOrder.push(range[left]);if(right!==left)sourceOrder.push(range[right])}
   const sourceLimit=Math.min(range.length,Math.max(needed,8)),sources=[];
   for(const surah of sourceOrder.slice(0,sourceLimit)){const max=SURAH_AYAH_COUNTS[surah]||1;const text=await fetchAyatText(surah,1,max);const ayahs=String(text||'').split(/\s*﴿?\d+﴾?\s*/).map(x=>x.trim()).filter(Boolean);if(ayahs.length)sources.push({surah,ayahs,text})}
-  if(!sources.length)throw new Error('تعذر تحميل النص القرآني للمولّد المحلي.');let cursor=0;const out=[],used=new Set(),randomPositions=['start','end','middle'];
+  if(!sources.length)throw new Error('تعذر تحميل النص القرآني للمولّد ��لمحلي.');let cursor=0;const out=[],used=new Set(),randomPositions=['start','end','middle'];
   for(const plan of plans){for(let i=0;i<plan.count;i++){const src=sources[cursor%sources.length],requestedPosition=plan.position||'random',position=requestedPosition==='random'?randomPositions[cursor%randomPositions.length]:requestedPosition;cursor++;const third=Math.max(1,Math.ceil(src.ayahs.length/3));let min=1,max=src.ayahs.length;if(position==='start')max=Math.min(src.ayahs.length,third);else if(position==='middle'){min=Math.min(src.ayahs.length,third+1);max=Math.min(src.ayahs.length,third*2)}else if(position==='end')min=Math.min(src.ayahs.length,third*2+1);let from=min+Math.floor(Math.random()*Math.max(1,max-min+1));for(let tries=0;tries<=max-min&&used.has(src.surah+':'+from);tries++)from=from>=max?min:from+1;used.add(src.surah+':'+from);const ayah=src.ayahs[from-1]||src.text,next=src.ayahs[from]||ayah;let q={surah:src.surah,from,to:Math.min(from+(plan.type==='complete'?plan.completeAyahs-1:plan.type==='audio'?plan.reciteAyahs-1:0),src.ayahs.length),points:1,source:'local-browser',options:[],stem:ayah,correct:''};
     if(plan.type==='mcq'){const options=shuffled([src.surah].concat(shuffled(range.filter(s=>s!==src.surah)).slice(0,plan.optionsCount-1)));q.prompt='إلى أي سورة ينتمي المقطع المصور؟';q.options=options;q.correct=src.surah}
     else if(plan.type==='truefalse'){const truth=Math.random()>.5,shown=truth?src.surah:(shuffled(range.filter(s=>s!==src.surah))[0]||src.surah);q.prompt='هل المقطع المصور من سورة '+shown+'؟';q.options=['صح','خطأ'];q.correct=truth?'صح':'خطأ'}
@@ -2731,7 +2732,7 @@ function saveSession(isFinal) {
     return;
   }
 
-  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام الالية والانتقال لليوم التالي.
+  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام الالية والانتقا�� لليوم التالي.
   const session = {date,elements:JSON.parse(JSON.stringify(activeElements)),homework:JSON.parse(JSON.stringify(homeworkItems)),reading:JSON.parse(JSON.stringify(readingItems)),totalScore,notes,isDraft:false,finalizedAt:nowText,status:'نهائ',completedTaskSnapshot:previousTasks};
   students[idx].sessions = students[idx].sessions.filter(s => !s.isDraft && s.date !== date);
   students[idx].sessions.push(session);
@@ -3988,7 +3989,7 @@ function renderStudentTasks() {
     } else if(task.type === 'reading') {
       html += '<div class="task-card" data-task-category="extra" style="border-right-color:var(--warning);"><h5>📖 قراءة: '+(task.text || (task.surah ? 'سورة '+task.surah : ''))+'</h5>';
       if(task.surah) html += '<p>لسورة: '+task.surah+' | من آية '+(task.from || '-')+' إلى آية '+(task.to || '-')+'</p>';
-      if(task.audio) html += '<div style="margin:8px 0;">🎙️ تسجيل من المسؤول: <audio controls src="'+task.audio+'" style="height:40px; vertical-align:middle;"></audio></div>';
+      if(task.audio) html += '<div style="margin:8px 0;">🎙�� تسجيل من المسؤول: <audio controls src="'+task.audio+'" style="height:40px; vertical-align:middle;"></audio></div>';
       html += studentAyatBlock(task, 'rd'+originalIdx);
       html += status;
 
@@ -4424,7 +4425,7 @@ async function computeVoicePrint(blob) {
     const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
     const std=a=>{const m=avg(a);return Math.sqrt(Math.max(0,avg(a.map(x=>(x-m)*(x-m)))))};
     vec.push(avg(cent),std(cent),avg(zcr),std(zcr),avg(ener),std(ener));
-    // تطبيع المتجه حتى تصبح المقارنة أقل حساسية لمستوى الصوت.
+    // تطبيع المتجه حتى تصبح المقارنة أقل حساسية لمست��ى الصوت.
     const mean=avg(vec);const centered=vec.map(x=>x-mean);const norm=Math.sqrt(centered.reduce((a,b)=>a+b*b,0))||1;
     return centered.map(x=>+(x/norm).toFixed(6));
   }catch(e){return null}
@@ -5039,7 +5040,7 @@ function fileTargetLabel(f) {
   const aud = f.audience || f.category;
   if(!f.targetId || f.targetId === 'all') return aud === 'parent' ? 'كل أولياء الأمور' : 'كل الكلاب';
   const st = getData('students', []).find(x => String(x.id) === String(f.targetId));
-  if(!st) return 'مستلم محءءد';
+  if(!st) return 'مس��لم محءءد';
   return aud === 'parent' ? ('ولي أمر ' + st.name) : st.name;
 }
 
@@ -5157,7 +5158,7 @@ function generateWelcomeMessages(student) {
     {title: 'هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من شيء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر ��ن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
     {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية وسترى الفرق في حياتك.'},
-    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
+    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجع�� قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
     {title: 'يوم مبارك يا '+student.name+'! ✨', body: 'حافظ على الاستمرارية في الحفظ، فالقرآن يُحفظ بالتكرار والمراجعة. ثق بالله، فهو معك في كل خطوة.'}
   ];
   const base = templates[dayOfWeek % templates.length];
@@ -5248,7 +5249,7 @@ function generateAIResponse(text, student) {
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صءءت','ميكروفون','تحق')) {
-    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوءءك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واضح.';
+    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوءءك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واض��.';
   }
   // خطة الحفظ
   if(has('خطة','جدول','تنظيم','وقت','كيف احفظ','كيف أحفظ')) {

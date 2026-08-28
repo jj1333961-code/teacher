@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect } from 'react'
-import { translate, type Locale } from '@/lib/i18n'
+import { getLocale, translate, validateDictionaries, type Locale } from '@/lib/i18n'
 
 export function LanguageRuntime() {
   useEffect(() => {
-    let locale: Locale = localStorage.getItem('lang') === 'en' ? 'en' : 'ar'
+    let locale: Locale = getLocale(localStorage.getItem('lang'))
+    const dictionaryStatus = validateDictionaries()
+    if (process.env.NODE_ENV !== 'production' && (dictionaryStatus.missingInEnglish.length || dictionaryStatus.missingInArabic.length)) console.warn('[i18n] Complete both locale dictionaries before release', dictionaryStatus)
     const originals = new WeakMap<Text, string>()
     const attrs = ['placeholder', 'title', 'aria-label', 'aria-description']
     let applying = false
@@ -33,8 +35,10 @@ export function LanguageRuntime() {
       observer.takeRecords()
     }
     const schedule = (root?: ParentNode, full = false) => { cancelAnimationFrame(frame); frame = requestAnimationFrame(() => apply(root, full)) }
-    const toggle = () => { locale = locale === 'ar' ? 'en' : 'ar'; localStorage.setItem('lang', locale); schedule(document.body, true) }
+    const syncExternalLocale = () => { locale = getLocale(localStorage.getItem('lang')); schedule(document.body, true) }
+    const toggle = () => { locale = locale === 'ar' ? 'en' : 'ar'; localStorage.setItem('lang', locale); document.cookie = `lang=${locale}; Max-Age=31536000; Path=/; SameSite=Lax`; schedule(document.body, true) }
     window.addEventListener('languagechange', toggle)
+    window.addEventListener('storage', (event) => { if (event.key === 'lang') syncExternalLocale() })
     const observer = new MutationObserver((mutations) => { const added = mutations.find((mutation) => mutation.addedNodes.length)?.addedNodes[0]; if (added instanceof Element) schedule(added) })
     observer.observe(document.body, { childList: true, subtree: true })
     schedule(document.body, true)
