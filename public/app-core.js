@@ -131,7 +131,7 @@ const LANG_DICT = {
   'ولي أمر': 'Parent',
   'الاسم بالكامل *': 'Full name *',
   'الرقم القومي *': 'National ID *',
-  'رقم الهاتف *': 'Phone number *',
+  '��قم الهاتف *': 'Phone number *',
   'الجزء': 'Juz',
   'السورة': 'Surah',
   'ملاحظات': 'Notes',
@@ -860,11 +860,24 @@ function handleGoogleCredential(resp) {
   showPage('signupStep2');
 }
 
-function getInternationalNumber(inputId, countryId) {
-  const raw = String(document.getElementById(inputId)?.value || '').replace(/\D/g, '');
-  const country = String(document.getElementById(countryId)?.value || '20').replace(/\D/g, '');
-  return country + raw.replace(/^0+/, '');
-}
+  function getInternationalNumber(inputId, countryId) {
+    if(window.CountryFields) {
+      const international = window.CountryFields.getInternationalValue(inputId);
+      if(international) return international.replace(/^\+/, '');
+    }
+    const raw = String(document.getElementById(inputId)?.value || '').replace(/\D/g, '');
+    const country = String(document.getElementById(countryId)?.value || '').replace(/\D/g, '');
+    return country ? country + raw.replace(/^0+/, '') : raw;
+  }
+  function normalizeIdentity(value) {
+    return String(value || '').trim().normalize('NFKC').replace(/[\s()./-]/g, '').toUpperCase();
+  }
+  function validatedPhoneValue(inputId, required) {
+    const input = document.getElementById(inputId);
+    if(!input || !input.value.trim()) return required ? null : '';
+    if(window.CountryFields && !window.CountryFields.validate(inputId)) return null;
+    return (window.CountryFields && window.CountryFields.getInternationalValue(inputId)) || input.value.trim();
+  }
 function updateSignupInternationalNumber(inputId, countryId, outputId) {
   const output = document.getElementById(outputId);
   if(output) output.textContent = 'الرقم الدولي: +' + getInternationalNumber(inputId, countryId);
@@ -920,16 +933,16 @@ function submitAccountRecovery() {
   const box=document.getElementById('recoveryResult');
   const role=document.getElementById('recoveryRole')?.value || 'student';
   const name=document.getElementById('recoveryName')?.value.trim() || '';
-  const nid=String(document.getElementById('recoveryNid')?.value || '').replace(/\D/g,'');
-  const phone=getInternationalNumber('recoveryPhone','recoveryCountry');
-  if(!name || !nid || phone.length < 8) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال نوع الحساب والاسم والرقم القومي ورقم الهاتف بصورة صحيحة.</div>'; return; }
+  const nid=normalizeIdentity(document.getElementById('recoveryNid')?.value || '');
+  const phone=validatedPhoneValue('recoveryPhone', true);
+  if(!name || !nid || !phone) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال نوع الحساب والاسم ووثيقة الهوية ورقم الهاتف بصورة صحيحة حسب البلد المختار.</div>'; return; }
   const students=getData('students', []);
   const matched=students.find(function(student){
     const expectedName=role === 'student' ? student.name : (student.parent || student.parentName);
     const expectedNid=role === 'student' ? (student.national || student.nationalId) : (student.parentNational || student.parentNationalId || student.national || student.nationalId);
     const expectedPhone=role === 'student' ? student.phone : (student.parentPhone || student.phone);
     return normalizeRecoveryText(expectedName) === normalizeRecoveryText(name)
-      && String(expectedNid || '').replace(/\D/g,'') === nid
+      && normalizeIdentity(expectedNid) === nid
       && recoveryPhoneMatches(expectedPhone, phone);
   });
   if(!matched) { box.innerHTML='<div class="alert alert-danger">لا يوجد بيانات مسجلة بهذا الشكل</div>'; return; }
@@ -1051,13 +1064,12 @@ function submitSignupRequest() {
   const name = document.getElementById('signupName').value.trim();
   const relationshipName = document.getElementById('signupRelationshipName').value.trim();
   const nid = document.getElementById('signupNid').value.trim();
-  const phone = getInternationalNumber('signupPhone','signupPhoneCountry');
+  const phone = validatedPhoneValue('signupPhone', true);
   const juz = document.getElementById('signupJuz').value;
   const surah = document.getElementById('signupSurah').value;
   const notes = document.getElementById('signupNotes').value.trim();
-  if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
-  if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هاتف صحيحًا مع اختيار كود الدولة</div>'; return; }
-  if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يكون 14 رقم</div>'; return; }
+  if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط ووثيقة الهوية ورقم الهاتف الصحيح حسب البلد مطلوبة</div>'; return; }
+  if(window.CountryFields && !window.CountryFields.validate('signupNid')) return;
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
   const time = new Date().toLocaleString('ar-EG');
   const details = '📋 طلب ئنشاء حساب جديد\n'
@@ -1074,7 +1086,7 @@ function submitSignupRequest() {
     + 'وقت الطلب: ' + time;
 
   const requests = getData('joinRequests');
-  requests.push({ id: 'jr' + Date.now(), role: role, name: name, guardianName: role === 'student' ? relationshipName : '', studentName: role === 'parent' ? relationshipName : '', relationshipName: relationshipName, nid: nid, phone: phone, whats: signupState.whats, email: signupState.email, method: signupState.method, juz: juz, surah: surah, notes: notes, status: 'pending', time: time });
+  requests.push({ id: 'jr' + Date.now(), role: role, name: name, guardianName: role === 'student' ? relationshipName : '', studentName: role === 'parent' ? relationshipName : '', relationshipName: relationshipName, nid: nid, nationalCountry: window.CountryFields?.getCountryCode('signupNid') || '', nationalDocumentType: window.CountryFields?.getDocumentLabel('signupNid') || 'وثيقة الهوية', phone: phone, phoneCountry: window.CountryFields?.getCountryCode('signupPhone') || '', whats: signupState.whats, email: signupState.email, method: signupState.method, juz: juz, surah: surah, notes: notes, status: 'pending', time: time });
   setData('joinRequests', requests);
 
   const msgs = getData('messages');
@@ -1294,9 +1306,10 @@ function getAdminWhatsapp() {
 }
 function saveAdminWhatsapp() {
   const input = document.getElementById('adminWhatsInput');
-  const num = String(input.value || '').replace(/\D/g, '');
+  const international = validatedPhoneValue('adminWhatsInput', true);
+  const num = String(international || '').replace(/\D/g, '');
   const box = document.getElementById('adminsAlert');
-  if(num.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح بصيغة الدولة (مثال: 201554542019)</div>'; return; }
+  if(!international) { box.innerHTML = '<div class="alert alert-danger">❌ اختر البلد وأدخل رقم واتساب صحيحًا تابعًا لها</div>'; return; }
   setData('adminWhatsapp', num);
   input.value = num;
   box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب المسؤول: ' + num + '</div>';
@@ -1316,11 +1329,10 @@ function renderAdmins() {
 }
 
 function addAdmin() {
-  const mobile = document.getElementById('newAdminMobile').value.trim();
+  const mobile = validatedPhoneValue('newAdminMobile', true);
   const pass = document.getElementById('newAdminPass').value.trim();
   const type = document.getElementById('newAdminType').value;
-  if(!mobile || !pass) return alert('يرجى ملء جميع الحقول');
-  if(mobile.length !== 11) return alert('رقئ الموبايل يجب أن يكون 11 رقم');
+  if(!mobile || !pass) return alert('يرجى إدخال رقم هاتف صحيح حسب البلد وجميع الحقول المطلوبة');
   const admins = getData('admins');
   if(admins.find(a => a.mobile === mobile)) return alert('هذا الرقم مسجل مسبقاً');
   admins.push({id: Date.now(), mobile, password: pass, isMain: type === 'main'});
@@ -1340,8 +1352,8 @@ function editAdmin(id) {
   const newPass = prompt('الرقم السري الجديد:', a.password);
   if(newPass === null) return;
   const newType = confirm('هل تريد جعله مسؤول رئيسي؟ (موافق = رئيسي، إ��غاء = فرعي)');
-  if(newMobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
-  if(admins.find(x => x.id !== id && x.mobile === newMobile)) return alert('هذا الرقم مسجل لمسؤول آخر');
+  if(!/^\+?[0-9][0-9 ()-]{6,19}$/.test(newMobile.trim())) return alert('أدخل رقم هاتف دوليًا صحيحًا، ويُفضّل تعديله من شاشة الإعدادات باختيار البلد');
+  if(admins.find(x => x.id !== id && x.mobile === newMobile.trim())) return alert('هذا الرقم مسجل لمسؤول آخر');
   a.mobile = newMobile; a.password = newPass; a.isMain = newType;
   setData('admins', admins); renderAdmins(); alert('تم التعديل بنجاح');
 }
@@ -1354,10 +1366,12 @@ function deleteAdmin(id) {
 }
 
 function adminLogin() {
-  const mobile = document.getElementById('adminMobile').value.trim();
+  const mobileRaw = document.getElementById('adminMobile').value.trim();
+  const mobileInternational = validatedPhoneValue('adminMobile', true);
+  const mobile = mobileInternational || mobileRaw;
   const pass = document.getElementById('adminPass').value;
   const admins = getData('admins');
-  const admin = admins.find(a => a.mobile === mobile && a.password === pass);
+  const admin = admins.find(a => (a.mobile === mobile || a.mobile === mobileRaw) && a.password === pass);
   if(admin) {
     currentUser = admin; currentType = 'admin'; currentAdminId = admin.id;
     saveSessionState();
@@ -1456,11 +1470,12 @@ function saveAdminSettings() {
   const admins = getData('admins');
   const idx = admins.findIndex(a => a.id === currentAdminId);
   if(idx === -1) return;
-  const confirmMobile = document.getElementById('confirmMobile').value.trim();
+  const confirmMobileRaw = document.getElementById('confirmMobile').value.trim();
+  const confirmMobile = validatedPhoneValue('confirmMobile', true) || confirmMobileRaw;
   const confirmPass = document.getElementById('confirmPass').value;
-  const newMobile = document.getElementById('newMobile').value.trim();
+  const newMobile = validatedPhoneValue('newMobile', false);
   const newPass = document.getElementById('newPass').value;
-  if(confirmMobile !== admins[idx].mobile) {
+  if(confirmMobile !== admins[idx].mobile && confirmMobileRaw !== admins[idx].mobile) {
     document.getElementById('adminSettingsAlert').innerHTML = '<div class="alert alert-danger">❌ رقم الموبايل الحالي غير صحيح</div>';
     return;
   }
@@ -1469,8 +1484,8 @@ function saveAdminSettings() {
     return;
   }
   let changed = false;
+  if(newMobile === null) return;
   if(newMobile) {
-    if(newMobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
     if(admins.find((a, i) => i !== idx && a.mobile === newMobile)) return alert('هذا الرقم مسجل لمسؤول آخر');
     admins[idx].mobile = newMobile; changed = true;
   }
@@ -1593,7 +1608,7 @@ async function saveStudent() {
   const name = document.getElementById('stName').value.trim();
   const username = document.getElementById('stUsername').value.trim();
   const national = document.getElementById('stNational').value.trim();
-  const phone = document.getElementById('stPhone').value.trim();
+  const phone = validatedPhoneValue('stPhone', false);
   const birth = document.getElementById('stBirth').value;
   const age = document.getElementById('stAge').value;
   const studentPass = document.getElementById('stStudentPass').value;
@@ -1604,8 +1619,8 @@ async function saveStudent() {
   const selectedSubjects = Array.from(subjectSelect.selectedOptions).map(o => parseInt(o.value));
 
   if(!name || !username || !national || !birth || !parent || !parentPass || !studentPass || selectedSubjects.length === 0) return fail('يرجى ملء جميع الحقول المطلوبة');
-  if(national.length !== 14) return fail('الرقم القومي يجب أن يكون 14 رقم بالضبط');
-  if(phone && phone.length !== 11) return fail('رقم الهاتف يجب أن يكون 11 رقم');
+  if(window.CountryFields && !window.CountryFields.validate('stNational')) return fail('تحقق من وثيقة الهوية والبلد المختار');
+  if(phone === null) return fail('تحقق من رقم الهاتف والبلد المختار');
 
   const students = getData('students');
   if(students.find(s => s.national === national)) return fail('هذا الرقم القومي مسجل مسبقاً');
@@ -1635,6 +1650,9 @@ async function saveStudent() {
 
   const newStudent = {
     id: Date.now(), name, username, national, phone, birth, age, studentPass, parent, parentPass,
+    nationalCountry: window.CountryFields?.getCountryCode('stNational') || '',
+    nationalDocumentType: window.CountryFields?.getDocumentLabel('stNational') || 'وثيقة الهوية',
+    phoneCountry: window.CountryFields?.getCountryCode('stPhone') || '',
     subjectIds: selectedSubjects, subjects: selectedSubData,
     notes, createdAt: new Date().toLocaleString('ar-EG'),
     juz: isQuran ? (document.getElementById('stJuz').value || '') : '',
@@ -1668,6 +1686,10 @@ function openEdit(id) {
   document.getElementById('editUsername').value = s.username || '';
   document.getElementById('editNational').value = s.national;
   document.getElementById('editPhone').value = s.phone || '';
+  if(window.CountryFields) {
+    window.CountryFields.setCountry('editNational', s.nationalCountry || '');
+    window.CountryFields.setCountry('editPhone', s.phoneCountry || '');
+  }
   document.getElementById('editBirth').value = s.birth || '';
   document.getElementById('editAge').value = s.age || '';
   document.getElementById('editStudentPass').value = s.studentPass || '';
@@ -1722,17 +1744,20 @@ function updateStudent() {
   const idx = students.findIndex(s => s.id === id);
   if(idx === -1) return;
   const national = document.getElementById('editNational').value.trim();
-  const phone = document.getElementById('editPhone').value.trim();
+  const phone = validatedPhoneValue('editPhone', false);
   const studentPass = document.getElementById('editStudentPass').value;
   const parentPass = document.getElementById('editParentPass').value.trim();
-  if(national.length !== 14) return alert('الرقم القومي يجب أن يكون 14 رقم');
-  if(phone && phone.length !== 11) return alert('رقم الهاتف يجب أن يكون 11 رقم');
+  if(window.CountryFields && !window.CountryFields.validate('editNational')) return;
+  if(phone === null) return;
   // ✅ مسموح تابق الرقم السري للطالب مع ولي الأمر
 
   students[idx].name = document.getElementById('editName').value.trim();
   students[idx].username = document.getElementById('editUsername').value.trim();
   students[idx].national = national;
+  students[idx].nationalCountry = window.CountryFields?.getCountryCode('editNational') || students[idx].nationalCountry || '';
+  students[idx].nationalDocumentType = window.CountryFields?.getDocumentLabel('editNational') || students[idx].nationalDocumentType || 'وثيقة الهوية';
   students[idx].phone = phone;
+  students[idx].phoneCountry = window.CountryFields?.getCountryCode('editPhone') || students[idx].phoneCountry || '';
   students[idx].birth = document.getElementById('editBirth').value;
   students[idx].age = document.getElementById('editAge').value;
   students[idx].studentPass = document.getElementById('editStudentPass').value;
@@ -3031,7 +3056,7 @@ async function toggleVoiceMsg(key) {
       voiceMsgStore[key] = await blobToDataURL(blob);
       delete voiceMsgRecorders[key];
       renderVoiceBox(key);
-      showToast('🎙️ تم تسجيل الرسالة الصوتية — اضغط إرسال', 'success');
+      showToast('🎙️ ت�� تسجيل الرسالة الصوتية — اضغط إرسال', 'success');
     };
     recorder.start();
     registerAudioRecorder('message-'+key,recorder,stream,{statusId:'vmStatus_'+key,buttonId:'vmBtn_'+key,maxMs:180000});
@@ -3685,9 +3710,9 @@ function renderSubjects() {
 function addSubject() {
   const name = document.getElementById('newSubName').value.trim();
   const teacher = document.getElementById('newSubTeacher').value.trim();
-  const phone = document.getElementById('newSubPhone').value.trim();
+  const phone = validatedPhoneValue('newSubPhone', false);
   if(!name || !teacher) return alert('يرجى ملء اسم المادة والمدرس');
-  if(phone && phone.length !== 11) return alert('رقم الهاتف يجب أن يكون 11 رقم');
+  if(phone === null) return alert('تحقق من رقم هاتف المدرس والبلد المختار');
   const subjects = getData('subjects');
   subjects.push({id: Date.now(), name, teacher, phone, isAdmin: false});
   setData('subjects', subjects);
@@ -3708,7 +3733,7 @@ function editSubject(id) {
   if(newTeacher === null) return;
   const newPhone = prompt('رقم هاتف المدرس:', s.phone || '');
   if(newPhone === null) return;
-  if(newPhone && newPhone.length !== 11) return alert('رقم الهاتف يجب أن يءءون 11 رقم');
+  if(newPhone && !/^\+?[0-9][0-9 ()-]{6,19}$/.test(newPhone.trim())) return alert('أدخل رقم هاتف دوليًا صحيحًا');
 
   const makeAdmin = confirm('هل تريد تعيين هذا المعلم كمسؤول في النظام؟');
   if(makeAdmin) {
@@ -5191,7 +5216,7 @@ function generateAIResponse(text, student) {
   }
   // التقدم عبر الجلسات
   if(has('تقد','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
-    if(finalizedSessions.length < 2) return ' أحتاج تسميعءءن نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
+    if(finalizedSessions.length < 2) return ' أحتاج تسميعءءن نهائيين على الأقل لأقارن تقدمك. س��ّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];

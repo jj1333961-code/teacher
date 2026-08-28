@@ -5,21 +5,55 @@ const names = new Intl.DisplayNames([locale, 'ar', 'en'], { type: 'region' });
 const countries = getCountries().map((iso) => ({ iso, name: names.of(iso) || iso, dial: getCountryCallingCode(iso) })).sort((a, b) => a.name.localeCompare(b.name, locale));
 
 const nationalIdRules = {
-  EG: { label: 'الرقم القومي المصري', pattern: /^\d{14}$/, hint: '14 رقمًا' },
-  SA: { label: 'رقم الهوية/الإقامة السعودي', pattern: /^[12]\d{9}$/, hint: '10 أرقام ويبدأ بـ 1 أو 2' },
-  AE: { label: 'رقم الهوية الإماراتية', pattern: /^784\d{12}$/, hint: '15 رقمًا ويبدأ بـ 784' },
-  QA: { label: 'رقم البطاقة القطرية', pattern: /^\d{11}$/, hint: '11 رقمًا' },
+  EG: { label: 'الرقم القومي المصري', pattern: /^\d{14}$/, hint: '14 رقمًا', example: '29801011234567' },
+  SA: { label: 'رقم الهوية الوطنية أو الإقامة', pattern: /^[12]\d{9}$/, hint: '10 أرقام ويبدأ بـ 1 للمواطن أو 2 للمقيم' },
+  AE: { label: 'رقم الهوية الإماراتية', pattern: /^784[- ]?\d{4}[- ]?\d{7}[- ]?\d$/, hint: '15 رقمًا يبدأ بـ 784، ويمكن كتابة الشرطات' },
+  QA: { label: 'الرقم الشخصي القطري', pattern: /^\d{11}$/, hint: '11 رقمًا' },
   KW: { label: 'الرقم المدني الكويتي', pattern: /^[123]\d{11}$/, hint: '12 رقمًا' },
+  BH: { label: 'الرقم الشخصي البحريني', pattern: /^\d{9}$/, hint: '9 أرقام' },
+  OM: { label: 'الرقم المدني العُماني', pattern: /^\d{8,9}$/, hint: '8 أو 9 أرقام' },
   JO: { label: 'الرقم الوطني الأردني', pattern: /^\d{10}$/, hint: '10 أرقام' },
   DZ: { label: 'رقم التعريف الوطني الجزائري', pattern: /^\d{18}$/, hint: '18 رقمًا' },
-  TN: { label: 'رقم بطاقة التعريف التونسية', pattern: /^\d{8}$/, hint: '8 أرقام' },
-  TR: { label: 'رقم الهوية التركي', pattern: /^[1-9]\d{10}$/, hint: '11 رقمًا' },
-  DE: { label: 'رقم الهوية الألماني', pattern: /^[A-Z0-9]{9,10}$/i, hint: '9 إلى 10 أحرف أو أرقام' },
-  GB: { label: 'رقم الهوية/التأمين الوطني', pattern: /^[A-Z0-9]{6,12}$/i, hint: '6 إلى 12 حرفًا أو رقمًا' },
-  US: { label: 'رقم الهوية الوطني/الضريبي', pattern: /^\d{9}$/, hint: '9 أرقام' },
-  CA: { label: 'رقم الهوية/التأمين الكندي', pattern: /^\d{9}$/, hint: '9 أرقام' },
-  MA: { label: 'رقم البطاقة الوطنية المغربية', pattern: /^[A-Z]{1,2}\d{5,8}$/i, hint: 'حرف أو حرفان ثم 5 إلى 8 أرقام' }
+  TN: { label: 'رقم بطاقة التعريف الوطنية', pattern: /^\d{8}$/, hint: '8 أرقام' },
+  MA: { label: 'رقم البطاقة الوطنية المغربية', pattern: /^[A-Z]{1,2}\d{5,8}$/i, hint: 'حرف أو حرفان ثم 5 إلى 8 أرقام' },
+  TR: { label: 'رقم الهوية التركي', pattern: /^[1-9]\d{10}$/, hint: '11 رقمًا ولا يبدأ بصفر' },
+  IN: { label: 'رقم Aadhaar', pattern: /^[2-9]\d{11}$/, hint: '12 رقمًا ولا يبدأ بـ 0 أو 1' },
+  PK: { label: 'رقم CNIC', pattern: /^\d{5}-?\d{7}-?\d$/, hint: '13 رقمًا، ويمكن كتابة الشرطات' },
+  BD: { label: 'رقم بطاقة الهوية الوطنية', pattern: /^(?:\d{10}|\d{13}|\d{17})$/, hint: '10 أو 13 أو 17 رقمًا' },
+  CN: { label: 'رقم بطاقة هوية المواطن', pattern: /^\d{17}[0-9X]$/i, hint: '18 خانة، وقد تنتهي بحرف X' },
+  HK: { label: 'رقم HKID', pattern: /^[A-Z]{1,2}\d{6}\(?[0-9A]\)?$/i, hint: 'حرف أو حرفان، 6 أرقام، ثم رقم تحقق أو A' },
+  SG: { label: 'رقم NRIC أو FIN', pattern: /^[STFGM]\d{7}[A-Z]$/i, hint: 'حرف، 7 أرقام، ثم حرف تحقق' },
+  MY: { label: 'رقم MyKad', pattern: /^\d{6}-?\d{2}-?\d{4}$/, hint: '12 رقمًا، ويمكن كتابة الشرطات' },
+  ID: { label: 'رقم NIK', pattern: /^\d{16}$/, hint: '16 رقمًا' },
+  PH: { label: 'رقم PhilSys', pattern: /^\d{12}$/, hint: '12 رقمًا' },
+  JP: { label: 'رقم My Number', pattern: /^\d{12}$/, hint: '12 رقمًا' },
+  KR: { label: 'رقم تسجيل المقيم', pattern: /^\d{6}-?\d{7}$/, hint: '13 رقمًا، ويمكن كتابة الشرطة' },
+  BR: { label: 'رقم CPF', pattern: /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, hint: '11 رقمًا، ويمكن كتابة النقاط والشرطة' },
+  AR: { label: 'رقم DNI', pattern: /^\d{7,8}$/, hint: '7 أو 8 أرقام' },
+  CL: { label: 'رقم RUN/RUT', pattern: /^\d{7,8}-?[0-9K]$/i, hint: '7 أو 8 أرقام ثم رقم تحقق أو K' },
+  CO: { label: 'رقم بطاقة المواطنة', pattern: /^\d{6,10}$/, hint: 'من 6 إلى 10 أرقام' },
+  MX: { label: 'رقم CURP', pattern: /^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d$/i, hint: '18 حرفًا ورقمًا بصيغة CURP' },
+  ZA: { label: 'رقم الهوية الجنوب أفريقي', pattern: /^\d{13}$/, hint: '13 رقمًا' },
+  NG: { label: 'رقم NIN', pattern: /^\d{11}$/, hint: '11 رقمًا' },
+  GH: { label: 'رقم Ghana Card', pattern: /^GHA-?\d{9}-?\d$/i, hint: 'GHA ثم 10 أرقام' },
+  KE: { label: 'رقم الهوية الوطنية', pattern: /^\d{7,8}$/, hint: '7 أو 8 أرقام' },
+  ES: { label: 'رقم DNI أو NIE', pattern: /^(?:\d{8}[A-Z]|[XYZ]\d{7}[A-Z])$/i, hint: '8 أرقام وحرف، أو X/Y/Z ثم 7 أرقام وحرف' },
+  IT: { label: 'الرمز الضريبي Codice Fiscale', pattern: /^[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]$/i, hint: '16 حرفًا ورقمًا' },
+  PL: { label: 'رقم PESEL', pattern: /^\d{11}$/, hint: '11 رقمًا' },
+  SE: { label: 'الرقم الشخصي', pattern: /^\d{6,8}[-+]?\d{4}$/, hint: '10 أو 12 رقمًا، وقد يتضمن شرطة أو علامة +' },
+  NO: { label: 'رقم الميلاد أو D-number', pattern: /^\d{11}$/, hint: '11 رقمًا' },
+  DK: { label: 'رقم CPR', pattern: /^\d{6}-?\d{4}$/, hint: '10 أرقام، ويمكن كتابة الشرطة' },
+  FI: { label: 'رمز الهوية الشخصية', pattern: /^\d{6}[A+-]\d{3}[0-9A-Z]$/i, hint: 'تاريخ من 6 أرقام، رمز قرن، ثم 4 خانات' },
+  IL: { label: 'رقم الهوية الإسرائيلية', pattern: /^\d{9}$/, hint: '9 أرقام' }
 };
+
+const passportPreferredCountries = new Set(['US','GB','CA','AU','NZ','IE','DE','FR','NL','BE','CH','AT','PT','GR','IS','LU','LI','MC','VA','SM','AD']);
+
+function documentRule(iso) {
+  if (nationalIdRules[iso]) return nationalIdRules[iso];
+  if (passportPreferredCountries.has(iso)) return { label: 'رقم جواز السفر أو وثيقة الهوية الرسمية', fallback: true, hint: 'من 4 إلى 30 حرفًا أو رقمًا كما يظهر في الوثيقة' };
+  return { label: 'رقم الهوية الشخصية أو جواز السفر', fallback: true, hint: 'من 4 إلى 30 حرفًا أو رقمًا كما يظهر في الوثيقة الرسمية' };
+}
 
 function options(selected = '', useDialValue = false) {
   return '<option value="">اختر البلد أولًا</option>' + countries.map((country) => `<option value="${useDialValue ? country.dial : country.iso}" data-iso="${country.iso}" data-dial="${country.dial}" ${country.iso === selected ? 'selected' : ''}>${country.name} (+${country.dial})</option>`).join('');
@@ -55,13 +89,17 @@ function enhance(input, kind) {
   const labelText = input.closest('.form-group')?.querySelector('label')?.textContent || '';
   input.dataset.countryRequired = String(input.required || labelText.includes('*') || /^(adminMobile|confirmMobile|newAdminMobile)$/.test(input.id));
   input.removeAttribute('maxlength');
+  input.removeAttribute('minlength');
+  input.removeAttribute('pattern');
+  input.removeAttribute('oninput');
+  input.oninput = null;
   input.setAttribute('autocomplete', kind === 'phone' ? 'tel-national' : 'off');
   input.setAttribute('inputmode', kind === 'phone' ? 'tel' : 'text');
   const existing = kind === 'phone' ? document.getElementById(`${input.id}Country`) : null;
   const select = existing || document.createElement('select');
+  select.classList.add('country-field-select');
   if (!existing) {
     select.id = `${input.id}Country`;
-    select.className = 'country-field-select';
     select.setAttribute('aria-label', `بلد ${kind === 'phone' ? 'رقم الهاتف' : 'وثيقة الهوية'}`);
     input.insertAdjacentElement('beforebegin', select);
   }
@@ -82,10 +120,17 @@ function updateFieldGuide(input, select, message) {
   const iso = selectedIso(select);
   const country = countries.find((item) => item.iso === iso);
   if (!country) { message.textContent = 'اختيار البلد مطلوب قبل إدخال الرقم.'; return; }
-  if (input.dataset.countryKind === 'phone') message.textContent = `أدخل الرقم المحلي لـ ${country.name} بدون كود الدولة (+${country.dial}).`;
-  else {
-    const rule = nationalIdRules[country.iso];
-    message.textContent = rule ? `${rule.label}: ${rule.hint}.` : `أدخل رقم وثيقة الهوية الرسمي في ${country.name} (قد يتكون من أحرف وأرقام).`;
+  if (input.dataset.countryKind === 'phone') {
+    input.placeholder = `رقم محلي صالح في ${country.name}`;
+    input.setAttribute('inputmode', 'tel');
+    message.textContent = `أدخل الرقم المحلي لـ ${country.name} بدون كود الدولة (+${country.dial})؛ الطول يتحدد تلقائيًا حسب شبكة البلد.`;
+  } else {
+    const rule = documentRule(country.iso);
+    input.placeholder = rule.label;
+    input.setAttribute('inputmode', /^\^?\\d|رقمًا/.test(String(rule.pattern || rule.hint)) && !/[A-Z]/.test(String(rule.pattern || '')) ? 'numeric' : 'text');
+    const label = input.closest('.form-group')?.querySelector('label');
+    if (label) label.textContent = `${rule.label}${input.dataset.countryRequired === 'true' ? ' *' : ''}`;
+    message.textContent = `${rule.label} في ${country.name}: ${rule.hint}.${rule.example ? ` مثال: ${rule.example}.` : ''}`;
   }
 }
 
@@ -140,7 +185,38 @@ function init() {
     if (!button || !button.closest('.page:not(.hidden)')) return;
     if (!validateVisiblePage()) { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
-  window.CountryFields = { validateVisiblePage, getInternationalValue(id) { return document.getElementById(id)?.dataset.internationalValue || ''; } };
+  window.CountryFields = {
+    validateVisiblePage,
+    validate(id) {
+      const input = document.getElementById(id);
+      const select = document.getElementById(`${id}Country`);
+      const message = document.getElementById(`${id}-country-message`);
+      return Boolean(input && select && message && validateField(input, select, message, true));
+    },
+    getInternationalValue(id) {
+      const input = document.getElementById(id);
+      if (input && !input.dataset.internationalValue) this.validate(id);
+      return input?.dataset.internationalValue || '';
+    },
+    getCountryCode(id) {
+      const select = document.getElementById(`${id}Country`);
+      return select ? selectedIso(select) : '';
+    },
+    getDocumentLabel(id) {
+      const iso = this.getCountryCode(id);
+      return iso ? documentRule(iso).label : 'وثيقة الهوية';
+    },
+    setCountry(id, iso) {
+      const input = document.getElementById(id);
+      const select = document.getElementById(`${id}Country`);
+      if (!input || !select || !iso) return;
+      const option = [...select.options].find((item) => item.dataset.iso === iso);
+      if (option) {
+        select.value = option.value;
+        select.dispatchEvent(new Event('change'));
+      }
+    }
+  };
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
