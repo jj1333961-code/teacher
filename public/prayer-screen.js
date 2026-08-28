@@ -23,7 +23,7 @@
 
   var LS_ADHAN = "thimar_prayer_adhan_enabled"; // "1" مفعّل / "0" معطّل
   var LS_SHOWN = "thimar_prayer_shown";          // منع التكرار: "YYYY-MM-DD:Key"
-  var DEFAULT_ADHAN = "/audio/adhan.mp3";
+  var DEFAULT_ADHAN = "/audio/671356.MP3";
   var FALLBACK_ADHAN = "/audio/notification-chime.mp3";
 
   /* ---------- المحتوى الديني لكل صلاة (يتغيّر تلقائيًا) ---------- */
