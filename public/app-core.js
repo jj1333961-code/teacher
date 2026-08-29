@@ -244,24 +244,36 @@ function initLanguage(){
 let neonSaveTimer = null;
 let neonSaveInFlight = false;
 let neonSaveQueued = false;
+let neonHydrationController = null;
 const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests','notifications','aiQuestionHistory'];
+const CLOUD_DATA_MAX_BYTES = 2_000_000;
 function getData(key, def) { try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); } catch (e) { console.warn('تعذر قراءة البيانات المحلية للمفتاح:', key, e); return def || []; } }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
   if(neonSaveInFlight){ neonSaveQueued=true; return; }
+  const data = collectCloudData();
+  let serialized;
+  try { serialized = JSON.stringify({data}); } catch (error) { console.warn('[v0] cloud data serialization failed:', error); return; }
+  if (serialized.length > CLOUD_DATA_MAX_BYTES) {
+    console.warn('[v0] cloud sync skipped because payload exceeds the safety limit');
+    return;
+  }
   neonSaveInFlight=true;
   const status=document.getElementById('cloudSaveStatus');
   const controller = new AbortController();
   const timeout = window.setTimeout(function(){ controller.abort(); }, 8000);
-  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()}),signal:controller.signal}); if(!res.ok)throw new Error(); if(status)status.textContent='محفوظ في Neon'; }
+  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:serialized,signal:controller.signal}); if(!res.ok)throw new Error(); if(status)status.textContent='محفوظ في Neon'; }
   catch(e){ if(status)status.textContent='تعذر الحفظ في Neon'; }
   finally{ window.clearTimeout(timeout); neonSaveInFlight=false; if(neonSaveQueued){ neonSaveQueued=false; clearTimeout(neonSaveTimer); neonSaveTimer=window.setTimeout(saveAllDataToNeon,700); } }
 }
 function setData(key, val) { try{localStorage.setItem(key, JSON.stringify(val));}catch(e){console.warn('تعذر حفظ البيانات محلياً:',key,e);return;} if(sessionStorage.getItem('neon_unavailable_v1')==='1') return; clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,700); }
 async function hydrateDataFromNeon(){
   if(sessionStorage.getItem('neon_hydrated_v1'))return;
-  try{ const res=await fetch('/api/data',{cache:'no-store'}); const body=await res.json(); if(res.ok&&body.data){ const before=JSON.stringify(collectCloudData()); Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); }); sessionStorage.setItem('neon_hydrated_v1','1'); const changed=before!==JSON.stringify(collectCloudData()); if(changed && !sessionStorage.getItem('neon_reload_done_v1')){ sessionStorage.setItem('neon_reload_done_v1','1'); location.reload(); } } else if(body.unavailable){ sessionStorage.setItem('neon_hydrated_v1','1'); sessionStorage.setItem('neon_unavailable_v1','1'); } else { sessionStorage.setItem('neon_hydrated_v1','1'); await saveAllDataToNeon(); } }
-  catch(e){ sessionStorage.setItem('neon_hydrated_v1','1'); }
+  neonHydrationController = new AbortController();
+  const hydrationTimeout = window.setTimeout(function(){ neonHydrationController?.abort(); }, 8000);
+  try{ const res=await fetch('/api/data',{cache:'no-store',signal:neonHydrationController.signal}); const body=await res.json(); if(res.ok&&body.data){ const before=JSON.stringify(collectCloudData()); Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); }); sessionStorage.setItem('neon_hydrated_v1','1'); const changed=before!==JSON.stringify(collectCloudData()); if(changed && !sessionStorage.getItem('neon_reload_done_v1')){ sessionStorage.setItem('neon_reload_done_v1','1'); location.reload(); } } else if(body.unavailable){ sessionStorage.setItem('neon_hydrated_v1','1'); sessionStorage.setItem('neon_unavailable_v1','1'); } else { sessionStorage.setItem('neon_hydrated_v1','1'); await saveAllDataToNeon(); } }
+  catch(e){ if (e?.name !== 'AbortError') sessionStorage.setItem('neon_hydrated_v1','1'); }
+  finally { window.clearTimeout(hydrationTimeout); neonHydrationController = null; }
 }
   // لا نؤخر شاشة الترحيب بسبب الشبكة؛ تتم المزامنة بعد أول رسم وفي وقت خمول المتصفح.
   const scheduleHydration = window.requestIdleCallback || function(cb){ window.setTimeout(cb, 1200); };
@@ -482,7 +494,9 @@ function cleanupPageResources(nextPage) {
 
 window.addEventListener('pagehide', function () {
   cleanupPageResources('unloaded');
-}, { once: true });
+  if (neonSaveTimer) { clearTimeout(neonSaveTimer); neonSaveTimer = null; }
+  if (neonHydrationController) { neonHydrationController.abort(); neonHydrationController = null; }
+});
 
 function showPage(id, options = {}) {
   cleanupPageResources(id);
@@ -2035,7 +2049,7 @@ function renderRecordElementHTML(el, i, num) {
     }
     html += '</select>';
   } else {
-    html += '<input type="number" value="'+el.from+'" onchange="updateRecordElement('+i+', ' + "'" + 'from' + "'" + ', this.value)" placeholder="رقم الآية" min="1">';
+    html += '<input type="number" value="'+el.from+'" onchange="updateRecordElement('+i+', ' + "'" + 'from' + "'" + ', this.value)" placeholder="��قم الآية" min="1">';
   }
   html += '</div>';
 
@@ -2420,7 +2434,7 @@ function renderExamPlanRows(){
       '<div class="form-group"><label>وقت السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" title="الساعات" type="number" min="0" max="23" value="'+Math.floor((r.timeLimit||60)/3600)+'" onchange="setExamPlanTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" title="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((r.timeLimit||60)%3600)/60)+'" onchange="setExamPlanTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" title="الثواني" type="number" min="0" max="59" value="'+((r.timeLimit||60)%60)+'" onchange="setExamPlanTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+
       (r.type==='mcq'?'<div class="form-group"><label>عدد الاختيارات</label><input type="number" min="2" max="6" value="'+(r.optionsCount||4)+'" onchange="examPlanRows['+i+'].optionsCount=Math.max(2,Math.min(6,parseInt(this.value)||4))"></div>':'')+
       (r.type==='complete'?'<div class="form-group"><label>عدد الآيات المراد إكمالها</label><input type="number" min="1" max="20" value="'+(r.completeAyahs||1)+'" onchange="examPlanRows['+i+'].completeAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">يحدد عدد الآيات التي سيكملها الطالب بعد بداية السؤال</small></div>':'')+
-      (r.type==='audio'?'<div class="form-group"><label>عدد الآات المطلوب تسجيلها</label><input type="number" min="1" max="20" value="'+(r.reciteAyahs||1)+'" onchange="examPlanRows['+i+'].reciteAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">عدد الآيات التي سيقرأها الطالب</small></div>':'')+
+      (r.type==='audio'?'<div class="form-group"><label>عدد الآات المطلوب تسجيلها</label><input type="number" min="1" max="20" value="'+(r.reciteAyahs||1)+'" onchange="examPlanRows['+i+'].reciteAyahs=Math.max(1,Math.min(20,parseInt(this.value)||1))"><small style="color:var(--text-light)">عدد الآيات الت�� سيقرأها الطالب</small></div>':'')+
       (r.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="examPlanRows['+i+'].audioShareWithParent=this.value===\'true\'"><option value="true" '+(r.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(r.audioShareWithParent===false?'selected':'')+'>إخفاء عن ولي الأمر</option></select></div>':'')+
       '<div class="form-group"><label>فحص الغش</label><select onchange="examPlanRows['+i+'].proctorEnabled=this.value===\'true\'"><option value="true" '+(r.proctorEnabled!==false?'selected':'')+'>مفعّل لهذا السؤال</option><option value="false" '+(r.proctorEnabled===false?'selected':'')+'>غير مفعّل</option></select></div>'+
       '<div class="form-group" style="display:flex;align-items:flex-end"><button class="btn btn-xs btn-danger" onclick="deleteExamPlanRow('+i+')">حذف الخانة</button></div>'+
@@ -2894,7 +2908,7 @@ function openHistory(id) {
         });
         html += '<div style="text-align:center; margin-top:15px; padding-top:15px; border-top:2px dashed var(--border);">';
         html += '<span class="score-badge">المجوع: '+sess.totalScore+' درجة</span>';
-        if(sess.finalizedAt) html += '<p style="margin-top:8px; color:var(--success); font-size:0.9rem;">✅ تم الإغلاق النهائي تءءريخ: '+sess.finalizedAt+'</p>';
+        if(sess.finalizedAt) html += '<p style="margin-top:8px; color:var(--success); font-size:0.9rem;">✅ تم الإغلاق النهائي تءءر��خ: '+sess.finalizedAt+'</p>';
         if(sess.notes) html += '<p style="margin-top:10px; color:var(--text-light);"><strong>ملاحظات:</strong> '+sess.notes+'</p>';
         html += '</div>';
       });
@@ -4218,7 +4232,7 @@ function startArabicASR() {
   } catch(e) { return null; }
 }
 
-// إرسال الصوت إلى Gemini على الخادم للتفريغ وتءءحيح التلاوة.
+// إرسال الصوت إلى Gemini على الخادم للتفريغ وتءءحيح الت��اوة.
 async function serverRecitationAnalysis(blob, task) {
   try {
     const audio=await voiceAudioPayload(blob);
@@ -4336,7 +4350,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
     saveSessionState();
   }
   proctorStop(true);
-  showToast('✅ تم التحقق من الصوت والمحتوى وإرسال التسجيل للمسؤول', 'success');
+  showToast('✅ تم التحقق من الصوت والمحتوى وإرسال ال��سجيل للمسؤول', 'success');
   renderStudentTasks();
   return true;
 }

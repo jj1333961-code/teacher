@@ -5,7 +5,9 @@ import { antiCheatEvents, antiCheatGlobalConfig, antiCheatItemConfigs, antiCheat
 import { calculateRiskScore, defaultAntiCheatConfig, normalizeServerConfig, severityFor, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
 
 const id = () => crypto.randomUUID()
+const MAX_BODY_BYTES = 256_000
 const clamp = (value: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(value) || 0))
+const bodyTooLarge = (request: Request) => Number(request.headers.get('content-length') || 0) > MAX_BODY_BYTES
 const validType = (value: unknown) => value === 'recitation' || value === 'exam' || value === 'task'
 const safeConfig = (value: unknown): AntiCheatConfig => normalizeServerConfig(value)
 
@@ -26,7 +28,7 @@ export async function GET(request: Request) {
     if (sessionId) {
       const sessions = await db.select().from(antiCheatSessions).where(eq(antiCheatSessions.id, sessionId)).limit(1)
       if (!sessions[0]) return NextResponse.json({ error: 'جلسة المراقبة غير موجودة' }, { status: 404 })
-      const events = await db.select().from(antiCheatEvents).where(eq(antiCheatEvents.sessionId, sessionId)).orderBy(desc(antiCheatEvents.timestamp))
+      const events = await db.select().from(antiCheatEvents).where(eq(antiCheatEvents.sessionId, sessionId)).orderBy(desc(antiCheatEvents.timestamp)).limit(500)
       return NextResponse.json({ session: sessions[0], events })
     }
     if (itemId && itemType && validType(itemType)) return NextResponse.json(await resolveConfig(itemId, itemType))
@@ -39,6 +41,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (bodyTooLarge(request)) return NextResponse.json({ error: 'حجم الطلب كبير جداً' }, { status: 413 })
   try {
     const body = await request.json()
     const { action } = body ?? {}
