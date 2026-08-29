@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إ��سال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -322,8 +322,10 @@ if(!localStorage.getItem('initialized_v7')) {
     if (existing) {
       let changed = false;
       const normalize = function(key, value) { if (!existing[key] && value) { existing[key] = value; changed = true; } };
-      normalize('studentPass', existing.password || 'واحد');
-      normalize('national', existing.nationalId || '778888889999999900');
+  normalize('studentPass', existing.password || '12');
+  if (existing.localSeed && existing.studentPass === 'واحد') { existing.studentPass = '12'; changed = true; }
+  existing.password = existing.studentPass;
+  normalize('national', existing.nationalId || '778888889999999900');
       normalize('birth', existing.birthDate || '2006-12-12');
       normalize('parent', existing.parentName || 'شعبان');
       normalize('parentPass', 'واحد');
@@ -348,8 +350,8 @@ if(!localStorage.getItem('initialized_v7')) {
       birth: '2006-12-12',
       birthDate: '2006-12-12',
       age: 19,
-      studentPass: 'واحد',
-      password: 'واحد',
+  studentPass: '12',
+  password: '12',
       parent: 'شعبان',
       parentName: 'شعبان',
       parentPass: 'واحد',
@@ -1018,7 +1020,7 @@ function submitAccountRecovery() {
   const roleLabel=role === 'student' ? 'طالب' : 'ولي أمر';
   const notification={id:'notification_'+now,type:'account_recovery',category:'استرجاع حساب',title:'طلب استرجاع حساب',message:'طلب استرجاع حساب '+roleLabel+' باسم '+name,role:role,roleLabel:roleLabel,name:name,nationalId:nid,phone:phone,time:time,createdAt:new Date().toISOString(),read:false};
   const notifications=getData('notifications', []); notifications.unshift(notification); setData('notifications',notifications);
-  const message='طلب استرجاع حساب في منصة ثمار\nنوع الحساب: '+roleLabel+'\nالاسم: '+name+'\nالرقم القومي: '+nid+'\nرقم الهاتف الدولي: +'+phone+'\nوقت الطلب: '+time+'\n\nيرجى مراجعة البيانات والتواصل مع صاحب الحساب لتعيين رقم سري جديد.';
+  const message='طلب استرجاع حساب في منصة ثمار\n��وع الحساب: '+roleLabel+'\nالاسم: '+name+'\nالرقم القومي: '+nid+'\nرقم الهاتف الدولي: +'+phone+'\nوقت الطلب: '+time+'\n\nيرجى مراجعة البيانات والتواصل مع صاحب الحساب لتعيين رقم سري جديد.';
   const link=buildWaLink(getAdminWhatsapp(),message);
   box.innerHTML='<div class="alert alert-success">تم إرسال طلب استرجاع الحساب إلى المسؤول. <a href="'+link+'" target="_blank" rel="noopener noreferrer"><strong>فتح الرسالة الجاهزة على واتساب</strong></a></div>';
   if(link) window.open(link,'_blank','noopener');
@@ -1737,8 +1739,9 @@ async function saveStudent() {
 }
 
 function openEdit(id) {
+  const studentId = String(id).trim();
   const students = getData('students');
-  const s = students.find(x => x.id === id);
+  const s = students.find(x => String(x.id).trim() === studentId);
   if(!s) return;
   currentUser = s;
   document.getElementById('editId').value = id;
@@ -1795,9 +1798,9 @@ async function toggleEditVoiceRecord(){
 }
 
 function updateStudent() {
-  const id = parseInt(document.getElementById('editId').value);
+  const id = String(document.getElementById('editId').value || '').trim();
   let students = getData('students');
-  const idx = students.findIndex(s => s.id === id);
+  const idx = students.findIndex(s => String(s.id).trim() === id);
   if(idx === -1) return;
   const national = document.getElementById('editNational').value.trim();
   const phone = document.getElementById('editPhone').value.trim();
@@ -1813,7 +1816,8 @@ function updateStudent() {
   students[idx].phone = phone;
   students[idx].birth = document.getElementById('editBirth').value;
   students[idx].age = document.getElementById('editAge').value;
-  students[idx].studentPass = document.getElementById('editStudentPass').value;
+  students[idx].studentPass = studentPass;
+  students[idx].password = studentPass;
   students[idx].parent = document.getElementById('editParent').value.trim();
   students[idx].parentPass = document.getElementById('editParentPass').value.trim();
   students[idx].notes = document.getElementById('editNotes').value.trim();
@@ -1879,8 +1883,9 @@ function renderStudents() {
 
 function deleteStudent(id) {
   if(!confirm('هل أنت متأكد من حذف هذا الطالب وجمي سجلاته؟')) return;
+  const studentId = String(id).trim();
   let students = getData('students');
-  students = students.filter(s => s.id !== id);
+  students = students.filter(s => String(s.id).trim() !== studentId);
   setData('students', students); renderStudents();
 }
 
@@ -1888,8 +1893,9 @@ function deleteStudent(id) {
 const FIXED_ELEMENTS = ['اللوح', 'السورة', 'الماضي القريب', 'الماضي البعيد'];
 
 function openRecord(id) {
+  const studentId = String(id).trim();
   const students = getData('students');
-  const s = students.find(x => x.id === id);
+  const s = students.find(x => String(x.id).trim() === studentId);
   if(!s) return;
   const isQuran = s.subjects && s.subjects.some(sub => sub.name.includes('قرآن'));
   if(!isQuran) { alert('التسميع متاح فقط طلاب القرآن الكريم'); return; }
@@ -1938,7 +1944,10 @@ proctorMaxViolations: 1
 
   renderRecordElements(); renderExtraElements(); renderHomeworkItems(); renderReadingItems();
   initExamBuilder();
-  const mb=students.find(x=>x.id===id).manualBoard||{}; if(document.getElementById('manualBoardText')) document.getElementById('manualBoardText').value=mb.text||''; if(document.getElementById('manualBoardImage')) document.getElementById('manualBoardImage').value=mb.image||'';
+  const recordStudent = students.find(x => String(x.id).trim() === studentId);
+  const mb = recordStudent?.manualBoard || {};
+  if(document.getElementById('manualBoardText')) document.getElementById('manualBoardText').value=mb.text||'';
+  if(document.getElementById('manualBoardImage')) document.getElementById('manualBoardImage').value=mb.image||'';
   document.getElementById('recordAlert').innerHTML = '';
   showPage('recordSession');
 }
@@ -2768,7 +2777,7 @@ function saveSession(isFinal) {
       date, elements: JSON.parse(JSON.stringify(activeElements)), homework: JSON.parse(JSON.stringify(homeworkItems)),
       reading: JSON.parse(JSON.stringify(readingItems)), totalScore, notes, isDraft:true, draftCreatedAt:Date.now(),
       homeworkApproved:false, readingApproved:false, voiceApproved:false, homeworkRejected:false, readingRejected:false,
-      voiceRejected:false, sentToStudent:true, status:'مسودة - قيد التعديل'
+      voiceRejected:false, sentToStudent:true, status:'م��ودة - قيد التعديل'
     });
     students[idx].tasks = [];
     let taskCounter=0;
@@ -2817,7 +2826,7 @@ function sendSystemSessionMessage(student,text){
   setData('messages',messages);
 }
 
-// إعاءءة الصفحة لحالتها الأصلية بعد الحفظ النهائي
+// إعاءءة ��لصفحة لحالتها الأصلية بعد الحفظ النهائي
 function resetRecordForm() {
   const mainSurah = currentRecordMainSurah || '';
   recordElements = FIXED_ELEMENTS.map(name => ({
@@ -2888,9 +2897,10 @@ function renderAdminExamHistory(s) {
   });
   return h+'</section>';
 }
-function openHistory(id) {
+  function openHistory(id) {
+  const studentId = String(id).trim();
   const students = getData('students');
-  const s = students.find(x => x.id === id);
+  const s = students.find(x => String(x.id).trim() === studentId);
   if(!s) return;
   fullChartStudentId = id;
   const sessions = s.sessions || [];
@@ -3457,7 +3467,7 @@ function renderDevPlan(plan){
       plan.applied.forEach(function(a){
         h += '<li><code style="direction:ltr;background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:5px;">'+esc(a.path||'')+'</code>'+
              (a.reason ? ' — '+esc(a.reason) : '')+
-             (a.commitUrl ? ' — <a href="'+esc(a.commitUrl)+'" target="_blank" rel="noopener">عرض الـcommit</a>' : '')+'</li>';
+             (a.commitUrl ? ' — <a href="'+esc(a.commitUrl)+'" target="_blank" rel="noopener">��رض الـcommit</a>' : '')+'</li>';
       });
       h += '</ul>';
     }
@@ -4028,7 +4038,7 @@ function renderStudentTasks() {
       html += status;
 
       if(isRejected) {
-        html += '<div class="task-rejected-alert">⚠️ تم رفض ءءلملف السابق. يرجى إرسال ملف ديد.</div>';
+        html += '<div class="task-rejected-alert">���️ تم رفض ءءلملف السابق. يرجى إرسال ملف ديد.</div>';
         html += '<div style="margin-top:10px;"><div class="file-upload" onclick="document.getElementById(&quot;hwFile_'+originalIdx+'&quot;).click()"><div>📷 اضغط لرفع صءءرة الواجب الجديدة</div></div>';
         html += '<input type="file" id="hwFile_'+originalIdx+'" accept="image/*" style="display:none" onchange="uploadTaskFile('+originalIdx+', this, &quot;homework&quot;)"></div>';
       } else if(!isSubmitted) {
