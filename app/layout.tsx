@@ -46,7 +46,7 @@ export default function RootLayout({
         {children}
         <div className="fixed left-4 top-4 z-50"><LanguageToggle /></div>
         <LanguageRuntime />
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <Analytics />
       </body>
     </html>
   )
