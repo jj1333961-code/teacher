@@ -575,7 +575,7 @@ function showPage(id, options = {}) {
 }
 
 function goBack() {
-  if (window.history.length > 1 && new URLSearchParams(window.location.search).has(PAGE_ROUTE_PARAM)) {
+  if (window.history.length > 1 && (new URLSearchParams(window.location.search).has(PAGE_ROUTE_PARAM) || window.history.state?.page)) {
     window.history.back();
     return;
   }
@@ -615,7 +615,7 @@ function updateBackButton() {
   const btn = document.createElement('div');
   btn.id = 'globalBackBtn';
   btn.className = 'back-btn-container';
-  btn.innerHTML = '<button class="back-btn" onclick="goBack()">🔙 رجوع للصفحة السابقة</button>';
+  btn.innerHTML = '<button class="back-btn" type="button" onclick="goBack()">رجوع للصفحة السابقة</button>';
   document.body.appendChild(btn);
 }
 
@@ -1334,7 +1334,7 @@ async function toggleVoiceRecord() {
     status.textContent = 'تم التسجيل ✅'; 
     return;
   }
-  const allowMic = confirm('🔴 يرجى السماح للموقع بالوصول إلى الميكروفون لتسجءءل البصمة الصوتية.\n\nاضغط "موافق" ثم اختر "السماح" في نافذة المتصفح.');
+  const allowMic = confirm('🔴 يرجى السماح للموقع بالوصول إلى الميكروفون لتسجءءل البصمة الصوتية.\n\n��ضغط "موافق" ثم اختر "السماح" في نافذة المتصفح.');
   if(!allowMic) { status.textContent = 'تم إلغاء التسجيل ❌'; return; }
   try {
     const stream = await safeGetMic();
@@ -3803,7 +3803,7 @@ function editSubject(id) {
   if(newTeacher === null) return;
   const newPhone = prompt('رقم هاتف المدرس:', s.phone || '');
   if(newPhone === null) return;
-  if(newPhone && newPhone.length !== 11) return alert('رقم الهاتف يجب أن يءءون 11 رقم');
+  if(newPhone && newPhone.length !== 11) return alert('ر��م الهاتف يجب أن يءءون 11 رقم');
 
   const makeAdmin = confirm('هل تريد تعيين هذا المعلم كمسؤول في النظام؟');
   if(makeAdmin) {
@@ -4335,7 +4335,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
   const rec = await analyzeRecitationContent(blob, task, transcript);
   const targetTxt = task.surah ? ('سورة ' + task.surah + ' (من الآية ' + (task.from || '-') + ' إلى ' + (task.to || task.from || '-') + ')') : (task.name || task.text || 'المقطع المطلوب');
   if(rec.pct < RECITATION_MIN_PCT) {
-    // لا يُحفظ التسجيل المرفوض ولا يُرسل للمسؤول ئذا لم طابق المقرر.
+    // لا يُحفظ ا��تسجيل المرفوض ولا يُرسل للمسؤول ئذا لم طابق المقرر.
     showToast('❌ التلاوة لا تئابق ' + targetTxt + ' — لم يتم حفظ التسجيل', 'error');
     if(statusEl) statusEl.textContent = 'مرفوض — أعد الرفع ❌';
     if(aiBox) aiBox.innerHTML = '<div class="alert alert-danger"><strong>🚫 قرر الذكاء ااصطناعي — المحتوى غير مطابق:</strong><br>' +
@@ -5221,7 +5221,7 @@ function generateAIReport(student) {
   const avgScore = last3.reduce((sum, s) => sum + s.totalScore, 0) / last3.length;
   let report = '';
   if(avgScore >= 14) report = 'ممتاز يا '+student.name+'! 🌟 مستواك رائع جداً. أنت تحفظ بثباءء وتميز. استمر في المراجعة وستكون من حفاظ كتاب الله.';
-  else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرارة.';
+  else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين ��ي المراجعة. حافظ على الاستمرارة.';
   else if(avgScore >= 6) report = 'جيد يا '+student.name+'! 📚 مستواك في تقدم مستمر. أنصحك بزيادة وقت المراجعة اليومي.';
   else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على التكرار والمراجعة اليومية وسترى التحسن قريباً.';
   report += '<br><br>📊 متوسط آخر 3 تسميعات: <strong>'+avgScore.toFixed(1)+' / 16</strong><br>📈 عدد التسميعات المسجلة: '+finalizedSessions.length;
@@ -5291,7 +5291,7 @@ function generateAIResponse(text, student) {
   }
   // المستوى / التقييم
   if(has('مستوى','مستواي','تقييم','درجات','درجة','نتيجة','نتيجتي')) {
-    if(!last) return 'مرحباً '+name+'! 🌟<br><br>لم ُسجَّل أي تسميع نهائي بعد. ابدأ اليوم، وسيظهر تقييءءك هنا فور اعتماد من المسؤول.';
+    if(!last) return 'مرحباً '+name+'! 🌟<br><br>لم ُسجَّل أي تسميع ن��ائي بعد. ابدأ اليوم، وسيظهر تقييءءك هنا فور اعتماد من المسؤول.';
     let r = '📊 <strong>آخر تسميع نهائي بتاريخ '+last.date+':</strong><br>';
     last.elements.forEach(e => {
       const rate = e.rating === '4' ? 'ممتاز' : e.rating === '3' ? 'جيد جداً' : e.rating === '1' ? 'جيد' : e.rating === '0' ? 'يعاد' : 'بدون تقييم';

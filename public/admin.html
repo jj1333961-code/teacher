@@ -331,7 +331,7 @@ tr:hover { background: var(--table-hover); }
 .draft-section { background: linear-gradient(135deg, rgba(255,193,7,0.15), rgba(255,152,0,0.15)); border: 2px solid var(--warning); border-radius: 15px; padding: 20px; margin-bottom: 20px; }
 
 /* Back Button Fixed at Bottom */
-  .back-btn-container, .back-btn, button[onclick="goBack()"], button[onclick^="showPage("][class*="btn-secondary"] { display:none !important; }
+  .back-btn-container { display:flex; }
 .back-btn {
   background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   color: #fff;
@@ -1052,7 +1052,7 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="notificationsPage" class="page hidden">
-  <div class="page-header"><h2>التنبيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد الكل كمقروء</button></div>
+  <div class="page-header"><h2>التنبيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد ال��ل كمقروء</button></div>
   <p style="color:var(--text-light);margin-bottom:18px;">جميع طلبات استرجاع الحساب والإنذارات والمخالفات والتنبيهات العامة في مكان واحد.</p>
   <div id="notificationsList" class="notifications-grid" aria-live="polite"></div>
 </div>
@@ -1397,7 +1397,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ندوق التسجيلات لطالب -->
 <div id="studentExamPage" class="page hidden">
-  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">ر��ءءع</button></div>
+  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رجوع</button></div>
   <div id="studentExamContent"></div>
 </div>
 
