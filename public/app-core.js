@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إ��سال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -132,6 +132,18 @@ const LANG_DICT = {
   'الاسم بالكامل *': 'Full name *',
   'الرقم القومي *': 'National ID *',
   'رقم الهاتف *': 'Phone number *',
+  'نوع الحساب': 'Account type',
+  'الاسم الكامل': 'Full name',
+  'الرقم القومي': 'National ID',
+  'رقم الهاتف': 'Phone Number',
+  'إرسال': 'Send',
+  'الاسم المسجل بالحساب': 'Full name registered to the account',
+  'الرقم القومي المسجل': 'National ID registered to the account',
+  'الرقم بدون كود الدولة': 'Phone number without country code',
+  'استرجاع الحساب': 'Recover account',
+  'أدخل البيانات المسجلة بالحساب. لن يتم إرسال الطلب إلا بعد مطابقتها بالكامل.': 'Enter the account details. The request will only be sent after all details match.',
+  'كود دولة الهاتف': 'Phone country code',
+  'مصر (+20)': 'Egypt (+20)', 'السعودية (+966)': 'Saudi Arabia (+966)', 'الإمارات (+971)': 'United Arab Emirates (+971)', 'قطر (+974)': 'Qatar (+974)', 'الكويت (+965)': 'Kuwait (+965)', 'الأردن (+962)': 'Jordan (+962)', 'المغرب (+212)': 'Morocco (+212)', 'الجزائر (+213)': 'Algeria (+213)', 'تونس (+216)': 'Tunisia (+216)', 'أمريكا/كندا (+1)': 'United States/Canada (+1)', 'بريطانيا (+44)': 'United Kingdom (+44)', 'ألمانيا (+49)': 'Germany (+49)', 'تركيا (+90)': 'Turkey (+90)',
   'الجزء': 'Juz',
   'السورة': 'Surah',
   'ملاحظات': 'Notes',
@@ -143,8 +155,8 @@ const LANG_DICT = {
   'الاختبارات': 'Exams', 'المهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل الصوتي': 'Audio recording',
   'مكافحة الغش': 'Anti-cheat', 'تحليل التسجيل': 'Analyze recording', 'جاري التحليل...': 'Analyzing...',
   'الكاميرا غير متاحة': 'Camera unavailable', 'تم رفض صلاحية الكاميرا': 'Camera permission was denied', 'الكاميرا مستخدمة بواسطة تطبيق آخر': 'Camera is being used by another app', 'المتصفح لا يدعم الكاميرا': 'This browser does not support the camera', 'حدث خطأ أثناء تشغيل الكاميرا': 'An error occurred while starting the camera', 'إعادة تشغيل الكاميرا': 'Restart camera',
-  'تع�� تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
-  'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا تود بيانات': 'No data available',
+  'تعذر تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
+  'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا توجد بيانات': 'No data available',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'حذف': 'Delete', 'تعديل': 'Edit', 'إضافة': 'Add',
   'إرسال': 'Send', 'تحميل': 'Loading', 'جار التحميل...': 'Loading...', 'تأكيد': 'Confirm',
   'نجح': 'Succeeded', 'فشل': 'Failed', 'محظور': 'Blocked', 'مفعل': 'Enabled', 'غير مفعل': 'Disabled',
@@ -200,7 +212,7 @@ function applyLangToDom() {
   langTextNodes().forEach(function(node){
     if(node.__arText === undefined) node.__arText = node.nodeValue;
     const source = node.__arText;
-    node.nodeValue = currentLang === 'en' ? translateValue(source) : source;
+    node.nodeValue = translateValue(source);
   });
   document.querySelectorAll('*').forEach(function(el){
     LANG_ATTRS.forEach(function(attr){
@@ -208,10 +220,15 @@ function applyLangToDom() {
       const key = 'data-ar-' + attr;
       if(!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr));
       const source = el.getAttribute(key) || '';
-      el.setAttribute(attr, currentLang === 'en' ? translateValue(source) : source);
+      el.setAttribute(attr, translateValue(source));
     });
   });
   const btn=document.getElementById('langToggleBtn'); if(btn) btn.textContent=currentLang==='en'?'ع':'EN';
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.endsWith('.vercel.app')) {
+    const visible = langTextNodes().map(function(node){ return node.nodeValue.trim(); }).filter(Boolean);
+    const untranslated = visible.filter(function(text){ return currentLang === 'ar' ? /[A-Za-z]{3,}/.test(text) && !/^(THIMAR|Gemini|Groq|GitHub|Neon|Google|WhatsApp|PDF|AI|Quran|Risk Score)/.test(text) : /[\u0600-\u06ff]/.test(text); });
+    if (untranslated.length) console.warn('[v0] untranslated visible strings', { locale: currentLang, count: untranslated.length, samples: untranslated.slice(0, 20) });
+  }
 }
   window.applyLangToDom = applyLangToDom;
   function toggleLang() { currentLang=currentLang==='ar'?'en':'ar'; localStorage.setItem('lang',currentLang); applyLangToDom(); window.dispatchEvent(new Event('languagechange')); }
@@ -763,7 +780,7 @@ function togglePassVisibility(inputId, iconEl) {
   }
 }
 
-// ====== التقسيم الحقيقي للـ30 جزءاً (حدود الآيات، لا أسماء السور فقط) ======
+// ====== التقسيم الحقيقي للـ30 جزءاً (حدود الآيات، لا أسماء السور ��قط) ======
 // الحدود مبنية على خريطة الآيات التقليدية للجزء: بداية كل جزء هي الآية التالية لنهاية الجزء السابق.
 const JUZ_BOUNDARIES = {
   1:[[1,1,7],[2,1,141]], 2:[[2,142,252]], 3:[[2,253,286],[3,1,92]],
@@ -1672,7 +1689,7 @@ async function saveStudent() {
   if(students.find(s => s.national === national)) return fail('هذا الرقم القومي مسجل مسبقاً');
   if(students.find(s => s.username === username)) return fail('اسم المستخدم مسجل مسبقاً');
   if(students.find(s => s.username === username)) return fail('اسم المستخدم مسجل مسبقاً');
-  // ✅ مسموح الآن أن يكون الرقم السري للطالب مطابقاً للرقم السري لولي الأمر
+  // ✅ مسموح الآن أن يكون الرقم السري للطالب مطاب��اً للرقم السري لولي الأمر
 
   const subjects = getData('subjects');
   const selectedSubData = selectedSubjects.map(id => subjects.find(s => s.id === id)).filter(Boolean);
@@ -2314,7 +2331,7 @@ function localSmartChatReply(message,role){
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
-  if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
+  if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقرو��ة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت االهدف والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
 }
@@ -4030,7 +4047,7 @@ function renderStudentTasks() {
       html += status;
 
       if(isProctorCancelled) {
-        html += '<div class="task-rejected-alert">لا يمكن إعادة هذه الءءهمة بعد إلغائها. تواصل مع المسؤول لإسناد مهمة جديدة.</div>';
+        html += '<div class="task-rejected-alert">لا يمكن إعادة هذه الءءهمة بعد إلغ��ئها. تواصل مع المسؤول لإسناد مهمة جديدة.</div>';
       } else if(isRejected) {
         html += '<div class="task-rejected-alert">⚠️ تم رفض التسجيل السابق. يرجى تسجيل قراءتك من جديد.</div>';
         html += studentVoiceRecorderHTML(originalIdx);
@@ -4487,7 +4504,7 @@ async function inspectVoiceQuality(blob){
     for(let i=0;i<data.length;i++){const x=Math.abs(data[i]);energy+=x*x;peak=Math.max(peak,x);if(x>.985)clipped++}
     for(let off=0;off+frame<data.length;off+=frame){let sum=0;for(let i=0;i<frame;i++)sum+=data[off+i]*data[off+i];frames++;if(Math.sqrt(sum/frame)>.012)voiced++}
     const rms=Math.sqrt(energy/Math.max(1,data.length)),voicedRatio=voiced/Math.max(1,frames),clippedRatio=clipped/Math.max(1,data.length);
-    if(rms<.008||voicedRatio<.25)throw new Error('لم يظهر صوت واضح في التسجيل. اقترب من الميكروفون وسجّل في مكان هادئ.');
+    if(rms<.008||voicedRatio<.25)throw new Error('لم يظهر صوت واضح في التسجيل. ا��ترب من الميكروفون وسجّل في مكان هادئ.');
     if(clippedRatio>.02||peak>=.999)throw new Error('مستوى الصوت مرتفع ويسبب تشويشًا. ابتعد قليلًا عن الميكروفون وأعد التسجيل.');
     return {duration:audio.duration,rms,voicedRatio,clippedRatio};
   }finally{try{await ctx.close()}catch(e){}}
@@ -4716,7 +4733,7 @@ async function sendStudentChat() {
   const chatDiv=document.getElementById('studentChatMessages');const typing=document.createElement('div');typing.className='ai-msg bot';typing.textContent='جاري التفكير...';chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div>';chatDiv.appendChild(typing);chatDiv.scrollTop=chatDiv.scrollHeight;
   const s=currentUser||{}; const last=(s.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
-    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانات الطالب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
+    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال الطالب: '+text+'\nبيانات ال��الب: '+JSON.stringify({name:s.name,juz:s.juz,surah:s.surah,lastSession:last,tasks:s.tasks||[],examResults:(s.examResults||[]).slice(-3)})})});
     const data=await readApiJson(res,'تعذر رد Gemini وGroq');
     const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');typing.innerHTML=reply;
   }catch(e){typing.innerHTML=escapeHtml(localSmartChatReply(text,'student'))+'<br><small>رد محي محدود بسبب تعذر Gemini وGroq.</small>'}
@@ -4940,7 +4957,7 @@ function renderParentPendingTasks() {
         html += '<h5>'+urgency+' '+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '📖 قراءة' : '🎙️ تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
         if(task.surah) html += '<p><strong>السورة:</strong> '+task.surah+' | <strong>من آية:</strong> '+(task.from || '-')+' | <strong>إلى آية:</strong> '+(task.to || '-')+'</p>';
         html += '<p style="color:var(--text-light); font-size:0.9rem;">🕐 تم الإرسال: '+sentTime+'</p>';
-        if(hoursPassed > 0) html += '<p style="color:var(--danger); font-size:0.85rem;">⏱️ مر '+hoursPassed+' ساعة على إرسال المهمة</p>';
+        if(hoursPassed > 0) html += '<p style="color:var(--danger); font-size:0.85rem;">⏱️ مر '+hoursPassed+' ساعة على إرسال المه��ة</p>';
         html += '</div>';
       });
     }
@@ -5297,11 +5314,11 @@ function generateAIResponse(text, student) {
   }
   // الآيات ءءالصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُعرض بارم العثمانءء المشكَّل كصورة مطابقة تماماً لمحف.';
+    return '📖 لعرض الآيات المطلوبة منك:<br>1. ��فتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُعرض بارم العثمانءء المشكَّل كصورة مطابقة تماماً لمحف.';
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صءءت','ميكروفون','تحق')) {
-    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوءءك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واضح.';
+    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوءءك أنت.<br><br>لأفضل نت��جة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واضح.';
   }
   // خطة الحفظ
   if(has('خطة','جدول','تنظيم','وقت','كيف احفظ','كيف أحفظ')) {

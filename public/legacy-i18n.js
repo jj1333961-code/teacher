@@ -5,7 +5,8 @@
     en: {
       'منصة ثمار': 'Thimar Platform', 'منصة ثِمار': 'Thimar Platform', 'لحفظ القرآن الكريم': 'for memorizing the Holy Quran',
       'تسجيل الدخول': 'Log in', 'تسجيل الخروج': 'Log out', 'إنشاء حساب جديد': 'Create account', 'ليس لديك حساب؟': "Don't have an account?", 'أليس لديك حساب؟': "Don't have an account?",
-      'اسم المستخدم': 'Username', 'الرقم السري': 'Password', 'رقم الهاتف': 'Phone number', 'تاريخ الميلاد': 'Date of birth', 'الصف الدراسي': 'Grade',
+      'اسم المستخدم': 'Username', 'الرقم السري': 'Password', 'رقم الهاتف': 'Phone Number', 'تاريخ الميلاد': 'Date of birth', 'الصف الدراسي': 'Grade',
+      'نوع الحساب': 'Account type', 'طالب': 'Student', 'الاسم الكامل': 'Full name', 'الاسم بالكامل': 'Full name', 'الرقم القومي': 'National ID', 'إرسال': 'Send', 'استرجاع الحساب': 'Recover account', 'الاسم المسجل بالحساب': 'Full name registered to the account', 'الرقم القومي المسجل': 'National ID registered to the account', 'الرقم بدون كود الدولة': 'Phone number without country code', 'كود دولة الهاتف': 'Phone country code',
       'المسؤول': 'Admin', 'الطالب': 'Student', 'المعلم': 'Teacher', 'ولي الأمر': 'Parent', 'الطلاب': 'Students', 'المعلمين': 'Teachers', 'أولياء الأمور': 'Parents',
       'الرئيسية': 'Home', 'لوحة التحكم': 'Dashboard', 'الإعدادات': 'Settings', 'الرسائل': 'Messages', 'محادثة': 'Chat', 'الإشعارات': 'Notifications',
       'المصحف الشريف': 'Holy Quran', 'القرآن الكريم': 'The Holy Quran', 'الاختبارات': 'Exams', 'قائمة الاختبار': 'Exam list', 'توليد الأسئلة بالذكاء الاصطناعي': 'Generate questions with AI',
@@ -31,9 +32,11 @@
   }
   function dictionary() { return dictionaries[locale] || {}; }
   function translate(value) {
-    if (locale === 'ar' || !value) return value;
-    var result = value;
-    Object.keys(dictionary()).sort(function(a,b){ return b.length-a.length; }).forEach(function(key){ result = result.split(key).join(dictionary()[key]); });
+    if (!value) return value;
+    var source = String(value);
+    var dict = locale === 'en' ? dictionary() : Object.fromEntries(Object.keys(dictionary()).map(function(key){ return [dictionary()[key], key]; }));
+    var result = source;
+    Object.keys(dict).sort(function(a,b){ return b.length-a.length; }).forEach(function(key){ result = result.split(key).join(dict[key]); });
     return result;
   }
   function apply(root) {
