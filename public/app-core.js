@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إ��سال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -215,26 +215,49 @@ function applyLangToDom() {
 }
   window.applyLangToDom = applyLangToDom;
   function toggleLang() { currentLang=currentLang==='ar'?'en':'ar'; localStorage.setItem('lang',currentLang); applyLangToDom(); window.dispatchEvent(new Event('languagechange')); }
-let langObserver = new MutationObserver(function(){
-  if(currentLang !== 'en' || langObserver._running) return;
-  langObserver._running = true;
-  langObserver.disconnect();
+let langObserver = null;
+let langApplyTimer = null;
+let langObserverStarted = false;
+function scheduleLanguageApply(){
+  if(currentLang !== 'en' || langApplyTimer) return;
+  langApplyTimer = window.setTimeout(function(){
+    langApplyTimer = null;
+    if(currentLang === 'en') applyLangToDom();
+  }, 120);
+}
+function initLanguage(){
   applyLangToDom();
+  if(langObserverStarted || !document.body) return;
+  langObserverStarted = true;
+  langObserver = new MutationObserver(function(records){
+    if(currentLang !== 'en') return;
+    const relevant = records.some(function(record){
+      return Array.from(record.addedNodes || []).some(function(node){
+        return node.nodeType === Node.ELEMENT_NODE || (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim());
+      });
+    });
+    if(relevant) scheduleLanguageApply();
+  });
   langObserver.observe(document.body,{childList:true,subtree:true});
-  langObserver._running = false;
-});
-function initLanguage(){ applyLangToDom(); langObserver.observe(document.body,{childList:true,subtree:true}); }
+}
 
 let neonSaveTimer = null;
+let neonSaveInFlight = false;
+let neonSaveQueued = false;
 const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests','notifications','aiQuestionHistory'];
 function getData(key, def) { try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); } catch (e) { console.warn('تعذر قراءة البيانات المحلية للمفتاح:', key, e); return def || []; } }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
+  if(neonSaveInFlight){ neonSaveQueued=true; return; }
+  neonSaveInFlight=true;
   const status=document.getElementById('cloudSaveStatus');
-  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})}); if(!res.ok)throw new Error(); if(status)status.textContent='محفوظ في Neon'; }
+  const controller = new AbortController();
+  const timeout = window.setTimeout(function(){ controller.abort(); }, 8000);
+  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()}),signal:controller.signal}); if(!res.ok)throw new Error(); if(status)status.textContent='محفوظ في Neon'; }
   catch(e){ if(status)status.textContent='تعذر الحفظ في Neon'; }
+  finally{ window.clearTimeout(timeout); neonSaveInFlight=false; if(neonSaveQueued){ neonSaveQueued=false; clearTimeout(neonSaveTimer); neonSaveTimer=window.setTimeout(saveAllDataToNeon,700); } }
 }
-function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); if(sessionStorage.getItem('neon_unavailable_v1')==='1') return; clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
+function setData(key, val) { try{localStorage.setItem(key, JSON.stringify(val));}catch(e){console.warn('تعذر حفظ البيانات محلياً:',key,e);return;} if(sessionStorage.getItem('neon_unavailable_v1')==='1') return; clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,700); }
 async function hydrateDataFromNeon(){
   if(sessionStorage.getItem('neon_hydrated_v1'))return;
   try{ const res=await fetch('/api/data',{cache:'no-store'}); const body=await res.json(); if(res.ok&&body.data){ const before=JSON.stringify(collectCloudData()); Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); }); sessionStorage.setItem('neon_hydrated_v1','1'); const changed=before!==JSON.stringify(collectCloudData()); if(changed && !sessionStorage.getItem('neon_reload_done_v1')){ sessionStorage.setItem('neon_reload_done_v1','1'); location.reload(); } } else if(body.unavailable){ sessionStorage.setItem('neon_hydrated_v1','1'); sessionStorage.setItem('neon_unavailable_v1','1'); } else { sessionStorage.setItem('neon_hydrated_v1','1'); await saveAllDataToNeon(); } }
@@ -495,7 +518,7 @@ function showPage(id, options = {}) {
   if(id === 'studentExamPage') renderStudentExam();
   if(id === 'parentPendingTasksPage') renderParentPendingTasks();
   if(id === 'parentChartPage') renderParentFullChart();
-  applyLangToDom();
+  if(currentLang === 'en') scheduleLanguageApply();
   window.scrollTo(0,0);
   saveSessionState();
 }
@@ -1240,7 +1263,7 @@ async function toggleStudentIntakeRecord(){
         preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='جاري فهم بيانات الطالب...';result.innerHTML='';
         const audio=await voiceAudioPayload(blob),data=await callStudentAI('student_voice_intake',{role:'admin',audioBase64:audio.audioBase64,mimeType:audio.mimeType},0.05),filled=applyStudentVoiceFields(data.fields||{});
         if(!filled.length)throw new Error('لم أتعرف على بيانات واضحة. اذكر اسم كل خانة ثم قيمتها ببطء.');
-        result.innerHTML='<div class="alert alert-success">تم ملء '+filled.length+' خانة. راجع جميع البيانات قبل الحفظ.<br><small>النص المسموع: '+escapeHtml(data.transcript||'لم يُرجع تفريغاً')+'</small></div>';status.textContent='اكتمل التحليل';
+        result.innerHTML='<div class="alert alert-success">تم ملء '+filled.length+' خانة. راجع جميع البيانات قبل الحفظ.<br><small>النص المسموع: '+escapeHtml(data.transcript||'لم يُرجع تفريغاً')+'</small></div>';status.textContent='��كتمل التحليل';
       }catch(e){result.innerHTML='<div class="alert alert-danger">تعذر تحليل التسجيل: '+escapeHtml(e.message||'خطأ غير معروف')+'<br><button type="button" class="btn btn-sm btn-primary" onclick="retryStudentIntakeAnalysis()">إعادة تحليل نفس التسجيل</button><button type="button" class="btn btn-sm btn-secondary" onclick="toggleStudentIntakeRecord()">تسجيل جديد</button></div>';status.textContent='فشل التحليل';}
       finally{btn.disabled=false;btn.textContent='إعادة التسجيل';studentIntakeRecorder=null;}
     };
@@ -1341,7 +1364,7 @@ function editAdmin(id) {
   const admins = getData('admins');
   const a = admins.find(x => x.id === id);
   if(!a) return;
-  const newMobile = prompt('رقم الموبايل الجديد:', a.mobile);
+  const newMobile = prompt('رقم ا��موبايل الجديد:', a.mobile);
   if(newMobile === null) return;
   const newPass = prompt('الرقم السري الجديد:', a.password);
   if(newPass === null) return;
@@ -1682,7 +1705,7 @@ function openEdit(id) {
   document.getElementById('editNotes').value = s.notes || '';
   editVoiceBlob=null; editVoiceFingerprint=null; editVoiceDataUrl=null; editVoiceProfileGemini=null;
   const evp=document.getElementById('editVoicePreview'); if(evp){evp.style.display='none';evp.removeAttribute('src');}
-  const evs=document.getElementById('editVoiceStatus'); if(evs)evs.textContent=(s.voiceProfile||s.voicePrintVec)?('البصمة الصوتية موجودئ'+(s.voiceProfile?' (جميناي)':'')+'. يمكنك استبدالها بتسءءيل جديد.'):'لا توجد بصمة صوتية محفوظة حالاً.';
+  const evs=document.getElementById('editVoiceStatus'); if(evs)evs.textContent=(s.voiceProfile||s.voicePrintVec)?('البصمة ال��وتية موجودئ'+(s.voiceProfile?' (جميناي)':'')+'. يمكنك استبدالها بتسءءيل جديد.'):'لا توجد بصمة صوتية محفوظة حالاً.';
   renderEditSubjectSelect(s.subjectIds);
   initEditJuzSelect(s.juz);
   const isQuran = s.subjects && s.subjects.some(sub => sub.name.includes('قرآن'));
@@ -3090,7 +3113,7 @@ function escapeHtmlAi(str) {
 function openGithubSync(){
   if(currentType !== 'admin'){ showToast('❌ هذه الميزة متاحة للمسؤول فقط', 'error'); return; }
   const a = document.getElementById('githubSyncAlert'); if(a) a.innerHTML = '';
-  const s = document.getElementById('githubSyncStatus'); if(s) s.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الاتصال بمستودعك...</p>';
+  const s = document.getElementById('githubSyncStatus'); if(s) s.innerHTML = '<p style="color:var(--text-light)">جارٍ التحقق من الاتصال بمست��دعك...</p>';
   const del = document.getElementById('githubDeleteBox'); if(del) del.style.display = 'none';
   const link = document.getElementById('githubHistoryLink'); if(link) link.style.display = 'none';
   showPage('githubSyncPage');
@@ -3219,7 +3242,7 @@ function clearDevAudit(){
 function renderDevAudit(){
   const box = document.getElementById('devAuditLog'); if(!box) return;
   let log = getData('devAuditLog'); if(!Array.isArray(log)) log = [];
-  if(!log.length){ box.innerHTML = '<div style="color:var(--text-light); font-size:0.9rem;">لا توجد عمليات مسجّلة بعد.</div>'; return; }
+  if(!log.length){ box.innerHTML = '<div style="color:var(--text-light); font-size:0.9rem;">لا توجد عمليات مسجّلة بع��.</div>'; return; }
   const esc = escapeHtmlAi;
   const statusBadge = function(s){
     if(s==='applied') return '<span style="background:#28a745;color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;">نجاح</span>';
@@ -5254,13 +5277,13 @@ function generateAIResponse(text, student) {
   }
   // نصائح
   if(has('نصفحة','نصائح','سادني','مساعدة','انسى','أنسى','نسيت','صعب')) {
-    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتءءل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
+    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يث��ّت أعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتءءل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طبيعي والمراجعة علاجه.';
   }
   // تحفيز
   if(has('تحفيز','همة','ملل','تعبا','زهقءءن','احبت','أحطت')) {
     const quotes = [
       '🌟 «وَلَقَدْ يَسَّرْنَا الْقُْآنَ لِلذِّكْرِ فهَلْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ فءءط.',
-      '💚 قال ﷺ: «خيركم من تعلم القرآن وعلم��». أنت اليوم في أفضل طريق.',
+      '💚 قال ﷺ: «خيركم من تعلم الق��آن وعلم��». أنت اليوم في أفضل طريق.',
       '🚀 كل صفحة تحفظها اليوم هي درة ترتف بها غداً. لا تستهن بالاختباريل.'
     ];
     return quotes[Math.floor(Math.random()*quotes.length)];

@@ -6,8 +6,6 @@
 <meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-  <link rel="preload" href="/quran/quran.pdf" as="fetch" type="application/pdf" crossorigin fetchpriority="high">
-  <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="/islamic-hub.css">
   <link rel="stylesheet" href="/prayer-screen.css">
@@ -1154,7 +1152,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي * (14 رقم)</label><input type="text" id="stNational" maxlength="14" placeholder="أدخل 14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف (11 رقم)</label><input type="text" id="stPhone" maxlength="11" placeholder="أدخل 11 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div class="form-group"><label>رقم اله��تف (11 رقم)</label><input type="text" id="stPhone" maxlength="11" placeholder="أدخل 11 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ الميلاد *</label><input type="date" id="stBirth" onchange="calcAge()"></div>
@@ -1236,7 +1234,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🎙️ تسجيل تسميع جديد</h2></div>
   <div id="recordAlert"></div>
   <input type="hidden" id="recordStudentId">
-  <div class="form-group"><label>اسم الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
+  <div class="form-group"><label>��سم الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُحدد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
     <div class="form-group"><label>الجزء</label><input type="text" id="recordJuz" readonly style="background:var(--table-header)"></div>
@@ -1409,7 +1407,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ملفات المسؤول للطالب -->
 <div id="studentFilesPage" class="page hidden">
-  <div class="page-header"><h2>📁 الملفات المرسلة لي</h2></div>
+  <div class="page-header"><h2>📁 ا��ملفات المرسلة لي</h2></div>
   <div id="studentFilesContent"></div>
 </div>
 
@@ -1470,7 +1468,7 @@ tr:hover { background: var(--table-hover); }
       </div>
       <div class="side-sidebar-body">
         <button type="button" class="role-nav-item" onclick="showPage('parentInbox')"><span class="role-nav-icon" aria-hidden="true">💬</span><span>الرسائل</span></button><button type="button" class="role-nav-item" onclick="openQuranReader()"><span class="role-nav-icon" aria-hidden="true">📖</span><span>المصحف الشريف</span></button>
-        <button type="button" class="role-nav-item" onclick="showPage('parentFilesPage')"><span class="role-nav-icon" aria-hidden="true">📁</span><span>الملفات</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('parentFilesPage')"><span class="role-nav-icon" aria-hidden="true">📁</span><span>��لملفات</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('parentAIChat')"><span class="role-nav-icon" aria-hidden="true">✦</span><span>مساعد الذكا الاصطناعي</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('parentChartPage')"><span class="role-nav-icon" aria-hidden="true">📈</span><span>المخطط</span></button>
       </div>
