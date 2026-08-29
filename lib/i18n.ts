@@ -1,6 +1,18 @@
 export type Locale = 'ar' | 'en'
 
 export const translations = {
+  'نوع الحساب': 'Account type',
+  'طالب': 'Student',
+  'الاسم الكامل': 'Full name',
+  'الرقم القومي': 'National ID',
+  'رقم الهاتف': 'Phone Number',
+  'إرسال': 'Send',
+  'الاسم المسجل بالحساب': 'Full name registered to the account',
+  'الرقم القومي المسجل': 'National ID registered to the account',
+  'الرقم بدون كود الدولة': 'Phone number without country code',
+  'استرجاع الحساب': 'Recover account',
+  'أدخل البيانات المسجلة بالحساب. لن يتم إرسال الطلب إلا بعد مطابقتها بالكامل.': 'Enter the account details. The request will only be sent after all details match.',
+  'كود دولة الهاتف': 'Phone country code',
   'منصة المعلّم الذكية': 'Smart Teacher Platform',
   'صفحة التسميع': 'Recitation page',
   'متصل بـ Neon': 'Connected to Neon',
@@ -22,7 +34,6 @@ export const translations = {
   'تعديل': 'Edit',
   'إضافة': 'Add',
   'رجوع': 'Back',
-  'إرسال': 'Send',
   'تحميل': 'Loading',
   'جار التحميل...': 'Loading...',
   'لا توجد بيانات': 'No data available',
