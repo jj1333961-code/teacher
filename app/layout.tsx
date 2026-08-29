@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { LanguageRuntime } from '@/components/language-runtime'
@@ -47,6 +48,7 @@ export default function RootLayout({
         <div className="fixed left-4 top-4 z-50"><LanguageToggle /></div>
         <LanguageRuntime />
         {process.env.NODE_ENV === 'production' && <Analytics />}
+        {process.env.NODE_ENV === 'production' && <SpeedInsights />}
       </body>
     </html>
   )
