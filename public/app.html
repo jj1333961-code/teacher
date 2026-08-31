@@ -916,7 +916,7 @@ tr:hover { background: var(--table-hover); }
   </div>
 </div>
 
-<!-- إنشاء حساب: الخطوة الثانية (البيانات) -->
+<!-- إنشاء حساب: الخط��ة الثانية (البيانات) -->
 <div id="signupStep2" class="page hidden" style="max-width:720px; margin:40px auto;">
   <div class="page-header"><h2>📝 بيانات طلب الانضمام</h2><button class="btn btn-secondary" onclick="showPage('signupStep1')">رجوع</button></div>
   <div id="signupStep2Alert"></div>
@@ -1237,7 +1237,7 @@ tr:hover { background: var(--table-hover); }
   <input type="hidden" id="recordStudentId">
   <div class="form-group"><label>اس�� الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
   <div class="form-row">
-    <div class="form-group"><label>تاريخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُ��دد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
+    <div class="form-group"><label>تا��يخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُ��دد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
     <div class="form-group"><label>الجزء</label><input type="text" id="recordJuz" readonly style="background:var(--table-header)"></div>
     <div class="form-group"><label>السور الأساسية</label><input type="text" id="recordSurahName" readonly style="background:var(--table-header)"></div>
   </div>
@@ -1264,7 +1264,7 @@ tr:hover { background: var(--table-hover); }
 <p style="color:var(--text-light);margin:10px 0">اختبار رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الاس.</small></div>
- <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">اماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف ريب ونص بعيد.</small></div>
+ <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">اماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُ��سم الماضي إلى نصف ريب ونص بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة اناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدويا قبل ءءقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
  <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.</small></div>
@@ -1985,6 +1985,9 @@ window.alert = function(m){ showToast(m); };
 })();
 </script>
 <link rel="stylesheet" href="/messaging.css">
+<link rel="stylesheet" href="/tuhfat.css">
+<script src="/tuhfat-data.js" defer></script>
+<script src="/tuhfat.js" defer></script>
 <script src="/legacy-i18n.js" defer></script>
 <script src="/prayer-screen.js" defer></script>
 <script src="/islamic-hub.js" defer></script>
