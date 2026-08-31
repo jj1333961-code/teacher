@@ -19,12 +19,12 @@ const nextConfig = {
     return {
       beforeFiles: [
         { source: '/', destination: '/index.html' },
-        { source: '/login', destination: '/app.html' },
-        { source: '/signup', destination: '/app.html?page=signupStep1' },
-        { source: '/forgot-password', destination: '/app.html?page=accountRecoveryPage' },
-        { source: '/admin', destination: '/admin.html' },
-        { source: '/student', destination: '/student.html' },
-        { source: '/parent', destination: '/parent.html' },
+        { source: '/login/:path*', destination: '/app.html' },
+        { source: '/signup/:path*', destination: '/app.html' },
+        { source: '/forgot-password', destination: '/app.html' },
+        { source: '/admin/:path*', destination: '/admin.html' },
+        { source: '/student/:path*', destination: '/student.html' },
+        { source: '/parent/:path*', destination: '/parent.html' },
       ],
     }
   },
