@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-  <link rel="preload" href="/quran/quran.pdf" as="fetch" type="application/pdf" crossorigin fetchpriority="high">
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="/islamic-hub.css">
   <link rel="stylesheet" href="/prayer-screen.css">
@@ -993,7 +992,7 @@ tr:hover { background: var(--table-hover); }
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد Gemini / Groq الإداري</h2></div>
   <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بانات الموقع عندما تكون مرتبطة بسؤالك.</p>
-  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
+  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أ��لياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
@@ -1053,7 +1052,7 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="notificationsPage" class="page hidden">
-  <div class="page-header"><h2>التنبيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد الكل كمقروء</button></div>
+  <div class="page-header"><h2>الت��بيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد الكل كمقروء</button></div>
   <p style="color:var(--text-light);margin-bottom:18px;">جميع طلبات استرجاع الحساب والإنذارات والمخالفات والتنبيهات العامة في مكان واحد.</p>
   <div id="notificationsList" class="notifications-grid" aria-live="polite"></div>
 </div>
@@ -1066,7 +1065,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group" style="margin-bottom:0;">
       <label>رقم واتساب المسؤول لاستلام طلبات الامام</label>
       <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
-      <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة على واتساب (بصيغة الدولة، مثال: 201554542019)</small>
+      <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة عل�� واتساب (بصيغة الدولة، مثال: 201554542019)</small>
     </div>
     <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
       <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حظ الرقم</button>
@@ -1161,7 +1160,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>السن (يحسب تلقائياً)</label><input type="number" id="stAge" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري للطالب *</label><input type="password" id="stStudentPass" placeholder="رقم سري لتسجيل دخول الطالب"><label style="font-weight:normal; margin-top:6px; display:block;"><input type="checkbox" id="stSamePass" onchange="syncStudentPass('st')"> استخدام نفس الرقم السري لولي الأمر</label></div>
+    <div class="form-group"><label>الرقم السري للطالب *</label><input type="password" id="stStudentPass" placeholder="رقم سري لتسجيل دخول الطالب"><label style="font-weight:normal; margin-top:6px; display:block;"><input type="checkbox" id="stSamePass" onchange="syncStudentPass('st')"> استخدام ��فس الرقم السري لولي الأمر</label></div>
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
@@ -1668,7 +1667,8 @@ window.alert = function(m){ showToast(m); };
       var box = document.getElementById('unifiedLoginAlert');
       if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
     }
-    return window.loadThimarAppCore().then(function(){
+    var loadWithTimeout = Promise.race([window.loadThimarAppCore(), new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })]);
+    return loadWithTimeout.then(function(){
       if (button) button.disabled = false;
       var fn = window[name];
       if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
@@ -1861,7 +1861,7 @@ window.alert = function(m){ showToast(m); };
         if(event.key === 'ArrowLeft') { event.preventDefault(); previousQuranPage(); }
         if(event.key === 'Escape') { event.preventDefault(); closeQuranReader(); }
       });
-      /* تكبير بإصبعين، وسحب للتنقل بين الصفح��ت (يمين = التالية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
+      /* تكبير بإصبعي��، وسحب للتنقل بين الصفح��ت (يمين = التالية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
       (function(){
         var MIN_SCALE = 1, MAX_SCALE = 4;
         var scale = 1, tx = 0, ty = 0;

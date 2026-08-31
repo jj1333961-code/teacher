@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-  <link rel="preload" href="/quran/quran.pdf" as="fetch" type="application/pdf" crossorigin fetchpriority="high">
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="/islamic-hub.css">
   <link rel="stylesheet" href="/prayer-screen.css">
@@ -1402,7 +1401,7 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="studentRecordsPage" class="page hidden">
-  <div class="page-header"><h2>📦 صنوق التسجيلات</h2></div>
+  <div class="page-header"><h2>��� صنوق التسجيلات</h2></div>
   <div id="studentRecordsContent"></div>
 </div>
 
@@ -1667,7 +1666,8 @@ window.alert = function(m){ showToast(m); };
       var box = document.getElementById('unifiedLoginAlert');
       if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
     }
-    return window.loadThimarAppCore().then(function(){
+    var loadWithTimeout = Promise.race([window.loadThimarAppCore(), new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })]);
+    return loadWithTimeout.then(function(){
       if (button) button.disabled = false;
       var fn = window[name];
       if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
