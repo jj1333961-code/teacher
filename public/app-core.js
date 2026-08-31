@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر����ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -364,7 +364,7 @@ function finishGoogleLogin(user){
 function restorePendingGoogleSignup(){try{const raw=sessionStorage.getItem('thimar_pending_google_signup');if(!raw)return false;const pending=JSON.parse(raw);if(!pending?.email)return false;signupState.method='google';signupState.email=String(pending.email).trim().toLowerCase();signupState.name=String(pending.name||'');signupState.whats='';signupState.verified=true;const note=document.getElementById('signupVerifiedNote');if(note)note.innerHTML='تم التحقق من هويتك عبر Google — '+escapeHtml(signupState.email);const name=document.getElementById('signupName');if(name&&!name.value)name.value=signupState.name;initSignupJuzSelect();showPage('signupStep2');return true}catch(e){try{sessionStorage.removeItem('thimar_pending_google_signup')}catch(ignore){}return false}}
 
 document.addEventListener('DOMContentLoaded',()=>{loadGlobalProctorSettings();setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store',credentials:'same-origin'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('عذر قراءة جلسة Google');finishGoogleLogin(data.user);history.replaceState({},'',pageUrl(document.querySelector('.page:not(.hidden)')?.id))}).catch(()=>{history.replaceState({},'',location.pathname);const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر استكمال تسجيل الدخول عبر Google.</div>'})}else if(restoreSession()){
-  const expectedRole = location.pathname.endsWith('/admin.html') ? 'admin' : location.pathname.endsWith('/student.html') ? 'student' : location.pathname.endsWith('/parent.html') ? 'parent' : null;
+  const expectedRole = location.pathname.startsWith('/admin') ? 'admin' : location.pathname.startsWith('/student') ? 'student' : location.pathname.startsWith('/parent') ? 'parent' : null;
   if(expectedRole && expectedRole !== currentType){
     location.replace(roleShellPath(currentType));
     return;
@@ -372,7 +372,12 @@ document.addEventListener('DOMContentLoaded',()=>{loadGlobalProctorSettings();se
   const routed=pageFromUrl();
   if(routed&&pageAllowedForUser(routed))showPage(routed,{fromBrowser:true});
   else{const home=currentType==='admin'?'adminDashboard':currentType==='student'?'studentDashboard':currentType==='parent'?'parentDashboard':'homePage';showPage(home,{fromBrowser:true});}
-}else restorePendingGoogleSignup()});
+}else{
+  const routed=pageFromUrl();
+  const protectedRoute=/^\/(admin|student|parent)(\/|$)/.test(location.pathname);
+  if(protectedRoute){ location.replace('/login?next='+encodeURIComponent(location.pathname)); return; }
+  if(!restorePendingGoogleSignup() && routed && document.getElementById(routed)) showPage(routed,{fromBrowser:true});
+}});
 
 window.addEventListener('popstate',()=>{const id=pageFromUrl();if(!id||!pageAllowedForUser(id)){showPage(currentType==='admin'?'adminDashboard':currentType==='student'?'studentDashboard':currentType==='parent'?'parentDashboard':'homePage',{fromBrowser:true});return;}showPage(id,{fromBrowser:true});});
 
@@ -413,23 +418,41 @@ function clearSession() {
 }
 
 const PAGE_ROUTE_PARAM = 'page';
+const PAGE_ROUTES = Object.freeze({
+  lockScreen: '/login', accountRecoveryPage: '/forgot-password', signupStep1: '/signup', signupStep2: '/signup/details',
+  adminLogin: '/login/admin', adminDashboard: '/admin', adminAIPage: '/admin/ai', devAssistantPage: '/admin/developer',
+  githubSyncPage: '/admin/github', notificationsPage: '/admin/notifications', adminsPage: '/admin/admins',
+  adminSettings: '/admin/settings', addStudent: '/admin/students/new', editStudent: '/admin/students/edit',
+  recordSession: '/admin/records/new', studentHistory: '/admin/students/history', studentsList: '/admin/students',
+  messagesPage: '/admin/messages', subjectsPage: '/admin/subjects', filesPage: '/admin/files',
+  studentLogin: '/login/student', studentDashboard: '/student', studentExamPage: '/student/exams/current',
+  studentRecordsPage: '/student/records', studentFilesPage: '/student/files', studentInbox: '/student/messages',
+  studentAIChat: '/student/ai', studentSettings: '/student/settings',
+  parentLogin: '/login/parent', parentDashboard: '/parent', parentFilesPage: '/parent/files',
+  parentInbox: '/parent/messages', parentAIChat: '/parent/ai', parentRecordsPage: '/parent/records',
+  parentPendingTasksPage: '/parent/tasks', parentChartPage: '/parent/chart', quranReaderPage: '/quran-reader',
+  tuhotPage: '/tuhfat', tuhfatPage: '/tuhfat'
+});
+const ROUTE_PAGES = Object.freeze(Object.fromEntries(Object.entries(PAGE_ROUTES).map(([page, route]) => [route, page])));
 let routingFromBrowser = false;
 
 function pageUrl(id) {
-  const url = new URL(window.location.href);
-  if (!id || id === 'homePage') url.searchParams.delete(PAGE_ROUTE_PARAM);
-  else url.searchParams.set(PAGE_ROUTE_PARAM, id);
-  return url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash;
+  const route = PAGE_ROUTES[id] || '/login';
+  const url = new URL(route, window.location.origin);
+  const current = new URL(window.location.href);
+  ['google', 'studentId'].forEach(key => { if (current.searchParams.has(key)) url.searchParams.set(key, current.searchParams.get(key)); });
+  return url.pathname + url.search + url.hash;
 }
 
 function pageFromUrl() {
-  const id = new URLSearchParams(window.location.search).get(PAGE_ROUTE_PARAM);
-  return id && document.getElementById(id) ? id : 'homePage';
+  const legacyId = new URLSearchParams(window.location.search).get(PAGE_ROUTE_PARAM);
+  if (legacyId && document.getElementById(legacyId)) return legacyId;
+  return ROUTE_PAGES[window.location.pathname.replace(/\/$/, '') || '/'] || (window.location.pathname === '/' ? 'homePage' : 'lockScreen');
 }
 
 function pageAllowedForUser(id) {
   if (!id) return true;
-  if (id.startsWith('admin') || ['studentsList','messagesPage','subjectsPage','adminsPage','addStudent','filesPage','adminSettings'].includes(id)) return currentType === 'admin';
+  if (id.startsWith('admin') || ['studentsList','messagesPage','subjectsPage','adminsPage','addStudent','editStudent','recordSession','studentHistory','notificationsPage','filesPage','devAssistantPage','githubSyncPage'].includes(id)) return currentType === 'admin';
   if (id.startsWith('student')) return currentType === 'student';
   if (id.startsWith('parent')) return currentType === 'parent';
   return true;
@@ -443,19 +466,16 @@ function roleShellPath(role) {
 }
 
 function showPage(id, options = {}) {
-  /* كل دور يُفتح في ملف HTML مستقل مع تحميل كامل من السيرفر. */
-  const dashboardRole = id === 'adminDashboard' ? 'admin' : id === 'studentDashboard' ? 'student' : id === 'parentDashboard' ? 'parent' : null;
-  if (!options.fromBrowser && dashboardRole && (location.pathname === '/login' || location.pathname === '/app.html')) {
-    const query = new URLSearchParams(location.search).toString();
-    location.assign(roleShellPath(dashboardRole) + (query ? '?' + query : ''));
+  /* كل صفحة لها مستند ومسار مستقلان؛ لا يجري تحميل الصفحة التالية قبل طلبها. */
+  const targetUrl = pageUrl(id);
+  const currentUrl = location.pathname + location.search + location.hash;
+  if (!options.fromBrowser && !routingFromBrowser && targetUrl !== currentUrl) {
+    saveSessionState();
+    location.assign(targetUrl);
     return;
   }
   const currentVisible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   const currentId = currentVisible ? currentVisible.id : null;
-
-  if (!options.fromBrowser && !routingFromBrowser && window.history && window.history.pushState) {
-    window.history.pushState({ page: id }, '', pageUrl(id));
-  }
   
   if(currentId && currentId !== id && currentId !== 'homePage' && !options.fromBrowser) {
     pageHistory.push(currentId);
@@ -2248,7 +2268,7 @@ function generateLocalFileQuestions(file,plans){const sentences=String(file.text
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
   const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الطالب';
-  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|محبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنن مساعدتك؟';
+  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم ال��لام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|محبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنن مساعدتك؟';
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
@@ -3590,7 +3610,7 @@ function approveMessage(idx, approved) {
         msgs.push({
           type:'admin', sender:'المسؤو', senderId:0,
           receiverType: 'student', receiverId: studentId,
-          text: '✅ تمت موفقة المسؤول على ملفك وتم تسجيل المهمة في السجلات بنجاح! أحسنت.',
+          text: '✅ تم�� موفقة المسؤول على ملفك وتم تسجيل المهمة في السجلات بنجاح! أحسنت.',
           reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false
         });
 
@@ -4455,7 +4475,7 @@ async function geminiVoiceProfile(blob){
 }
 async function verifyVoiceIdentity(blob,student){
   const profile=(student&&student.voiceProfile)?student.voiceProfile:null;
-  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية محفوءءة لهذا الطالءء');
+  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية م��فوءءة لهذا الطالءء');
   const audio=await voiceAudioPayload(blob);
   const data=await callStudentAI('voice_match',Object.assign({referenceProfile:profile},audio),0.05);
   if(!data||typeof data.matchPercent!=='number')throw new Error('لم يُرجع Gemini نتيجة مطابقة صالحة');
@@ -5293,20 +5313,11 @@ function logout() {
 
 initLanguage();
 
-// Restore session on page load
+// استعادة الجلسة مع احترام المسار المباشر بدلاً من إعادته دائماً إلى لوحة الدور.
+const initialRoutePage = pageFromUrl();
 if(restoreSession()) {
-  if(currentType === 'admin' && currentUser) {
-    showPage('adminDashboard');
-  } else if(currentType === 'student' && currentUser) {
-    renderStudentDashboard();
-    showPage('studentDashboard');
-  } else if(currentType === 'parent' && currentUser) {
-    renderParentDashboard();
-    showPage('parentDashboard');
-  } else {
-    showPage('lockScreen');
-  }
-} else {
-  // الصفحة الرئيسية الأصلية هي شاشة الدخول الموحدة؛ لا نعرض بطاقات اختيار المسؤول/الطالب/ولي الأمر.
-  showPage('lockScreen');
+  const roleHome = currentType === 'admin' ? 'adminDashboard' : currentType === 'student' ? 'studentDashboard' : currentType === 'parent' ? 'parentDashboard' : 'lockScreen';
+  showPage(pageAllowedForUser(initialRoutePage) ? initialRoutePage : roleHome, {fromBrowser:true});
+} else if(!/^\/(admin|student|parent)(\/|$)/.test(location.pathname)) {
+  showPage(initialRoutePage, {fromBrowser:true});
 }

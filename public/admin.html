@@ -7,7 +7,6 @@
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
   <link rel="preload" href="/quran/quran.pdf" as="fetch" type="application/pdf" crossorigin fetchpriority="high">
-  <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="/islamic-hub.css">
   <link rel="stylesheet" href="/prayer-screen.css">
@@ -1399,7 +1398,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ندوق التسجيلات لطالب -->
 <div id="studentExamPage" class="page hidden">
-  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">ر��ءءع</button></div>
+  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">ر����ءءع</button></div>
   <div id="studentExamContent"></div>
 </div>
 
@@ -1654,10 +1653,9 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواجهة.
-  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core warmup failed', err); }); };
-  if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
-  else setTimeout(warm, 350);
+  // صفحات الدخول لا تحمل النواة الكبيرة إلا عند التفاعل؛ الصفحات المحمية تحتاجها فوراً.
+  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
+  if (/^\/(admin|student|parent|signup)(\/|$)/.test(location.pathname) || location.pathname === '/forgot-password' || location.pathname === '/quran-reader' || location.pathname === '/tuhfat') warm();
 })();
 </script>
 <script>
@@ -1863,7 +1861,7 @@ window.alert = function(m){ showToast(m); };
         if(event.key === 'ArrowLeft') { event.preventDefault(); previousQuranPage(); }
         if(event.key === 'Escape') { event.preventDefault(); closeQuranReader(); }
       });
-      /* تكبير بإصبعين، وسحب للتنقل بين الصفحات (يمين = التالية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
+      /* تكبير بإصبعين، وسحب للتنقل بين الصفح��ت (يمين = التالية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
       (function(){
         var MIN_SCALE = 1, MAX_SCALE = 4;
         var scale = 1, tx = 0, ty = 0;
