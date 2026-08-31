@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر��ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر����ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -436,16 +436,16 @@ function pageAllowedForUser(id) {
 }
 
 function roleShellPath(role) {
-  if (role === 'admin') return '/admin.html';
-  if (role === 'student') return '/student.html';
-  if (role === 'parent') return '/parent.html';
-  return '/app.html';
+  if (role === 'admin') return '/admin';
+  if (role === 'student') return '/student';
+  if (role === 'parent') return '/parent';
+  return '/login';
 }
 
 function showPage(id, options = {}) {
   /* كل دور يُفتح في ملف HTML مستقل مع تحميل كامل من السيرفر. */
   const dashboardRole = id === 'adminDashboard' ? 'admin' : id === 'studentDashboard' ? 'student' : id === 'parentDashboard' ? 'parent' : null;
-  if (!options.fromBrowser && dashboardRole && location.pathname === '/app.html') {
+  if (!options.fromBrowser && dashboardRole && (location.pathname === '/login' || location.pathname === '/app.html')) {
     const query = new URLSearchParams(location.search).toString();
     location.assign(roleShellPath(dashboardRole) + (query ? '?' + query : ''));
     return;
@@ -623,7 +623,7 @@ function renderTaskArchiveHtml(s) {
   return html;
 }
 
-// صندوق السجيلات للطالب: كل التسميعات + المهام مرتبة بالأيام
+// صندوق السجيلات للطالب: كل التسميع��ت + المهام مرتبة بالأيام
 function renderStudentRecordsBox() {
   const s = currentUser;
   const box = document.getElementById('studentRecordsContent');
@@ -1017,7 +1017,7 @@ function sendSignupCode() {
     + 'يرجى إرسال هذا الكود لمقدّم الطلب لإكمال التسجيل.';
   const link = buildWaLink(adminWa, text);
   document.getElementById('signupVerifyBox').classList.remove('hidden');
-  box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق لإرسالها إلى المسؤول (' + adminWa + '). <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال الكود إلى واتساب المسؤول</strong></a> ثم أدخل الكود بالأسفل بعد استلامه من المسؤول.</div>';
+  box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق لإرسالها إلى المسؤول (' + adminWa + '). <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال الكود إلى واتساب المسؤول</strong></a> ثم أدخل الكود بالأسفل بعد استلام�� من المسؤول.</div>';
   window.open(link, '_blank', 'noopener');
 }
 function verifySignupCode() {
@@ -1175,7 +1175,7 @@ function renderStudentSpeechPreview(parsed,filled){
   const box=document.getElementById('studentIntakeResult'); if(!box)return;
   const labels={name:'اسم الطالب',username:'اسم المستخدم',national:'الرقم القومي',phone:'رقم الهاتف',birth:'تاريخ الميلا',parent:'اسم ولي الأمر',notes:'الملاحظات'};
   const rows=Object.keys(parsed.fields).map(function(k){return '<div>✓ '+escapeHtml(labels[k]||k)+': <strong>'+escapeHtml(parsed.fields[k])+'</strong></div>'}).join('');
-  box.innerHTML='<div class="alert alert-success">تم التعرف على النص. راجع الخانات قبل الحفظ اليدوي.<br>'+rows+'<small>النص الكامل: '+escapeHtml(parsed.text)+'</small></div>';
+  box.innerHTML='<div class="alert alert-success">تم التعرف على النص. راجع الخانات قبل ا��حفظ اليدوي.<br>'+rows+'<small>النص الكامل: '+escapeHtml(parsed.text)+'</small></div>';
 }
 function speechErrorMessage(error){const code=error&&error.error;if(code==='not-allowed'||code==='service-not-allowed')return currentLang==='en'?'Microphone permission was denied.':'تم رفض إذن الميكروفون.';if(code==='no-speech')return currentLang==='en'?'No speech was detected. Try again.':'لم يتم التعرف على الصوت، حاول مرة أخرى.';if(code==='audio-capture')return currentLang==='en'?'No microphone was found.':'لم يتم العثور على ميكروفون.';return currentLang==='en'?'Voice input is unavailable in this browser.':'الإدخال الصوتي غير متاح في هذا المتصفح.'}
 function stopStudentSpeech(){if(studentSpeechRecognition){try{studentSpeechRecognition.stop()}catch(e){}}studentSpeechListening=false;const btn=document.getElementById('studentSpeechBtn');if(btn){btn.disabled=false;btn.setAttribute('aria-pressed','false');btn.textContent='🎤 إدخال البيانات بالصوت'}const status=document.getElementById('studentSpeechStatus');if(status)status.textContent='تم التعرف'}
@@ -1183,7 +1183,7 @@ function toggleStudentSpeech(){
   const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition, btn=document.getElementById('studentSpeechBtn'), status=document.getElementById('studentSpeechStatus'), transcript=document.getElementById('studentSpeechTranscript');
   if(studentSpeechListening){stopStudentSpeech();return}
   if(!Recognition){
-    if(status)status.textContent=currentLang==='en'?'Browser speech recognition is unavailable; recording fallback is ready.':'التعرف المباشر غير متاح؛ سيتم استخدام التسجيل الصوتي كبديل آمن.';
+    if(status)status.textContent=currentLang==='en'?'Browser speech recognition is unavailable; recording fallback is ready.':'التعرف المباشر غير متاح؛ سيتم استخدام التسجي�� الصوتي كبديل آمن.';
     if(transcript){transcript.classList.remove('hidden');transcript.textContent=currentLang==='en'?'Press the recording button below, then analyze the same recording.':'اضغط زر التسجيل بالأسفل، ثم حلّل التسجيل نفسه.'}
     const recorderBtn=document.getElementById('studentIntakeRecordBtn');
     if(recorderBtn){recorderBtn.focus();}
@@ -2211,7 +2211,7 @@ function renderReadingItems() {
   container.innerHTML = html;
 }
 
-// ====== الاختبار الذكي المستقل ======
+// ====== الاختبار الذكي ا��مستقل ======
 let examQuestions=[]; let examPlanRows=[]; let examEditorActiveIndex=0; let studentExamTimer=null; let studentExamQuestionTimer=null; let proctorExamAuthorizedId='';
 let studentExamQuestionRemaining=[]; let studentExamQuestionStartedAt=[]; let studentExamQuestionElapsed=[]; let studentExamSessionId=''; let studentExamCurrentIndex=0; let studentExamViewIndex=0; let studentExamLockedIndices={};
 
@@ -3257,7 +3257,7 @@ async function runDevAssistant(){
   if(dangers.length){
     const confirmed = confirm(
       '⚠️ تحذير: قد يتضمن هذا الطلب عملية حسّاسة:\n\n- '+dangers.join('\n- ')+
-      '\n\nهذه العمليات قد تؤثر على البيانات أئ الأمان أو المستخدمين. لن يُنفَّذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتابعة والتنفيذ التلقائي؟'
+      '\n\nهذه العمليات قد تؤثر على البيانات أئ الأمان أو المستخدمين. لن يُنفَ��ذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتابعة والتنفيذ التلقائي؟'
     );
     if(!confirmed){
       recordDevAudit({ status:'blocked', request, summary:'أُلغي بواسطة ءءلمسؤول قبل التنفيذ.', flagged:dangers });
@@ -5199,7 +5199,7 @@ function generateAIResponse(text, student) {
 
   // تحية
   if(has('السلا','مرحبا','مرحباً','هلا','اهلا','أهلا','صباح','مساء')) {
-    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الواجبءءءت والتسجيلات المطلوبة<br>• <em>لآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
+    return 'وعليكم السلام ورحمة الله وبركاته '+name+'! ءءء<br><br>أنا <strong>مساعدك الذكي</strong> في رحلتك مع القرآن، متاح ئك 24 ساعة.<br>جرّب أن تكتب:<br>• <em>مستواي</em> — لعرض آخر تقييم وتحليله<br>• <em>مهاءء</em> — لعرض الو��جبءءءت والتسجيلات المطلوبة<br>• <em>لآيات</em> — لمعرفة كيف ترى آيات تسءءيعك كصورة<br>• <em>خطة</em> — لخطة حفظ يومية مصصة ك<br>• <em>تحفيز</em> — لجرعة همة 💪';
   }
   // شكر
   if(has('شكرا','شكراً','جزاك','بارك الله','تمام','ok')) {
