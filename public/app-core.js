@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر����ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر����������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -224,13 +224,19 @@ let langObserver = new MutationObserver(function(){
 function initLanguage(){ applyLangToDom(); langObserver.observe(document.body,{childList:true,subtree:true}); }
 
 let neonSaveTimer = null;
+let neonSaveInFlight = false;
+let neonSaveQueued = false;
 const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests','notifications','aiQuestionHistory'];
 function getData(key, def) { try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); } catch (e) { console.warn('تعذر قراءة البيانات المحلية للمفتاح:', key, e); return def || []; } }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 async function saveAllDataToNeon(){
+  if(neonSaveInFlight){neonSaveQueued=true;return}
+  neonSaveInFlight=true;neonSaveQueued=false;
   const status=document.getElementById('cloudSaveStatus');
-  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})}); if(!res.ok)throw new Error(); if(status)status.textContent='محفوظ في Neon'; }
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),8000);
+  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()}),signal:controller.signal}); if(!res.ok)throw new Error(); if(status)status.textContent='محفوظ في Neon'; }
   catch(e){ if(status)status.textContent='تعذر الحفظ في Neon'; }
+  finally{clearTimeout(timeout);neonSaveInFlight=false;if(neonSaveQueued){clearTimeout(neonSaveTimer);neonSaveTimer=setTimeout(saveAllDataToNeon,500)}}
 }
 function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); if(sessionStorage.getItem('neon_unavailable_v1')==='1') return; clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
 async function hydrateDataFromNeon(){
@@ -334,7 +340,7 @@ async function proctorDetectFaces(video){if(proctor.detectorType==='native')retu
 function proctorAverage(list){return list.length?list.reduce((a,b)=>a+b,0)/list.length:0}
 function proctorEyeRatio(points,upper,lower,left,right){if(!points||!points[upper]||!points[lower]||!points[left]||!points[right])return null;const vertical=Math.hypot(points[upper].x-points[lower].x,points[upper].y-points[lower].y),horizontal=Math.max(.001,Math.hypot(points[left].x-points[right].x,points[left].y-points[right].y));return vertical/horizontal}
 async function proctorAnalyzeFrame(){const video=document.getElementById('proctorVideo'),canvas=document.getElementById('proctorCanvas');if(!video||video.readyState<2||!proctor.detector||proctor.analyzing)return;proctor.analyzing=true;try{const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,0,canvas.width,canvas.height);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;let sum=0;for(let i=0;i<pixels.length;i+=16)sum+=(pixels[i]+pixels[i+1]+pixels[i+2])/3;const light=sum/(pixels.length/16),lightOk=light>=42&&light<=240;let faces=[];try{faces=await proctorDetectFaces(video)}catch(e){}const oneFace=faces.length===1;let gazeOk=false,faceOk=false,eyesOk=true;if(oneFace){const face=faces[0],b=face.boundingBox,cx=(b.x+b.width/2)/video.videoWidth,cy=(b.y+b.height/2)/video.videoHeight,ratio=b.width/video.videoWidth;faceOk=ratio>.16&&ratio<.78&&cy>.23&&cy<.78;proctor.gazeSamples.push({cx,cy,ratio});if(proctor.gazeSamples.length>7)proctor.gazeSamples.shift();const smooth={cx:proctorAverage(proctor.gazeSamples.map(x=>x.cx)),cy:proctorAverage(proctor.gazeSamples.map(x=>x.cy)),ratio:proctorAverage(proctor.gazeSamples.map(x=>x.ratio))};if(!proctor.baseline&&faceOk&&lightOk)proctor.baseline=smooth;if(face.landmarks){const left=proctorEyeRatio(face.landmarks,159,145,33,133),right=proctorEyeRatio(face.landmarks,386,374,362,263),eye=(left!==null&&right!==null)?(left+right)/2:null;if(eye!==null){proctor.eyeSamples.push(eye);if(proctor.eyeSamples.length>9)proctor.eyeSamples.shift();const smoothEye=proctorAverage(proctor.eyeSamples),adaptiveFloor=Math.max(.035,Math.min(.095,(proctor.baseline?.eye||smoothEye)*.48));if(proctor.baseline&&!proctor.baseline.eye&&proctor.eyeSamples.length>=5)proctor.baseline.eye=smoothEye;eyesOk=smoothEye>=adaptiveFloor}}if(proctor.baseline)gazeOk=eyesOk&&Math.abs(smooth.cx-proctor.baseline.cx)<.14&&Math.abs(smooth.cy-proctor.baseline.cy)<.14&&Math.abs(smooth.ratio-proctor.baseline.ratio)<.2}setProctorCheck('proctorLightCheck',lightOk,lightOk?'الإضاءة مناسبة':'عدّل الإضاءة أمام الوجه');setProctorCheck('proctorFaceCheck',faceOk,faceOk?'وجه واحد واضح':'اجعل وجهاً واحداً كاملاً في المنتصف');setProctorCheck('proctorGazeCheck',gazeOk,gazeOk?'تركيز العينين ثابت على ائشاشة':'انظر مباشرة إلى الشاشة وافتح عينيك بصورة طبيعية');const allOk=isTouchDevice()&&lightOk&&faceOk&&gazeOk;if(allOk){if(!proctor.stableSince)proctor.stableSince=Date.now()}else proctor.stableSince=0;const stable=allOk&&Date.now()-proctor.stableSince>=1800;const hold=document.getElementById('proctorGateHold');if(hold)hold.setAttribute('aria-disabled',String(!stable));document.getElementById('proctorCameraStatus').textContent=stable?'جميع الشروط مستوفاة — ضع إصبع واحد للبدء':'يتم تثبيت التركيز على العينين...';if(proctor.active)proctorHandleLiveState(allOk,lightOk?'أبعدت وجهك أو نظرك عن الشاشة':'الإضاءة غير مناسبة')}finally{proctor.analyzing=false}}
-function setupProctorHold(zone){if(!zone||zone.dataset.proctorBound)return;zone.dataset.proctorBound='1';const sync=function(e){e.preventDefault();proctor.touches=new Set(Array.from(e.touches||[]).map(t=>t.identifier));proctor.holding=proctor.touches.size===1;zone.classList.toggle('holding',proctor.holding);zone.textContent=proctor.holding?'تم رصد إصبع واحد — بدء المهمة':(proctor.touches.size>1?'استخدم إصبعًا واحد��ا فقط':'ضع إصبعًا واحدًا هنا للبدء');if(proctor.holding&&zone.getAttribute('aria-disabled')==='false'&&proctor.onReady){const cb=proctor.onReady,ctx=proctor.context;proctor.onReady=null;document.getElementById('proctorGate').classList.add('hidden');proctor.active=true;proctor.context=ctx;proctor.screenWidth=screen.width;proctor.screenHeight=screen.height;proctor.warningAt=0;proctor.touchWarningAt=0;proctor.leaveAt=0;proctor.lastGoodAt=Date.now();if(getProctorSettings().fullscreen&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});cb()}};zone.addEventListener('touchstart',sync,{passive:false});zone.addEventListener('touchmove',sync,{passive:false});zone.addEventListener('touchend',sync,{passive:false});zone.addEventListener('touchcancel',sync,{passive:false})}
+function setupProctorHold(zone){if(!zone||zone.dataset.proctorBound)return;zone.dataset.proctorBound='1';const sync=function(e){e.preventDefault();proctor.touches=new Set(Array.from(e.touches||[]).map(t=>t.identifier));proctor.holding=proctor.touches.size===1;zone.classList.toggle('holding',proctor.holding);zone.textContent=proctor.holding?'تم رصد إصبع واحد — بدء المهمة':(proctor.touches.size>1?'استخد�� إصبعًا واحد��ا فقط':'ضع إصبعًا واحدًا هنا للبدء');if(proctor.holding&&zone.getAttribute('aria-disabled')==='false'&&proctor.onReady){const cb=proctor.onReady,ctx=proctor.context;proctor.onReady=null;document.getElementById('proctorGate').classList.add('hidden');proctor.active=true;proctor.context=ctx;proctor.screenWidth=screen.width;proctor.screenHeight=screen.height;proctor.warningAt=0;proctor.touchWarningAt=0;proctor.leaveAt=0;proctor.lastGoodAt=Date.now();if(getProctorSettings().fullscreen&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});cb()}};zone.addEventListener('touchstart',sync,{passive:false});zone.addEventListener('touchmove',sync,{passive:false});zone.addEventListener('touchend',sync,{passive:false});zone.addEventListener('touchcancel',sync,{passive:false})}
 function proctorLiveBar(){return ''}
 function bindLiveProctorHold(){}
 function proctorShowWarning(reason,startedAt){const grace=Math.ceil(getProctorSettings().gazeGraceMs/1000),left=Math.max(0,grace-Math.floor((Date.now()-startedAt)/1000)),w=document.getElementById('proctorWarning');if(w){w.textContent='تنبيه: '+reason+' — صحح الوضع خلال '+left+' ثانية';w.classList.remove('hidden')}}
@@ -364,7 +370,7 @@ function finishGoogleLogin(user){
 function restorePendingGoogleSignup(){try{const raw=sessionStorage.getItem('thimar_pending_google_signup');if(!raw)return false;const pending=JSON.parse(raw);if(!pending?.email)return false;signupState.method='google';signupState.email=String(pending.email).trim().toLowerCase();signupState.name=String(pending.name||'');signupState.whats='';signupState.verified=true;const note=document.getElementById('signupVerifiedNote');if(note)note.innerHTML='تم التحقق من هويتك عبر Google — '+escapeHtml(signupState.email);const name=document.getElementById('signupName');if(name&&!name.value)name.value=signupState.name;initSignupJuzSelect();showPage('signupStep2');return true}catch(e){try{sessionStorage.removeItem('thimar_pending_google_signup')}catch(ignore){}return false}}
 
 document.addEventListener('DOMContentLoaded',()=>{loadGlobalProctorSettings();setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store',credentials:'same-origin'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('عذر قراءة جلسة Google');finishGoogleLogin(data.user);history.replaceState({},'',pageUrl(document.querySelector('.page:not(.hidden)')?.id))}).catch(()=>{history.replaceState({},'',location.pathname);const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر استكمال تسجيل الدخول عبر Google.</div>'})}else if(restoreSession()){
-  const expectedRole = location.pathname.endsWith('/admin.html') ? 'admin' : location.pathname.endsWith('/student.html') ? 'student' : location.pathname.endsWith('/parent.html') ? 'parent' : null;
+  const expectedRole = location.pathname.startsWith('/admin') ? 'admin' : location.pathname.startsWith('/student') ? 'student' : location.pathname.startsWith('/parent') ? 'parent' : null;
   if(expectedRole && expectedRole !== currentType){
     location.replace(roleShellPath(currentType));
     return;
@@ -372,7 +378,12 @@ document.addEventListener('DOMContentLoaded',()=>{loadGlobalProctorSettings();se
   const routed=pageFromUrl();
   if(routed&&pageAllowedForUser(routed))showPage(routed,{fromBrowser:true});
   else{const home=currentType==='admin'?'adminDashboard':currentType==='student'?'studentDashboard':currentType==='parent'?'parentDashboard':'homePage';showPage(home,{fromBrowser:true});}
-}else restorePendingGoogleSignup()});
+}else{
+  const routed=pageFromUrl();
+  const protectedRoute=/^\/(admin|student|parent)(\/|$)/.test(location.pathname);
+  if(protectedRoute){ location.replace('/login?next='+encodeURIComponent(location.pathname)); return; }
+  if(!restorePendingGoogleSignup() && routed && document.getElementById(routed)) showPage(routed,{fromBrowser:true});
+}});
 
 window.addEventListener('popstate',()=>{const id=pageFromUrl();if(!id||!pageAllowedForUser(id)){showPage(currentType==='admin'?'adminDashboard':currentType==='student'?'studentDashboard':currentType==='parent'?'parentDashboard':'homePage',{fromBrowser:true});return;}showPage(id,{fromBrowser:true});});
 
@@ -413,23 +424,41 @@ function clearSession() {
 }
 
 const PAGE_ROUTE_PARAM = 'page';
+const PAGE_ROUTES = Object.freeze({
+  lockScreen: '/login', accountRecoveryPage: '/forgot-password', signupStep1: '/signup', signupStep2: '/signup/details',
+  adminLogin: '/login/admin', adminDashboard: '/admin', adminAIPage: '/admin/ai', devAssistantPage: '/admin/developer',
+  githubSyncPage: '/admin/github', notificationsPage: '/admin/notifications', adminsPage: '/admin/admins',
+  adminSettings: '/admin/settings', addStudent: '/admin/students/new', editStudent: '/admin/students/edit',
+  recordSession: '/admin/records/new', studentHistory: '/admin/students/history', studentsList: '/admin/students',
+  messagesPage: '/admin/messages', subjectsPage: '/admin/subjects', filesPage: '/admin/files',
+  studentLogin: '/login/student', studentDashboard: '/student', studentExamPage: '/student/exams/current',
+  studentRecordsPage: '/student/records', studentFilesPage: '/student/files', studentInbox: '/student/messages',
+  studentAIChat: '/student/ai', studentSettings: '/student/settings',
+  parentLogin: '/login/parent', parentDashboard: '/parent', parentFilesPage: '/parent/files',
+  parentInbox: '/parent/messages', parentAIChat: '/parent/ai', parentRecordsPage: '/parent/records',
+  parentPendingTasksPage: '/parent/tasks', parentChartPage: '/parent/chart', quranReaderPage: '/quran-reader',
+  tuhotPage: '/tuhfat', tuhfatPage: '/tuhfat'
+});
+const ROUTE_PAGES = Object.freeze(Object.fromEntries(Object.entries(PAGE_ROUTES).map(([page, route]) => [route, page])));
 let routingFromBrowser = false;
 
 function pageUrl(id) {
-  const url = new URL(window.location.href);
-  if (!id || id === 'homePage') url.searchParams.delete(PAGE_ROUTE_PARAM);
-  else url.searchParams.set(PAGE_ROUTE_PARAM, id);
-  return url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash;
+  const route = PAGE_ROUTES[id] || '/login';
+  const url = new URL(route, window.location.origin);
+  const current = new URL(window.location.href);
+  ['google', 'studentId'].forEach(key => { if (current.searchParams.has(key)) url.searchParams.set(key, current.searchParams.get(key)); });
+  return url.pathname + url.search + url.hash;
 }
 
 function pageFromUrl() {
-  const id = new URLSearchParams(window.location.search).get(PAGE_ROUTE_PARAM);
-  return id && document.getElementById(id) ? id : 'homePage';
+  const legacyId = new URLSearchParams(window.location.search).get(PAGE_ROUTE_PARAM);
+  if (legacyId && document.getElementById(legacyId)) return legacyId;
+  return ROUTE_PAGES[window.location.pathname.replace(/\/$/, '') || '/'] || (window.location.pathname === '/' ? 'homePage' : 'lockScreen');
 }
 
 function pageAllowedForUser(id) {
   if (!id) return true;
-  if (id.startsWith('admin') || ['studentsList','messagesPage','subjectsPage','adminsPage','addStudent','filesPage','adminSettings'].includes(id)) return currentType === 'admin';
+  if (id.startsWith('admin') || ['studentsList','messagesPage','subjectsPage','adminsPage','addStudent','editStudent','recordSession','studentHistory','notificationsPage','filesPage','devAssistantPage','githubSyncPage'].includes(id)) return currentType === 'admin';
   if (id.startsWith('student')) return currentType === 'student';
   if (id.startsWith('parent')) return currentType === 'parent';
   return true;
@@ -443,19 +472,16 @@ function roleShellPath(role) {
 }
 
 function showPage(id, options = {}) {
-  /* كل دور يُفتح في ملف HTML مستقل مع تحميل كامل من السيرفر. */
-  const dashboardRole = id === 'adminDashboard' ? 'admin' : id === 'studentDashboard' ? 'student' : id === 'parentDashboard' ? 'parent' : null;
-  if (!options.fromBrowser && dashboardRole && (location.pathname === '/login' || location.pathname === '/app.html')) {
-    const query = new URLSearchParams(location.search).toString();
-    location.assign(roleShellPath(dashboardRole) + (query ? '?' + query : ''));
+  /* كل صفحة لها مستند ومسار مستقلان؛ لا يجري تحميل الصفحة التالية قبل طلبها. */
+  const targetUrl = pageUrl(id);
+  const currentUrl = location.pathname + location.search + location.hash;
+  if (!options.fromBrowser && !routingFromBrowser && targetUrl !== currentUrl) {
+    saveSessionState();
+    location.assign(targetUrl);
     return;
   }
   const currentVisible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   const currentId = currentVisible ? currentVisible.id : null;
-
-  if (!options.fromBrowser && !routingFromBrowser && window.history && window.history.pushState) {
-    window.history.pushState({ page: id }, '', pageUrl(id));
-  }
   
   if(currentId && currentId !== id && currentId !== 'homePage' && !options.fromBrowser) {
     pageHistory.push(currentId);
@@ -1162,7 +1188,7 @@ function spokenDigits(value){
 }
 function parseStudentSpeech(text){
   const clean=cleanSpeechText(text), result={};
-  const labels={name:['اسم الطالب','الاسم','student name','name'],username:['اسم المستخدم','username','user name'],national:['الرقم القومي','الرقم القومى','national id'],phone:['رقم الهاتف','الهاتف','phone number','phone'],birth:['تاريخ الميلاد','birth date','date of birth'],parent:['اسم ولي الأمر','ولي الأمر','ولي الامر','parent name','guardian name'],notes:['ملاحظات','notes']};
+  const labels={name:['اسم الطالب','الاسم','student name','name'],username:['اسم المستخدم','username','user name'],national:['الرقم القومي','الرقم القومى','national id'],phone:['��قم الهاتف','الهاتف','phone number','phone'],birth:['تاريخ الميلاد','birth date','date of birth'],parent:['اسم ولي الأمر','ولي الأمر','ولي الامر','parent name','guardian name'],notes:['ملاحظات','notes']};
   const all=Object.keys(labels).reduce(function(a,k){return a.concat(labels[k])},[]).sort(function(a,b){return b.length-a.length});
   const pattern=all.map(function(x){return x.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')}).join('|');
   const re=new RegExp('(?:'+pattern+')\\s*[:：-]?\\s*([\\s\\S]*?)(?=\\s+(?:'+pattern+')\\s*[:：-]?|$)','gi'); let match;
@@ -1232,7 +1258,7 @@ async function toggleStudentIntakeRecord(){
     recorder.onstop=async function(){
       const blob=new Blob(studentIntakeChunks,{type:recorder.mimeType||mimeType||'audio/webm'});studentIntakeLastBlob=blob;studentIntakeChunks=[];
       try{
-        if(blob.size<1500)throw new Error('التسجيل قصير أو فارغ. تحدث بوضوح لعدة ثوانٍ ثم أعد المحاولة.');
+        if(blob.size<1500)throw new Error('التسجيل قصير أو فارغ. تحد�� بوضوح لعدة ثوانٍ ثم أعد المحاولة.');
         if(blob.size>2800000)throw new Error('حجم التسجيل كبير جداً للإرسال الآمن. اجعله أقصر من دقيقة ونصف ثم أعد المحاولة.');
         if(preview.src&&preview.src.startsWith('blob:'))URL.revokeObjectURL(preview.src);
         preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='جاري فهم بيانات الطالب...';result.innerHTML='';
@@ -1962,7 +1988,7 @@ function renderRecordElementHTML(el, i, num) {
     if(mainSurahIndex === -1) {
       html += '<small style="color:var(--text-light)">لم يتم تحديد السورة الأساسية للطالب</small>';
     } else {
-      html += '<small style="color:var(--text-light)">يتم عرض السور من بعد '+mainSurah+' حتى الناس</small>';
+      html += '<small style="color:var(--text-light)">يتم عرض السور من ��عد '+mainSurah+' حتى الناس</small>';
     }
   } else if(el.isExtra) {
     html += '<select onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="margin-bottom:8px; width:100%;">';
@@ -2228,27 +2254,25 @@ async function readApiJson(res, fallback){
   return data;
 }
 async function loadExamFiles(){
+  examFilesCache=[];
   const box=document.getElementById('examFilesList');
-  try{
-    const previous=document.getElementById('examFileSource')?.value||'';
-    const res=await fetch('/api/exam-files',{cache:'no-store'});const data=await readApiJson(res,'تعذر تحميل ملفات الاختبارات');examFilesCache=Array.isArray(data.files)?data.files:[];
-    const select=document.getElementById('examFileSource');if(select){select.innerHTML='<option value="">اختر مرجعاً...</option>'+examFilesCache.map(f=>'<option value="'+f.id+'">'+escapeHtml(f.name)+(f.pinned?' — مثبت دائماً':'')+'</option>').join('');select.value=examFilesCache.some(f=>f.id===previous)?previous:(examFilesCache[0]?.id||'')}
-    if(box)box.innerHTML=(data.warning?'<div class="alert alert-warning">'+escapeHtml(data.warning)+'</div>':'')+(examFilesCache.length?examFilesCache.map(f=>'<div class="exam-plan-row"><strong>'+escapeHtml(f.name)+(f.pinned?' <span class="badge badge-primary">مرجع مثبت</span>':'')+'</strong><div style="color:var(--text-light);font-size:.85rem">'+(f.text||'').length+' حرف'+(f.pinned?' — متاح دائماً':' — '+new Date(f.uploadedAt).toLocaleString('ar-EG'))+'</div>'+(f.pinned?'':'<button class="btn btn-sm btn-danger" onclick="deleteExamFile(\''+f.id+'\')">حذف الملف</button>')+'</div>').join(''):'<div class="alert alert-info">لا توجد ملفات ختبارات محفوظة.</div>');
-    updateExamSourceDistribution();
-  }catch(e){examFilesCache=[];if(box)box.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر تحميل ا��ملفات')+' <button class="btn btn-sm btn-primary" onclick="loadExamFiles()">إعادة المحاولة</button></div>';throw e}
+  const select=document.getElementById('examFileSource');
+  if(select){select.innerHTML='<option value="">تم تعطيل ملفات الاختبارات</option>';select.disabled=true}
+  if(box)box.innerHTML='<div class="alert alert-info">تم حذف ملفات الاختبارات وتعطيل رفعها. المصحف الشريف هو ملف PDF الوحيد المتاح.</div>';
+  updateExamSourceDistribution();
 }
-function updateExamSourceDistribution(){const mode=document.getElementById('examSourceMode')?.value||'ai',group=document.getElementById('examFileSourceGroup'),source=document.getElementById('examFileSource'),label=document.getElementById('examSourceDistribution');if(group)group.style.display=mode==='file'?'block':'none';if(source)source.disabled=mode!=='file';if(label)label.textContent=mode==='file'?'ستُنشأ الدفعة املة من الملف المحدد.':'توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.'}
-function getExamSourceMode(){return document.getElementById('examSourceMode')?.value==='file'?'file':'ai'}
-async function uploadExamFile(input){const file=input.files&&input.files[0];if(!file)return;const status=document.getElementById('examFileUploadStatus');if(status)status.innerHTML='<div class="alert alert-info">جاري رفع واستخراج النص...</div>';try{const form=new FormData();form.append('file',file);const res=await fetch('/api/exam-files',{method:'POST',body:form});await readApiJson(res,'تعذر رفع الملف');if(status)status.innerHTML='<div class="alert alert-success">تم حفظ اءءملف واستخراج النص.</div>';await loadExamFiles()}catch(e){if(status)status.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر رفع الملف')+' <button class="btn btn-sm btn-primary" onclick="document.getElementById(\'examFileInput\')?.click()">اختيار ملف آخر</button></div>'}finally{input.value=''}}
-async function deleteExamFile(id){const file=examFilesCache.find(f=>f.id===id);if(!file||!confirm('هل تريد حذف هذا الملف نهائياً؟'))return;try{const res=await fetch('/api/exam-files',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({pathname:file.pathname,metadataPathname:file.metadataPathname})});await readApiJson(res,'تعذر حذف الملف');await loadExamFiles()}catch(e){alert(e.message||'تعذر الحذف')}}
-function toggleExamSource(){loadExamFiles().catch(e=>showExamAlert(e.message,'danger'))}
+function updateExamSourceDistribution(){const mode=document.getElementById('examSourceMode'),group=document.getElementById('examFileSourceGroup'),source=document.getElementById('examFileSource'),label=document.getElementById('examSourceDistribution');if(mode){mode.value='ai';Array.from(mode.options).forEach(o=>{if(o.value==='file')o.disabled=true})}if(group)group.style.display='none';if(source)source.disabled=true;if(label)label.textContent='توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.'}
+function getExamSourceMode(){return 'ai'}
+async function uploadExamFile(input){if(input)input.value='';alert('تم تعطيل رفع ملفات الاختبارات. المصحف الشريف هو ملف PDF الوحيد المتاح.')}
+async function deleteExamFile(){return}
+function toggleExamSource(){updateExamSourceDistribution()}
 function shuffled(values){return values.slice().sort(()=>Math.random()-.5)}
 function generateLocalFileQuestions(file,plans){const sentences=String(file.text||'').split(/[.!؟\n]+/).map(s=>s.trim()).filter(s=>s.length>=25&&s.length<=260);if(sentences.length<6)throw new Error('لا يحتوي الملف على جمل كافية لإنشاء اختبار متنوع.');const words=shuffled(Array.from(new Set(sentences.join(' ').split(/\s+/).filter(w=>w.length>4))));let cursor=0;const output=[];plans.forEach(plan=>{for(let i=0;i<plan.count;i++){const sentence=sentences[(cursor++)%sentences.length],type=plan.type;let q={id:'file_'+Date.now()+'_'+output.length,type,level:plan.level,surah:'',prompt:'',stem:sentence,options:[],correct:'',from:1,to:1,timeLimit:plan.timeLimit,completeAyahs:1,reciteAyahs:1,audioShareWithParent:false,points:1,rejected:false,weakened:false,source:'file',sourceFileId:file.id,sourceFileName:file.name,optionsCount:plan.optionsCount||4};if(type==='truefalse'){const truthful=Math.random()>.5;q.prompt='صح أم خطأ: هل العبارة المعروضة مطابقة لما ورد في الملف؟';q.stem=truthful?sentence:sentences[(cursor+2)%sentences.length].split(' ').reverse().join(' ');q.options=['صح','خطأ'];q.correct=truthful?'صح':'خطأ'}else if(type==='complete'){const candidates=sentence.split(/\s+/).filter(w=>w.length>4);const answer=candidates[Math.floor(Math.random()*candidates.length)]||words[0];q.prompt='أكمل الجزء الاقص اعتماداً علئ النص المثبت';q.correct=answer;q.stem=sentence.replace(answer,'_____')}else if(type==='audio'){q.prompt='اقرأ النص المعروض بصوت واضح';q.correct=sentence;q.audioShareWithParent=plan.audioShareWithParent!==false}else{const correct=(sentence.split(/\s+/).filter(w=>w.length>4)[0]||words[0]);q.prompt='اختر الكلمة التي وردت في النص لمعروض';q.correct=correct;q.options=shuffled([correct].concat(words.filter(w=>w!==correct).slice(0,Math.max(1,(plan.optionsCount||4)-1))))}output.push(q)}});return output}
 
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
   const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الطالب';
-  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|محبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنن مساعدتك؟';
+  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم ال��لام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|محبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنن مساعدتك؟';
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
@@ -2279,7 +2303,7 @@ function initExamBuilder(){
   const base=document.getElementById('examBaseSurah');
   if(base){base.innerHTML=ALL_SURAHS_ORDERED.map(s=>'<option value="'+s+'">'+s+'</option>').join('');base.value=currentRecordMainSurah||ALL_SURAHS_ORDERED[0]}
   syncExamSurahRange();
-  loadExamFiles().catch(e=>showExamAlert(e.message,'danger'));
+  updateExamSourceDistribution();
   const deadline=document.getElementById('examDeadline');if(deadline&&!deadline.value){const d=new Date(Date.now()+24*60*60*1000);deadline.value=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)}
   renderExamPlanRows(); renderExamQuestions(); updateExamSourceDistribution();
 }
@@ -2409,7 +2433,7 @@ function startExamGenerationProgress(questionCount){
   const overlay=document.getElementById('examGenerationOverlay'),stage=document.getElementById('examGenerationStage'),bar=document.getElementById('examGenerationBar'),eta=document.getElementById('examGenerationEta');
   let elapsed=0,total=Math.max(45,Math.min(180,35+(Math.max(1,questionCount||1)*7)));overlay?.classList.remove('hidden');
   clearInterval(examGenerationTimer);
-  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينءءقئ الذكاء الاصطناعي أسئلة المتشابهاتت ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والنهاية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
+  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينءءقئ الذكاء الاصطناعي أسئلة المتشابهاتت ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والن��اية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
   update();examGenerationTimer=setInterval(update,1000);
 }
 function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'اكتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
@@ -2535,7 +2559,7 @@ function renderStudentExam(){
   if(typeof studentExamCurrentIndex!=='number'||studentExamCurrentIndex<0)studentExamCurrentIndex=0;
   const requiredQuestion=ex.questions[studentExamCurrentIndex],questionNeedsProctor=requiredQuestion&&requiredQuestion.proctorEnabled!==false,questionAuthId=ex.id+':'+studentExamCurrentIndex;
   if(!questionNeedsProctor&&proctor.active){proctorStop(true);proctorExamAuthorizedId=''}
-  if(questionNeedsProctor&&(proctorExamAuthorizedId!==questionAuthId||!proctor.active)){c.innerHTML='<div class="alert alert-info"><h3>التحقق الأمني مطلوب لهذا السؤال</h3><p>يبدأ وقت السؤال فقط بعد نءءاح فحص العين والوجه ووضع إصبع واحد ءءلى الشاشة. يمكن تحريكهما بحرية، وتوجد مهلة 12 ثانية لإعادتهما.</p><button class="btn btn-primary" onclick="openProctorGate({type:\'exam\',id:\''+escapeHtml(ex.id)+'\',questionIndex:'+studentExamCurrentIndex+'},function(){proctorExamAuthorizedId=\''+escapeHtml(questionAuthId)+'\';renderStudentExam()})">بدء فحص السؤال</button></div>';return}
+  if(questionNeedsProctor&&(proctorExamAuthorizedId!==questionAuthId||!proctor.active)){c.innerHTML='<div class="alert alert-info"><h3>ال��حقق الأمني مطلوب لهذا السؤال</h3><p>يبدأ وقت السؤال فقط بعد نءءاح فحص العين والوجه ووضع إصبع واحد ءءلى الشاشة. يمكن تحريكهما بحرية، وتوجد مهلة 12 ثانية لإعادتهما.</p><button class="btn btn-primary" onclick="openProctorGate({type:\'exam\',id:\''+escapeHtml(ex.id)+'\',questionIndex:'+studentExamCurrentIndex+'},function(){proctorExamAuthorizedId=\''+escapeHtml(questionAuthId)+'\';renderStudentExam()})">بدء فحص السؤال</button></div>';return}
   if(studentExamCurrentIndex>=ex.questions.length){submitStudentExam(true);return}
   studentExamViewIndex=Math.max(0,Math.min(studentExamViewIndex,studentExamCurrentIndex));
   const i=studentExamViewIndex,q=ex.questions[i],isCurrent=i===studentExamCurrentIndex;
@@ -3122,7 +3146,7 @@ async function refreshGithubSync(){
     html += '<div>✍️ صلاحية الكتابة (Push): <b>'+(st.canWrite ? 'متاحة ✅' : 'غير متاحة ❌')+'</b></div>';
     html += '<div>⚡ الدفع التلقائي عند التعديل: <b>'+(st.autoSync ? 'مفعّءء ✅' : 'غير مفعّل (اضبط DEV_ASSISTANT_AUTO_APPLY=true)')+'</b></div>';
     if(lc){
-      html += '<div style="margin-top:6px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.15);">آخر Commit:</div>';
+      html += '<div style="margin-top:6px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.15);">آخ�� Commit:</div>';
       html += '<div>🔖 <code>'+escapeHtmlAi(lc.sha)+'</code> — '+escapeHtmlAi((lc.message||'').split('\n')[0])+'</div>';
       html += '<div style="color:var(--text-light); font-size:0.85rem;">👤 '+escapeHtmlAi(lc.author||'')+(lc.date ? ' — '+escapeHtmlAi(new Date(lc.date).toLocaleString('ar-EG')) : '')+'</div>';
       if(lc.url) html += '<div><a href="'+escapeHtmlAi(lc.url)+'" target="_blank" rel="noopener">رض هذا الـCommit على GitHub</a></div>';
@@ -3270,7 +3294,7 @@ async function runDevAssistant(){
   btn.disabled = true;
   const originalLabel = btn.textContent;
   btn.textContent = 'جارٍ التعديل المباشر...';
-  resultBox.innerHTML = '<p style="color:var(--text-light)">جارٍ تحليل المشروع وقراءة الملفات البرمجية اللازمة ثم تطبيق التعديل...</p>';
+  resultBox.innerHTML = '<p style="color:var(--text-light)">جارٍ تحليل المشروع ��قراءة الملفات البرمجية اللازمة ثم تطبيق التعديل...</p>';
   const progressPanel=document.getElementById('devProgressPanel'),progressBar=document.getElementById('devProgressBar'),progressLabel=document.getElementById('devProgressLabel'),etaBox=document.getElementById('devEta');
   if(progressPanel)progressPanel.style.display='block'; let elapsed=0,estimate=120;
   const progressTimer=setInterval(function(){elapsed++;const left=Math.max(0,estimate-elapsed),progress=Math.min(94,8+Math.round(elapsed/estimate*86));if(progressBar)progressBar.style.width=progress+'%';if(etaBox)etaBox.textContent='الوقت المتبقي التقريبي: '+formatExamTime(left);if(progressLabel)progressLabel.textContent=elapsed<25?'تحليل الطلب':elapsed<70?'تعديل ملفات المشروع':elapsed<105?'إرسال التعديل إلى GitHub':'بدء تحديث الموقع';},1000);
@@ -3590,7 +3614,7 @@ function approveMessage(idx, approved) {
         msgs.push({
           type:'admin', sender:'المسؤو', senderId:0,
           receiverType: 'student', receiverId: studentId,
-          text: '✅ تمت موفقة المسؤول على ملفك وتم تسجيل المهمة في السجلات بنجاح! أحسنت.',
+          text: '✅ تم�� موفقة المسؤول على ملفك وتم تسجيل المهمة في السجلات بنجاح! أحسنت.',
           reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false
         });
 
@@ -3801,7 +3825,7 @@ function renderStudentDashboard() {
 
   let html = '<div class="student-identity-cards" aria-label="بيانات الطالب الأساسية">';
   html += '<div class="student-identity-card"><div class="identity-value">'+escapeHtml(s.name || '-')+'</div><div class="identity-label">اسم الطالب</div></div>';
-  html += '<div class="student-identity-card"><div class="identity-value">'+escapeHtml(String(s.age || '-'))+'</div><div class="identity-label">سن الطالب</div></div>';
+  html += '<div class="student-identity-card"><div class="identity-value">'+escapeHtml(String(s.age || '-'))+'</div><div class="identity-label">سن الطال��</div></div>';
   html += '</div>';
 
   html += '<div style="display:flex; gap:20px; flex-wrap:wrap;"><div style="flex:1; min-width:300px;">';
@@ -3828,7 +3852,7 @@ function renderStudentDashboard() {
     draft.elements.forEach((el, ei) => {
       draftHtml += '<div style="padding:10px; background:var(--input-bg); border-radius:8px; margin-bottom:8px; border-right:3px solid '+(el.color || 'var(--primary)')+';">';
       draftHtml += '<strong>'+el.name+'</strong> - '+(el.surah || 'بدون سرة')+'<br>';
-      draftHtml += 'من آية '+(el.from || '-')+' إلى '+(el.to || '-')+' | ';
+      draftHtml += 'من آية '+(el.from || '-')+' إل�� '+(el.to || '-')+' | ';
       draftHtml += 'التقءءيم: <span class="badge '+getRatingClass(el.rating)+'">'+getRatingLabel(el.rating)+'</span>';
       draftHtml += '</div>';
     });
@@ -4455,7 +4479,7 @@ async function geminiVoiceProfile(blob){
 }
 async function verifyVoiceIdentity(blob,student){
   const profile=(student&&student.voiceProfile)?student.voiceProfile:null;
-  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية محفوءءة لهذا الطالءء');
+  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية م��فوءءة لهذا الطالءء');
   const audio=await voiceAudioPayload(blob);
   const data=await callStudentAI('voice_match',Object.assign({referenceProfile:profile},audio),0.05);
   if(!data||typeof data.matchPercent!=='number')throw new Error('لم يُرجع Gemini نتيجة مطابقة صالحة');
@@ -4794,7 +4818,7 @@ async function sendParentChat() {
   const chatDiv=document.getElementById('parentChatMessages');const typing=document.createElement('div');typing.className='ai-msg bot';typing.textContent='جاري تحليل البيانات...';chatDiv.innerHTML+='<div class="ai-msg user">'+escapeHtml(text)+'</div>';chatDiv.appendChild(typing);chatDiv.scrollTop=chatDiv.scrollHeight;
   const child=currentUser&&currentUser[0]?currentUser[0]:{}; const last=(child.sessions||[]).filter(x=>!x.isDraft).slice(-1)[0]||null;
   try{
-    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال ولي الأمر: '+text+'\nبانات الابن/الابنة: '+JSON.stringify({name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)})})});
+    const res=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'assistant',model:getSelectedAIModel(),prompt:'سؤال ولي الأمر: '+text+'\nبانات الابن/ال��بنة: '+JSON.stringify({name:child.name,juz:child.juz,surah:child.surah,lastSession:last,tasks:child.tasks||[],examResults:(child.examResults||[]).slice(-3)})})});
     const data=await readApiJson(res,'تعذر رد Gemini وGroq');const reply=escapeHtml(data.result||'لم يصل رد.').replace(/\n/g,'<br>');typing.innerHTML=reply;
   }catch(e){typing.innerHTML=escapeHtml(localSmartChatReply(text,'parent'))+'<br><small>رد محلي محدود بسبب تعذر Gemini وGroq.</small>'}
   chatDiv.scrollTop=chatDiv.scrollHeight;
@@ -5174,7 +5198,7 @@ function generateParentWelcome(student) {
   const templates = [
     {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
     {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
-    {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر لمن يتب في سبيله.'}
+    {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الل�� يُضاعف الأجر لمن يتب في سبيله.'}
   ];
   const base = templates[Math.floor(Math.random() * templates.length)];
   if(last) {
@@ -5244,7 +5268,7 @@ function generateAIResponse(text, student) {
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صءءت','ميكروفون','تحق')) {
-    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوءءك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واضح.';
+    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجي�� إلا إذا كان صوءءك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واضح.';
   }
   // خطة الحفظ
   if(has('خطة','جدول','تنظيم','وقت','كيف احفظ','كيف أحفظ')) {
@@ -5293,20 +5317,11 @@ function logout() {
 
 initLanguage();
 
-// Restore session on page load
+// استعادة الجلسة مع احترام المسار المباشر بدلاً من إعادته دائماً إلى لوحة الدور.
+const initialRoutePage = pageFromUrl();
 if(restoreSession()) {
-  if(currentType === 'admin' && currentUser) {
-    showPage('adminDashboard');
-  } else if(currentType === 'student' && currentUser) {
-    renderStudentDashboard();
-    showPage('studentDashboard');
-  } else if(currentType === 'parent' && currentUser) {
-    renderParentDashboard();
-    showPage('parentDashboard');
-  } else {
-    showPage('lockScreen');
-  }
-} else {
-  // الصفحة الرئيسية الأصلية هي شاشة الدخول الموحدة؛ لا نعرض بطاقات اختيار المسؤول/الطالب/ولي الأمر.
-  showPage('lockScreen');
+  const roleHome = currentType === 'admin' ? 'adminDashboard' : currentType === 'student' ? 'studentDashboard' : currentType === 'parent' ? 'parentDashboard' : 'lockScreen';
+  showPage(pageAllowedForUser(initialRoutePage) ? initialRoutePage : roleHome, {fromBrowser:true});
+} else if(!/^\/(admin|student|parent)(\/|$)/.test(location.pathname)) {
+  showPage(initialRoutePage, {fromBrowser:true});
 }

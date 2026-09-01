@@ -6,8 +6,6 @@
 <meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-  <link rel="preload" href="/quran/quran.pdf" as="fetch" type="application/pdf" crossorigin fetchpriority="high">
-  <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="/islamic-hub.css">
   <link rel="stylesheet" href="/prayer-screen.css">
@@ -913,7 +911,7 @@ tr:hover { background: var(--table-hover); }
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
       <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
-      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 إعادة إرسال الكود</button>
+      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 إعادة إر��ال الكود</button>
     </div>
   </div>
 </div>
@@ -994,7 +992,7 @@ tr:hover { background: var(--table-hover); }
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد Gemini / Groq الإداري</h2></div>
   <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بانات الموقع عندما تكون مرتبطة بسؤالك.</p>
-  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
+  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أ��لياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
@@ -1054,7 +1052,7 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="notificationsPage" class="page hidden">
-  <div class="page-header"><h2>التنبيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد الكل كمقروء</button></div>
+  <div class="page-header"><h2>الت��بيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد ��لكل كمقروء</button></div>
   <p style="color:var(--text-light);margin-bottom:18px;">جميع طلبات استرجاع الحساب والإنذارات والمخالفات والتنبيهات العامة في مكان واحد.</p>
   <div id="notificationsList" class="notifications-grid" aria-live="polite"></div>
 </div>
@@ -1067,7 +1065,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group" style="margin-bottom:0;">
       <label>رقم واتساب المسؤول لاستلام طلبات الامام</label>
       <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
-      <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة على واتساب (بصيغة الدولة، مثال: 201554542019)</small>
+      <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة عل�� واتساب (بصيغة الدولة، مثال: 201554542019)</small>
     </div>
     <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
       <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حظ الرقم</button>
@@ -1162,7 +1160,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>السن (يحسب تلقائياً)</label><input type="number" id="stAge" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري للطالب *</label><input type="password" id="stStudentPass" placeholder="رقم سري لتسجيل دخول الطالب"><label style="font-weight:normal; margin-top:6px; display:block;"><input type="checkbox" id="stSamePass" onchange="syncStudentPass('st')"> استخدام نفس الرقم السري لولي الأمر</label></div>
+    <div class="form-group"><label>الرقم السري للطالب *</label><input type="password" id="stStudentPass" placeholder="رقم سري لتسجيل دخول الطالب"><label style="font-weight:normal; margin-top:6px; display:block;"><input type="checkbox" id="stSamePass" onchange="syncStudentPass('st')"> استخدام ��فس الرقم السري لولي الأمر</label></div>
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
@@ -1245,7 +1243,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
+  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائي��ً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
   <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
@@ -1266,7 +1264,7 @@ tr:hover { background: var(--table-hover); }
 <p style="color:var(--text-light);margin:10px 0">اختبار رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الاس.</small></div>
- <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">اماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قرب ونص بعيد.</small></div>
+ <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">اماضي القريب</option><option value="far">الم��ضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قرب ونص بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة اناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدويا قبل ءءقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
  <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.</small></div>
@@ -1399,12 +1397,12 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ندوق التسجيلات لطالب -->
 <div id="studentExamPage" class="page hidden">
-  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">ر��ءءع</button></div>
+  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">ر����ءءع</button></div>
   <div id="studentExamContent"></div>
 </div>
 
 <div id="studentRecordsPage" class="page hidden">
-  <div class="page-header"><h2>📦 صنوق التسجيلات</h2></div>
+  <div class="page-header"><h2>📦 صنوق الت��جيلات</h2></div>
   <div id="studentRecordsContent"></div>
 </div>
 
@@ -1530,11 +1528,9 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>📁 الملفات المرفوعة</h2></div>
   <div id="filesAlert"></div>
   <section style="background:var(--table-header);border:2px solid var(--primary);border-radius:15px;padding:20px;margin-bottom:20px;">
-    <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
-    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها محياً دون إرساله إلى Gemini وGroq.</p>
-    <input id="examFileUpload" type="file" accept=".pdf,.docx,.txt" onchange="uploadExamFile(this)">
-    <div id="examFileUploadStatus" style="margin-top:10px;"></div>
-    <div id="examFilesList" style="margin-top:15px;"></div>
+  <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
+  <div class="alert alert-info">تم حذف ملفات الاختبارات وتعطيل رفعها. المصحف الشريف هو ملف PDF الوحيد المتاح في المنصة.</div>
+  <div id="examFilesList"></div>
   </section>
   <div style="background:linear-gradient(135deg, rgba(31,88,69,0.08), rgba(179,138,67,0.1)); border-radius:15px; padding:20px; margin-bottom:20px; border:2px solid var(--primary);">
     <h4 style="color:var(--primary); margin-bottom:15px;">⬆️ رفع ملف جديد</h4>
@@ -1647,17 +1643,16 @@ window.alert = function(m){ showToast(m); };
       const s = document.createElement('script');
       s.src = '/app-core.js';
       s.async = false;
-      s.onload = function(){ window.__thimarAppCoreLoaded = true; const p=document.createElement('script'); p.src='/proctoring-v2.js'; p.onload=resolve; p.onerror=reject; document.head.appendChild(p); };
-      s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
+      s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
+      s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظ��م.')); };
       document.head.appendChild(s);
     });
     return corePromise;
   };
 
-  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواجهة.
-  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core warmup failed', err); }); };
-  if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
-  else setTimeout(warm, 350);
+  // صفحات الدخول لا تحمل النواة الكبيرة إلا عند التفاعل؛ الصفحات المحمية تحتاجها فوراً.
+  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
+  if (/^\/(admin|student|parent|signup)(\/|$)/.test(location.pathname) || location.pathname === '/forgot-password' || location.pathname === '/quran-reader' || location.pathname === '/tuhfat') warm();
 })();
 </script>
 <script>
@@ -1670,7 +1665,8 @@ window.alert = function(m){ showToast(m); };
       var box = document.getElementById('unifiedLoginAlert');
       if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
     }
-    return window.loadThimarAppCore().then(function(){
+    var loadWithTimeout = Promise.race([window.loadThimarAppCore(), new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })]);
+    return loadWithTimeout.then(function(){
       if (button) button.disabled = false;
       var fn = window[name];
       if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
@@ -1863,7 +1859,7 @@ window.alert = function(m){ showToast(m); };
         if(event.key === 'ArrowLeft') { event.preventDefault(); previousQuranPage(); }
         if(event.key === 'Escape') { event.preventDefault(); closeQuranReader(); }
       });
-      /* تكبير بإصبعين، وسحب للتنقل بين الصفحات (يمين = التالية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
+      /* تكبير بإصبعي��، وسحب للتنقل بين الصفح��ت (يمين = التالية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
       (function(){
         var MIN_SCALE = 1, MAX_SCALE = 4;
         var scale = 1, tx = 0, ty = 0;

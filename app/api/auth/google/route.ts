@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic"
 const COOKIE = "teacher_google_state"
 const SESSION = "teacher_google_session"
 const DOMAIN = "https://teacher-three-ashen.vercel.app"
-const APP_PAGE = `${DOMAIN}/app.html`
+const APP_PAGE = `${DOMAIN}/login`
 const CALLBACK = `${DOMAIN}/api/auth/google`
 
 function config() {

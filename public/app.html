@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-  <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="/islamic-hub.css">
   <link rel="stylesheet" href="/prayer-screen.css">
@@ -1164,7 +1163,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري لولي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
+    <div class="form-group"><label>الرقم السري لو��ي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
     <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
@@ -1237,7 +1236,7 @@ tr:hover { background: var(--table-hover); }
   <input type="hidden" id="recordStudentId">
   <div class="form-group"><label>اس�� الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
   <div class="form-row">
-    <div class="form-group"><label>تا��يخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُ��دد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
+    <div class="form-group"><label>��ا��يخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُ��دد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
     <div class="form-group"><label>الجزء</label><input type="text" id="recordJuz" readonly style="background:var(--table-header)"></div>
     <div class="form-group"><label>السور الأساسية</label><input type="text" id="recordSurahName" readonly style="background:var(--table-header)"></div>
   </div>
@@ -1263,7 +1262,7 @@ tr:hover { background: var(--table-hover); }
     </div>
 <p style="color:var(--text-light);margin:10px 0">اختبار رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
-<div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الاس.</small></div>
+<div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الم��ضي من السور التي تسبقها في المراجعة حتى سورة الاس.</small></div>
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">اماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُ��سم الماضي إلى نصف ريب ونص بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة اناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدويا قبل ءءقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
@@ -1300,7 +1299,7 @@ tr:hover { background: var(--table-hover); }
     <h4>📖 القراءة الإضافية <button class="add-item-btn" onclick="addReadingItem()">+</button></h4>
     <div id="readingItems"></div>
   </div>
-  <div class="form-group"><label>ملاحظات التسميع</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
+  <div class="form-group"><label>ملاحظات ال��سمي��</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
   <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حفظ مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, var(--primary), var(--primary-hover));">🔒 حفظ نهائي (لا يمكن التعديل)</button></div>
 </div>
 
@@ -1406,7 +1405,7 @@ tr:hover { background: var(--table-hover); }
   <div id="studentRecordsContent"></div>
 </div>
 
-<!-- ملفات المسؤول للطالب -->
+<!-- ملفا�� المسؤول للطالب -->
 <div id="studentFilesPage" class="page hidden">
   <div class="page-header"><h2>📁 الملفات المرسلة لي</h2></div>
   <div id="studentFilesContent"></div>
@@ -1433,7 +1432,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- إعدادات الطالب -->
 <div id="studentSettings" class="page hidden" style="max-width:500px;">
-  <div class="page-header"><h2>⚙️ تغيير الرقم السري</h2></div>
+  <div class="page-header"><h2>⚙��� تغيي�� الرقم السري</h2></div>
   <div id="studentSettingsAlert"></div>
   <div class="form-group"><label>الرقم السري الحالي</label><input type="password" id="currentStudentPass" placeholder="أدخل الرقم السري الحالي"></div>
   <div class="form-group"><label>الرقم السي الجديد</label><input type="password" id="newStudentPass" placeholder="أدخل الرقم السري لجديد"></div>
@@ -1528,11 +1527,9 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>📁 الملفات المرفوعة</h2></div>
   <div id="filesAlert"></div>
   <section style="background:var(--table-header);border:2px solid var(--primary);border-radius:15px;padding:20px;margin-bottom:20px;">
-    <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
-    <p style="color:var(--text-light);margin-bottom:15px;">ارفع PDF أو Word أو TXT. تُحفظ الملفات بشكل خاص حتى يحذفها المسؤول، ويُستخدم نصها محياً دون إرساله إلى Gemini وGroq.</p>
-    <input id="examFileUpload" type="file" accept=".pdf,.docx,.txt" onchange="uploadExamFile(this)">
-    <div id="examFileUploadStatus" style="margin-top:10px;"></div>
-    <div id="examFilesList" style="margin-top:15px;"></div>
+  <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
+  <div class="alert alert-info">تم حذف ملفات الاختبارات وتعطيل رفعها. المصحف الشريف هو ملف PDF الوحيد المتاح في المنصة.</div>
+  <div id="examFilesList"></div>
   </section>
   <div style="background:linear-gradient(135deg, rgba(31,88,69,0.08), rgba(179,138,67,0.1)); border-radius:15px; padding:20px; margin-bottom:20px; border:2px solid var(--primary);">
     <h4 style="color:var(--primary); margin-bottom:15px;">⬆️ رفع ملف جديد</h4>
@@ -1645,17 +1642,21 @@ window.alert = function(m){ showToast(m); };
       const s = document.createElement('script');
       s.src = '/app-core.js';
       s.async = false;
-      s.onload = function(){ window.__thimarAppCoreLoaded = true; const p=document.createElement('script'); p.src='/proctoring-v2.js'; p.onload=resolve; p.onerror=reject; document.head.appendChild(p); };
+      s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
       s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
       document.head.appendChild(s);
     });
     return corePromise;
   };
+  // توجيه خفيف لصفحة الدخول قبل تنزيل نواة التطبيق الكبيرة.
+  window.showPage = window.showPage || function(id){
+    const authRoutes = {lockScreen:'/login', accountRecoveryPage:'/forgot-password', signupStep1:'/signup', signupStep2:'/signup/details'};
+    location.assign(authRoutes[id] || '/login');
+  };
 
-  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواجهة.
-  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core warmup failed', err); }); };
-  if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
-  else setTimeout(warm, 350);
+  // صفحات الدخول لا تحمل النواة الكبيرة إلا عند التفاعل؛ الصفحات المحمية تحتاجها فوراً.
+  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
+  if (/^\/(admin|student|parent)(\/|$)/.test(location.pathname) || location.pathname === '/quran-reader' || location.pathname === '/tuhfat') warm();
 })();
 </script>
 <script>
@@ -1668,7 +1669,8 @@ window.alert = function(m){ showToast(m); };
       var box = document.getElementById('unifiedLoginAlert');
       if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
     }
-    return window.loadThimarAppCore().then(function(){
+    var loadWithTimeout = Promise.race([window.loadThimarAppCore(), new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })]);
+    return loadWithTimeout.then(function(){
       if (button) button.disabled = false;
       var fn = window[name];
       if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
