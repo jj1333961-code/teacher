@@ -48,6 +48,12 @@ export const antiCheatEvents = pgTable('anti_cheat_events', {
 
 export type AntiCheatItemType = 'recitation' | 'exam' | 'task'
 
+export const appSnapshots = pgTable('app_snapshots', {
+  id: text('id').primaryKey(),
+  data: jsonb('data').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
 export const messages = pgTable('messages', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
   senderId: text('sender_id').notNull(), senderName: text('sender_name').notNull(), senderRole: text('sender_role').notNull(),
