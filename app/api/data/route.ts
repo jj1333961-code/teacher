@@ -52,10 +52,11 @@ export async function PUT(request: Request) {
 
   try {
     const body = await readJsonBody<{ data?: unknown }>(request, MAX_SNAPSHOT_BYTES)
-    if (!body || typeof body.data !== 'object' || Array.isArray(body.data)) {
+    if (!body || typeof body.data !== 'object' || body.data === null || Array.isArray(body.data)) {
       return response({ error: 'صيغة البيانات غير صالحة' }, 400)
     }
-    const unknownKeys = Object.keys(body.data).filter((key) => !SNAPSHOT_KEYS.has(key))
+    const snapshotData = body.data as Record<string, unknown>
+    const unknownKeys = Object.keys(snapshotData).filter((key) => !SNAPSHOT_KEYS.has(key))
     if (unknownKeys.length) {
       return response({ error: 'تحتوي البيانات على مفاتيح غير مسموحة' }, 400)
     }
