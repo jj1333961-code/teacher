@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
-const OLD_HOST = "teacher.vercel.app"
-const configuredProductionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
-const CANONICAL_ORIGIN = configuredProductionHost
-  ? (configuredProductionHost.startsWith("http") ? configuredProductionHost.replace(/\/$/, "") : `https://${configuredProductionHost}`)
-  : "https://teacher-nine-blush.vercel.app"
+const CANONICAL_ORIGIN = "https://teacher-three-ashen.vercel.app"
+const CANONICAL_HOST = "teacher-three-ashen.vercel.app"
+const OLD_HOSTS = ["teacher.vercel.app", "teacher-nine-blush.vercel.app"]
 const LEGACY_PAGE_ROUTES: Record<string, string> = {
   lockScreen: "/login",
   accountRecoveryPage: "/forgot-password",
@@ -66,7 +64,7 @@ export function proxy(request: NextRequest) {
     }
     return NextResponse.redirect(target, 308)
   }
-  if (request.nextUrl.hostname === OLD_HOST) {
+  if (request.nextUrl.hostname !== CANONICAL_HOST && OLD_HOSTS.includes(request.nextUrl.hostname)) {
     const target = new URL(request.nextUrl.pathname + request.nextUrl.search, CANONICAL_ORIGIN)
     return NextResponse.redirect(target, 308)
   }

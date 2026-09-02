@@ -619,16 +619,7 @@ tr:hover { background: var(--table-hover); }
   .thimar-orn:last-of-type { transform:scaleX(-1); }
   .thimar-ayah { font-family:'Amiri',serif; color:var(--thimar-ink); font-size:clamp(1rem,4.6vw,1.35rem); line-height:2.1; text-wrap:balance; }
   .thimar-ayah-ref { display:block; color:var(--thimar-gold); font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-size:clamp(.75rem,3.2vw,.9rem); margin-top:10px; }
-  .thimar-quran { width:min(100%,370px); height:auto; display:block; margin:clamp(6px,2vw,14px) auto clamp(10px,3vw,18px); filter:var(--thimar-quran-glow); border-radius:28px; mix-blend-mode:screen; opacity:.94; transform:translateY(2px); }
   .thimar-inner { isolation:isolate; }
-  .thimar-quran-wrap { position:relative; width:min(100%,370px); margin:clamp(6px,2vw,14px) auto clamp(10px,3vw,18px); }
-  .thimar-quran-wrap::before, .thimar-quran-wrap::after { content:''; position:absolute; pointer-events:none; z-index:-1; }
-  .thimar-quran-wrap::before { inset:8% -10% 4%; border-radius:50%; background:radial-gradient(ellipse, rgba(177,214,194,.34), transparent 70%); filter:blur(12px); }
-  .thimar-quran-wrap::after { inset:auto 8% -4%; height:24%; border-radius:50%; background:rgba(8,42,34,.34); filter:blur(16px); }
-  .thimar-quran { width:100%; margin:0; }
-  .thimar-cloud { position:absolute; z-index:1; width:34%; height:18%; opacity:.58; filter:blur(.2px); pointer-events:none; background:radial-gradient(ellipse at 50% 70%, rgba(220,239,226,.68) 0 28%, rgba(220,239,226,.3) 46%, transparent 72%); }
-  .thimar-cloud-left { left:-7%; bottom:16%; transform:scaleX(-1); }
-  .thimar-cloud-right { right:-7%; top:18%; }
   #lockScreen.thimar-auth #unifiedLoginAlert { width:100%; }
   #lockScreen.thimar-auth .alert { background:var(--thimar-input-bg); border:1px solid var(--thimar-gold-line); color:var(--thimar-ink); text-align:center; }
   #lockScreen.thimar-auth .alert-danger { background:rgba(181,79,79,.22); border-color:rgba(233,150,150,.45); color:#ffdede; }
@@ -652,11 +643,11 @@ tr:hover { background: var(--table-hover); }
   .thimar-signup-row span { color:var(--thimar-ink-soft); font-size:.9rem; font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; }
   .thimar-signup-inline { background:transparent; border:1px solid var(--thimar-gold-line); border-radius:999px; color:var(--thimar-gold); padding:9px 18px; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; }
   .thimar-signup-inline:hover { background:var(--thimar-gold-fade); }
-  .thimar-password-toggle { position:absolute; right:16px; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--thimar-gold); cursor:pointer; }
-  .thimar-password-toggle::after { content:''; position:absolute; width:22px; height:2px; border-radius:2px; background:currentColor; transform:rotate(-42deg); transition:opacity .15s ease; }
-  .thimar-password-toggle.is-visible::after { opacity:0; }
-  .thimar-password-toggle:focus-visible { outline:2px solid var(--thimar-gold); outline-offset:2px; }
-  .thimar-field.has-password-toggle input { padding-right:58px; }
+ .thimar-password-toggle { position:absolute; left:48px; right:auto; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--thimar-gold); cursor:pointer; }
+ .thimar-password-toggle:hover, .thimar-password-toggle:active { transform:translateY(-50%) !important; }
+ .thimar-password-toggle::after { content:''; position:absolute; width:22px; height:2px; border-radius:2px; background:currentColor; transform:rotate(-42deg); transition:opacity .15s ease; }
+ .thimar-password-toggle.is-visible::after { opacity:0; }
+ .thimar-field.has-password-toggle input { padding-left:94px; padding-right:20px; }
   .thimar-forgot { display:inline-flex; margin-top:10px; border:0; background:transparent; color:var(--thimar-gold); font:inherit; font-size:.9rem; font-weight:700; cursor:pointer; text-decoration:underline; text-underline-offset:4px; }
   .notification-count { min-width:22px; height:22px; display:inline-grid; place-items:center; padding:0 6px; border-radius:999px; background:var(--danger); color:#fffdf7; font-size:.75rem; }
   .notifications-grid { display:grid; gap:14px; }
@@ -771,7 +762,7 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  /* قارئ مستقل يملأ الشاشة بالكامل، مع ������������بقاء زر الإغلاق واضحًا فوق PDF */
+  /* قارئ مستقل يملأ الشاشة بالكامل، مع ��������������بقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
@@ -839,12 +830,7 @@ tr:hover { background: var(--table-hover); }
       <span class="thimar-orn" aria-hidden="true">❁</span>
     </div>
 
-    <div class="thimar-quran-wrap">
-  <span class="thimar-cloud thimar-cloud-left" aria-hidden="true"></span>
-  <img class="thimar-quran" src="/images/thimar-quran-rehl.png" alt="مصحف مفتوح على حامل خشبي">
-  <span class="thimar-cloud thimar-cloud-right" aria-hidden="true"></span>
-  </div>
-
+  
     <div id="unifiedLoginAlert"></div>
 
     <!-- شاشة تسجيل الدخول (نفس الحقول والوظائف السابقة) -->
@@ -921,7 +907,7 @@ tr:hover { background: var(--table-hover); }
   <div class="alert alert-success" id="signupVerifiedNote">✅ تم التحقق من هويتك بنجاح.</div>
   <div class="form-row">
     <div class="form-group"><label>نوع الحساب *</label><select id="signupRole" onchange="syncSignupRelationshipField()"><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
-    <div class="form-group"><label>الاسم بالكامل *</label><input type="text" id="signupName" placeholder="الاسم كما في البطاقة"></div>
+    <div class="form-group"><label>الاسم بالكامل *</label><input type="text" id="signupName" placeholder="الاسم كما في البطا��ة"></div>
   </div>
   <div class="form-group" id="signupRelationshipGroup">
     <label id="signupRelationshipLabel">اسم ولي الأمر *</label>
@@ -1261,7 +1247,7 @@ tr:hover { background: var(--table-hover); }
       <h4 style="color:var(--primary);margin:0">🧪 اختبار مستقل بعد السورة الأساسية</h4>
       <span class="badge badge-primary">لا يختلط بعناصر التسميع</span>
     </div>
-<p style="color:var(--text-light);margin:10px 0">اختبار رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
+<p style="color:var(--text-light);margin:10px 0">اختبار رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنوي�� الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الاس.</small></div>
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">اماضي القريب</option><option value="far">الم��ضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قرب ونص بعيد.</small></div>
@@ -1357,7 +1343,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-group"><label>اسم المستخدم</label><input type="text" id="studentUsername" placeholder="أدخل اسم المستخدم"></div>
   <div class="form-group"><label>الرقم السري</label><input type="password" id="studentPassInput" placeholder="أدخل الرقم السري"></div>
   <button class="btn btn-primary" onclick="studentLogin()" style="width:100%">دخول</button>
-  <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للرئيسية</button>
+  <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجو�� للرئيسية</button>
 </div>
 
 <!-- صفحة الطالب -->
@@ -1476,7 +1462,7 @@ tr:hover { background: var(--table-hover); }
     </aside>
   </div>
   <div id="parentWelcome"></div>
-  <section id="parentIslamicHub" data-isl-hub aria-label="القسم الإسلامي"></section>
+  <section id="parentIslamicHub" data-isl-hub aria-label="القسم الإسلام��"></section>
   <div id="parentInfo"></div>
 </div>
 
@@ -1529,7 +1515,7 @@ tr:hover { background: var(--table-hover); }
   <div id="filesAlert"></div>
   <section style="background:var(--table-header);border:2px solid var(--primary);border-radius:15px;padding:20px;margin-bottom:20px;">
   <h3 style="color:var(--primary);margin-bottom:8px;">ملفات إنشاء الاختبارات</h3>
-  <div class="alert alert-info">تم حذف ملفات الاختبارات وتعطيل رفعها. المصحف الشريف هو ملف PDF الوحيد المتاح في المنصة.</div>
+  <div class="alert alert-info">تم حذف ملفات الاختبارات وتعطيل ��فعها. المصحف الشريف هو ملف PDF الوحيد المتاح في المنصة.</div>
   <div id="examFilesList"></div>
   </section>
   <div style="background:linear-gradient(135deg, rgba(31,88,69,0.08), rgba(179,138,67,0.1)); border-radius:15px; padding:20px; margin-bottom:20px; border:2px solid var(--primary);">

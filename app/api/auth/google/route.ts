@@ -4,10 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 export const dynamic = "force-dynamic"
 const COOKIE = "teacher_google_state"
 const SESSION = "teacher_google_session"
-const configuredProductionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
-const DOMAIN = configuredProductionHost
-  ? (configuredProductionHost.startsWith("http") ? configuredProductionHost.replace(/\/$/, "") : `https://${configuredProductionHost}`)
-  : "https://teacher-nine-blush.vercel.app"
+const DOMAIN = "https://teacher-three-ashen.vercel.app"
 const APP_PAGE = `${DOMAIN}/login`
 const CALLBACK = `${DOMAIN}/api/auth/google`
 
@@ -61,9 +58,9 @@ export async function GET(request: NextRequest) {
   try {
     const { clientId, clientSecret } = config()
     const url = new URL(request.url)
-    // Older bookmarks may still start OAuth on teacher.vercel.app. Move the
+    // Older bookmarks may still start OAuth on a legacy domain. Move the
     // browser to the canonical production origin before creating state/cookies.
-    if (url.hostname === "teacher.vercel.app") {
+    if (url.hostname === "teacher.vercel.app" || url.hostname === "teacher-nine-blush.vercel.app") {
       const canonical = new URL(`${CALLBACK}${url.search}`)
       return NextResponse.redirect(canonical)
     }
