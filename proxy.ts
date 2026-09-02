@@ -5,6 +5,7 @@ const CANONICAL_ORIGIN = "https://teacher-three-ashen.vercel.app"
 
 export function proxy(request: NextRequest) {
   const legacyRoutes: Record<string, string> = {
+    "/index.html": "/login",
     "/app.html": "/login",
     "/admin.html": "/admin",
     "/student.html": "/student",

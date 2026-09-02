@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر����������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر������������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -173,16 +173,34 @@ const LANG_DICT = {
 };
 let currentLang = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
 const LANG_ATTRS = ['placeholder','title','aria-label','alt'];
-function langTextNodes() {
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  const nodes = []; let node;
+const EN_LANG_DICT = Object.fromEntries(Object.entries(LANG_DICT).map(function(entry){ return [entry[1], entry[0]]; }));
+const langTextRegistry = new Set();
+const langElementRegistry = new Set();
+function registerLangElement(el) {
+  if(!el || !el.hasAttribute) return;
+  let registered = false;
+  LANG_ATTRS.forEach(function(attr){
+    if(!el.hasAttribute(attr)) return;
+    const key = 'data-ar-' + attr;
+    if(!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr) || '');
+    registered = true;
+  });
+  if(registered) langElementRegistry.add(el);
+}
+function registerLangNodes(root) {
+  const container = root && root.nodeType ? root : document.body;
+  if(!container) return;
+  if(container.nodeType === 1) registerLangElement(container);
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  let node;
   while((node = walker.nextNode())) {
     if(node.parentElement && ['SCRIPT','STYLE','NOSCRIPT'].includes(node.parentElement.tagName)) continue;
-    if(node.nodeValue && node.nodeValue.trim()) nodes.push(node);
+    if(!node.nodeValue || !node.nodeValue.trim()) continue;
+    if(node.__arText === undefined) node.__arText = node.nodeValue;
+    langTextRegistry.add(node);
   }
-  return nodes;
+  if(container.querySelectorAll) container.querySelectorAll('*').forEach(registerLangElement);
 }
-const EN_LANG_DICT = Object.fromEntries(Object.entries(LANG_DICT).map(function(entry){ return [entry[1], entry[0]]; }));
 function translateValue(value) {
   if(!value) return value;
   const dict = currentLang === 'en' ? LANG_DICT : EN_LANG_DICT;
@@ -192,36 +210,49 @@ function translateValue(value) {
   Object.keys(dict).sort((a,b)=>b.length-a.length).forEach(function(key){ if(result.includes(key)) result=result.split(key).join(dict[key]); });
   return result;
 }
-function applyLangToDom() {
+function applyLangToDom(root) {
+  if(root) registerLangNodes(root);
   document.documentElement.lang = currentLang;
   document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
-  langTextNodes().forEach(function(node){
-    if(node.__arText === undefined) node.__arText = node.nodeValue;
-    const source = node.__arText;
-    node.nodeValue = currentLang === 'en' ? translateValue(source) : source;
+  langTextRegistry.forEach(function(node){
+    if(!node.isConnected) { langTextRegistry.delete(node); return; }
+    node.nodeValue = currentLang === 'en' ? translateValue(node.__arText) : node.__arText;
   });
-  document.querySelectorAll('*').forEach(function(el){
+  langElementRegistry.forEach(function(el){
+    if(!el.isConnected) { langElementRegistry.delete(el); return; }
     LANG_ATTRS.forEach(function(attr){
-      if(!el.hasAttribute(attr)) return;
       const key = 'data-ar-' + attr;
-      if(!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr));
+      if(!el.hasAttribute(key)) return;
       const source = el.getAttribute(key) || '';
       el.setAttribute(attr, currentLang === 'en' ? translateValue(source) : source);
     });
   });
-  const btn=document.getElementById('langToggleBtn'); if(btn) btn.textContent=currentLang==='en'?'ع':'EN';
+  const btn = document.getElementById('langToggleBtn');
+  if(btn) btn.textContent = currentLang === 'en' ? 'ع' : 'EN';
 }
-  window.applyLangToDom = applyLangToDom;
-  function toggleLang() { currentLang=currentLang==='ar'?'en':'ar'; localStorage.setItem('lang',currentLang); applyLangToDom(); window.dispatchEvent(new Event('languagechange')); }
-let langObserver = new MutationObserver(function(){
-  if(currentLang !== 'en' || langObserver._running) return;
-  langObserver._running = true;
-  langObserver.disconnect();
+window.applyLangToDom = applyLangToDom;
+function toggleLang() {
+  currentLang = currentLang === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('lang', currentLang);
   applyLangToDom();
-  langObserver.observe(document.body,{childList:true,subtree:true});
-  langObserver._running = false;
+  window.dispatchEvent(new Event('languagechange'));
+}
+let langObserver = new MutationObserver(function(records){
+  let hasAddedNodes = false;
+  records.forEach(function(record){
+    record.addedNodes.forEach(function(added){
+      if(added.nodeType !== 1 && added.nodeType !== 3) return;
+      registerLangNodes(added.nodeType === 3 ? added.parentElement : added);
+      hasAddedNodes = true;
+    });
+  });
+  if(hasAddedNodes) applyLangToDom();
 });
-function initLanguage(){ applyLangToDom(); langObserver.observe(document.body,{childList:true,subtree:true}); }
+function initLanguage(){
+  registerLangNodes(document.body);
+  applyLangToDom();
+  langObserver.observe(document.body, { childList: true, subtree: true });
+}
 
 let neonSaveTimer = null;
 let neonSaveInFlight = false;
@@ -330,7 +361,7 @@ const proctor={stream:null,detector:null,detectorType:'',faceMeshResults:null,an
 window.proctor=proctor;
 function getProctorSettings(){const ctx=proctor.context||{};return{touchGraceMs:Math.max(1,parseInt(ctx.proctorTouchGrace)||12)*1000,gazeGraceMs:Math.max(3,parseInt(ctx.proctorGazeGrace||ctx.proctorFaceGrace)||12)*1000,leaveGraceMs:Math.max(1,parseInt(ctx.proctorLeaveGrace)||5)*1000,maxViolations:Math.max(1,parseInt(ctx.proctorMaxViolations)||2),fullscreen:ctx.proctorFullscreen===true,focus:ctx.proctorFocus!==false,touch:ctx.proctorTouch!==false,autoRestore:ctx.proctorAutoRestore!==false}}
 function setProctorCheck(id,ok,text){const el=document.getElementById(id);if(!el)return;el.className='proctor-check '+(ok?'ok':'bad');el.textContent=(ok?'✓ ':'! ')+text}
-function isTouchDevice(){return true}
+function isTouchDevice(){return Boolean((navigator.maxTouchPoints||0)>0||('ontouchstart' in window)||(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches))}
 function proctorTaskLabel(ctx){return ctx&&ctx.type==='exam'?'الاختبار':'مهمة '+(ctx&&ctx.type==='reading'?'القراءة':'التسميع')}
 function proctorStopCamera(){clearInterval(proctor.scanTimer);proctor.scanTimer=null;proctor.analyzing=false;proctor.faceMeshResults=null;if(proctor.detectorType==='mediapipe')try{proctor.detector?.close()}catch(e){}proctor.detector=null;proctor.detectorType='';if(proctor.stream){proctor.stream.getTracks().forEach(t=>t.stop());proctor.stream=null}const v=document.getElementById('proctorVideo');if(v)v.srcObject=null;const scan=document.getElementById('proctorScanBtn');if(scan)scan.disabled=false}
 function closeProctorGate(){proctorStopCamera();proctor.onReady=null;proctor.context=null;document.getElementById('proctorGate')?.classList.add('hidden')}
@@ -353,7 +384,7 @@ function cancelProctoredTask(reason){if(!proctor.active||proctor.cancelled)retur
 function proctorStop(closeCamera=true){proctor.active=false;proctor.holding=false;proctor.touches.clear();proctor.warningAt=0;proctor.touchWarningAt=0;document.getElementById('proctorWarning')?.classList.add('hidden');if(closeCamera)proctorStopCamera()}
 function proctorLeaveStart(reason){if(!proctor.active||proctor.leaveAt||!getProctorSettings().focus)return;proctor.leaveAt=Date.now();proctorShowWarning(reason,proctor.leaveAt);const grace=getProctorSettings().leaveGraceMs;setTimeout(function(){if(proctor.active&&proctor.leaveAt&&Date.now()-proctor.leaveAt>=grace)proctorBlockTask(reason)},grace+50)}
 function proctorLeaveEnd(){proctor.leaveAt=0;document.getElementById('proctorWarning')?.classList.add('hidden')}
-document.addEventListener('visibilitychange',()=>{if(!proctor.active)return;if(document.hidden)proctorLeaveStart('تمت مغادرة صفحة المهمة');else proctorLeaveEnd()});window.addEventListener('blur',()=>{if(proctor.active)proctorLeaveStart('تم ترك نافذة المهمة')});window.addEventListener('focus',()=>{if(proctor.active)proctorLeaveEnd()});document.addEventListener('fullscreenchange',()=>{if(proctor.active&&getProctorSettings().fullscreen&&!document.fullscreenElement)proctorLeaveStart('تم الخروج من ملء الشاشة')});window.addEventListener('pagehide',()=>{if(proctor.active){recordProctorIncident('تم الخروج المفاجئ من الموقع');cancelProctoredTask('تم الخروج المفاجئ من الموقع')}});window.addEventListener('resize',()=>{if(proctor.active&&((screen.width&&screen.width<proctor.screenWidth*.72)||(window.innerWidth<screen.availWidth*.62)))proctorLeaveStart('تم اكتشاف تقسيم الشاشة أو تصغير نافذة المهمة')});
+document.addEventListener('visibilitychange',()=>{if(!proctor.active)return;if(document.hidden)proctorLeaveStart('تمت مغادرة صفحة المهمة');else proctorLeaveEnd()});window.addEventListener('blur',()=>{if(proctor.active)proctorLeaveStart('تم ترك نافذة المهمة')});window.addEventListener('focus',()=>{if(proctor.active)proctorLeaveEnd()});document.addEventListener('fullscreenchange',()=>{if(proctor.active&&getProctorSettings().fullscreen&&!document.fullscreenElement)proctorLeaveStart('تم الخروج من ملء الشاشة')});window.addEventListener('pagehide',()=>{if(proctor.active){recordProctorIncident('تم الخروج المفاجئ من الموقع');cancelProctoredTask('تم الخروج المفاجئ من الموقع')}});window.addEventListener('resize',()=>{if(proctor.active&&((screen.width&&screen.width<proctor.screenWidth*.72)||(window.innerWidth<screen.availWidth*.62)))proctorLeaveStart('تم اكتشاف تقسيم الشاشة أو تصغير نا��ذة المهمة')});
 function finishGoogleLogin(user){
   const email=String(user?.email||'').trim().toLowerCase();
   if(!email) throw new Error('جلسة Google بلا بريد إلكتروني');
@@ -369,23 +400,64 @@ function finishGoogleLogin(user){
 }
 function restorePendingGoogleSignup(){try{const raw=sessionStorage.getItem('thimar_pending_google_signup');if(!raw)return false;const pending=JSON.parse(raw);if(!pending?.email)return false;signupState.method='google';signupState.email=String(pending.email).trim().toLowerCase();signupState.name=String(pending.name||'');signupState.whats='';signupState.verified=true;const note=document.getElementById('signupVerifiedNote');if(note)note.innerHTML='تم التحقق من هويتك عبر Google — '+escapeHtml(signupState.email);const name=document.getElementById('signupName');if(name&&!name.value)name.value=signupState.name;initSignupJuzSelect();showPage('signupStep2');return true}catch(e){try{sessionStorage.removeItem('thimar_pending_google_signup')}catch(ignore){}return false}}
 
-document.addEventListener('DOMContentLoaded',()=>{loadGlobalProctorSettings();setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store',credentials:'same-origin'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('عذر قراءة جلسة Google');finishGoogleLogin(data.user);history.replaceState({},'',pageUrl(document.querySelector('.page:not(.hidden)')?.id))}).catch(()=>{history.replaceState({},'',location.pathname);const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر استكمال تسجيل الدخول عبر Google.</div>'})}else if(restoreSession()){
-  const expectedRole = location.pathname.startsWith('/admin') ? 'admin' : location.pathname.startsWith('/student') ? 'student' : location.pathname.startsWith('/parent') ? 'parent' : null;
-  if(expectedRole && expectedRole !== currentType){
-    location.replace(roleShellPath(currentType));
+let appBootstrapped = false;
+function bootstrapApp() {
+  if (appBootstrapped) return;
+  appBootstrapped = true;
+  initLanguage();
+  loadGlobalProctorSettings();
+  setupProctorHold(document.getElementById('proctorGateHold'), true);
+  const params = new URLSearchParams(location.search);
+  if (params.get('google') === 'success') {
+    fetch('/api/auth/google/session', { cache: 'no-store', credentials: 'same-origin' })
+      .then(function(response) { return response.json(); })
+      .then(function(data) {
+        if (!data.authenticated || !data.user?.email) throw new Error('تعذر قراءة جلسة Google');
+        finishGoogleLogin(data.user);
+        history.replaceState({}, '', pageUrl(document.querySelector('.page:not(.hidden)')?.id));
+      })
+      .catch(function() {
+        history.replaceState({}, '', location.pathname);
+        const box = document.getElementById('signupStep1Alert');
+        if (box) box.innerHTML = '<div class="alert alert-danger">تعذر استكمال تسجيل الدخول عبر Google.</div>';
+      });
     return;
   }
-  const routed=pageFromUrl();
-  if(routed&&pageAllowedForUser(routed))showPage(routed,{fromBrowser:true});
-  else{const home=currentType==='admin'?'adminDashboard':currentType==='student'?'studentDashboard':currentType==='parent'?'parentDashboard':'homePage';showPage(home,{fromBrowser:true});}
-}else{
-  const routed=pageFromUrl();
-  const protectedRoute=/^\/(admin|student|parent)(\/|$)/.test(location.pathname);
-  if(protectedRoute){ location.replace('/login?next='+encodeURIComponent(location.pathname)); return; }
-  if(!restorePendingGoogleSignup() && routed && document.getElementById(routed)) showPage(routed,{fromBrowser:true});
-}});
+  if (restoreSession()) {
+    const expectedRole = location.pathname.startsWith('/admin') ? 'admin' : location.pathname.startsWith('/student') ? 'student' : location.pathname.startsWith('/parent') ? 'parent' : null;
+    if (expectedRole && expectedRole !== currentType) {
+      location.replace(roleShellPath(currentType));
+      return;
+    }
+    const routed = pageFromUrl();
+    if (routed && pageAllowedForUser(routed)) showPage(routed, { fromBrowser: true });
+    else {
+      const home = currentType === 'admin' ? 'adminDashboard' : currentType === 'student' ? 'studentDashboard' : currentType === 'parent' ? 'parentDashboard' : 'lockScreen';
+      showPage(home, { fromBrowser: true });
+    }
+  } else {
+    const routed = pageFromUrl();
+    const protectedRoute = /^\/(admin|student|parent)(\/|$)/.test(location.pathname);
+    if (protectedRoute) {
+      location.replace('/login?next=' + encodeURIComponent(location.pathname));
+      return;
+    }
+    if (!restorePendingGoogleSignup() && routed && document.getElementById(routed)) showPage(routed, { fromBrowser: true });
+  }
+}
+function bootstrapAppWhenReady() {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootstrapApp, { once: true });
+  else bootstrapApp();
+}
 
-window.addEventListener('popstate',()=>{const id=pageFromUrl();if(!id||!pageAllowedForUser(id)){showPage(currentType==='admin'?'adminDashboard':currentType==='student'?'studentDashboard':currentType==='parent'?'parentDashboard':'homePage',{fromBrowser:true});return;}showPage(id,{fromBrowser:true});});
+window.addEventListener('popstate', function() {
+  const id = pageFromUrl();
+  if (!id || !pageAllowedForUser(id)) {
+    showPage(currentType === 'admin' ? 'adminDashboard' : currentType === 'student' ? 'studentDashboard' : currentType === 'parent' ? 'parentDashboard' : 'lockScreen', { fromBrowser: true });
+    return;
+  }
+  showPage(id, { fromBrowser: true });
+});
 
 // ====== SESSION PERSISTENCE ======
 function saveSessionState() {
@@ -519,7 +591,7 @@ function showPage(id, options = {}) {
   if(id === 'studentExamPage') renderStudentExam();
   if(id === 'parentPendingTasksPage') renderParentPendingTasks();
   if(id === 'parentChartPage') renderParentFullChart();
-  applyLangToDom();
+  applyLangToDom(el);
   window.scrollTo(0,0);
   saveSessionState();
 }
@@ -1115,7 +1187,7 @@ function submitSignupRequest() {
   box.innerHTML = '<div class="alert alert-success">✅ تم إرسال طلبك للمسؤول على المنصة. <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال نفس التفاصيل على واتساب المسؤول</strong></a></div>';
   window.open(link, '_blank', 'noopener');
   try{sessionStorage.removeItem('thimar_pending_google_signup')}catch(e){}
-  if(typeof showToast === 'function') showToast('✅ تم إرسال طلب إنشاء الحساب للمسؤول', 'success');
+  if(typeof showToast === 'function') showToast('✅ تم إرسال طلب إنشا�� الحساب للمسؤول', 'success');
 }
 
 function initEditJuzSelect(val) {
@@ -1367,7 +1439,7 @@ function editAdmin(id) {
   if(!a) return;
   const newMobile = prompt('رقم الموبايل الجديد:', a.mobile);
   if(newMobile === null) return;
-  const newPass = prompt('الرقم السري الجديد:', a.password);
+  const newPass = prompt('ال��قم السري الجديد:', a.password);
   if(newPass === null) return;
   const newType = confirm('هل تريد جعله مسؤول رئيسي؟ (موافق = رئيسي، إغاء = فرعي)');
   if(newMobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
@@ -2245,7 +2317,7 @@ let examFilesCache=[];
 async function readApiJson(res, fallback){
   const text=await res.text();
   const contentType=(res.headers.get('content-type')||'').toLowerCase();
-  if(!text.trim()){const requestId=res.headers.get('x-request-id')||'';throw new Error(fallback+' — لم يرسل الخادم تفاصيل (HTTP '+res.status+')'+(requestId?' — معرف الطلب: '+requestId:'')+'. أعد المحاولة، وإن استمر الخطأ تحقق من سجل النشر.');}
+  if(!text.trim()){const requestId=res.headers.get('x-request-id')||'';throw new Error(fallback+' — لم يرسل ال��ادم تفاصيل (HTTP '+res.status+')'+(requestId?' — معرف الطلب: '+requestId:'')+'. أعد المحاولة، وإن استمر الخطأ تحقق من سجل النشر.');}
   let data=null;
   if(contentType.includes('application/json')){try{data=JSON.parse(text)}catch(e){}}
   else{try{data=JSON.parse(text)}catch(e){data={error:text.slice(0,300)}}}
@@ -2646,7 +2718,7 @@ async function submitStudentExam(auto){
   }
   const hasAudio=ex.questions.some(q=>q.type==='audio');ex.status=hasAudio?'pending_audio_review':'graded';ex.submittedAt=Date.now();ex.answers=answers;ex.score=score;ex.maxScore=ex.questions.reduce((n,q)=>n+(Number(q.points)||1),0);ex.totalDurationSeconds=Math.round((Date.now()-(ex.createdAt||Date.now()))/1000);ex.autoSubmitted=!!auto;ex.reviewedAt=hasAudio?null:Date.now();
   let students=getData('students');const idx=students.findIndex(x=>x.id===s.id);if(idx<0)return;students[idx].activeExam=null;students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].completedTasks=students[idx].completedTasks||[];students[idx].completedTasks.push({type:'exam',name:'اختبار '+ex.date,date:ex.date,completedAt:new Date().toLocaleString('ar-EG'),score,maxScore:ex.maxScore});setData('students',students);currentUser=students[idx];
-  let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوتي والنتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
+  let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبا�� الصوتي والنتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة اتسجيل الصوتي':'نتيجة اختبار '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبار وإرساله للمسؤول وولي الأمر','success');
 }
@@ -2735,7 +2807,7 @@ function saveSession(isFinal) {
     return;
   }
 
-  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام الالية والانتقال لليوم التالي.
+  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم ت��ريغ المهام الالية والانتقال لليوم التالي.
   const session = {date,elements:JSON.parse(JSON.stringify(activeElements)),homework:JSON.parse(JSON.stringify(homeworkItems)),reading:JSON.parse(JSON.stringify(readingItems)),totalScore,notes,isDraft:false,finalizedAt:nowText,status:'نهائ',completedTaskSnapshot:previousTasks};
   students[idx].sessions = students[idx].sessions.filter(s => !s.isDraft && s.date !== date);
   students[idx].sessions.push(session);
@@ -3284,7 +3356,7 @@ async function runDevAssistant(){
       '\n\nهذه العمليات قد تؤثر على البيانات أئ الأمان أو المستخدمين. لن يُنفَ��ذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتابعة والتنفيذ التلقائي؟'
     );
     if(!confirmed){
-      recordDevAudit({ status:'blocked', request, summary:'أُلغي بواسطة ءءلمسؤول قبل التنفيذ.', flagged:dangers });
+      recordDevAudit({ status:'blocked', request, summary:'��ُلغي بواسطة ءءلمسؤول قبل التنفيذ.', flagged:dangers });
       renderDevAudit();
       showToast('🛑 تم إلاء لعملية الحسّاسة', 'info');
       return;
@@ -4034,7 +4106,7 @@ function renderStudentTasks() {
   const extraTasks=Array.from(temp.querySelectorAll('[data-task-category="extra"]')).map(el=>el.outerHTML).join('');
   const exam=s.activeExam&&s.activeExam.status==='pending'?s.activeExam:null;
   const examHtml=exam?'<p>لديك اختبار نشط من '+(exam.questions?.length||0)+' سؤال.</p><button class="btn btn-primary" onclick="showPage(\'studentExamPage\')">فتح الاختبار</button>':'<p style="color:var(--text-light)">لا يوجد اختبار نشط حاليًا.</p>';
-  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المهات اءءإضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمءءت ءءضافية حالية.</p>')+'</section></div>';
+  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المهات اءءإضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمءءت ءءضافية حا��ية.</p>')+'</section></div>';
   if(proctor.active)bindLiveProctorHold();
 }
 
@@ -5093,7 +5165,7 @@ function renderUserFiles(role) {
     html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">🕐 ' + f.uploadedAt + '</p>';
     html += '<div style="display:flex; gap:8px;">';
     html += '<a href="' + f.data + '" download="' + f.name + '" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تميل</a>';
-    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁️ عر</button>';
+    html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁��� عر</button>';
     html += '</div></div>';
   });
   html += '</div>';
@@ -5315,13 +5387,4 @@ function logout() {
   showPage('lockScreen');
 }
 
-initLanguage();
-
-// استعادة الجلسة مع احترام المسار المباشر بدلاً من إعادته دائماً إلى لوحة الدور.
-const initialRoutePage = pageFromUrl();
-if(restoreSession()) {
-  const roleHome = currentType === 'admin' ? 'adminDashboard' : currentType === 'student' ? 'studentDashboard' : currentType === 'parent' ? 'parentDashboard' : 'lockScreen';
-  showPage(pageAllowedForUser(initialRoutePage) ? initialRoutePage : roleHome, {fromBrowser:true});
-} else if(!/^\/(admin|student|parent)(\/|$)/.test(location.pathname)) {
-  showPage(initialRoutePage, {fromBrowser:true});
-}
+bootstrapAppWhenReady();
