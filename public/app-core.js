@@ -1,3 +1,4 @@
+console.log('[v0] app-core:start')
 // ====== QURAN DATA: JUZ AND SURAHS ======
 const quranData = {
   1: ["الفاتحة", "البقرة"],
@@ -357,6 +358,7 @@ function setData(key, val) {
   scheduleNeonSave();
 }
 async function hydrateDataFromNeon(){
+  console.log('[v0] neon:enter');
   if(neonHydrationPromise) return neonHydrationPromise;
   if(neonHydrated || neonUnavailable) return;
   if(sessionStorage.getItem('neon_hydrated_v1')){
@@ -375,6 +377,7 @@ async function hydrateDataFromNeon(){
     try{
       const res=await fetch('/api/data',{cache:'no-store',credentials:'same-origin',signal:controller.signal});
       const body=await res.json().catch(()=>({}));
+      console.log('[v0] neon:response', res.ok, Boolean(body.unavailable), Boolean(body.data && typeof body.data === 'object'));
       if(body.unavailable){
         neonUnavailable=true;
       }else if(res.ok&&body.data&&typeof body.data==='object'&&!Array.isArray(body.data)){
@@ -398,6 +401,7 @@ async function hydrateDataFromNeon(){
       neonUnavailable=true;
       if(error?.name!=='AbortError') console.warn('[v0] Neon hydration unavailable; local data retained');
     }finally{
+      console.log('[v0] neon:finally', changed, shouldSave, neonUnavailable);
       clearTimeout(timeout);
       neonHydrated=true;
       sessionStorage.setItem('neon_hydrated_v1','1');
@@ -411,6 +415,7 @@ async function hydrateDataFromNeon(){
   return neonHydrationPromise;
 }
 function refreshVisiblePageAfterHydration(){
+  console.log('[v0] neon:refresh-visible');
   const visible=document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   if(visible&&typeof showPage==='function') showPage(visible.id,{fromBrowser:true});
 }
@@ -489,6 +494,7 @@ if(!localStorage.getItem('initialized_v7')) {
   }());
   // يبدأ الاتصال بعد تجهيز البيانات المحلية والرسم الأول، ولا ي��بق تهيئة القيم الافتراضية.
   scheduleCloudHydration();
+  console.log('[v0] app-core:after-data-init');
   
   let currentUser = null, currentType = null, currentAdminId = null;
 let voiceBlob = null, voiceChunks = [], mediaRecorder = null;
@@ -509,7 +515,7 @@ function isTouchDevice(){return Boolean((navigator.maxTouchPoints||0)>0||('ontou
 function proctorTaskLabel(ctx){return ctx&&ctx.type==='exam'?'الاختبار':'مهمة '+(ctx&&ctx.type==='reading'?'القراءة':'التسميع')}
 function proctorStopCamera(){clearInterval(proctor.scanTimer);proctor.scanTimer=null;proctor.analyzing=false;proctor.faceMeshResults=null;if(proctor.detectorType==='mediapipe')try{proctor.detector?.close()}catch(e){}proctor.detector=null;proctor.detectorType='';if(proctor.stream){proctor.stream.getTracks().forEach(t=>t.stop());proctor.stream=null}const v=document.getElementById('proctorVideo');if(v)v.srcObject=null;const scan=document.getElementById('proctorScanBtn');if(scan)scan.disabled=false}
 function closeProctorGate(){proctorStopCamera();proctor.onReady=null;proctor.context=null;document.getElementById('proctorGate')?.classList.add('hidden')}
-function openProctorGate(context,onReady){proctorStopCamera();proctor.active=false;proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبع واحد':'هذه المهمة تعمل على هاتف بشاشة لمس فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبع واحد هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اض����ط تشغيل الفحص للسماح بالكاميرا'}
+function openProctorGate(context,onReady){proctorStopCamera();proctor.active=false;proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبع واحد':'هذه المهمة تعم�� على هاتف بشاشة لمس فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبع واحد هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اض����ط تشغيل الفحص للسماح بالكاميرا'}
 async function startProctorScan(){if(!navigator.mediaDevices?.getUserMedia){document.getElementById('proctorHelp').textContent='الكاميرا تحتاج متصفحاً حديثاً واتصال HTTPS.';return}try{proctor.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:640},height:{ideal:480}},audio:false});const video=document.getElementById('proctorVideo');video.srcObject=proctor.stream;await video.play();if('FaceDetector' in window){proctor.detector=new FaceDetector({fastMode:true,maxDetectedFaces:2});proctor.detectorType='native'}else if(window.FaceMesh){const mesh=new FaceMesh({locateFile:file=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/'+file});mesh.setOptions({maxNumFaces:2,refineLandmarks:true,minDetectionConfidence:.55,minTrackingConfidence:.55});mesh.onResults(results=>{proctor.faceMeshResults=results.multiFaceLandmarks||[]});proctor.detector=mesh;proctor.detectorType='mediapipe'}else{throw new Error('face-model-unavailable')}document.getElementById('proctorScanBtn').disabled=true;document.getElementById('proctorHelp').textContent='يمل الفحص عى Chrome وSafari وFirefox وEdge الحديثة.';proctor.scanTimer=setInterval(proctorAnalyzeFrame,350);proctorAnalyzeFrame()}catch(e){proctorStopCamera();const name=e&&e.name||'';document.getElementById('proctorHelp').textContent=e&&e.message==='face-model-unavailable'?'تعذر تحميل نموذج فحص الوجه. تحقق من اتصال الإنترنت ثم أعد المحاولة.':name==='NotAllowedError'?'تم رفض إذن الكاميرا. اسمح به من إعدادات الموقع ثم أعد المحاولة.':name==='NotFoundError'?'لم يتم العثور على كاميرا متاحة.':name==='NotReadableError'?'ا��كاميرا مستخدمة في تطبيق آخر. أغلقه ثم أعد المحاولة.':name==='SecurityError'?'افتح الصفحة عبر HTTPS للسماح بالكاميرا.':'تعذر فتح الكاميرا. تحقق من إذن المتصفح ثم أعد المحاوة.'}}
 async function proctorDetectFaces(video){if(proctor.detectorType==='native')return await proctor.detector.detect(video);if(proctor.detectorType==='mediapipe'){await proctor.detector.send({image:video});return (proctor.faceMeshResults||[]).map(points=>{let minX=1,minY=1,maxX=0,maxY=0;points.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});return{boundingBox:{x:minX*video.videoWidth,y:minY*video.videoHeight,width:(maxX-minX)*video.videoWidth,height:(maxY-minY)*video.videoHeight},landmarks:points}})}return[]}
 function proctorAverage(list){return list.length?list.reduce((a,b)=>a+b,0)/list.length:0}
@@ -546,6 +552,7 @@ function restorePendingGoogleSignup(){try{const raw=sessionStorage.getItem('thim
 
 let appBootstrapped = false;
 function bootstrapApp() {
+  console.log('[v0] app-core:bootstrap-enter');
   if (appBootstrapped) return;
   appBootstrapped = true;
   initLanguage();
@@ -579,8 +586,9 @@ function bootstrapApp() {
       showPage(home, { fromBrowser: true });
     }
   } else {
-    const routed = pageFromUrl();
-    const protectedRoute = /^\/(admin|student|parent)(\/|$)/.test(location.pathname);
+  const routed = pageFromUrl();
+  console.log('[v0] app-core:routing', location.pathname, routed);
+  const protectedRoute = /^\/(admin|student|parent)(\/|$)/.test(location.pathname);
     if (protectedRoute) {
       location.replace('/login?next=' + encodeURIComponent(location.pathname));
       return;
@@ -765,6 +773,7 @@ function refreshFeaturePage(id) {
 }
 
 function showPage(id, options = {}) {
+  console.log('[v0] showPage:enter', id);
   /* تستخدم الروابط الحقيقية مع إبقاء التنقل الداخلي سريعاً داخل مستند الجسر الحالي. */
   const currentVisible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   const currentId = currentVisible ? currentVisible.id : null;
@@ -814,7 +823,9 @@ function showPage(id, options = {}) {
   document.querySelectorAll('.page, .home-page, .chart-page').forEach(node => node.classList.add('hidden'));
   el.classList.remove('hidden');
 
+  console.log('[v0] showPage:before-finalize');
   checkAndFinalizeDrafts();
+  console.log('[v0] showPage:after-finalize');
   updateBackButton();
 
   if(id === 'adminDashboard') { renderAdminStats(); updateMsgBadge(); renderActiveDrafts(); }
@@ -836,8 +847,10 @@ function showPage(id, options = {}) {
   if(id === 'studentExamPage') renderStudentExam();
   if(id === 'parentPendingTasksPage') renderParentPendingTasks();
   if(id === 'parentChartPage') renderParentFullChart();
+  console.log('[v0] showPage:before-lang');
   applyLangToDom(el);
-
+  console.log('[v0] showPage:after-lang');
+  
   const featureName = pageFeature(id);
   if (featureName) {
     ensureThimarFeature(featureName).then(function (loaded) {
@@ -851,8 +864,11 @@ function showPage(id, options = {}) {
     });
   }
 
+  console.log('[v0] showPage:before-scroll');
   window.scrollTo(0,0);
+  console.log('[v0] showPage:before-save');
   saveSessionState();
+  console.log('[v0] showPage:done');
 }
 
 function goBack() {
@@ -1374,7 +1390,7 @@ function sendSignupCode() {
     + 'يرجى إرسال هذا الكود لمقدّم الطلب لإكمال التسجيل.';
   const link = buildWaLink(adminWa, text);
   document.getElementById('signupVerifyBox').classList.remove('hidden');
-  box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق لإرسالها إلى المسؤول (' + adminWa + '). <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال الكود إلى واتساب المسؤول</strong></a> ثم أدخل الكود بالأسفل بعد استلام��� من المسؤول.</div>';
+  box.innerHTML = '<div class="alert alert-info">📩 تم تجهيز رسالة التحقق لإ��سالها إلى المسؤول (' + adminWa + '). <a href="' + link + '" target="_blank" rel="noopener noreferrer"><strong>اضغط هنا لإرسال الكود إلى واتساب المسؤول</strong></a> ثم أدخل الكود بالأسفل بعد استلام��� من المسؤول.</div>';
   window.open(link, '_blank', 'noopener');
 }
 function verifySignupCode() {
@@ -1553,7 +1569,7 @@ function renderStudentSpeechPreview(parsed,filled){
   const rows=Object.keys(parsed.fields).map(function(k){return '<div>✓ '+escapeHtml(labels[k]||k)+': <strong>'+escapeHtml(parsed.fields[k])+'</strong></div>'}).join('');
   box.innerHTML='<div class="alert alert-success">تم التعرف على النص. راجع الخانات قبل ا��حفظ اليدوي.<br>'+rows+'<small>النص الكامل: '+escapeHtml(parsed.text)+'</small></div>';
 }
-function speechErrorMessage(error){const code=error&&error.error;if(code==='not-allowed'||code==='service-not-allowed')return currentLang==='en'?'Microphone permission was denied.':'تم رفض إذن الميكروفون.';if(code==='no-speech')return currentLang==='en'?'No speech was detected. Try again.':'لم يتم التعرف على الصوت، حاول مرة أخرى.';if(code==='audio-capture')return currentLang==='en'?'No microphone was found.':'لم يتم العثور على ميكروفون.';return currentLang==='en'?'Voice input is unavailable in this browser.':'الإدخال الصوتي غير متاح في هذا المتصفح.'}
+function speechErrorMessage(error){const code=error&&error.error;if(code==='not-allowed'||code==='service-not-allowed')return currentLang==='en'?'Microphone permission was denied.':'تم رفض إذن الميكروفون.';if(code==='no-speech')return currentLang==='en'?'No speech was detected. Try again.':'لم يتم التعرف على الصوت، حاول مرة أخرى.';if(code==='audio-capture')return currentLang==='en'?'No microphone was found.':'لم يتم العثور على ميكروفون.';return currentLang==='en'?'Voice input is unavailable in this browser.':'الإدخال الصوتي غير متاح ف�� هذا المتصفح.'}
 function stopStudentSpeech(){if(studentSpeechRecognition){try{studentSpeechRecognition.stop()}catch(e){}}studentSpeechListening=false;const btn=document.getElementById('studentSpeechBtn');if(btn){btn.disabled=false;btn.setAttribute('aria-pressed','false');btn.textContent='🎤 إدخال البيانات بالصوت'}const status=document.getElementById('studentSpeechStatus');if(status)status.textContent='تم التعرف'}
 function toggleStudentSpeech(){
   const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition, btn=document.getElementById('studentSpeechBtn'), status=document.getElementById('studentSpeechStatus'), transcript=document.getElementById('studentSpeechTranscript');
@@ -2705,7 +2721,7 @@ function cleanExamQuestion(q){
   return q;
 }
 async function generateLocalQuranQuestions(base,lastSurah,plans){
-  const start=ALL_SURAHS_ORDERED.indexOf(base),end=lastSurah?ALL_SURAHS_ORDERED.indexOf(lastSurah):113;if(start<0||end<start)throw new Error('نطاق السور غير صالح: يجب أن تكون آخر سورة بعد أول سورة.');
+  const start=ALL_SURAHS_ORDERED.indexOf(base),end=lastSurah?ALL_SURAHS_ORDERED.indexOf(lastSurah):113;if(start<0||end<start)throw new Error('��طاق السور غير صالح: يجب أن تكون آخر سورة بعد أول سورة.');
   const range=ALL_SURAHS_ORDERED.slice(start,end+1),needed=plans.reduce((n,p)=>n+p.count,0),sourceOrder=[];
   for(let left=0,right=range.length-1;left<=right;left++,right--){sourceOrder.push(range[left]);if(right!==left)sourceOrder.push(range[right])}
   const sourceLimit=Math.min(range.length,Math.max(needed,8)),sources=[];
@@ -2822,7 +2838,7 @@ async function generateExamQuestions(){
     const now=Date.now(),historyByFingerprint=new Map(savedHistory.map(item=>[String(item.fingerprint),item]));
     added.forEach(q=>{const fingerprint=examQuestionFingerprint(q),previous=historyByFingerprint.get(fingerprint);historyByFingerprint.set(fingerprint,{fingerprint,lastUsedAt:now,useCount:Math.max(0,Number(previous&&previous.useCount)||0)+1,studentId:currentRecordStudentId||'',surah:q.surah||'',from:q.from||1,to:q.to||1,type:q.type||'',level:q.level||''})});
     setData('aiQuestionHistory',Array.from(historyByFingerprint.values()).sort((a,b)=>a.lastUsedAt-b.lastUsedAt).slice(-2000));
-    generationSucceeded=true;renderExamQuestions();showExamAlert('تمت إضافة '+added.length+' سؤالاً جديداً، والإجمالي الآن '+examQuestions.length+' سؤالاً. لم تُحذف الأسئلة السابقة.','success');
+    generationSucceeded=true;renderExamQuestions();showExamAlert('تمت ��ضافة '+added.length+' سؤالاً جديداً، والإجمالي الآن '+examQuestions.length+' سؤالاً. لم تُحذف الأسئلة السابقة.','success');
   }catch(e){showExamAlert((e.message||'تعذر تو��يد الأسئلة')+' لم يتم حذف أي سؤال سابق.','danger')}
   finally{finishExamGenerationProgress(generationSucceeded);btns.forEach(b=>b.disabled=false)}
 }
@@ -3013,7 +3029,7 @@ async function recordStudentExamAudio(i){
       stream.getTracks().forEach(t=>t.stop());if(asr)asr.stop();await new Promise(r=>setTimeout(r,400));
       const blob=new Blob(chunks,{type:'audio/webm'});const dataUrl=await blobToDataURL(blob);const transcript=asr?(asr.text||''):'';preview.src=URL.createObjectURL(blob);preview.style.display='block';status.textContent='🤖 جاري التحقق من البصمة والمحتوى...';
       const identity=await verifyVoiceIdentity(blob,currentUser);const match=identity?identity.pct:null;
-      if(match!==null && (match<VOICE_MATCH_THRESHOLD || identity.sameSpeaker===false)){status.textContent='❌ البصمة غير مطابقة — لم يُحفظ التسجيل';aiBox.innerHTML='<div class="alert alert-danger">🚫 هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل بصوت الطالب نفسه.</div>';showToast('❌ التسجيل غير مطابق للبصمة ولم يتم حفظه','error');studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;btn.dataset.recording='false';btn.classList.remove('recording');return;}
+      if(match!==null && (match<VOICE_MATCH_THRESHOLD || identity.sameSpeaker===false)){status.textContent='❌ البصمة غير مطابقة — لم يُحفظ التسجيل';aiBox.innerHTML='<div class="alert alert-danger">🚫 هذا التسجيل لا يطابق بصمة الطالب ('+match+'%). أعد التسجيل ��صوت الطالب نفسه.</div>';showToast('❌ التسجيل غير مطابق للبصمة ولم يتم حفظه','error');studentExamAnswers[i]='';studentExamAudioAnswers[i]=null;btn.dataset.recording='false';btn.classList.remove('recording');return;}
       // تحليل الصوت على الخادم (تفريغ حقيقي + تصحيح) مع احتياطي المتصفح
       let aiResult=await serverRecitationAnalysis(blob,{surah:q.surah,from:q.from,to:q.to});
       let usedTranscript=transcript;
@@ -4058,7 +4074,7 @@ function updateMsgBadge() {
 // ====== SUBJECTS & TEACHERS ======
 function renderSubjects() {
   const subjects = getData('subjects');
-  let html = '<table><thead><tr><th>المادة</th><th>المدرس</th><th>رقم الهاتف</th><th>الصلاحيات</th><th>التحكم</th></tr></thead><tbody>';
+  let html = '<table><thead><tr><th>المادة</th><th>المدرس</th><th>رقم الهاتف</th><th>الصلا��يات</th><th>التحكم</th></tr></thead><tbody>';
   subjects.forEach(s => {
     const adminBadge = s.isAdmin ? '<span class="teacher-admin-badge">👨‍💼 مسؤول</span>' : '';
     html += '<tr><td><strong>'+s.name+'</strong> '+adminBadge+'</td><td>'+s.teacher+'</td><td>'+(s.phone || '-')+'</td><td>'+(s.isAdmin ? 'مسؤول نظام' : 'معلم')+'</td><td><button class="btn btn-xs btn-info" onclick="editSubject('+s.id+')">تعديل</button> <button class="btn btn-xs btn-danger" onclick="deleteSubject('+s.id+')">حذف</button></td></tr>';
@@ -4791,7 +4807,7 @@ function voiceCosine(a, b) {
   return d;
 }
 function voiceMatchPercent(a, b) { return Math.round(Math.max(0, Math.min(1, (voiceCosine(a, b) + 1) / 2)) * 100); }
-const VOICE_MATCH_THRESHOLD = 78;      // نسبة قبول مطابقة صوت الطالب
+const VOICE_MATCH_THRESHOLD = 78;      // نسبة قبول مطاب��ة صوت الطالب
 const VOICE_DUPLICATE_THRESHOLD = 93;  // نسبة اعتبار البصمة مكررة لطالب آخر
 
 // ====== فحص جودة موحد قبل إرسال البصمة الصوتية إلى الخادم ======
