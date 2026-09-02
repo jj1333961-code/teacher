@@ -38,14 +38,17 @@ async function resolveConfig(itemId: string, itemType: string) {
 }
 
 export async function GET(request: Request) {
-  const guard = guardRequest(request, { maxBytes: MAX_ANTI_CHEAT_REQUEST_BYTES })
+  const guard = guardRequest(request, { maxBytes: MAX_REQUEST_BYTES })
   if (guard) return guard
+  const limited = rateLimit(request, { bucket: 'anti-cheat-read', limit: 120, windowMs: 60_000 })
+  if (limited) return limited
 
   try {
     const { searchParams } = new URL(request.url)
-    const itemId = searchParams.get('itemId')
-    const itemType = searchParams.get('itemType')
-    const sessionId = searchParams.get('sessionId')
+    const itemId = clean(searchParams.get('itemId'), 120)
+    const itemType = clean(searchParams.get('itemType'), 20)
+    const sessionId = clean(searchParams.get('sessionId'), 120)
+    if (itemType && !validType(itemType)) return NextResponse.json({ error: 'نوع العنصر غير صالح' }, { status: 400 })
     if (sessionId) {
       const sessions = await db.select().from(antiCheatSessions).where(eq(antiCheatSessions.id, sessionId)).limit(1)
       if (!sessions[0]) return NextResponse.json({ error: 'جلسة المراقبة غير موجودة' }, { status: 404 })
