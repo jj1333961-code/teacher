@@ -771,7 +771,7 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  /* قارئ مستقل يملأ الشاشة بالكامل، مع ����������بقاء زر الإغلاق واضحًا فوق PDF */
+  /* قارئ مستقل يملأ الشاشة بالكامل، مع ������������بقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
@@ -1822,22 +1822,6 @@ window.alert = function(m){ showToast(m); };
     if(form) form.classList.remove('hidden');
   };
 
-  /* عند العودة لشاشة الدخول (تسجيل الخروج مثلاً) نعيد عرض الأزرار الرئيسية */
-  (function patchShowPageWhenReady(){
-  if(window.__thimarShowPagePatched) return;
-  var patch = function(){
-  if(window.__thimarShowPagePatched || typeof window.showPage !== 'function') return;
-  window.__thimarShowPagePatched = true;
-  var original = window.showPage;
-  window.showPage = function(id){
-  var out = original.apply(this, arguments);
-  if(id === 'lockScreen') window.thimarResetAuthView();
-  return out;
-  };
-  };
-  if(typeof window.showPage === 'function') patch();
-  else if(typeof window.loadThimarAppCore === 'function') window.loadThimarAppCore().then(patch).catch(function(err){ console.error('[v0] showPage patch failed', err); });
-  })();
 })();
 </script>
   <script src="/app-routes.js"></script>
