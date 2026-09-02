@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر��������������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر����������������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -210,16 +210,22 @@ function translateValue(value) {
   Object.keys(dict).sort((a,b)=>b.length-a.length).forEach(function(key){ if(result.includes(key)) result=result.split(key).join(dict[key]); });
   return result;
 }
+function isLangNodeInScope(node, scope) {
+  return !scope || scope === document || scope === node || (scope.contains && scope.contains(node));
+}
 function applyLangToDom(root) {
-  if(root) registerLangNodes(root);
+  const scope = root && root.nodeType === 3 ? root.parentElement : root;
+  if(scope) registerLangNodes(scope);
   document.documentElement.lang = currentLang;
   document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
   langTextRegistry.forEach(function(node){
     if(!node.isConnected) { langTextRegistry.delete(node); return; }
+    if(!isLangNodeInScope(node, scope)) return;
     node.nodeValue = currentLang === 'en' ? translateValue(node.__arText) : node.__arText;
   });
   langElementRegistry.forEach(function(el){
     if(!el.isConnected) { langElementRegistry.delete(el); return; }
+    if(!isLangNodeInScope(el, scope)) return;
     LANG_ATTRS.forEach(function(attr){
       const key = 'data-ar-' + attr;
       if(!el.hasAttribute(key)) return;
@@ -237,20 +243,30 @@ function toggleLang() {
   applyLangToDom();
   window.dispatchEvent(new Event('languagechange'));
 }
+let langUpdateQueued = false;
+const pendingLangRoots = new Set();
+function queueLangUpdate(root) {
+  if(root) pendingLangRoots.add(root);
+  if(langUpdateQueued) return;
+  langUpdateQueued = true;
+  Promise.resolve().then(function(){
+    langUpdateQueued = false;
+    const roots = Array.from(pendingLangRoots);
+    pendingLangRoots.clear();
+    roots.forEach(function(scope){ if(scope && scope.isConnected) applyLangToDom(scope); });
+  });
+}
 let langObserver = new MutationObserver(function(records){
-  let hasAddedNodes = false;
   records.forEach(function(record){
     record.addedNodes.forEach(function(added){
       if(added.nodeType !== 1 && added.nodeType !== 3) return;
-      registerLangNodes(added.nodeType === 3 ? added.parentElement : added);
-      hasAddedNodes = true;
+      queueLangUpdate(added.nodeType === 3 ? added.parentElement : added);
     });
   });
-  if(hasAddedNodes) applyLangToDom();
 });
 function initLanguage(){
   registerLangNodes(document.body);
-  applyLangToDom();
+  applyLangToDom(document.body);
   langObserver.observe(document.body, { childList: true, subtree: true });
 }
 
@@ -608,11 +624,12 @@ function pageUrl(id) {
 function pageFromUrl() {
   const legacyId = new URLSearchParams(window.location.search).get(PAGE_ROUTE_PARAM);
   if (legacyId && document.getElementById(legacyId)) return legacyId;
-  return ROUTE_PAGES[window.location.pathname.replace(/\/$/, '') || '/'] || (window.location.pathname === '/' ? 'homePage' : 'lockScreen');
+  return ROUTE_PAGES[window.location.pathname.replace(/\/$/, '') || '/'] || 'lockScreen';
 }
 
+const PUBLIC_PAGE_IDS = new Set(['lockScreen','accountRecoveryPage','signupStep1','signupStep2','adminLogin','studentLogin','parentLogin']);
 function pageAllowedForUser(id) {
-  if (!id) return true;
+  if (!id || PUBLIC_PAGE_IDS.has(id)) return true;
   if (id.startsWith('admin') || ['studentsList','messagesPage','subjectsPage','adminsPage','addStudent','editStudent','recordSession','studentHistory','notificationsPage','filesPage','devAssistantPage','githubSyncPage'].includes(id)) return currentType === 'admin';
   if (id.startsWith('student')) return currentType === 'student';
   if (id.startsWith('parent')) return currentType === 'parent';
@@ -632,8 +649,8 @@ function showPage(id, options = {}) {
   const currentId = currentVisible ? currentVisible.id : null;
   let el = document.getElementById(id);
   if(!el || !pageAllowedForUser(id)) {
-    id = currentType === 'admin' ? 'adminDashboard' : currentType === 'student' ? 'studentDashboard' : currentType === 'parent' ? 'parentDashboard' : 'homePage';
-    el = document.getElementById(id) || document.getElementById('homePage');
+    id = currentType === 'admin' ? 'adminDashboard' : currentType === 'student' ? 'studentDashboard' : currentType === 'parent' ? 'parentDashboard' : 'lockScreen';
+    el = document.getElementById(id) || document.getElementById('lockScreen');
     if (!options.fromBrowser && window.history && window.history.replaceState) window.history.replaceState({ page: id, thimarRoute: true }, '', pageUrl(id));
   }
   if(!el) return;
@@ -2440,7 +2457,7 @@ function localSmartChatReply(message,role){
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
-      return 'ملخص ابيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
+      return 'ملخص ابيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وس��رة أقدم لتثبيت المائي البعيد.';
     }
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
@@ -2597,7 +2614,7 @@ function startExamGenerationProgress(questionCount){
   const overlay=document.getElementById('examGenerationOverlay'),stage=document.getElementById('examGenerationStage'),bar=document.getElementById('examGenerationBar'),eta=document.getElementById('examGenerationEta');
   let elapsed=0,total=Math.max(45,Math.min(180,35+(Math.max(1,questionCount||1)*7)));overlay?.classList.remove('hidden');
   clearInterval(examGenerationTimer);
-  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب الآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينءءقئ الذكاء الاصطناعي أسئلة المتشابهاتت ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والن��اية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
+  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب ��لآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينءءقئ الذكاء الاصطناعي أسئلة المتشابهاتت ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والن��اية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
   update();examGenerationTimer=setInterval(update,1000);
 }
 function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'اكتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
@@ -3461,7 +3478,7 @@ async function runDevAssistant(){
   resultBox.innerHTML = '<p style="color:var(--text-light)">جارٍ تحليل المشروع ��قراءة الملفات البرمجية اللازمة ثم تطبيق التعديل...</p>';
   const progressPanel=document.getElementById('devProgressPanel'),progressBar=document.getElementById('devProgressBar'),progressLabel=document.getElementById('devProgressLabel'),etaBox=document.getElementById('devEta');
   if(progressPanel)progressPanel.style.display='block'; let elapsed=0,estimate=120;
-  const progressTimer=setInterval(function(){elapsed++;const left=Math.max(0,estimate-elapsed),progress=Math.min(94,8+Math.round(elapsed/estimate*86));if(progressBar)progressBar.style.width=progress+'%';if(etaBox)etaBox.textContent='الوقت المتبقي التقريبي: '+formatExamTime(left);if(progressLabel)progressLabel.textContent=elapsed<25?'تحليل الطلب':elapsed<70?'تعديل ملفات المشروع':elapsed<105?'إرسال التعديل إلى GitHub':'بدء تحديث الموقع';},1000);
+  const progressTimer=setInterval(function(){elapsed++;const left=Math.max(0,estimate-elapsed),progress=Math.min(94,8+Math.round(elapsed/estimate*86));if(progressBar)progressBar.style.width=progress+'%';if(etaBox)etaBox.textContent='الوقت المتبقي التقريبي: '+formatExamTime(left);if(progressLabel)progressLabel.textContent=elapsed<25?'تحليل الطلب':elapsed<70?'تعديل ملفات المشروع':elapsed<105?'إرسال التع��يل إلى GitHub':'بدء تحديث الموقع';},1000);
 
   try {
     const plan = await callStudentAI('dev_assistant', { request, role:'admin', adminId: currentAdminId || null, autoApply:true }, 0.2);
@@ -3704,7 +3721,7 @@ function toggleShareWithParent(idx) {
   msgs[idx].shareWithParent = !msgs[idx].shareWithParent;
   setData('messages', msgs);
   renderMessages();
-  alert(msgs[idx].shareWithParent ? '✅ أصبح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعديءء).' : '🚫 تم منع ولي الأ من الاطلاع على هذا الملف.');
+  alert(msgs[idx].shareWithParent ? '✅ أصبح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعديءء).' : '🚫 تم منع ��لي الأ من الاطلاع على هذا الملف.');
 }
 
 function openMessageFileById(msgId, readonly) {
