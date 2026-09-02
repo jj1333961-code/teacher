@@ -140,14 +140,17 @@
     window.location.assign(safeNextPath(role));
   }
 
-  function showPage(id) {
+  function showPage(id, options) {
     if (window.__thimarAppCoreLoaded && window.__thimarCoreShowPage && window.__thimarCoreShowPage !== showPage) {
       return window.__thimarCoreShowPage.apply(window, arguments);
     }
     var publicRoute = routeForPage(id);
-    if (id === 'lockScreen' || id === 'accountRecoveryPage' || id === 'signupStep1' || id === 'signupStep2') {
-      if (window.location.pathname !== publicRoute) window.location.assign(publicRoute);
-      return;
+    var publicPage = document.getElementById(id);
+    if (publicPage && (id === 'lockScreen' || id === 'accountRecoveryPage' || id === 'signupStep1' || id === 'signupStep2' || id === 'adminLogin' || id === 'studentLogin' || id === 'parentLogin')) {
+      document.querySelectorAll('.page, .home-page, .chart-page').forEach(function (page) { page.classList.add('hidden'); });
+      publicPage.classList.remove('hidden');
+      if (!(options && options.fromBrowser) && window.location.pathname !== publicRoute) window.history.pushState({}, '', publicRoute);
+      return publicPage;
     }
     return runWhenCoreReady('showPage', arguments, null);
   }
@@ -217,9 +220,26 @@
   window.addEventListener('DOMContentLoaded', function () {
     var path = routes && routes.normalizePath ? routes.normalizePath(window.location.pathname) : window.location.pathname;
     var params = new URLSearchParams(window.location.search);
-    var needsCore = (routes && routes.isProtectedPath && routes.isProtectedPath(path)) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
+    var needsCore = (routes && routes.isProtectedPath && routes.isProtectedPath(path))
+      || path === '/forgot-password'
+      || /^\/signup(\/|$)/.test(path)
+      || /^\/login\/(admin|student|parent)(\/|$)/.test(path)
+      || path === '/quran-reader'
+      || path === '/tuhfat'
+      || params.has('page')
+      || params.has('google');
+    var directPublicPage = routes && routes.pages ? Object.keys(routes.pages).find(function (id) { return routes.pages[id] === path; }) : null;
+    if (directPublicPage && /^(lockScreen|accountRecoveryPage|signupStep1|signupStep2|adminLogin|studentLogin|parentLogin)$/.test(directPublicPage)) {
+      showPage(directPublicPage, { fromBrowser: true });
+    }
     if (!needsCore) return;
-    var start = function () { loadCore().catch(function (error) { console.error('[v0] protected route bootstrap failed', error); }); };
+    var start = function () {
+      loadCore().catch(function (error) {
+        console.error('[v0] protected route bootstrap failed', error);
+        var alert = document.getElementById('unifiedLoginAlert') || document.getElementById('signupStep1Alert');
+        if (alert) alert.innerHTML = '<div class="alert alert-danger">تعذر فتح الصفحة. أعد المحاولة.</div>';
+      });
+    };
     if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(start, { timeout: 900 });
     else window.setTimeout(start, 50);
   }, { once: true });
