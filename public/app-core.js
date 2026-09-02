@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر����������������������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر������������������������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -174,65 +174,59 @@ const LANG_DICT = {
 let currentLang = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
 const LANG_ATTRS = ['placeholder','title','aria-label','alt'];
 const EN_LANG_DICT = Object.fromEntries(Object.entries(LANG_DICT).map(function(entry){ return [entry[1], entry[0]]; }));
-const langTextRegistry = new Set();
-const langElementRegistry = new Set();
+const LANG_TRANSLATION_KEYS = Object.keys(LANG_DICT).sort(function(a,b){ return b.length - a.length; });
+const EN_TRANSLATION_KEYS = Object.keys(EN_LANG_DICT).sort(function(a,b){ return b.length - a.length; });
 function registerLangElement(el) {
   if(!el || !el.hasAttribute) return;
-  let registered = false;
   LANG_ATTRS.forEach(function(attr){
     if(!el.hasAttribute(attr)) return;
     const key = 'data-ar-' + attr;
     if(!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr) || '');
-    registered = true;
   });
-  if(registered) langElementRegistry.add(el);
-}
-function registerLangNodes(root) {
-  const container = root && root.nodeType ? root : document.body;
-  if(!container) return;
-  if(container.nodeType === 1) registerLangElement(container);
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-  let node;
-  while((node = walker.nextNode())) {
-    if(node.parentElement && ['SCRIPT','STYLE','NOSCRIPT'].includes(node.parentElement.tagName)) continue;
-    if(!node.nodeValue || !node.nodeValue.trim()) continue;
-    if(node.__arText === undefined) node.__arText = node.nodeValue;
-    langTextRegistry.add(node);
-  }
-  if(container.querySelectorAll) container.querySelectorAll('*').forEach(registerLangElement);
 }
 function translateValue(value) {
   if(!value) return value;
   const dict = currentLang === 'en' ? LANG_DICT : EN_LANG_DICT;
+  const keys = currentLang === 'en' ? LANG_TRANSLATION_KEYS : EN_TRANSLATION_KEYS;
   const clean = value.trim();
   if(dict[clean]) return value.replace(clean, dict[clean]);
   let result = value;
-  Object.keys(dict).sort((a,b)=>b.length-a.length).forEach(function(key){ if(result.includes(key)) result=result.split(key).join(dict[key]); });
+  keys.forEach(function(key){ if(result.includes(key)) result = result.split(key).join(dict[key]); });
   return result;
 }
-function isLangNodeInScope(node, scope) {
-  return !scope || scope === document || scope === node || (scope.contains && scope.contains(node));
+function applyLangTextNode(node) {
+  if(!node || !node.nodeValue || !node.nodeValue.trim()) return;
+  if(node.parentElement && ['SCRIPT','STYLE','NOSCRIPT'].includes(node.parentElement.tagName)) return;
+  if(node.__arText === undefined) node.__arText = node.nodeValue;
+  node.nodeValue = currentLang === 'en' ? translateValue(node.__arText) : node.__arText;
+}
+function applyLangElement(el) {
+  if(!el || !el.hasAttribute) return;
+  registerLangElement(el);
+  LANG_ATTRS.forEach(function(attr){
+    const key = 'data-ar-' + attr;
+    if(!el.hasAttribute(key)) return;
+    const source = el.getAttribute(key) || '';
+    const value = currentLang === 'en' ? translateValue(source) : source;
+    if(el.getAttribute(attr) !== value) el.setAttribute(attr, value);
+  });
 }
 function applyLangToDom(root) {
-  const scope = root && root.nodeType === 3 ? root.parentElement : root;
-  if(scope) registerLangNodes(scope);
+  const requested = root && root.nodeType === 3 ? root.parentElement : root;
+  const scope = requested || document.body;
+  const walkRoot = scope && scope.nodeType === 9 ? scope.body : scope;
+  if(!walkRoot) return;
   document.documentElement.lang = currentLang;
   document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
-  langTextRegistry.forEach(function(node){
-    if(!node.isConnected) { langTextRegistry.delete(node); return; }
-    if(!isLangNodeInScope(node, scope)) return;
-    node.nodeValue = currentLang === 'en' ? translateValue(node.__arText) : node.__arText;
-  });
-  langElementRegistry.forEach(function(el){
-    if(!el.isConnected) { langElementRegistry.delete(el); return; }
-    if(!isLangNodeInScope(el, scope)) return;
-    LANG_ATTRS.forEach(function(attr){
-      const key = 'data-ar-' + attr;
-      if(!el.hasAttribute(key)) return;
-      const source = el.getAttribute(key) || '';
-      el.setAttribute(attr, currentLang === 'en' ? translateValue(source) : source);
-    });
-  });
+  if(walkRoot.nodeType === 3) {
+    applyLangTextNode(walkRoot);
+  } else {
+    applyLangElement(walkRoot);
+    const walker = document.createTreeWalker(walkRoot, NodeFilter.SHOW_TEXT);
+    let node;
+    while((node = walker.nextNode())) applyLangTextNode(node);
+    if(walkRoot.querySelectorAll) walkRoot.querySelectorAll('*').forEach(applyLangElement);
+  }
   const btn = document.getElementById('langToggleBtn');
   if(btn) btn.textContent = currentLang === 'en' ? 'ع' : 'EN';
 }
@@ -243,6 +237,7 @@ function toggleLang() {
   applyLangToDom();
   window.dispatchEvent(new Event('languagechange'));
 }
+let languageInitialized = false;
 let langUpdateQueued = false;
 const pendingLangRoots = new Set();
 function queueLangUpdate(root) {
@@ -253,10 +248,18 @@ function queueLangUpdate(root) {
     langUpdateQueued = false;
     const roots = Array.from(pendingLangRoots);
     pendingLangRoots.clear();
-    roots.forEach(function(scope){ if(scope && scope.isConnected) applyLangToDom(scope); });
+    const compactRoots = [];
+    roots.forEach(function(scope){
+      if(!scope || !scope.isConnected) return;
+      for(let i = compactRoots.length - 1; i >= 0; i--) {
+        if(scope.contains && scope.contains(compactRoots[i])) compactRoots.splice(i, 1);
+      }
+      if(!compactRoots.some(function(parent){ return parent.contains && parent.contains(scope); })) compactRoots.push(scope);
+    });
+    compactRoots.forEach(applyLangToDom);
   });
 }
-let langObserver = new MutationObserver(function(records){
+const langObserver = new MutationObserver(function(records){
   records.forEach(function(record){
     record.addedNodes.forEach(function(added){
       if(added.nodeType !== 1 && added.nodeType !== 3) return;
@@ -265,7 +268,8 @@ let langObserver = new MutationObserver(function(records){
   });
 });
 function initLanguage(){
-  registerLangNodes(document.body);
+  if(languageInitialized) return;
+  languageInitialized = true;
   applyLangToDom(document.body);
   langObserver.observe(document.body, { childList: true, subtree: true });
 }
@@ -273,6 +277,7 @@ function initLanguage(){
 let neonSaveTimer = null;
 let neonSaveInFlight = false;
 let neonSaveQueued = false;
+let neonSaveRetryCount = 0;
 let neonHydrationPromise = null;
 let neonHydrationStarted = false;
 let neonHydrated = false;
@@ -280,39 +285,62 @@ let neonUnavailable = false;
 let neonLocalRevision = 0;
 let neonDirtyDuringHydration = false;
 const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests','notifications','aiQuestionHistory'];
+const CLOUD_DATA_KEY_SET = new Set(CLOUD_DATA_KEYS);
 function getData(key, def) { try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); } catch (e) { console.warn('تعذر قراءة البيانات المحلية للمفتاح:', key, e); return def || []; } }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
 function scheduleNeonSave(delay = 600){
   if(!neonHydrated || neonUnavailable) return;
   clearTimeout(neonSaveTimer);
-  neonSaveTimer = setTimeout(saveAllDataToNeon, delay);
+  neonSaveTimer = setTimeout(function(){ void saveAllDataToNeon(); }, Math.max(0, delay));
 }
 async function saveAllDataToNeon(){
   if(!neonHydrated || neonUnavailable) return;
   if(neonSaveInFlight){neonSaveQueued=true;return}
+  const requested = neonSaveQueued || neonPendingKeys.size > 0;
+  if(!requested) return;
+  clearTimeout(neonSaveTimer);
+  neonSaveTimer = null;
   neonSaveInFlight=true;
   neonSaveQueued=false;
+  const revisionAtStart=neonLocalRevision;
+  const keysAtStart=Array.from(neonPendingKeys);
+  neonPendingKeys.clear();
   const status=document.getElementById('cloudSaveStatus');
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),8000);
+  let succeeded=false;
   try{
     const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()}),signal:controller.signal,credentials:'same-origin'});
-    if(!res.ok) throw new Error('cloud-save-failed');
+    const body=await res.json().catch(function(){ return {}; });
+    if(!res.ok || body.unavailable || body.saved === false) throw new Error('cloud-save-failed');
+    succeeded=true;
+    neonSaveRetryCount=0;
     if(status) status.textContent='محفوظ في Neon';
   }catch(error){
+    keysAtStart.forEach(function(key){ neonPendingKeys.add(key); });
+    neonSaveRetryCount=Math.min(neonSaveRetryCount+1, 6);
     if(status) status.textContent=error?.name==='AbortError'?'انتهت مهلة الحفظ في Neon':'تعذر الحفظ في Neon';
   }finally{
     clearTimeout(timeout);
     neonSaveInFlight=false;
-    if(neonSaveQueued) scheduleNeonSave(600);
+    const hasNewChanges=neonSaveQueued || neonPendingKeys.size > 0 || neonLocalRevision !== revisionAtStart;
+    const shouldRetry=!succeeded && requested;
+    neonSaveQueued=false;
+    if(hasNewChanges || shouldRetry){
+      const delay=succeeded?600:Math.min(30000,1000 * Math.pow(2, Math.max(0, neonSaveRetryCount-1)));
+      scheduleNeonSave(delay);
+    }
   }
 }
+const neonPendingKeys = new Set();
 function setData(key, val) {
   localStorage.setItem(key, JSON.stringify(val));
   if(!neonHydrationStarted) return;
   neonLocalRevision += 1;
+  if(!CLOUD_DATA_KEY_SET.has(key)) return;
+  neonPendingKeys.add(key);
   if(!neonHydrated){ neonDirtyDuringHydration=true; return; }
-  if(sessionStorage.getItem('neon_unavailable_v1')==='1') return;
+  if(neonUnavailable || sessionStorage.getItem('neon_unavailable_v1')==='1') return;
   scheduleNeonSave();
 }
 async function hydrateDataFromNeon(){
@@ -339,11 +367,14 @@ async function hydrateDataFromNeon(){
       }else if(res.ok&&body.data&&typeof body.data==='object'&&!Array.isArray(body.data)){
         const canApply=neonLocalRevision===revisionAtStart&&!neonDirtyDuringHydration;
         if(canApply&&Object.keys(body.data).length){
-          const before=JSON.stringify(collectCloudData());
           CLOUD_DATA_KEYS.forEach(function(key){
-            if(Object.prototype.hasOwnProperty.call(body.data,key)) localStorage.setItem(key,JSON.stringify(body.data[key]));
+            if(!Object.prototype.hasOwnProperty.call(body.data,key)) return;
+            const next=JSON.stringify(body.data[key]);
+            if(localStorage.getItem(key)!==next){
+              localStorage.setItem(key,next);
+              changed=true;
+            }
           });
-          changed=before!==JSON.stringify(collectCloudData());
         }else if(!canApply||!Object.keys(body.data).length){
           shouldSave=true;
         }
@@ -456,7 +487,7 @@ let currentRecordAvailableSurahs = [];
 let currentRecordJuz = 0;
 
 // ====== PROCTORING: camera, gaze approximation and continuous touch ======
-const proctor={stream:null,detector:null,detectorType:'',faceMeshResults:null,analyzing:false,scanTimer:null,active:false,context:null,onReady:null,warningAt:0,touchWarningAt:0,lastGoodAt:0,stableSince:0,holding:false,touches:new Set(),baseline:null,gazeSamples:[],eyeSamples:[],screenWidth:0,screenHeight:0,cancelled:false,blocked:false,violations:0,leaveAt:0};
+const proctor={stream:null,detector:null,detectorType:'',faceMeshResults:null,analyzing:false,scanTimer:null,active:false,context:null,onReady:null,warningAt:0,touchWarningAt:0,lastGoodAt:0,stableSince:0,holding:false,touches:new Set(),baseline:null,gazeSamples:[],eyeSamples:[],screenWidth:0,screenHeight:0,cancelled:false,blocked:false,violations:0,leaveAt:0,leaveTimer:null};
 // Expose the shared runtime to the isolated v2 camera controller.
 window.proctor=proctor;
 function getProctorSettings(){const ctx=proctor.context||{};return{touchGraceMs:Math.max(1,parseInt(ctx.proctorTouchGrace)||12)*1000,gazeGraceMs:Math.max(3,parseInt(ctx.proctorGazeGrace||ctx.proctorFaceGrace)||12)*1000,leaveGraceMs:Math.max(1,parseInt(ctx.proctorLeaveGrace)||5)*1000,maxViolations:Math.max(1,parseInt(ctx.proctorMaxViolations)||2),fullscreen:ctx.proctorFullscreen===true,focus:ctx.proctorFocus!==false,touch:ctx.proctorTouch!==false,autoRestore:ctx.proctorAutoRestore!==false}}
@@ -481,9 +512,9 @@ function proctorHandleTouches(e){if(!proctor.active||!getProctorSettings().touch
 ['touchstart','touchmove','touchend','touchcancel'].forEach(type=>document.addEventListener(type,proctorHandleTouches,{passive:true,capture:true}));
 function recordProctorIncident(reason){if(!currentUser)return;const incident={id:'pi_'+Date.now(),studentId:currentUser.id,studentName:currentUser.name,taskType:proctor.context?.type||'unknown',taskId:proctor.context?.id||'',reason,time:new Date().toLocaleString('ar-EG'),timestamp:Date.now(),status:'cancelled'};const incidents=getData('proctoringIncidents',[]);incidents.unshift(incident);setData('proctoringIncidents',incidents.slice(0,500));const messages=getData('messages',[]);messages.push({type:'system',sender:'نظام المراقبة',senderId:0,receiverType:'admin',text:'تنبيه مخالفة مراقبة: '+currentUser.name+' — '+proctorTaskLabel(proctor.context)+' — '+reason+' — '+incident.time,time:incident.time,approved:true,read:false,proctorIncidentId:incident.id});setData('messages',messages);return incident}
 function cancelProctoredTask(reason){if(!proctor.active||proctor.cancelled)return;proctor.cancelled=true;recordProctorIncident(reason);clearInterval(studentExamTimer);clearInterval(studentExamQuestionTimer);Object.keys(typeof activeAudioRecorders==='object'?activeAudioRecorders:{}).forEach(function(key){const state=activeAudioRecorders[key];try{if(state.recorder&&state.recorder.state!=='inactive')state.recorder.stop()}catch(e){}try{state.stream?.getTracks().forEach(t=>t.stop())}catch(e){}});const ctx=proctor.context;if(ctx?.type==='exam'){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].activeExam){const ex=students[idx].activeExam;ex.status='cancelled_proctoring';ex.cancelReason=reason;ex.cancelledAt=Date.now();students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].activeExam=null;setData('students',students);currentUser=students[idx];document.getElementById('studentExamContent').innerHTML='<div class="alert alert-danger"><h3>أُلغي الاختبار بسبب مخاءءفة المراقبة</h3><p>'+escapeHtml(reason)+'</p></div>'}}else if(Number.isInteger(ctx?.taskIndex)){let students=getData('students',[]),idx=students.findIndex(s=>s.id===currentUser.id);if(idx>=0&&students[idx].tasks[ctx.taskIndex]){students[idx].tasks[ctx.taskIndex].proctorCancelled=true;students[idx].tasks[ctx.taskIndex].cancelReason=reason;setData('students',students);currentUser=students[idx];renderStudentTasks()}}proctorStop(true);showToast('أُلغيت المهمة وتم إرسال تنبيه للمسؤول','error')}
-function proctorStop(closeCamera=true){proctor.active=false;proctor.holding=false;proctor.touches.clear();proctor.warningAt=0;proctor.touchWarningAt=0;document.getElementById('proctorWarning')?.classList.add('hidden');if(closeCamera)proctorStopCamera()}
-function proctorLeaveStart(reason){if(!proctor.active||proctor.leaveAt||!getProctorSettings().focus)return;proctor.leaveAt=Date.now();proctorShowWarning(reason,proctor.leaveAt);const grace=getProctorSettings().leaveGraceMs;setTimeout(function(){if(proctor.active&&proctor.leaveAt&&Date.now()-proctor.leaveAt>=grace)proctorBlockTask(reason)},grace+50)}
-function proctorLeaveEnd(){proctor.leaveAt=0;document.getElementById('proctorWarning')?.classList.add('hidden')}
+function proctorStop(closeCamera=true){proctor.active=false;proctor.holding=false;proctor.touches.clear();proctor.warningAt=0;proctor.touchWarningAt=0;proctor.leaveAt=0;clearTimeout(proctor.leaveTimer);proctor.leaveTimer=null;document.getElementById('proctorWarning')?.classList.add('hidden');if(closeCamera)proctorStopCamera()}
+  function proctorLeaveStart(reason){if(!proctor.active||proctor.leaveAt||!getProctorSettings().focus)return;proctor.leaveAt=Date.now();proctorShowWarning(reason,proctor.leaveAt);const grace=getProctorSettings().leaveGraceMs;clearTimeout(proctor.leaveTimer);proctor.leaveTimer=setTimeout(function(){proctor.leaveTimer=null;if(proctor.active&&proctor.leaveAt&&Date.now()-proctor.leaveAt>=grace)proctorBlockTask(reason)},grace+50)}
+  function proctorLeaveEnd(){proctor.leaveAt=0;clearTimeout(proctor.leaveTimer);proctor.leaveTimer=null;document.getElementById('proctorWarning')?.classList.add('hidden')}
 document.addEventListener('visibilitychange',()=>{if(!proctor.active)return;if(document.hidden)proctorLeaveStart('تمت مغادرة صفحة المهمة');else proctorLeaveEnd()});window.addEventListener('blur',()=>{if(proctor.active)proctorLeaveStart('تم ترك نافذة المهمة')});window.addEventListener('focus',()=>{if(proctor.active)proctorLeaveEnd()});document.addEventListener('fullscreenchange',()=>{if(proctor.active&&getProctorSettings().fullscreen&&!document.fullscreenElement)proctorLeaveStart('تم الخروج من ملء الشاشة')});window.addEventListener('pagehide',()=>{if(proctor.active){recordProctorIncident('تم الخروج المفاجئ من الموقع');cancelProctoredTask('تم الخروج المفاجئ من الموقع')}});window.addEventListener('resize',()=>{if(proctor.active&&((screen.width&&screen.width<proctor.screenWidth*.72)||(window.innerWidth<screen.availWidth*.62)))proctorLeaveStart('تم اكتشاف تقسيم الشاشة أو تصغير نا��ذة المهمة')});
 function finishGoogleLogin(user){
   const email=String(user?.email||'').trim().toLowerCase();
@@ -723,6 +754,10 @@ function showPage(id, options = {}) {
   /* تستخدم الروابط الحقيقية مع إبقاء التنقل الداخلي سريعاً داخل مستند الجسر الحالي. */
   const currentVisible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   const currentId = currentVisible ? currentVisible.id : null;
+  if(currentId && currentId !== id){
+    if(typeof stopAllAudioRecorders === 'function') stopAllAudioRecorders();
+    if(proctor.active) proctorStop(true);
+  }
   let el = document.getElementById(id);
   if (!el && id === 'tuhfatPage' && typeof window.loadThimarFeature === 'function') {
     ensureThimarFeature('tuhfat').then(function (loaded) {
@@ -1438,6 +1473,25 @@ function registerAudioRecorder(key, recorder, stream, options) {
     delete activeAudioRecorders[key];
   }, {once:true});
 }
+function stopAllAudioRecorders() {
+  Object.keys(activeAudioRecorders).forEach(function(key){
+    const state=activeAudioRecorders[key];
+    if(!state) return;
+    try {
+      if(state.recorder && state.recorder.state !== 'inactive') state.recorder.stop();
+      else {
+        clearInterval(state.timer);
+        if(state.stream) state.stream.getTracks().forEach(function(track){ track.stop(); });
+        delete activeAudioRecorders[key];
+      }
+    } catch(e) {
+      clearInterval(state.timer);
+      if(state.stream) state.stream.getTracks().forEach(function(track){ track.stop(); });
+      delete activeAudioRecorders[key];
+    }
+  });
+}
+window.addEventListener('pagehide', stopAllAudioRecorders);
 function toggleAudioPause(key) {
   const state=activeAudioRecorders[key]; if(!state) return;
   const recorder=state.recorder, btn=state.pauseBtnId?document.getElementById(state.pauseBtnId):null, status=state.statusId?document.getElementById(state.statusId):null;
@@ -1619,7 +1673,7 @@ function renderAdmins() {
   const whatsInput = document.getElementById('adminWhatsInput');
   if(whatsInput) whatsInput.value = getAdminWhatsapp();
   const admins = getData('admins');
-  let html = '<table><thead><tr><th>#</th><th>رقم الموبايل</th><th>الرقم السري</th><th>النوع</th><th>التحكم</th></tr></thead><tbody>';
+  let html = '<table><thead><tr><th>#</th><th>رقم المو��ايل</th><th>الرقم السري</th><th>النوع</th><th>التحكم</th></tr></thead><tbody>';
   admins.forEach((a, i) => {
     html += '<tr><td>'+(i+1)+'</td><td>'+a.mobile+'</td><td><code style="background:var(--table-header); padding:4px 10px; border-radius:5px;">'+a.password+'</code></td><td>'+(a.isMain ? '<span class="badge badge-warning">رئيسي</span>' : '<span class="badge badge-primary">فرعي</span>')+'</td><td>'+(!a.isMain ? '<button class="btn btn-xs btn-info" onclick="editAdmin('+a.id+')">تعديل</button> <button class="btn btn-xs btn-danger" onclick="deleteAdmin('+a.id+')">حذف</button>' : '<span style="color:var(--text-light)">غير قابل للتعديل</span>')+'</td></tr>';
   });
@@ -1793,7 +1847,7 @@ function saveAdminSettings() {
   }
   setData('admins', admins);
   currentUser = admins[idx];
-  document.getElementById('adminSettingsAlert').innerHTML = '<div class="alert alert-success">✅ تم حفظ التغييرات بنجاح</div>';
+  document.getElementById('adminSettingsAlert').innerHTML = '<div class="alert alert-success">✅ تم حفظ التغ��يرات بنجاح</div>';
   document.getElementById('confirmMobile').value = '';
   document.getElementById('confirmPass').value = '';
   document.getElementById('newMobile').value = '';
@@ -2527,7 +2581,7 @@ let examFilesCache=[];
 async function readApiJson(res, fallback){
   const text=await res.text();
   const contentType=(res.headers.get('content-type')||'').toLowerCase();
-  if(!text.trim()){const requestId=res.headers.get('x-request-id')||'';throw new Error(fallback+' — لم يرسل ال��ادم تفاصيل (HTTP '+res.status+')'+(requestId?' — معرف الطلب: '+requestId:'')+'. أعد المحاولة، وإن استمر الخطأ تحقق من سجل النشر.');}
+  if(!text.trim()){const requestId=res.headers.get('x-request-id')||'';throw new Error(fallback+' — لم يرسل ال��ادم تفاصيل (HTTP '+res.status+')'+(requestId?' — معرف الطلب: '+requestId:'')+'. أعد المحاولة، وإن استمر الخطأ تح��ق من سجل النشر.');}
   let data=null;
   if(contentType.includes('application/json')){try{data=JSON.parse(text)}catch(e){}}
   else{try{data=JSON.parse(text)}catch(e){data={error:text.slice(0,300)}}}
@@ -3932,7 +3986,7 @@ function approveMessage(idx, approved) {
         msgs.push({
           type:'admin', sender:'المسؤول', senderId:0,
           receiverType: 'student', receiverId: studentId,
-          text: '❌ تم رفض ملفك من المسؤول. يرجى المحاوة مرة أخرى وإرسال ملف جديد.',
+          text: '❌ تم رفض ملفك من المسؤول. يرجى المح��وة مرة أخرى وإرسال ملف جديد.',
           reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false
         });
 
@@ -4599,7 +4653,7 @@ async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiB
     saveSessionState();
   }
   proctorStop(true);
-  showToast('✅ تم التحقق من الصوت والمحتوى وإرسال التسجيل للمسؤول', 'success');
+  showToast('✅ تم الت��قق من الصوت والمحتوى وإرسال التسجيل للمسؤول', 'success');
   renderStudentTasks();
   return true;
 }
@@ -4736,7 +4790,7 @@ async function inspectVoiceQuality(blob){
     for(let i=0;i<data.length;i++){const x=Math.abs(data[i]);energy+=x*x;peak=Math.max(peak,x);if(x>.985)clipped++}
     for(let off=0;off+frame<data.length;off+=frame){let sum=0;for(let i=0;i<frame;i++)sum+=data[off+i]*data[off+i];frames++;if(Math.sqrt(sum/frame)>.012)voiced++}
     const rms=Math.sqrt(energy/Math.max(1,data.length)),voicedRatio=voiced/Math.max(1,frames),clippedRatio=clipped/Math.max(1,data.length);
-    if(rms<.008||voicedRatio<.25)throw new Error('لم يظهر صوت واضح في التسجيل. اقترب من الميكروفون وسجّل في مكان هادئ.');
+    if(rms<.008||voicedRatio<.25)throw new Error('��م يظهر صوت واضح في التسجيل. اقترب من الميكروفون وسجّل في مكان هادئ.');
     if(clippedRatio>.02||peak>=.999)throw new Error('مستوى الصوت مرتفع ويسبب تشويشًا. ابتعد قليلًا عن الميكروفون وأعد التسجيل.');
     return {duration:audio.duration,rms,voicedRatio,clippedRatio};
   }finally{try{await ctx.close()}catch(e){}}
@@ -5216,7 +5270,7 @@ function renderParentPendingTasks() {
     } else {
       rejectedToday.slice().reverse().forEach(task => {
         html += '<div class="task-card" style="border-right-color:var(--danger);">';
-        html += '<h5 style="color:var(--danger);">❌ '+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '📖 قراءة' : '🎙️ تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
+        html += '<h5 style="color:var(--danger);">❌ '+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '���� قراءة' : '🎙️ تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
         if(task.surah) html += '<p><strong>السورة:</strong> '+task.surah+' | <strong>من آية:</strong> '+(task.from || '-')+' | <strong>إلى آية:</strong> '+(task.to || '-')+'</p>';
         html += '<p style="color:var(--text-light); font-size:0.9rem;">🕐 '+(task.rejectedAt || '')+'</p>';
         if(task.sourceMsgId) html += '<button class="btn btn-sm btn-info" onclick="openMessageFileById(\''+task.sourceMsgId+'\', true)">👁️ الاطلاع على الملف (عرض ف��ط)</button>';
@@ -5487,7 +5541,7 @@ function generateParentWelcome(student) {
     base.body += '<br><br>📊 آخر تسميع نهائي لـ '+student.name+' كان بتاريخ '+last.date+' بمجموع <strong>'+last.totalScore+' درجة</strong>. ';
     if(last.totalScore >= 14) base.body += 'أداء مءءتاز! ابنك يُظهر تفوقاً واضحاً. استمر في تشجيعه. 🌟';
     else if(last.totalScore >= 10) base.body += 'مستوى جي جداً. مع دعمك المستمر سيصل للتميز. 👍';
-    else base.body += 'يحتاج لبعض الدعم والمراجعة. جالسه يومياً وشاركه الحفظ. 💪';
+    else base.body += 'يحتاج لبعض الدعم والمراجعة. جالسه يومياً وشاركه ال��فظ. 💪';
   }
   return base;
 }
