@@ -1,4 +1,3 @@
-console.log('[v0] app-core:start')
 // ====== QURAN DATA: JUZ AND SURAHS ======
 const quranData = {
   1: ["الفاتحة", "البقرة"],
@@ -358,7 +357,6 @@ function setData(key, val) {
   scheduleNeonSave();
 }
 async function hydrateDataFromNeon(){
-  console.log('[v0] neon:enter');
   if(neonHydrationPromise) return neonHydrationPromise;
   if(neonHydrated || neonUnavailable) return;
   if(sessionStorage.getItem('neon_hydrated_v1')){
@@ -377,7 +375,6 @@ async function hydrateDataFromNeon(){
     try{
       const res=await fetch('/api/data',{cache:'no-store',credentials:'same-origin',signal:controller.signal});
       const body=await res.json().catch(()=>({}));
-      console.log('[v0] neon:response', res.ok, Boolean(body.unavailable), Boolean(body.data && typeof body.data === 'object'));
       if(body.unavailable){
         neonUnavailable=true;
       }else if(res.ok&&body.data&&typeof body.data==='object'&&!Array.isArray(body.data)){
@@ -401,7 +398,6 @@ async function hydrateDataFromNeon(){
       neonUnavailable=true;
       if(error?.name!=='AbortError') console.warn('[v0] Neon hydration unavailable; local data retained');
     }finally{
-      console.log('[v0] neon:finally', changed, shouldSave, neonUnavailable);
       clearTimeout(timeout);
       neonHydrated=true;
       sessionStorage.setItem('neon_hydrated_v1','1');
@@ -415,7 +411,6 @@ async function hydrateDataFromNeon(){
   return neonHydrationPromise;
 }
 function refreshVisiblePageAfterHydration(){
-  console.log('[v0] neon:refresh-visible');
   const visible=document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   if(visible&&typeof showPage==='function') showPage(visible.id,{fromBrowser:true});
 }
@@ -494,7 +489,6 @@ if(!localStorage.getItem('initialized_v7')) {
   }());
   // يبدأ الاتصال بعد تجهيز البيانات المحلية والرسم الأول، ولا ي��بق تهيئة القيم الافتراضية.
   scheduleCloudHydration();
-  console.log('[v0] app-core:after-data-init');
   
   let currentUser = null, currentType = null, currentAdminId = null;
 let voiceBlob = null, voiceChunks = [], mediaRecorder = null;
@@ -552,7 +546,6 @@ function restorePendingGoogleSignup(){try{const raw=sessionStorage.getItem('thim
 
 let appBootstrapped = false;
 function bootstrapApp() {
-  console.log('[v0] app-core:bootstrap-enter');
   if (appBootstrapped) return;
   appBootstrapped = true;
   initLanguage();
@@ -587,7 +580,6 @@ function bootstrapApp() {
     }
   } else {
   const routed = pageFromUrl();
-  console.log('[v0] app-core:routing', location.pathname, routed);
   const protectedRoute = /^\/(admin|student|parent)(\/|$)/.test(location.pathname);
     if (protectedRoute) {
       location.replace('/login?next=' + encodeURIComponent(location.pathname));
@@ -773,7 +765,6 @@ function refreshFeaturePage(id) {
 }
 
 function showPage(id, options = {}) {
-  console.log('[v0] showPage:enter', id);
   /* تستخدم الروابط الحقيقية مع إبقاء التنقل الداخلي سريعاً داخل مستند الجسر الحالي. */
   const currentVisible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   const currentId = currentVisible ? currentVisible.id : null;
@@ -823,9 +814,7 @@ function showPage(id, options = {}) {
   document.querySelectorAll('.page, .home-page, .chart-page').forEach(node => node.classList.add('hidden'));
   el.classList.remove('hidden');
 
-  console.log('[v0] showPage:before-finalize');
   checkAndFinalizeDrafts();
-  console.log('[v0] showPage:after-finalize');
   updateBackButton();
 
   if(id === 'adminDashboard') { renderAdminStats(); updateMsgBadge(); renderActiveDrafts(); }
@@ -847,9 +836,7 @@ function showPage(id, options = {}) {
   if(id === 'studentExamPage') renderStudentExam();
   if(id === 'parentPendingTasksPage') renderParentPendingTasks();
   if(id === 'parentChartPage') renderParentFullChart();
-  console.log('[v0] showPage:before-lang');
   applyLangToDom(el);
-  console.log('[v0] showPage:after-lang');
   
   const featureName = pageFeature(id);
   if (featureName) {
@@ -864,11 +851,8 @@ function showPage(id, options = {}) {
     });
   }
 
-  console.log('[v0] showPage:before-scroll');
   window.scrollTo(0,0);
-  console.log('[v0] showPage:before-save');
   saveSessionState();
-  console.log('[v0] showPage:done');
 }
 
 function goBack() {
@@ -1765,7 +1749,7 @@ function adminLogin() {
     updateNotificationBadges();
     document.getElementById('adminLoginAlert').innerHTML = '';
   } else {
-    document.getElementById('adminLoginAlert').innerHTML = '<div class="alert alert-danger">❌ رقم الوبايل أو الرقم السري غير صحيح</div>';
+    document.getElementById('adminLoginAlert').innerHTML = '<div class="alert alert-danger">❌ رقم الوبايل أ�� الرقم السري غير صحيح</div>';
   }
 }
 
@@ -2726,7 +2710,7 @@ async function generateLocalQuranQuestions(base,lastSurah,plans){
   for(let left=0,right=range.length-1;left<=right;left++,right--){sourceOrder.push(range[left]);if(right!==left)sourceOrder.push(range[right])}
   const sourceLimit=Math.min(range.length,Math.max(needed,8)),sources=[];
   for(const surah of sourceOrder.slice(0,sourceLimit)){const max=SURAH_AYAH_COUNTS[surah]||1;const text=await fetchAyatText(surah,1,max);const ayahs=String(text||'').split(/\s*﴿?\d+﴾?\s*/).map(x=>x.trim()).filter(Boolean);if(ayahs.length)sources.push({surah,ayahs,text})}
-  if(!sources.length)throw new Error('تعذر تحميل النص القرآني للمولّد المحلي.');let cursor=0;const out=[],used=new Set(),randomPositions=['start','end','middle'];
+  if(!sources.length)throw new Error('تعذر تحم��ل النص القرآني للمولّد المحلي.');let cursor=0;const out=[],used=new Set(),randomPositions=['start','end','middle'];
   for(const plan of plans){for(let i=0;i<plan.count;i++){const src=sources[cursor%sources.length],requestedPosition=plan.position||'random',position=requestedPosition==='random'?randomPositions[cursor%randomPositions.length]:requestedPosition;cursor++;const third=Math.max(1,Math.ceil(src.ayahs.length/3));let min=1,max=src.ayahs.length;if(position==='start')max=Math.min(src.ayahs.length,third);else if(position==='middle'){min=Math.min(src.ayahs.length,third+1);max=Math.min(src.ayahs.length,third*2)}else if(position==='end')min=Math.min(src.ayahs.length,third*2+1);let from=min+Math.floor(Math.random()*Math.max(1,max-min+1));for(let tries=0;tries<=max-min&&used.has(src.surah+':'+from);tries++)from=from>=max?min:from+1;used.add(src.surah+':'+from);const ayah=src.ayahs[from-1]||src.text,next=src.ayahs[from]||ayah;let q={surah:src.surah,from,to:Math.min(from+(plan.type==='complete'?plan.completeAyahs-1:plan.type==='audio'?plan.reciteAyahs-1:0),src.ayahs.length),points:1,source:'local-browser',options:[],stem:ayah,correct:''};
     if(plan.type==='mcq'){const options=shuffled([src.surah].concat(shuffled(range.filter(s=>s!==src.surah)).slice(0,plan.optionsCount-1)));q.prompt='إلى أي سورة ينتمي المقطع المصور؟';q.options=options;q.correct=src.surah}
     else if(plan.type==='truefalse'){const truth=Math.random()>.5,shown=truth?src.surah:(shuffled(range.filter(s=>s!==src.surah))[0]||src.surah);q.prompt='هل المقطع المصور من سورة '+shown+'؟';q.options=['صح','خطأ'];q.correct=truth?'صح':'خطأ'}
@@ -3913,7 +3897,7 @@ function openMessageFileById(msgId, readonly) {
   const msgs = getData('messages');
   const m = msgs.find(x => x.id === msgId);
   if(!m || !m.fileData) { alert('الملف غير متاح'); return; }
-  if(readonly && !m.shareWithParent) { alert('لم يسمح المسؤول بالاطلاع على هذا الملف بعد'); return; }
+  if(readonly && !m.shareWithParent) { alert('لم يسمح المسؤول بالاطل��ع على هذا الملف بعد'); return; }
   openFileModal(m.fileData, m.fileName || 'file', 'ملف مرسل من ' + m.sender + (typeof m.voiceMatch === 'number' ? ' — 🤖 مطابقة البصم الصوتية: ' + m.voiceMatch + '% ' + (m.voiceMatch >= VOICE_MATCH_THRESHOLD ? '✅ مطابق' : '⚠️ ير مطابق') : ''), m.fileType === 'homework' ? 'image/jpeg' : (m.fileType === 'reading' || m.fileType === 'voice') ? 'audio/webm' : '', readonly);
 }
 
@@ -5522,7 +5506,7 @@ function deleteFile(id) {
 function generateAIReport(student) {
   const sessions = student.sessions || [];
   const finalizedSessions = sessions.filter(sess => !sess.isDraft);
-  if(finalizedSessions.length === 0) return 'لم يتم تسجيل أي تسميع نهائي بعد. بداية جيدة تنتظرك! 💪';
+  if(finalizedSessions.length === 0) return 'لم يتم تسجيل أي ��سميع نهائي بعد. بداية جيدة تنتظرك! 💪';
   const last3 = finalizedSessions.slice(-3);
   const avgScore = last3.reduce((sum, s) => sum + s.totalScore, 0) / last3.length;
   let report = '';
@@ -5608,7 +5592,7 @@ function generateAIResponse(text, student) {
   }
   // التقدم عبر الجلسات
   if(has('تقد','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
-    if(finalizedSessions.length < 2) return ' أحتاج تسميعءءن نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
+    if(finalizedSessions.length < 2) return ' أحتاج تسميعءءن نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك ال��ادم وسأحلل لك المنحنى بدقة.';
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
@@ -5679,6 +5663,14 @@ function logout() {
   const up = document.getElementById('unifiedPass'); if(up) up.value = '';
   const ua = document.getElementById('unifiedLoginAlert'); if(ua) ua.innerHTML = '';
   showPage('lockScreen');
-}
+  }
 
-bootstrapAppWhenReady();
+  // تعيين الدوال صراحةً لأن صفحة الدخول تنشئ جسوراً مؤقتة قبل تحميل هذه النواة.
+  // بدون هذا التعيين قد تبقى showPage المؤقتة وتعيد التوجيه إلى /login بلا نهاية.
+  window.showPage = showPage;
+  window.unifiedLogin = unifiedLogin;
+  window.startSignup = startSignup;
+  window.openAccountRecovery = openAccountRecovery;
+
+  bootstrapAppWhenReady();
+
