@@ -1005,7 +1005,7 @@ tr:hover { background: var(--table-hover); }
     <label>طلب التطوير</label>
     <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما ترد إضافته أو تعديله ف الموقع..."></textarea>
   </div>
-  <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
+  <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">نشر التغييرات بأمان عبر GitHub</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
     <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;"><strong id="devProgressLabel">تحليل الطلب</strong><span id="devEta">الءءقت المتبقي: 02:00</span></div>
     <div style="height:9px;background:var(--border);border-radius:999px;overflow:hidden;"><div id="devProgressBar" style="height:100%;width:8%;background:var(--primary);transition:width .5s;"></div></div>
@@ -1030,6 +1030,7 @@ tr:hover { background: var(--table-hover); }
 <div id="githubSyncPage" class="page hidden" style="max-width:820px; margin:40px auto;">
   <div class="page-header"><h2>🔗 مزامنة المشروع مع GitHub</h2></div>
   <p style="color:var(--text-light); margin-bottom:12px;">المشروع مرتبط بمستودعك الشخصي فقط عبر متغيرات البيئة عل الخادم (<code>GITHUB_TOKEN</code>, <code>GITHUB_OWNER</code>, <code>GITHUB_REPO</code>, <code>GITHUB_BRANCH</code>). كل إضافة أو تعديل يقوم به مساعد اتطوير يُنشئ <b>Commit</b> ويُدفع تلقائياً إلى فرعك المحدد، مع الحفاظ على كامل تاريخ الإصدارات. لن يتم وضع أي مفتاح أو سرّ داخل الملفات أو في المتصفح.</p>
+  <div id="githubPublisherAuthHint" class="alert alert-info" style="margin-bottom:12px;">حماية النشر: يجب أن تكون جلسة Google موثقة، وأن يكون بريدك ضمن قائمة النشر على الخادم. <a href="/api/auth/google?prompt=select_account">تسجيل الدخول باستخدام Google</a></div>
   <div id="githubSyncAlert"></div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
     <button class="btn btn-primary" id="githubSyncRefreshBtn" onclick="refreshGithubSync()">🔄 تحقق من حالة المزامنة</button>
@@ -1240,7 +1241,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلق��ئياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وج�� و��حد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام ا��شاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
+  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلق��ئياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وج�� و��حد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام ا����شاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
   <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
@@ -1430,7 +1431,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- إعدادات الطالب -->
 <div id="studentSettings" class="page hidden" style="max-width:500px;">
-  <div class="page-header"><h2>⚙️ تغيير ����رقم السري</h2></div>
+  <div class="page-header"><h2>⚙️ تغيير �����رقم السري</h2></div>
   <div id="studentSettingsAlert"></div>
   <div class="form-group"><label>الرقم السري الحالي</label><input type="password" id="currentStudentPass" placeholder="أدخل الرقم السري الحالي"></div>
   <div class="form-group"><label>الرقم السي الجديد</label><input type="password" id="newStudentPass" placeholder="أدخل الرقم السري لجديد"></div>

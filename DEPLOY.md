@@ -27,6 +27,8 @@
 - `GITHUB_OWNER`
 - `GITHUB_REPO`
 - `GITHUB_BRANCH` (مثلاً `main`)
+- `GITHUB_PUBLISHER_EMAILS` (عناوين Google الموثقة المسموح لها بالنشر، مفصولة بفواصل)
 
+سجّل الدخول من نفس النطاق عبر Google OAuth. صلاحية GitHub المطلوبة هي Contents: Read and write للمستودع المحدد فقط؛ لا تعتمد حماية الخادم على `role` أو `adminId` المرسل من المتصفح.
 جميع هذه القيم Server-side فقط. لا تضعها في `public/index.html` أو أي JavaScript يصل إلى المتصفح.
 المساعد يقرأ الملفات التي تحددها الخطة، يولّد المحتوى الكامل للملفات المعدلة، ثم يحفظها عبر GitHub Contents API. لا يسمح بحذف الملفات أو تعديل `.env`، والحد التلقائي 8 ملفات و500KB لكل ملف.

@@ -509,7 +509,7 @@ function isTouchDevice(){return Boolean((navigator.maxTouchPoints||0)>0||('ontou
 function proctorTaskLabel(ctx){return ctx&&ctx.type==='exam'?'الاختبار':'مهمة '+(ctx&&ctx.type==='reading'?'القراءة':'التسميع')}
 function proctorStopCamera(){clearInterval(proctor.scanTimer);proctor.scanTimer=null;proctor.analyzing=false;proctor.faceMeshResults=null;if(proctor.detectorType==='mediapipe')try{proctor.detector?.close()}catch(e){}proctor.detector=null;proctor.detectorType='';if(proctor.stream){proctor.stream.getTracks().forEach(t=>t.stop());proctor.stream=null}const v=document.getElementById('proctorVideo');if(v)v.srcObject=null;const scan=document.getElementById('proctorScanBtn');if(scan)scan.disabled=false}
 function closeProctorGate(){proctorStopCamera();proctor.onReady=null;proctor.context=null;document.getElementById('proctorGate')?.classList.add('hidden')}
-function openProctorGate(context,onReady){proctorStopCamera();proctor.active=false;proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبع واحد':'هذه المهمة تعم���� على هاتف بشاشة لمس فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبع واحد هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اض����ط تشغيل الفحص للسماح بالكاميرا'}
+function openProctorGate(context,onReady){proctorStopCamera();proctor.active=false;proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبع واحد':'هذه المهمة تعم���� على هاتف بشاشة ل��س فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبع واحد هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اض����ط تشغيل الفحص للسماح بالكاميرا'}
 async function startProctorScan(){if(!navigator.mediaDevices?.getUserMedia){document.getElementById('proctorHelp').textContent='الكاميرا تحتاج متصفحاً حديثاً واتصال HTTPS.';return}try{proctor.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:640},height:{ideal:480}},audio:false});const video=document.getElementById('proctorVideo');video.srcObject=proctor.stream;await video.play();if('FaceDetector' in window){proctor.detector=new FaceDetector({fastMode:true,maxDetectedFaces:2});proctor.detectorType='native'}else if(window.FaceMesh){const mesh=new FaceMesh({locateFile:file=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/'+file});mesh.setOptions({maxNumFaces:2,refineLandmarks:true,minDetectionConfidence:.55,minTrackingConfidence:.55});mesh.onResults(results=>{proctor.faceMeshResults=results.multiFaceLandmarks||[]});proctor.detector=mesh;proctor.detectorType='mediapipe'}else{throw new Error('face-model-unavailable')}document.getElementById('proctorScanBtn').disabled=true;document.getElementById('proctorHelp').textContent='يمل الفحص عى Chrome وSafari وFirefox وEdge الحديثة.';proctor.scanTimer=setInterval(proctorAnalyzeFrame,350);proctorAnalyzeFrame()}catch(e){proctorStopCamera();const name=e&&e.name||'';document.getElementById('proctorHelp').textContent=e&&e.message==='face-model-unavailable'?'تعذر تحميل نموذج فحص الوجه. تحقق من اتصال الإنترنت ثم أعد المحاولة.':name==='NotAllowedError'?'تم رفض إذن الكاميرا. اسمح به من إعدادات الموقع ثم أعد المحاولة.':name==='NotFoundError'?'لم يتم العثور على كاميرا متاحة.':name==='NotReadableError'?'ا��كاميرا مستخدمة في تطبيق آخر. أغلقه ثم أعد المحاولة.':name==='SecurityError'?'افتح الصفحة عبر HTTPS للسماح بالكاميرا.':'تعذر فتح الكاميرا. تحقق من إذن المتصفح ثم أعد المحاوة.'}}
 async function proctorDetectFaces(video){if(proctor.detectorType==='native')return await proctor.detector.detect(video);if(proctor.detectorType==='mediapipe'){await proctor.detector.send({image:video});return (proctor.faceMeshResults||[]).map(points=>{let minX=1,minY=1,maxX=0,maxY=0;points.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});return{boundingBox:{x:minX*video.videoWidth,y:minY*video.videoHeight,width:(maxX-minX)*video.videoWidth,height:(maxY-minY)*video.videoHeight},landmarks:points}})}return[]}
 function proctorAverage(list){return list.length?list.reduce((a,b)=>a+b,0)/list.length:0}
@@ -2711,7 +2711,7 @@ async function sendAdminChat(){const input=document.getElementById('adminChatInp
 
 async function callStudentAI(mode, payload, temperature){
   const res = await fetch('/api/ai', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'},
     body:JSON.stringify({mode, payload, model:getSelectedAIModel(), temperature: typeof temperature==='number' ? temperature : 0.15})
   });
   const data=await readApiJson(res,'فشل الذكاء الاصطناعي');
@@ -3189,7 +3189,7 @@ function sendSystemSessionMessage(student,text){
   setData('messages',messages);
 }
 
-// إعاءءة الصفحة لحالتها الأصلية بعد الحفظ النهائي
+// إعاءءة الصفحة لحالتها الأصلية بعد الحف�� النهائي
 function resetRecordForm() {
   const mainSurah = currentRecordMainSurah || '';
   recordElements = FIXED_ELEMENTS.map(name => ({
@@ -3251,7 +3251,7 @@ function renderAdminExamHistory(s) {
       if(r.reason)h+='<p><strong>سبب التصحيح:</strong> '+escapeHtml(r.reason)+'</p>';
       if(Number.isFinite(Number(r.matchedPercent)))h+='<p><strong>نسبة المطابقة:</strong> '+Math.max(0,Math.min(100,Number(r.matchedPercent)))+'٪</p>';
       if(Array.isArray(r.missingAyahs)&&r.missingAyahs.length)h+='<p><strong>الآيات الناقصة:</strong> '+r.missingAyahs.map(function(item){return escapeHtml(String(item))}).join('، ')+'</p>';
-      if(audio)h+='<div style="margin-top:10px"><strong>التسجيل الصوتي:</strong><br><audio controls preload="metadata" src="'+audio+'" style="width:100%;max-width:420px"></audio></div>';
+      if(audio)h+='<div style="margin-top:10px"><strong>التسجيل الصو��ي:</strong><br><audio controls preload="metadata" src="'+audio+'" style="width:100%;max-width:420px"></audio></div>';
       if(image)h+='<div style="margin-top:10px"><strong>ءءورة/مرجع السؤال:</strong><br><img src="'+escapeHtml(image)+'" alt="مرجع السؤال '+(i+1)+'" loading="lazy" style="max-width:100%;border-radius:10px;border:1px solid var(--border)"></div>';
       if(q.sourceFileName)h+='<p><strong>ملف المرجع:</strong> '+escapeHtml(q.sourceFileName)+'</p>';
       h+='</div>';
@@ -3529,6 +3529,12 @@ async function sendUserMessageToAdmin(role) {
 function escapeHtmlAi(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+function githubAuthErrorMessage(error) {
+  if(error && error.status === 401) return 'يجب تسجيل الدخول باستخدام Google الموثق قبل نشر التغييرات.';
+  if(error && error.status === 403) return 'حساب Google الحالي غير موجود في قائمة المسؤولين المسموح لهم بالنشر.';
+  if(error && error.code === 'GITHUB_PUBLISHER_ALLOWLIST_MISSING') return 'لم تُضبط قائمة حسابات Google المسموح لها بالنشر على الخادم.';
+  return error && error.message ? error.message : 'تعذر تنفيذ عملية GitHub.';
+}
 
 // ===== مزامنة GitHub (لمسؤول فقط) =====
 function openGithubSync(){
@@ -3550,7 +3556,7 @@ async function refreshGithubSync(){
   if(btn){ btn.disabled = true; btn.textContent = '⏳ جءءرٍ التحقق...'; }
   if(box) box.innerHTML = '<p style="color:var(--text-light)">جارٍ التحءءق من التال بمستودعك...</p>';
   try {
-    const st = await callStudentAI('github_status', { role:'admin', adminId: currentAdminId || null }, 0.1);
+    const st = await callStudentAI('github_status', {}, 0.1);
     if(!st || st.connected !== true){
       const reason = (st && st.reason) ? st.reason : 'تعذر الاتصال بمستودع GitHub';
       if(box) box.innerHTML = '<div style="background:rgba(220,53,69,0.1); border:1px solid #dc3545; border-radius:10px; padding:14px 16px; color:var(--text);">'
@@ -3579,7 +3585,7 @@ async function refreshGithubSync(){
     if(del) del.style.display = st.canWrite ? 'block' : 'none';
   } catch(e){
     if(box) box.innerHTML = '<div style="background:rgba(220,53,69,0.1); border:1px solid #dc3545; border-radius:10px; padding:14px 16px; color:var(--text);">'
-      + '<b style="color:#dc3545;">❌ فشل التحقق</b><br><span style="color:var(--text-light); font-size:0.9rem;">'+escapeHtmlAi(e.message || 'خطأ غير معروف')+'</span></div>';
+      + '<b style="color:#dc3545;">❌ فشل التحقق</b><br><span style="color:var(--text-light); font-size:0.9rem;">'+escapeHtmlAi(githubAuthErrorMessage(e))+'</span></div>';
   } finally {
     if(btn){ btn.disabled = false; btn.textContent = '🔄 تحقق من ءءالة المزامنة'; }
   }
@@ -3596,7 +3602,7 @@ async function deleteGithubFile(){
   if(!confirm('هل أنت متأكد من حذف الملف: '+path+' ؟ سيتم إنشاء Commit في مستودعك.')) return;
   if(resBox) resBox.innerHTML = '<span style="color:var(--text-light)">جارٍ الحذف...</span>';
   try {
-    const r = await callStudentAI('github_delete', { role:'admin', adminId: currentAdminId || null, path, confirm:true }, 0.1);
+    const r = await callStudentAI('github_delete', { path, confirm:true }, 0.1);
   if(r && r.deleted){
   let html = '<div style="color:#28a745;">✅ '+escapeHtmlAi(r.note || 'تم حذف الملف')+'</div>';
   if(r.commitUrl) html += '<div><a href="'+escapeHtmlAi(r.commitUrl)+'" target="_blank" rel="noopener">عرض الـCommit</a></div>';
@@ -3609,7 +3615,7 @@ async function deleteGithubFile(){
   recordDevAudit({ status:'failed', request:'حذف ملف: '+path, error:'لم يتم الحذف' });
   }
   } catch(e){
-  if(resBox) resBox.innerHTML = '<span style="color:#dc3545;">❌ '+escapeHtmlAi(e.message || 'تعذر الحذف')+'</span>';
+  if(resBox) resBox.innerHTML = '<span style="color:#dc3545;">❌ '+escapeHtmlAi(githubAuthErrorMessage(e))+'</span>';
   recordDevAudit({ status:'failed', request:'حذف ملف: '+path, error:(e && e.message) ? e.message : 'تعذر الحذف' });
   }
   }
@@ -3722,7 +3728,7 @@ async function runDevAssistant(){
   const progressTimer=setInterval(function(){elapsed++;const left=Math.max(0,estimate-elapsed),progress=Math.min(94,8+Math.round(elapsed/estimate*86));if(progressBar)progressBar.style.width=progress+'%';if(etaBox)etaBox.textContent='الوقت المتبقي التقريبي: '+formatExamTime(left);if(progressLabel)progressLabel.textContent=elapsed<25?'تحليل الطلب':elapsed<70?'تعديل ملفات المشروع':elapsed<105?'إرسال التع��يل إلى GitHub':'بدء تحديث الموقع';},1000);
 
   try {
-    const plan = await callStudentAI('dev_assistant', { request, role:'admin', adminId: currentAdminId || null, autoApply:true }, 0.2);
+    const plan = await callStudentAI('dev_assistant', { request, autoApply:true }, 0.2);
     lastDevPlan = plan;
     renderDevPlan(plan);
     // تسجيل العملية في سجل التدقيق.
@@ -3736,8 +3742,8 @@ async function runDevAssistant(){
     renderDevAudit();
     showToast(plan && plan.applied ? '✅ تم تنفيذ التعديل بنجاح' : '⚠️ تم تحليل الطلب ولم يكتمل التطبيق', plan && plan.applied ? 'success' : 'info');
   } catch(err) {
-    const reason = err && err.message ? err.message : 'سبب غير معروف';
-    const canRetry = !!(err && err.retryable);
+    const reason = githubAuthErrorMessage(err);
+    const canRetry = !!(err && err.retryable) && !(err.status === 401 || err.status === 403);
     resultBox.innerHTML =
       '<div style="background:#fdecea; color:#b02a37; padding:16px 18px; border-radius:10px; line-height:1.9;" role="alert">'+
       '<div style="font-weight:bold; font-size:1.15rem; margin-bottom:6px;">تعذر تنفيذ التعديل</div>'+
@@ -5703,7 +5709,7 @@ function generateAIResponse(text, student) {
   // تحفيز
   if(has('تحفيز','همة','ملل','تعبا','زهقءءن','احبت','أحطت')) {
     const quotes = [
-      '🌟 «وَلَقَدْ يَسَّرْنَا الْقُْآنَ لِلذِّكْرِ فهَلْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ فءءط.',
+      '🌟 «وَلَقَدْ يَسَّرْنَا الْقُْآنَ لِلذِّكْرِ فهَ��ْ مِن مُّدَّكِرٍ» — الحفظ أيسر مما تظن، ابدأ فءءط.',
       '💚 قال ﷺ: «خيركم من تعلم القرآن وعلمه». أنت اليوم في أفضل طريق.',
       '🚀 كل صفحة تحفظها اليوم هي درة ترتف بها غداً. لا تستهن بالاختباريل.'
     ];

@@ -1,4 +1,5 @@
 import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
+import { session as googleSession } from "../auth/google/route"
 import { guardRequest, rateLimit, readJsonBody, RequestBodyError } from "@/lib/request-guards"
 
 export const runtime = "nodejs"
@@ -416,7 +417,7 @@ const SYS_VOICE_PRINT = `أنت محرك بصمة صوتية. تستمع إلى 
 أعد JSON فقط بلا markdown:
 {"speaker":{"gender":"male|female|unknown","ageRange":"child|teen|adult|senior|unknown","pitch":"very-low|low|medium|high|very-high","pitchHz":number,"timbre":"وصف موجز","speed":"slow|medium|fast","nasality":"low|medium|high","breathiness":"low|medium|high","accent":"وصف موجز","distinctiveTraits":["سمات مميزة موجزة"]},"quality":"good|noisy|too-short","usable":true/false,"reason":"سبب موجز بالعربية"}`
 
-const SYS_VOICE_MATCH = `أنت محرك تحقق من هوية المتحدث بالبصمة الصوتية. لديك تسجيل صوتي حديث، ووصف بصمة صوتية مرجعية محفوظة لنفس الشخص المتوقع (referenceProfile)، وقد يصلك تسجيل مرجعي أيضاً.
+const SYS_VOICE_MATCH = `أنت محرك تحقق من هوية المتحدث بالبصمة الصوتية. لديك تسجيل صوتي حديث، ووصف بصمة صوتية مرجع��ة محفوظة لنفس الشخص المتوقع (referenceProfile)، وقد يصلك تسجيل مرجعي أيضاً.
 حلّل خصائص الصوت في التسجيل الحديث ثم قارنها بالمرجع: الطبقة، الون الصوتي، الجرس، الأنفية، السرعة، اللكنة.
 تجاهل اختلاف الكلمات أو النص المقرءءء تماماً؛ المقارنة على الصوت فقط. راعِ اختلاف الميكروفون والضجيج.
 أعد JSON فقط بلا markdown:
@@ -533,6 +534,36 @@ function githubHeaders() {
     "X-GitHub-Api-Version": "2022-11-28",
     "Content-Type": "application/json",
   }
+}
+
+type GooglePublisher = { email: string; name?: string }
+
+function publisherEmails() {
+  return new Set(
+    (process.env.GITHUB_PUBLISHER_EMAILS || "")
+      .split(/[\s,;]+/)
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  )
+}
+
+async function authorizeGithubPublisher(request: Request): Promise<{ user: GooglePublisher } | { response: Response }> {
+  const user = await googleSession(request)
+  if (!user) {
+    return { response: json({ error: "يجب تسجيل الدخول باستخدام Google قبل نشر التغييرات.", code: "GOOGLE_AUTH_REQUIRED" }, 401) }
+  }
+  const allowedEmails = publisherEmails()
+  if (!allowedEmails.size) {
+    return { response: json({ error: "لم يتم إعداد قائمة حسابات Google المسموح لها بالنشر على GitHub.", code: "GITHUB_PUBLISHER_ALLOWLIST_MISSING" }, 503) }
+  }
+  if (!allowedEmails.has(user.email.trim().toLowerCase())) {
+    return { response: json({ error: "حساب Google هذا غير مصرح له بنشر التغييرات.", code: "GITHUB_PUBLISH_FORBIDDEN" }, 403) }
+  }
+  return { user: { email: user.email.trim().toLowerCase(), name: typeof user.name === "string" ? user.name : "" } }
+}
+
+function recordGithubAudit(user: GooglePublisher, event: string, details: Record<string, unknown> = {}) {
+  console.info("[GITHUB_PUBLISH_AUDIT]", { event, email: user.email, ...details })
 }
 
 // قراءة بيانات المستودع (تُستخدم للتحقق من وجوده، صلاحيات الرمز، والفرع الافتراضي).
@@ -689,6 +720,7 @@ async function getGithubSyncStatus() {
 // لا يشف أبداً قيمة أي رمز مميز�� فقط اسم لمتغير الناقص أو نوع المشكلة.
 async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; details?: any }> {
   const missing: string[] = []
+  if (!publisherEmails().size) missing.push("GITHUB_PUBLISHER_EMAILS")
   if (!GITHUB_TOKEN) missing.push("GITHUB_TOKEN")
   if (!GITHUB_OWNER) missing.push("GITHUB_OWNER")
   if (!GITHUB_REPO) missing.push("GITHUB_REPO")
@@ -714,7 +746,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
     }
     return { ok: false, reason: msg }
   }
-  // التحقق من صلاحية الكتابة على محتوى المستودع (Contents: Read and write).
+  // التحقق من ��لاحية الكتابة على محتوى المستودع (Contents: Read and write).
   const perms = repo?.permissions
   if (perms && perms.push !== true && perms.admin !== true && perms.maintain !== true) {
     return {
@@ -1257,7 +1289,8 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
 
     // 6.أ) فحص جاهزية مساعد التطوير (للمسول) — يتحقق من المتغيرات والشبكة والمستودع والصلاحيات دون كش أي سرّ.
     if (mode === "dev_preflight") {
-      if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
+      const authorization = await authorizeGithubPublisher(req)
+      if ("response" in authorization) return authorization.response
       const pf = await preflightAutoApply()
       return json({
         result: {
@@ -1284,10 +1317,11 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
 
     // 6) ماعد تطوير الموقع — تحليل فقط أو تطبيق تلقائي عند طلب المسؤول
     if (mode === "dev_assistant") {
-      if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
+      const authorization = await authorizeGithubPublisher(req)
+      if ("response" in authorization) return authorization.response
       const request = typeof payload.request === "string" ? payload.request.trim() : ""
       if (!request) return json({ error: "يرجى كتابة طلب التطوير", diagnostics }, 400)
-      if (request.length > 4000) return json({ error: "طلب التطوير طويل جداً (الحد الأقصى 4000 حرف)", diagnostics }, 400)
+      if (request.length > 4000) return json({ error: "طلب التطو��ر طويل جداً (الحد الأقصى 4000 حرف)", diagnostics }, 400)
       const tree = githubConfigured ? await githubListTree() : { files: [
         "public/index.html", "app/api/ai/route.ts", "app/page.tsx", "app/layout.tsx",
         "app/globals.css", "next.config.mjs", "package.json", "components/ui/button.tsx",
@@ -1319,8 +1353,10 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
       if (payload.autoApply === true && plan.feasible !== false) {
         try {
           const applied = await autoApplyDevRequest(request, plan)
+          recordGithubAudit(authorization.user, "auto_apply_succeeded", { fileCount: Array.isArray(applied.applied) ? applied.applied.length : 0 })
           return json({ result: { ...plan, ...applied, applied: true, autoApplied: true, note: "تم تطبيق التعديلات تلقائياً على المشروع من الخادم. إذا كان Vercel مربوطاً بالمستودع فسيبدأ النشر تلقائياً، أو يمكن استخدام VERCEL_DEPLOY_HOOK_URL." }, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
         } catch (e:any) {
+          recordGithubAudit(authorization.user, "auto_apply_failed", { errorCode: e?.code || "DEV_APPLY_ERROR" })
           const failure = classifyAiFailure(e)
           const isProviderFailure = /Gemini|Groq|generativelanguage|api\.groq\.com|rate.?limit|insufficient credits/i.test(failure.raw)
           return json({
@@ -1343,14 +1379,17 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
 
     // 7) حالة مزامنة GitHub — للمسؤول فقط. يتحقق من الاتصال بمستودع المسؤول ويعرض آخر commit وسجل التعديلات.
     if (mode === "github_status") {
-      if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
+      const authorization = await authorizeGithubPublisher(req)
+      if ("response" in authorization) return authorization.response
       const status = await getGithubSyncStatus()
+      recordGithubAudit(authorization.user, "status_checked", { connected: status.connected, canWrite: status.canWrite === true })
       return json({ result: status, diagnostics: { ...diagnostics, githubConfigured, autoDevEnabled: AUTO_DEV_ENABLED } })
     }
 
     // 8) حذف ملف من المستودع — للمسؤول فقط، بتأكيد صريح، مع حماية الملفات الأساسية. ينشئ commit ويحافظ على التاريخ.
     if (mode === "github_delete") {
-      if (payload?.role !== "admin") return json({ error: "هذه الميزة متاحة للمسؤول فقط", diagnostics }, 403)
+      const authorization = await authorizeGithubPublisher(req)
+      if ("response" in authorization) return authorization.response
       if (payload?.confirm !== true) return json({ error: "الحذف يتطلب تأكيداً صريحاً من المسؤول", diagnostics }, 400)
       const path = typeof payload.path === "string" ? payload.path.trim() : ""
       if (!path) return json({ error: "يرجى تحديد مسار الملف المراد حذفه", diagnostics }, 400)
@@ -1361,6 +1400,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
       try {
         const message = `chore: delete ${path} (admin request via sync panel)`
         const result = await githubDeleteFile(path, message)
+        recordGithubAudit(authorization.user, "delete_succeeded", { path })
         return json({
           result: {
             deleted: true,
@@ -1371,6 +1411,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
           diagnostics: { ...diagnostics, githubConfigured },
         })
       } catch (e: any) {
+        recordGithubAudit(authorization.user, "delete_failed", { path, errorCode: e?.code || "GITHUB_DELETE_ERROR" })
         return json({ error: e?.message || "تعذر حذف الملف", diagnostics: { ...diagnostics, githubConfigured } }, 500)
       }
     }

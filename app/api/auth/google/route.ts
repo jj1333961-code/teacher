@@ -17,8 +17,17 @@ function config() {
 function sign(value: string, secret: string) {
   return createHmac("sha256", secret).update(value).digest("base64url")
 }
+const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
+
 function sessionValue(email: string, name: string, secret: string) {
-  const payload = Buffer.from(JSON.stringify({ email, name, issuedAt: Date.now() })).toString("base64url")
+  const issuedAt = Date.now()
+  const payload = Buffer.from(JSON.stringify({
+    email: email.trim().toLowerCase(),
+    name: name.trim().slice(0, 160),
+    emailVerified: true,
+    issuedAt,
+    expiresAt: issuedAt + SESSION_MAX_AGE_MS,
+  })).toString("base64url")
   return `${payload}.${sign(payload, secret)}`
 }
 function verify(value: string, secret: string) {
@@ -28,7 +37,13 @@ function verify(value: string, secret: string) {
   if (signature.length !== expected.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null
   try {
     const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"))
-    return typeof parsed.email === "string" ? parsed : null
+    const now = Date.now()
+    const email = typeof parsed.email === "string" ? parsed.email.trim().toLowerCase() : ""
+    const issuedAt = Number(parsed.issuedAt)
+    const expiresAt = Number(parsed.expiresAt)
+    if (!email || parsed.emailVerified !== true || !Number.isFinite(issuedAt) || !Number.isFinite(expiresAt)) return null
+    if (issuedAt > now + 5 * 60 * 1000 || expiresAt <= now || expiresAt - issuedAt > SESSION_MAX_AGE_MS + 60_000) return null
+    return { ...parsed, email, issuedAt, expiresAt }
   } catch { return null }
 }
 function redirectUri() { return CALLBACK }
@@ -83,8 +98,11 @@ export async function POST() {
   } catch { return NextResponse.json({ configured: false }, { status: 503 }) }
 }
 
-export async function session(request: NextRequest) {
+export async function session(request: Request) {
   const secret = process.env.GOOGLE_CLIENT_SECRET?.trim()
-  const value = request.cookies.get(SESSION)?.value
+  const cookieHeader = request.headers.get("cookie") || ""
+  const match = cookieHeader.match(/(?:^|;\s*)teacher_google_session=([^;]*)/)
+  let value = ""
+  try { value = match ? decodeURIComponent(match[1]) : "" } catch { return null }
   return secret && value ? verify(value, secret) : null
 }
