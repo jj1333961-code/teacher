@@ -66,10 +66,15 @@ export function proxy(request: NextRequest) {
     }
     return NextResponse.redirect(target, 308)
   }
-  if (request.nextUrl.hostname !== OLD_HOST) return NextResponse.next()
+  if (request.nextUrl.hostname === OLD_HOST) {
+    const target = new URL(request.nextUrl.pathname + request.nextUrl.search, CANONICAL_ORIGIN)
+    return NextResponse.redirect(target, 308)
+  }
 
-  const target = new URL(request.nextUrl.pathname + request.nextUrl.search, CANONICAL_ORIGIN)
-  return NextResponse.redirect(target, 308)
+  // Route-to-shell mapping belongs in next.config.mjs. Keeping proxy focused
+  // on canonical redirects prevents two rewrite systems from competing and
+  // makes direct requests resolve through one deterministic Next.js pipeline.
+  return NextResponse.next()
 }
 
 export const config = {

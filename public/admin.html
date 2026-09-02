@@ -771,7 +771,7 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  /* قارئ مستقل يملأ الشاشة بالكامل، مع ������بقاء زر الإغلاق واضحًا فوق PDF */
+  /* قارئ مستقل يملأ الشاشة بالكامل، مع ����������بقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
@@ -990,7 +990,7 @@ tr:hover { background: var(--table-hover); }
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد Gemini / Groq الإداري</h2></div>
   <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بانات الموقع عندما تكون مرتبطة بسؤالك.</p>
-  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أ��لياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيان����� الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
+  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أ��لياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="��سأل عن بيان����� الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
@@ -1644,14 +1644,15 @@ window.alert = function(m){ showToast(m); };
       s.src = '/app-core.js';
       s.async = true;
       s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
-      s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظ��م.')); };
+      s.onerror = function(){ corePromise = null; reject(new Error('تع��ر تحميل ملفات النظ��م.')); };
       document.head.appendChild(s);
     });
     return corePromise;
   };
 
   // نحافظ على دخول /login خفيفاً ونجهز المسارات ال��ميقة فقط عند الحاجة.
-  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
+  // The shared bootstrap owns loading. Keep the login document free of the heavy core.
+  const warm = function() {};
   const path = location.pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(location.search);
   const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
@@ -1677,8 +1678,7 @@ window.alert = function(m){ showToast(m); };
     if (button) button.disabled = true;
     var boxId = errorBoxIds[name] || 'unifiedLoginAlert';
     var box = document.getElementById(boxId);
-    if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
-    var timeoutId;
+      var timeoutId;
     var loadWithTimeout = Promise.race([
       window.loadThimarAppCore(),
       new Promise(function(_, reject){ timeoutId = window.setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })
@@ -1840,5 +1840,7 @@ window.alert = function(m){ showToast(m); };
   })();
 })();
 </script>
+  <script src="/app-routes.js"></script>
+  <script src="/app-bootstrap.js"></script>
  </body>
 </html>
