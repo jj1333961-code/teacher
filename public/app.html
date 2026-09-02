@@ -908,7 +908,7 @@ tr:hover { background: var(--table-hover); }
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
       <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
-      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 ����عادة إرسال الكود</button>
+      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 ������عادة إرسال الكود</button>
     </div>
   </div>
 </div>
@@ -1007,7 +1007,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
-    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;"><strong id="devProgressLabel">تحليل الطلب</strong><span id="devEta">الءءقت المتبقي: 02:00</span></div>
+    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;"><strong id="devProgressLabel">تحل��ل الطلب</strong><span id="devEta">الءءقت المتبقي: 02:00</span></div>
     <div style="height:9px;background:var(--border);border-radius:999px;overflow:hidden;"><div id="devProgressBar" style="height:100%;width:8%;background:var(--primary);transition:width .5s;"></div></div>
   </div>
   <div id="devAssistantResult" style="margin-top:20px;"></div>
@@ -1068,7 +1068,7 @@ tr:hover { background: var(--table-hover); }
       <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حظ الرم</button>
     </div>
   </div>
-  <div class="alert alert-info" style="margin-bottom:20px;">تفعل Google مركزي ومتاح لجميع الأجهزة عبر إعداد GOOGLE_CLIENT_ID في بيئة Vercel.</div>
+  <div class="alert alert-info" style="margin-bottom:20px;">��فعل Google مركزي ومتاح لجميع الأجهزة عبر إعداد GOOGLE_CLIENT_ID في بيئة Vercel.</div>
 
   <div class="form-row" style="margin-bottom:20px;">
     <div class="form-group"><label>رقم الموبايل</label><input type="text" id="newAdminMobile" placeholder="رقم الموبايل (11 رقم)" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
@@ -1240,7 +1240,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بق��ء الوجه أمام الشاشة، تركيز الصفحة، ووجو�� إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
+  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بق��ء الوجه أمام الشاشة، تركيز الصفحة�� ووجو�� إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
   <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
@@ -1405,7 +1405,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ملفا�� المسؤول للطالب -->
 <div id="studentFilesPage" class="page hidden">
-  <div class="page-header"><h2>📁 ال��لف��ت المرسلة لي</h2></div>
+  <div class="page-header"><h2>���� ال��لف��ت المرسلة لي</h2></div>
   <div id="studentFilesContent"></div>
 </div>
 
@@ -1647,7 +1647,7 @@ window.alert = function(m){ showToast(m); };
     });
     return corePromise;
   };
-  // توجيه خفيف لصفحة الدخول قبل تنزيل نواة التطبيق الكبيرة.
+  // توجيه خفيف لصفحة الدخول قبل ت��زيل نواة التطبيق الكبيرة.
   window.showPage = window.showPage || function(id){
     const authRoutes = {lockScreen:'/login', accountRecoveryPage:'/forgot-password', signupStep1:'/signup', signupStep2:'/signup/details'};
     location.assign(authRoutes[id] || '/login');
@@ -1657,7 +1657,9 @@ window.alert = function(m){ showToast(m); };
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
   const path = location.pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(location.search);
-  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || /^\/login(\/|$)/.test(path) || /^\/signup(\/|$)/.test(path) || path === '/forgot-password' || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
+  // شاشة الدخول/التسجيل خفيفة عمدًا؛ تحميل app-core.js مبكرًا كان يحجز main thread
+  // قبل أول تفاعل. تُحمّل النواة عند طلب وظيفة تحتاجها أو عند فتح لوحة محمية.
+  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
   if (needsCore) {
     const start = function(){
       if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: 1200 });
@@ -1737,21 +1739,25 @@ window.alert = function(m){ showToast(m); };
     var html = document.documentElement;
     var btn = document.querySelector('.theme-toggle');
     var dark = html.getAttribute('data-theme') === 'dark';
-    if (dark) { html.removeAttribute('data-theme'); localStorage.setItem('theme','light'); if(btn) btn.textContent='🌙'; }
-    else { html.setAttribute('data-theme','dark'); localStorage.setItem('theme','dark'); if(btn) btn.textContent='☀️'; }
+    try {
+      if (dark) { html.removeAttribute('data-theme'); localStorage.setItem('theme','light'); if(btn) btn.textContent='🌙'; }
+      else { html.setAttribute('data-theme','dark'); localStorage.setItem('theme','dark'); if(btn) btn.textContent='☀️'; }
+    } catch (error) {
+      if (dark) { html.removeAttribute('data-theme'); if(btn) btn.textContent='🌙'; }
+      else { html.setAttribute('data-theme','dark'); if(btn) btn.textContent='☀️'; }
+    }
   };
 
   wrappers.toggleLang = function(){
     var next = document.documentElement.lang === 'en' ? 'ar' : 'en';
-    localStorage.setItem('lang', next);
+    try { localStorage.setItem('lang', next); } catch (error) {}
     document.documentElement.lang = next;
     document.documentElement.dir = next === 'en' ? 'ltr' : 'rtl';
     var btn = document.getElementById('langToggleBtn');
     if (btn) btn.textContent = next === 'en' ? 'ع' : 'EN';
-    window.loadThimarAppCore().then(function(){
-      window.dispatchEvent(new Event('languagechange'));
-      if (typeof window.applyLangToDom === 'function') window.applyLangToDom();
-    }).catch(function(err){ console.error('App core failed to load', err); });
+    // تبديل اتجاه/لغة الواجهة لا يحتاج تحميل النواة الثقيلة؛ تحميلها داخل النقرة كان
+    // يحجز main thread ويجعل الزر يبدو متجمداً. ستطبق النواة الترجمة عند تشغيلها لاحقاً.
+    window.dispatchEvent(new Event('languagechange'));
   };
   window.toggleLang = wrappers.toggleLang;
 })();
