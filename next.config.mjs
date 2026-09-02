@@ -11,6 +11,8 @@ const nextConfig = {
         { source: '/login', destination: '/app.html' },
         { source: '/signup/:path*', destination: '/app.html' },
         { source: '/signup', destination: '/app.html' },
+        { source: '/register/:path*', destination: '/app.html' },
+        { source: '/register', destination: '/app.html' },
         { source: '/forgot-password', destination: '/app.html' },
         { source: '/dashboard', destination: '/app.html' },
         { source: '/students', destination: '/app.html' },

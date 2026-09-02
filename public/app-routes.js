@@ -46,7 +46,15 @@
     '/dashboard': Object.freeze({ admin: 'adminDashboard', student: 'studentDashboard', parent: 'parentDashboard' }),
     '/students': 'studentsList',
     '/profile': Object.freeze({ admin: 'adminSettings', student: 'studentSettings', parent: 'parentDashboard' }),
-    '/settings': Object.freeze({ admin: 'adminSettings', student: 'studentSettings', parent: 'parentDashboard' })
+    '/settings': Object.freeze({ admin: 'adminSettings', student: 'studentSettings', parent: 'parentDashboard' }),
+    '/register': 'signupStep1'
+  });
+
+  var protectedAliases = Object.freeze({
+    '/dashboard': true,
+    '/students': true,
+    '/profile': true,
+    '/settings': true
   });
 
   function normalizePath(path) {
@@ -65,12 +73,13 @@
 
   function isProtectedPath(path) {
     var normalized = normalizePath(path);
-    return /^\/(admin|student|parent)(\/|$)/.test(normalized) || Object.prototype.hasOwnProperty.call(aliases, normalized);
+    return /^\/(admin|student|parent)(\/|$)/.test(normalized) || Boolean(protectedAliases[normalized]);
   }
 
   window.THIMAR_ROUTES = Object.freeze({
     pages: pages,
     aliases: aliases,
+    protectedAliases: protectedAliases,
     normalizePath: normalizePath,
     pageForPath: pageForPath,
     isProtectedPath: isProtectedPath
