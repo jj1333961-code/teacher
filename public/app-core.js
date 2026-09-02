@@ -509,7 +509,7 @@ function isTouchDevice(){return Boolean((navigator.maxTouchPoints||0)>0||('ontou
 function proctorTaskLabel(ctx){return ctx&&ctx.type==='exam'?'الاختبار':'مهمة '+(ctx&&ctx.type==='reading'?'القراءة':'التسميع')}
 function proctorStopCamera(){clearInterval(proctor.scanTimer);proctor.scanTimer=null;proctor.analyzing=false;proctor.faceMeshResults=null;if(proctor.detectorType==='mediapipe')try{proctor.detector?.close()}catch(e){}proctor.detector=null;proctor.detectorType='';if(proctor.stream){proctor.stream.getTracks().forEach(t=>t.stop());proctor.stream=null}const v=document.getElementById('proctorVideo');if(v)v.srcObject=null;const scan=document.getElementById('proctorScanBtn');if(scan)scan.disabled=false}
 function closeProctorGate(){proctorStopCamera();proctor.onReady=null;proctor.context=null;document.getElementById('proctorGate')?.classList.add('hidden')}
-function openProctorGate(context,onReady){proctorStopCamera();proctor.active=false;proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبع واحد':'هذه المهمة تعم���� على هاتف بشاشة ل��س فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبع واحد هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اض����ط تشغيل الفحص للسماح بالكاميرا'}
+function openProctorGate(context,onReady){proctorStopCamera();proctor.active=false;proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبع واحد':'هذه المهمة تعم���� على هاتف بشاشة ل����س فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبع واحد هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اض����ط تشغيل الفحص للسماح بالكاميرا'}
 async function startProctorScan(){if(!navigator.mediaDevices?.getUserMedia){document.getElementById('proctorHelp').textContent='الكاميرا تحتاج متصفحاً حديثاً واتصال HTTPS.';return}try{proctor.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:640},height:{ideal:480}},audio:false});const video=document.getElementById('proctorVideo');video.srcObject=proctor.stream;await video.play();if('FaceDetector' in window){proctor.detector=new FaceDetector({fastMode:true,maxDetectedFaces:2});proctor.detectorType='native'}else if(window.FaceMesh){const mesh=new FaceMesh({locateFile:file=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/'+file});mesh.setOptions({maxNumFaces:2,refineLandmarks:true,minDetectionConfidence:.55,minTrackingConfidence:.55});mesh.onResults(results=>{proctor.faceMeshResults=results.multiFaceLandmarks||[]});proctor.detector=mesh;proctor.detectorType='mediapipe'}else{throw new Error('face-model-unavailable')}document.getElementById('proctorScanBtn').disabled=true;document.getElementById('proctorHelp').textContent='يمل الفحص عى Chrome وSafari وFirefox وEdge الحديثة.';proctor.scanTimer=setInterval(proctorAnalyzeFrame,350);proctorAnalyzeFrame()}catch(e){proctorStopCamera();const name=e&&e.name||'';document.getElementById('proctorHelp').textContent=e&&e.message==='face-model-unavailable'?'تعذر تحميل نموذج فحص الوجه. تحقق من اتصال الإنترنت ثم أعد المحاولة.':name==='NotAllowedError'?'تم رفض إذن الكاميرا. اسمح به من إعدادات الموقع ثم أعد المحاولة.':name==='NotFoundError'?'لم يتم العثور على كاميرا متاحة.':name==='NotReadableError'?'ا��كاميرا مستخدمة في تطبيق آخر. أغلقه ثم أعد المحاولة.':name==='SecurityError'?'افتح الصفحة عبر HTTPS للسماح بالكاميرا.':'تعذر فتح الكاميرا. تحقق من إذن المتصفح ثم أعد المحاوة.'}}
 async function proctorDetectFaces(video){if(proctor.detectorType==='native')return await proctor.detector.detect(video);if(proctor.detectorType==='mediapipe'){await proctor.detector.send({image:video});return (proctor.faceMeshResults||[]).map(points=>{let minX=1,minY=1,maxX=0,maxY=0;points.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});return{boundingBox:{x:minX*video.videoWidth,y:minY*video.videoHeight,width:(maxX-minX)*video.videoWidth,height:(maxY-minY)*video.videoHeight},landmarks:points}})}return[]}
 function proctorAverage(list){return list.length?list.reduce((a,b)=>a+b,0)/list.length:0}
@@ -580,7 +580,9 @@ function bootstrapApp() {
     }
   } else {
   const routed = pageFromUrl();
-  const protectedRoute = /^\/(admin|student|parent)(\/|$)/.test(location.pathname);
+  const protectedRoute = window.THIMAR_ROUTES?.isProtectedPath
+    ? window.THIMAR_ROUTES.isProtectedPath(location.pathname)
+    : /^\/(admin|student|parent)(\/|$)/.test(location.pathname);
     if (protectedRoute) {
       location.replace('/login?next=' + encodeURIComponent(location.pathname));
       return;
@@ -679,7 +681,7 @@ function clearSession() {
 }
 
 const PAGE_ROUTE_PARAM = 'page';
-const PAGE_ROUTES = Object.freeze({
+const PAGE_ROUTES = (window.THIMAR_ROUTES && window.THIMAR_ROUTES.pages) || Object.freeze({
   lockScreen: '/login', accountRecoveryPage: '/forgot-password', signupStep1: '/signup', signupStep2: '/signup/details',
   adminLogin: '/login/admin', adminDashboard: '/admin', adminAIPage: '/admin/ai', devAssistantPage: '/admin/developer',
   githubSyncPage: '/admin/github', notificationsPage: '/admin/notifications', adminsPage: '/admin/admins',
@@ -708,7 +710,13 @@ function pageUrl(id) {
 function pageFromUrl() {
   const legacyId = new URLSearchParams(window.location.search).get(PAGE_ROUTE_PARAM);
   if (legacyId && document.getElementById(legacyId)) return legacyId;
-  return ROUTE_PAGES[window.location.pathname.replace(/\/$/, '') || '/'] || 'lockScreen';
+  const path = window.THIMAR_ROUTES?.normalizePath
+    ? window.THIMAR_ROUTES.normalizePath(window.location.pathname)
+    : window.location.pathname.replace(/\/$/, '') || '/';
+  const directPage = ROUTE_PAGES[path];
+  if (directPage) return directPage;
+  const aliasedPage = window.THIMAR_ROUTES?.pageForPath?.(path, currentType);
+  return aliasedPage && document.getElementById(aliasedPage) ? aliasedPage : 'lockScreen';
 }
 
 const PUBLIC_PAGE_IDS = new Set(['lockScreen','accountRecoveryPage','signupStep1','signupStep2','adminLogin','studentLogin','parentLogin']);
@@ -4484,7 +4492,7 @@ function uploadTaskFile(taskIdx, input, type) {
 
     messages.push({
       type: 'student', sender: currentUser.name, senderId: currentUser.id,
-      receiverType: 'admin', text: 'تم إرسال '+(type === 'homework' ? 'واجب' : 'قراءة')+' من الطالب '+currentUser.name+'. '+(task.name || task.text || ''),
+      receiverType: 'admin', text: 'تم إرسا�� '+(type === 'homework' ? 'واجب' : 'قراءة')+' من الطالب '+currentUser.name+'. '+(task.name || task.text || ''),
       fileData: e.target.result, fileName: file.name, fileType: type,
       taskIndex: task.originalTaskIndex !== undefined ? task.originalTaskIndex : taskIdx,
       time: new Date().toLocaleString('ar-EG'), approved: false, read: false

@@ -1044,7 +1044,7 @@ tr:hover { background: var(--table-hover); }
     <h3 style="margin:0 0 8px; color:#dc3545;">🗑️ حذف ملف من المستودع</h3>
     <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">ءءُءءشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأساية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
     <div class="form-group"><label>مسر الملف المراد حذفه</label><input id="githubDeletePath" placeholder="مثال: public/old-file.js" /></div>
-    <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أنني أريد حذف هذا الملف نهائياً من المستودع</label>
+    <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أ��ني أريد حذف هذا الملف نهائياً من المستودع</label>
     <button class="btn" style="background:#dc3545; color:#fff;" onclick="deleteGithubFile()">حذف الملف</button>
     <div id="githubDeleteResult" style="margin-top:12px;"></div>
   </div>
@@ -1419,7 +1419,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- دردشة AI للطاب -->
 <div id="studentAIChat" class="page hidden">
-  <div class="page-header"><h2>🤖 مساعدك الذكي في القرآن</h2></div>
+  <div class="page-header"><h2>🤖 مساعدك ا��ذكي في القرآن</h2></div>
   <div class="ai-chat">
     <div id="studentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
@@ -1650,7 +1650,8 @@ window.alert = function(m){ showToast(m); };
   };
 
   // نحافظ على دخول /login خفيفاً ونجهز المسارات العميقة فقط عند الحاجة.
-  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
+  // The shared bootstrap owns loading. Keep the login document free of the heavy core.
+  const warm = function() {};
   const path = location.pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(location.search);
   const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
@@ -1839,5 +1840,7 @@ window.alert = function(m){ showToast(m); };
   })();
 })();
 </script>
+  <script src="/app-routes.js"></script>
+  <script src="/app-bootstrap.js"></script>
  </body>
 </html>
