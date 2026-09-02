@@ -1639,7 +1639,8 @@ window.alert = function(m){ showToast(m); };
     corePromise = new Promise(function(resolve, reject){
       const s = document.createElement('script');
       s.src = '/app-core.js';
-      s.async = false;
+      // لا ننفذ نواة التطبيق بشكل متزامن داخل معالج النقر؛ ذلك يحجز الـ main thread.
+      s.async = true;
       s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
       s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
       document.head.appendChild(s);
@@ -1656,8 +1657,15 @@ window.alert = function(m){ showToast(m); };
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
   const path = location.pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(location.search);
-  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || /^\/login\//.test(path) || /^\/signup(\/|$)/.test(path) || path === '/forgot-password' || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
-  if (needsCore) warm();
+  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || /^\/login(\/|$)/.test(path) || /^\/signup(\/|$)/.test(path) || path === '/forgot-password' || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
+  if (needsCore) {
+    const start = function(){
+      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: 1200 });
+      else window.setTimeout(warm, 0);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+    else start();
+  }
 })();
 </script>
 <script>
