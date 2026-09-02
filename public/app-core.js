@@ -142,7 +142,7 @@ const LANG_DICT = {
   '⚙️ إعدادات المسؤول': '⚙️ Admin Settings',
   'الاختبارات': 'Exams', 'المهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل الصوتي': 'Audio recording',
   'مكافحة الغش': 'Anti-cheat', 'تحليل التسجيل': 'Analyze recording', 'جاري التحليل...': 'Analyzing...',
-  'تعذ تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
+  '��عذ تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
   'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا تود بيانات': 'No data available',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'حذف': 'Delete', 'تعديل': 'Edit', 'إضافة': 'Add',
   'إرسال': 'Send', 'تحميل': 'Loading', 'جار التحميل...': 'Loading...', 'تأكيد': 'Confirm',
@@ -627,27 +627,36 @@ function roleShellPath(role) {
 }
 
 function showPage(id, options = {}) {
-  /* كل صفحة لها مستند ومسار مستقلان؛ لا يجري تحميل الصفحة التالية قبل طلبها. */
-  const targetUrl = pageUrl(id);
-  const currentUrl = location.pathname + location.search + location.hash;
-  if (!options.fromBrowser && !routingFromBrowser && targetUrl !== currentUrl) {
-    saveSessionState();
-    location.assign(targetUrl);
-    return;
-  }
+  /* تستخدم الروابط الحقيقية مع إبقاء التنقل الداخلي سريعاً داخل مستند الجسر الحالي. */
   const currentVisible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   const currentId = currentVisible ? currentVisible.id : null;
-  
-  if(currentId && currentId !== id && currentId !== 'homePage' && !options.fromBrowser) {
-    pageHistory.push(currentId);
-    if(pageHistory.length > 20) pageHistory.shift();
-  }
-
   let el = document.getElementById(id);
   if(!el || !pageAllowedForUser(id)) {
     id = currentType === 'admin' ? 'adminDashboard' : currentType === 'student' ? 'studentDashboard' : currentType === 'parent' ? 'parentDashboard' : 'homePage';
     el = document.getElementById(id) || document.getElementById('homePage');
-    if (!options.fromBrowser && window.history && window.history.replaceState) window.history.replaceState({ page: id }, '', pageUrl(id));
+    if (!options.fromBrowser && window.history && window.history.replaceState) window.history.replaceState({ page: id, thimarRoute: true }, '', pageUrl(id));
+  }
+  if(!el) return;
+
+  const targetUrl = pageUrl(id);
+  const currentUrl = location.pathname + location.search + location.hash;
+  if (!options.fromBrowser && !routingFromBrowser && targetUrl !== currentUrl) {
+    if(currentId && currentId !== id && currentId !== 'homePage') {
+      pageHistory.push(currentId);
+      if(pageHistory.length > 20) pageHistory.shift();
+    }
+    saveSessionState();
+    if(window.history && window.history.pushState) {
+      window.history.pushState({ page: id, thimarRoute: true }, '', targetUrl);
+    } else {
+      location.assign(targetUrl);
+      return;
+    }
+  }
+
+  if(currentId && currentId !== id && currentId !== 'homePage' && !options.fromBrowser && targetUrl === currentUrl) {
+    pageHistory.push(currentId);
+    if(pageHistory.length > 20) pageHistory.shift();
   }
   document.querySelectorAll('.page, .home-page, .chart-page').forEach(node => node.classList.add('hidden'));
   el.classList.remove('hidden');
@@ -680,7 +689,7 @@ function showPage(id, options = {}) {
 }
 
 function goBack() {
-  if (window.history.length > 1 && new URLSearchParams(window.location.search).has(PAGE_ROUTE_PARAM)) {
+  if (window.history && (window.history.state?.thimarRoute || new URLSearchParams(window.location.search).has(PAGE_ROUTE_PARAM))) {
     window.history.back();
     return;
   }
@@ -1083,7 +1092,7 @@ function toggleUnifiedPassword() {
   input.type = showing ? 'text' : 'password';
   button.classList.toggle('is-visible', showing);
   button.setAttribute('aria-pressed', String(showing));
-  button.setAttribute('aria-label', showing ? 'إخفاء الرقم السري' : 'إظهار الرقم السري');
+  button.setAttribute('aria-label', showing ? 'إخفاء الرقم ال��ري' : 'إظهار الرقم السري');
 }
 function openAccountRecovery() {
   ['recoveryName','recoveryNid','recoveryPhone'].forEach(function(id){ const el=document.getElementById(id); if(el) el.value=''; });
@@ -3436,7 +3445,7 @@ async function runDevAssistant(){
   if(dangers.length){
     const confirmed = confirm(
       '⚠️ تحذير: قد يتضمن هذا الطلب عملية حسّاسة:\n\n- '+dangers.join('\n- ')+
-      '\n\nهذه العمليات قد تؤثر على البيانات أئ الأمان أو المستخدمين. لن يُنفَ��ذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتابعة والتنفيذ التلقائي؟'
+      '\n\nهذه العمليات قد تؤثر على البيانات أئ الأمان أو المستخدمين. لن يُنفَ��ذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتاب��ة والتنفيذ التلقائي؟'
     );
     if(!confirmed){
       recordDevAudit({ status:'blocked', request, summary:'��ُلغي بواسطة ءءلمسؤول قبل التنفيذ.', flagged:dangers });
@@ -3939,7 +3948,7 @@ function studentLogin() {
     document.getElementById('studentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ اسم المستخدم غير مسجل في النظام</div>'; return;
   }
   if(s.studentPass !== pass) {
-    document.getElementById('studentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ الرقم السري غير صحيح</div>'; return;
+    document.getElementById('studentLoginAlert').innerHTML = '<div class="alert alert-danger">❌ الرق�� السري غير صحيح</div>'; return;
   }
   currentUser = s; currentType = 'student';
   saveSessionState();
@@ -4721,7 +4730,7 @@ function buildAyatImagesHTML(surah, from, to, width) {
 let _ayatZoom = 92;
 function openAyatViewer(surah, from, to) {
   if (!surahNumber(surah)) { showToast('❌ اختر السورة ئولاً', 'error'); return; }
-  if (!parseInt(from)) { showToast('❌ حدد رقم الآية أولاً', 'error'); return; }
+  if (!parseInt(from)) { showToast('❌ حدد رقم الآية أ��لاً', 'error'); return; }
   _ayatZoom = 92;
   let modal = document.getElementById('ayatViewerModal');
   if (!modal) {
