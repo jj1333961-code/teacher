@@ -24,6 +24,8 @@ function bodyError(error: unknown) {
 export async function GET(request: Request) {
   const guard = guardRequest(request, { maxBytes: MAX_MESSAGE_REQUEST_BYTES })
   if (guard) return guard
+  const limited = rateLimit(request, { bucket: 'messages-read', limit: 120, windowMs: 60_000 })
+  if (limited) return limited
 
   try {
     const url = new URL(request.url)
@@ -47,6 +49,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const guard = guardRequest(request, { maxBytes: MAX_MESSAGE_REQUEST_BYTES, requireJson: true })
   if (guard) return guard
+  const limited = rateLimit(request, { bucket: 'messages-write', limit: 60, windowMs: 60_000 })
+  if (limited) return limited
 
   try {
     const body = await readJsonBody<Record<string, unknown>>(request, MAX_MESSAGE_REQUEST_BYTES)

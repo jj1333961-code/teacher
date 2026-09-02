@@ -1,5 +1,5 @@
 import { pool } from '@/lib/db'
-import { guardRequest, readJsonBody, RequestBodyError } from '@/lib/request-guards'
+import { guardRequest, rateLimit, readJsonBody, RequestBodyError } from '@/lib/request-guards'
 
 export const runtime = 'nodejs'
 const SNAPSHOT_ID = 'teacher-platform-v1'
@@ -30,6 +30,8 @@ function bodyError(error: unknown) {
 export async function GET(request: Request) {
   const guard = guardRequest(request, { maxBytes: MAX_SNAPSHOT_BYTES })
   if (guard) return guard
+  const limited = rateLimit(request, { bucket: 'snapshot-read', limit: 120, windowMs: 60_000 })
+  if (limited) return limited
 
   try {
     const result = await pool.query(
@@ -49,6 +51,8 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   const guard = guardRequest(request, { maxBytes: MAX_SNAPSHOT_BYTES, requireJson: true })
   if (guard) return guard
+  const limited = rateLimit(request, { bucket: 'snapshot-write', limit: 30, windowMs: 60_000 })
+  if (limited) return limited
 
   try {
     const body = await readJsonBody<{ data?: unknown }>(request, MAX_SNAPSHOT_BYTES)
