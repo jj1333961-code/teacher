@@ -65,17 +65,20 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const guard = guardRequest(request, { maxBytes: MAX_ANTI_CHEAT_REQUEST_BYTES, requireJson: true })
+  const guard = guardRequest(request, { maxBytes: MAX_REQUEST_BYTES, requireJson: true })
   if (guard) return guard
+  const limited = rateLimit(request, { bucket: 'anti-cheat-write', limit: 120, windowMs: 60_000 })
+  if (limited) return limited
 
   try {
-    const body = await readJsonBody<Record<string, any>>(request, MAX_ANTI_CHEAT_REQUEST_BYTES)
+    const body = await readJsonBody<Record<string, any>>(request, MAX_REQUEST_BYTES)
     const { action } = body ?? {}
     if (action === 'save-global') {
       const enabled = Boolean(body.enabled)
       const existingGlobal = await db.select().from(antiCheatGlobalConfig).where(eq(antiCheatGlobalConfig.id, true)).limit(1)
-      const config = body.config && typeof body.config === 'object' ? body.config : existingGlobal[0]?.config ?? {}
-      await db.insert(antiCheatGlobalConfig).values({ id: true, enabled, config }).onConflictDoUpdate({ target: antiCheatGlobalConfig.id, set: { enabled, config, updatedAt: new Date() } })
+      const config = body.config === undefined ? existingGlobal[0]?.config ?? {} : boundedObject(body.config, MAX_CONFIG_BYTES)
+      if (body.config !== undefined && !config) return NextResponse.json({ error: 'إعدادات مكافحة الغش غير صالحة' }, { status: 400 })
+      await db.insert(antiCheatGlobalConfig).values({ id: true, enabled, config: config ?? {} }).onConflictDoUpdate({ target: antiCheatGlobalConfig.id, set: { enabled, config: config ?? {}, updatedAt: new Date() } })
       const saved = await db.select().from(antiCheatGlobalConfig).where(eq(antiCheatGlobalConfig.id, true)).limit(1)
       return NextResponse.json({ ok: true, global: saved[0] })
     }
@@ -84,7 +87,9 @@ export async function POST(request: Request) {
       const itemType = String(body.item?.itemType ?? '')
       if (!itemId || !validType(itemType)) return NextResponse.json({ error: 'هوية العنصر غير صالحة' }, { status: 400 })
       const enabled = Boolean(body.item.enabled)
-      await db.insert(antiCheatItemConfigs).values({ itemId, itemType, enabled, isOverride: true, config: body.item.config ?? {} }).onConflictDoUpdate({ target: [antiCheatItemConfigs.itemId, antiCheatItemConfigs.itemType], set: { enabled, isOverride: true, config: body.item.config ?? {}, updatedAt: new Date() } })
+      const config = body.item.config === undefined ? {} : boundedObject(body.item.config, MAX_CONFIG_BYTES)
+      if (body.item.config !== undefined && !config) return NextResponse.json({ error: 'إعدادات العنصر غير صالحة' }, { status: 400 })
+      await db.insert(antiCheatItemConfigs).values({ itemId, itemType, enabled, isOverride: true, config: config ?? {} }).onConflictDoUpdate({ target: [antiCheatItemConfigs.itemId, antiCheatItemConfigs.itemType], set: { enabled, isOverride: true, config: config ?? {}, updatedAt: new Date() } })
       const saved = await db.select().from(antiCheatItemConfigs).where(and(eq(antiCheatItemConfigs.itemId, itemId), eq(antiCheatItemConfigs.itemType, itemType))).limit(1)
       return NextResponse.json({ ok: true, item: saved[0] })
     }
@@ -112,7 +117,7 @@ export async function POST(request: Request) {
       const riskScore = clamp(calculateRiskScore(signals, session.riskScore)), severity = severityFor(riskScore, resolved.config)
       const riskDelta = riskScore - session.riskScore
       const reason = String(event.reason || 'تم رصد إشارة قابلة للتفسير من مجموعة الفحوص').slice(0, 300)
-      const metadata = event.metadata && typeof event.metadata === 'object' ? event.metadata : { signalCount: signals.filter((signal) => signal.active).length, signalTypes: signals.filter((signal) => signal.active).map((signal) => signal.type) }
+      const metadata = boundedObject(event.metadata, MAX_METADATA_BYTES) ?? { signalCount: signals.filter((signal) => signal.active).length, signalTypes: signals.filter((signal) => signal.active).map((signal) => signal.type) }
       await db.insert(antiCheatEvents).values({ id: id(), sessionId: session.id, studentId: session.studentId, itemId: session.itemId, itemType: session.itemType, eventType: String(event.eventType).slice(0, 64), riskScore, riskDelta, severity, decision: severity, reason, durationMs: clamp(event.durationMs, 0, 86400000), metadata })
       await db.update(antiCheatSessions).set({ riskScore, severity, updatedAt: new Date() }).where(eq(antiCheatSessions.id, session.id))
       return NextResponse.json({ ok: true, riskScore, severity })
