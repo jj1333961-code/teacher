@@ -6,9 +6,7 @@
 <meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-  <script src="/islamic-data.js" defer></script>
-  <link rel="stylesheet" href="/islamic-hub.css">
-  <link rel="stylesheet" href="/prayer-screen.css">
+  <script src="/feature-loader.js"></script>
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -772,7 +770,7 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  /* قارئ مستقل يملأ الشاشة بالكامل�� مع إبقاء زر الإغلاق واضحًا فوق PDF */
+  /* قارئ مستقل يملأ الشاشة بالكامل������ مع إبقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
@@ -930,7 +928,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود ��لدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -1058,7 +1056,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- إدارة المسؤولين -->
 <div id="adminsPage" class="page hidden">
-  <div class="page-header"><h2>👨‍💼 إدارة المسؤولين</h2></div>
+  <div class="page-header"><h2>👨‍💼 إدارة ا��مسؤولين</h2></div>
   <div id="adminsAlert"></div>
   <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
     <div class="form-group" style="margin-bottom:0;">
@@ -1163,7 +1161,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري لولي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
+    <div class="form-group"><label>الرقم السري ل��لي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
     <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
@@ -1299,7 +1297,7 @@ tr:hover { background: var(--table-hover); }
     <h4>📖 القراءة الإضافية <button class="add-item-btn" onclick="addReadingItem()">+</button></h4>
     <div id="readingItems"></div>
   </div>
-  <div class="form-group"><label>ملاحظات التسميع</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
+  <div class="form-group"><label>ملاحظات التسمي��</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
   <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حفظ مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, var(--primary), var(--primary-hover));">🔒 حفظ نهائي (لا يمكن التعديل)</button></div>
 </div>
 
@@ -1649,40 +1647,52 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // صفحات الدخول لا تحمل النواة الكبيرة إلا عند التفاعل؛ الصفحات المحمية تحتاجها فوراً.
+  // نحافظ على دخول /login خفيفاً ونجهز المسار��ت العميقة فقط عند الحاجة.
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
-  if (/^\/(admin|student|parent|signup)(\/|$)/.test(location.pathname) || location.pathname === '/forgot-password' || location.pathname === '/quran-reader' || location.pathname === '/tuhfat') warm();
+  const path = location.pathname.replace(/\/+$/, '') || '/';
+  const params = new URLSearchParams(location.search);
+  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || /^\/login\//.test(path) || /^\/signup(\/|$)/.test(path) || path === '/forgot-password' || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
+  if (needsCore) warm();
 })();
 </script>
 <script>
 /* واجهة الدخول تعمل فوراً، والنظام الكامل جاهز مسبقاً أو يُحمّل عند الحاجة. */
 (function(){
   var wrappers = {};
+  var pendingCalls = {};
+  var errorBoxIds = { unifiedLogin: 'unifiedLoginAlert', openAccountRecovery: 'unifiedLoginAlert', startSignup: 'signupStep1Alert' };
   function runWhenCoreReady(name, args, button){
+    if (pendingCalls[name]) return pendingCalls[name];
     if (button) button.disabled = true;
-    if (name === 'unifiedLogin') {
-      var box = document.getElementById('unifiedLoginAlert');
-      if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
-    }
-    var loadWithTimeout = Promise.race([window.loadThimarAppCore(), new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })]);
-    return loadWithTimeout.then(function(){
-      if (button) button.disabled = false;
+    var boxId = errorBoxIds[name] || 'unifiedLoginAlert';
+    var box = document.getElementById(boxId);
+    if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
+    var timeoutId;
+    var loadWithTimeout = Promise.race([
+      window.loadThimarAppCore(),
+      new Promise(function(_, reject){ timeoutId = window.setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })
+    ]).finally(function(){ window.clearTimeout(timeoutId); });
+    var promise = loadWithTimeout.then(function(){
       var fn = window[name];
       if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
       return fn.apply(window, Array.prototype.slice.call(args || []));
     }).catch(function(err){
-      if (button) button.disabled = false;
-      var message = '❌ تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
-      var box = document.getElementById('unifiedLoginAlert');
-      if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
+      var message = 'تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
+      var target = document.getElementById(boxId);
+      if (target) target.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
       console.error('App core failed to load', err);
       if (typeof showToast === 'function') showToast(message, 'error');
+    }).finally(function(){
+      if (button) button.disabled = false;
+      delete pendingCalls[name];
     });
+    pendingCalls[name] = promise;
+    return promise;
   }
 
-  ['unifiedLogin','startSignup'].forEach(function(name){
+  ['unifiedLogin','startSignup','openAccountRecovery','showPage'].forEach(function(name){
     wrappers[name] = function(){
-      var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : null;
+      var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : name === 'openAccountRecovery' ? document.querySelector('.thimar-forgot') : null;
       return runWhenCoreReady(name, arguments, btn);
     };
     window[name] = wrappers[name];
@@ -1781,170 +1791,7 @@ window.alert = function(m){ showToast(m); };
   });
 })();
 </script>
-  <script>
-    (function(){
-      var MUSHAF_URL = '/quran/quran.pdf';           /* ملف المصحف الأصلي المرفق بالمشروع — لا يُستبدل ولا يُعاد توليد محتواه */
-      var MUSHAF_CACHE = 'thimar-mushaf-v1';
-      var currentPage = 1, totalPages = 569, pdfDocument = null, renderToken = 0, scaleFactor = 1.8;
-      var pdfLibPromise = null;
-      /* تخزين ملف المصحف محلياً في ذاكرة المتصفح حتى يفتح فوراً في الزيارات التالية دون انتظار تحميل */
-      function mushafBytes(){
-        if(!('caches' in window)) return fetch(MUSHAF_URL).then(function(r){ return r.arrayBuffer(); });
-        return caches.open(MUSHAF_CACHE).then(function(cache){
-          return cache.match(MUSHAF_URL).then(function(hit){
-            if(hit) return hit.arrayBuffer();
-            return fetch(MUSHAF_URL).then(function(response){
-              if(!response.ok) throw new Error('mushaf fetch failed');
-              try { cache.put(MUSHAF_URL, response.clone()); } catch(err){}
-              return response.arrayBuffer();
-            });
-          });
-        }).catch(function(){ return fetch(MUSHAF_URL).then(function(r){ return r.arrayBuffer(); }); });
-      }
-      function loadPdf(){
-        if(pdfDocument) return Promise.resolve(pdfDocument);
-        if(!pdfLibPromise) pdfLibPromise = Promise.all([
-          import('/vendor/pdfjs/pdf.min.mjs'),
-          mushafBytes()
-        ]).then(function(parts){
-          var pdfjs = parts[0].default || parts[0];
-          pdfjs.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
-          /* رسم الحروف من خطوط المصحف المدمجة داخل الملف نفسه (disableFontFace) لضمان تطابق الحروف والتشكيل حرفياً مع النسخة الأصلية */
-          return pdfjs.getDocument({
-            data: new Uint8Array(parts[1]),
-            cMapUrl: '/vendor/pdfjs/cmaps/',
-            cMapPacked: true,
-            standardFontDataUrl: '/vendor/pdfjs/standard_fonts/',
-            disableFontFace: true,
-            useSystemFonts: false
-          }).promise;
-        });
-        return pdfLibPromise.then(function(pdf){ pdfDocument=pdf; totalPages=pdf.numPages; return pdf; });
-      }
-      /* تجهيز الملف والصفحة الأولى في الخلفية بعد فتح الموقع */
-      if(typeof window.requestIdleCallback === 'function') window.requestIdleCallback(function(){ loadPdf().catch(function(){}); }, { timeout: 4000 });
-      else setTimeout(function(){ loadPdf().catch(function(){}); }, 2000);
-      function setPage(page){
-        var requestedPage = parseInt(page, 10) || 1;
-        if(requestedPage < 1 || (pdfDocument && requestedPage > totalPages)) return;
-        currentPage = Math.min(totalPages, Math.max(1, requestedPage));
-        if(typeof window.__quranResetZoom === 'function') window.__quranResetZoom();
-        var canvas=document.getElementById('quranOriginalCanvas'), token=++renderToken;
-        if(!canvas) return;
-        loadPdf().then(function(pdf){ return pdf.getPage(currentPage); }).then(function(pageObj){
-          if(token!==renderToken) return;
-          var base=pageObj.getViewport({scale:1}), frame=document.querySelector('.quran-reader-frame'), maxW=frame.clientWidth-24, maxH=frame.clientHeight-24;
-          var fit=Math.min(maxW/base.width,maxH/base.height); var viewport=pageObj.getViewport({scale:Math.max(fit,0.1)*scaleFactor});
-          var ratio=window.devicePixelRatio||1; canvas.width=Math.ceil(viewport.width*ratio); canvas.height=Math.ceil(viewport.height*ratio); canvas.style.width=Math.ceil(viewport.width)+'px'; canvas.style.height=Math.ceil(viewport.height)+'px';
-          return pageObj.render({canvasContext:canvas.getContext('2d',{alpha:false}),viewport:viewport,transform:ratio!==1?[ratio,0,0,ratio,0,0]:null}).promise;
-        }).catch(function(){});
-      }
-      window.openQuranReader = function(page){
-        if(typeof window.showPage === 'function') window.showPage('quranReaderPage');
-        setPage(page || 1);
-        var reader = document.getElementById('quranReaderPage');
-        if(reader && reader.requestFullscreen) reader.requestFullscreen().catch(function(){});
-      };
-      window.nextQuranPage = function(){ setPage(currentPage + 1); };
-      window.previousQuranPage = function(){ setPage(currentPage - 1); };
-      window.closeQuranReader = function(){
-        if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){});
-        if(typeof window.showPage === 'function') window.showPage('lockScreen');
-      };
-      document.addEventListener('keydown', function(event){
-        var reader = document.getElementById('quranReaderPage');
-        if(!reader || reader.classList.contains('hidden')) return;
-        if(event.key === 'ArrowRight') { event.preventDefault(); nextQuranPage(); }
-        if(event.key === 'ArrowLeft') { event.preventDefault(); previousQuranPage(); }
-        if(event.key === 'Escape') { event.preventDefault(); closeQuranReader(); }
-      });
-      /* تكبير بإصبعين، وسحب للتنقل بين الصفحات (يمين = التالية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
-      (function(){
-        var MIN_SCALE = 1, MAX_SCALE = 4;
-        var scale = 1, tx = 0, ty = 0;
-        var pointers = {}, pinch = null, pan = null, swipe = null;
-        function wrapEl(){ return document.getElementById('quranZoomWrap'); }
-        function frameEl(){ return document.querySelector('.quran-reader-frame'); }
-        function applyTransform(){
-          var w = wrapEl();
-          if(w) w.style.transform = 'translate3d('+tx+'px,'+ty+'px,0) scale('+scale+')';
-        }
-        function clampPan(){
-          if(scale <= 1.001) { tx = 0; ty = 0; return; }
-          var frame = frameEl();
-          if(!frame) return;
-          var maxX = (frame.clientWidth * (scale - 1)) / 2 + frame.clientWidth * 0.25;
-          var maxY = (frame.clientHeight * (scale - 1)) / 2 + frame.clientHeight * 0.25;
-          tx = Math.max(-maxX, Math.min(maxX, tx));
-          ty = Math.max(-maxY, Math.min(maxY, ty));
-        }
-        function resetZoom(){ scale = 1; tx = 0; ty = 0; applyTransform(); }
-        window.__quranResetZoom = resetZoom;
-        function dist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
-        function onPointerDown(event){
-          pointers[event.pointerId] = { x: event.clientX, y: event.clientY };
-          var ids = Object.keys(pointers);
-          if(ids.length === 1){
-            if(scale > 1.001) pan = { startX: event.clientX, startY: event.clientY, originX: tx, originY: ty };
-            else swipe = { startX: event.clientX, startY: event.clientY };
-          } else if(ids.length === 2){
-            swipe = null;
-            var pts = ids.map(function(id){ return pointers[id]; });
-            pinch = { startDist: dist(pts[0], pts[1]), startScale: scale, startTx: tx, startTy: ty };
-          }
-          try { event.target.setPointerCapture(event.pointerId); } catch(err){}
-        }
-        function onPointerMove(event){
-          if(!pointers[event.pointerId]) return;
-          pointers[event.pointerId] = { x: event.clientX, y: event.clientY };
-          var ids = Object.keys(pointers);
-          if(ids.length === 2 && pinch){
-            var pts = ids.map(function(id){ return pointers[id]; });
-            var ratio = dist(pts[0], pts[1]) / (pinch.startDist || 1);
-            scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, pinch.startScale * ratio));
-            tx = pinch.startTx; ty = pinch.startTy;
-            clampPan(); applyTransform();
-            event.preventDefault();
-          } else if(ids.length === 1 && pan){
-            tx = pan.originX + (event.clientX - pan.startX);
-            ty = pan.originY + (event.clientY - pan.startY);
-            clampPan(); applyTransform();
-            event.preventDefault();
-          } else if(ids.length === 1 && swipe){
-            if(Math.abs(event.clientX - swipe.startX) > 10) event.preventDefault();
-          }
-        }
-        function onPointerUp(event){
-          var finishedSwipe = swipe;
-          delete pointers[event.pointerId];
-          var ids = Object.keys(pointers);
-          if(ids.length < 2) pinch = null;
-          if(ids.length < 1) pan = null;
-          swipe = null;
-          if(finishedSwipe && scale <= 1.001){
-            var dx = event.clientX - finishedSwipe.startX, dy = event.clientY - finishedSwipe.startY;
-            if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)){
-              if(dx > 0) nextQuranPage(); else previousQuranPage();
-            }
-          }
-        }
-        function onDoubleClick(){
-          if(scale > 1.001) resetZoom();
-          else { scale = 2; clampPan(); applyTransform(); }
-        }
-        function bind(){
-          var surface = document.getElementById('quranSwipeSurface');
-          if(!surface) return setTimeout(bind, 60);
-          surface.addEventListener('pointerdown', onPointerDown);
-          surface.addEventListener('pointermove', onPointerMove);
-          surface.addEventListener('pointerup', onPointerUp);
-          surface.addEventListener('pointercancel', onPointerUp);
-          surface.addEventListener('dblclick', onDoubleClick);
-        }
-        bind();
-      })();
-    })();
-  </script>
+
   <section id="quranReaderPage" class="page quran-reader-page hidden" aria-label="قارئ المصحف">
     <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق قارئ المصحف" title="إغلاق">×</button>
     <div class="quran-reader-frame"><div id="quranZoomWrap" class="quran-zoom-wrap"><canvas id="quranOriginalCanvas" class="quran-reader-canvas" aria-label="صفحة المصحف الأصلية"></canvas></div><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اسحب للتنقل بين صفحات المصحف أو قرّب بإصبعين للتكبير"></div></div>
@@ -1981,13 +1828,5 @@ window.alert = function(m){ showToast(m); };
   })();
 })();
 </script>
-<link rel="stylesheet" href="/messaging.css">
-<link rel="stylesheet" href="/tuhfat.css">
-<script src="/tuhfat-data.js" defer></script>
-<script src="/tuhfat.js" defer></script>
-<script src="/legacy-i18n.js" defer></script>
-<script src="/prayer-screen.js" defer></script>
-<script src="/islamic-hub.js" defer></script>
-<script src="/messaging.js" defer></script>
  </body>
 </html>

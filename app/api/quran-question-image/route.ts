@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { createCanvas, loadImage, type Image } from "@napi-rs/canvas"
+import { guardRequest, rateLimit } from "@/lib/request-guards"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
@@ -85,7 +86,14 @@ async function printOnFrame(ayah: ReturnType<typeof createCanvas>) {
   return canvas
 }
 
+const MAX_QUERY_BYTES = 8_000
+
 export async function GET(request: Request) {
+  const guard = guardRequest(request, { maxBytes: MAX_QUERY_BYTES })
+  if (guard) return guard
+  const limited = rateLimit(request, { bucket: 'quran-question-image', limit: 40, windowMs: 60_000 })
+  if (limited) return limited
+
   try {
     const url = new URL(request.url)
     const surah = Number(url.searchParams.get("surah"))
@@ -93,7 +101,7 @@ export async function GET(request: Request) {
     const requestedType = url.searchParams.get("type") || "complete"
     const type = QUESTION_TYPES.has(requestedType) ? requestedType : "complete"
     const masked = url.searchParams.get("display") !== "anchor" && type === "complete"
-    if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1) {
+    if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1 || ayah > 286) {
       return Response.json({ error: "مرجع الآية غير صالح" }, { status: 400 })
     }
 

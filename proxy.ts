@@ -2,9 +2,50 @@ import { NextRequest, NextResponse } from "next/server"
 
 const OLD_HOST = "teacher.vercel.app"
 const CANONICAL_ORIGIN = "https://teacher-three-ashen.vercel.app"
+const LEGACY_PAGE_ROUTES: Record<string, string> = {
+  lockScreen: "/login",
+  accountRecoveryPage: "/forgot-password",
+  signupStep1: "/signup",
+  signupStep2: "/signup/details",
+  adminLogin: "/login/admin",
+  adminDashboard: "/admin",
+  adminAIPage: "/admin/ai",
+  devAssistantPage: "/admin/developer",
+  githubSyncPage: "/admin/github",
+  notificationsPage: "/admin/notifications",
+  adminsPage: "/admin/admins",
+  adminSettings: "/admin/settings",
+  addStudent: "/admin/students/new",
+  editStudent: "/admin/students/edit",
+  recordSession: "/admin/records/new",
+  studentHistory: "/admin/students/history",
+  studentsList: "/admin/students",
+  messagesPage: "/admin/messages",
+  subjectsPage: "/admin/subjects",
+  filesPage: "/admin/files",
+  studentLogin: "/login/student",
+  studentDashboard: "/student",
+  studentExamPage: "/student/exams/current",
+  studentRecordsPage: "/student/records",
+  studentFilesPage: "/student/files",
+  studentInbox: "/student/messages",
+  studentAIChat: "/student/ai",
+  studentSettings: "/student/settings",
+  parentLogin: "/login/parent",
+  parentDashboard: "/parent",
+  parentFilesPage: "/parent/files",
+  parentInbox: "/parent/messages",
+  parentAIChat: "/parent/ai",
+  parentRecordsPage: "/parent/records",
+  parentPendingTasksPage: "/parent/tasks",
+  parentChartPage: "/parent/chart",
+  quranReaderPage: "/quran-reader",
+  tuhfatPage: "/tuhfat",
+}
 
 export function proxy(request: NextRequest) {
   const legacyRoutes: Record<string, string> = {
+    "/index.html": "/login",
     "/app.html": "/login",
     "/admin.html": "/admin",
     "/student.html": "/student",
@@ -15,7 +56,11 @@ export function proxy(request: NextRequest) {
     const target = request.nextUrl.clone()
     target.pathname = cleanPath
     const legacyPage = target.searchParams.get("page")
-    if (legacyPage) target.searchParams.delete("page")
+    if (legacyPage) {
+      target.searchParams.delete("page")
+      const mappedRoute = LEGACY_PAGE_ROUTES[legacyPage]
+      if (mappedRoute) target.pathname = mappedRoute
+    }
     return NextResponse.redirect(target, 308)
   }
   if (request.nextUrl.hostname !== OLD_HOST) return NextResponse.next()

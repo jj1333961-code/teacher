@@ -1,5 +1,3 @@
-import { del, list } from "@vercel/blob"
-
 export const runtime = "nodejs"
 export const maxDuration = 60
 
@@ -11,19 +9,6 @@ function response(data: unknown, status = 200) {
       "X-Content-Type-Options": "nosniff",
     },
   })
-}
-
-async function listAllExamFiles() {
-  const urls: string[] = []
-  let cursor: string | undefined
-
-  do {
-    const page = await list({ prefix: "exam-files/", cursor, limit: 1000 })
-    urls.push(...page.blobs.map((blob) => blob.url))
-    cursor = page.hasMore ? page.cursor : undefined
-  } while (cursor)
-
-  return urls
 }
 
 /**
@@ -39,15 +24,5 @@ export async function POST() {
 }
 
 export async function DELETE() {
-  try {
-    if (!(process.env.BLOB_READ_WRITE_TOKEN || "").trim()) {
-      return response({ success: true, deleted: 0 })
-    }
-
-    const urls = await listAllExamFiles()
-    if (urls.length) await del(urls)
-    return response({ success: true, deleted: urls.length })
-  } catch {
-    return response({ error: "تعذر تنظيف ملفات الاختبارات المخزنة" }, 500)
-  }
+  return response({ error: "تم تعطيل حذف ملفات الاختبارات عبر الواجهة العامة" }, 410)
 }

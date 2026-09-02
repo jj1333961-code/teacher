@@ -1,4 +1,5 @@
 import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
+import { guardRequest, rateLimit, readJsonBody, RequestBodyError } from "@/lib/request-guards"
 
 export const runtime = "nodejs"
 export const maxDuration = 300
@@ -222,12 +223,13 @@ async function groqTranscribe(audio: { mimeType: string; data: string }): Promis
 function json(data: unknown, status = 200, requestId?: string) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-      "Referrer-Policy": "strict-origin-when-cross-origin",
-      ...(requestId ? { "X-Request-Id": requestId } : {}),
-    },
+  headers: {
+  "Content-Type": "application/json; charset=utf-8",
+  "Cache-Control": "no-store",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  ...(requestId ? { "X-Request-Id": requestId } : {}),
+  },
   })
 }
 
@@ -438,7 +440,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - صور حد البداية وحد النهاية ستُعرض منفصلة وقابلة للتكبير، لذلك لا تنسخ نصهما داخل prompt ولا تكشف الجزء المطلوب إجابته.
 - لا تنشئ أسئلة سطحية من قصار السور، ولا سؤالاً يكتفي بالتعرف إلى اسم سورة مشهورة من مطلعها. تجنب سورة الفلق والناس وسائر السور القصيرة السهلة المستبعدة من النطاق.
 - level=easy: سؤال واضح لكنه يحتاج استحضاراً حقيقياً، وليس سؤالاً بديهياً من أول السورة.
-- level=medium: اجعله صعبًا فعليًا ويحتاج تفكيرًا واستحضارًا؛ استخدم تمييزًا وربطًا دقيقًا بين مواضع متقاربة ومتشابهات لفظية من وسط السورة، ولا تسمح بسؤال مباشر أو إجابة ظاهرة من مطلع مشهور.
+- level=medium: اجعله صعبًا فعليًا ويحتاج تفكيرًا واستحضارًا؛ استخدم تمييز��ا وربطًا دقيقًا بين مواضع متقاربة ومتشابهات لفظية من وسط السورة، ولا تسمح بسؤال مباشر أو إجابة ظاهرة من مطلع مشهور.
 - level=hard: سؤال شديد الصعوبة من المتشابهات اللفظية الموثقة: فروق الواو والفاء، الزيادة والنقص، اختلاف الضمائر والمفرد والجمع، اختلاف البداية أو الخاتمة، والتمييز بين آيتين متقاربتين. يجب أن يبقى له جواب واحد قطعي.
 - صغ prompt بلغة عربية سليمة ومباشرة تحدد المطلوب دون غموض، وراجع الإملاء قبل الإخراج.
 - في الاختياري اجعل المشتتات من ألفاظ أو سور أو تكملات قرآنية شديدة التقارب، ولا تستخدم مشتتاً واضح البطلان أو بعيداً عن الصحيح.
@@ -455,7 +457,7 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 شكل كل عنصر:
 {"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"نص السؤال","stem":"","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
 
-تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs، وأن لكل سؤال إجابة واحدة قطعية.`
+تحقق قبل الإ��راج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs، وأن لكل سؤال إجابة واحدة قطعية.`
 
 const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
 كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
@@ -684,7 +686,7 @@ async function getGithubSyncStatus() {
 }
 
 // فحص مسبق تفصيلي قبل أي تطبيق تلقائي. يعيد ok=false مع سبب محدد جداً (أي متغير ناقص/أي صلاحية).
-// لا يشف أبداً قيمة أي رمز مميز، فقط اسم لمتغير الناقص أو نوع المشكلة.
+// لا يشف أبداً قيمة أي رمز مميز�� فقط اسم لمتغير الناقص أو نوع المشكلة.
 async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; details?: any }> {
   const missing: string[] = []
   if (!GITHUB_TOKEN) missing.push("GITHUB_TOKEN")
@@ -844,28 +846,40 @@ async function autoApplyDevRequest(request: string, plan: any) {
 }
 
 export async function POST(req: Request) {
-  let body: any = {}
+  const guard = guardRequest(req, { maxBytes: AUDIO_MAX_REQUEST_BYTES, requireJson: true })
+  if (guard) return guard
+  const limited = rateLimit(req, { bucket: "ai-request", limit: 20, windowMs: 60_000 })
+  if (limited) return limited
+
+  let body: Record<string, any> = {}
   const requestId = crypto.randomUUID()
   safeAudioLog("request started", { requestId })
   try {
-    const contentLength = Number(req.headers.get("content-length") || 0)
-    if (contentLength > AUDIO_MAX_REQUEST_BYTES) {
+    const parsed = await readJsonBody<unknown>(req, AUDIO_MAX_REQUEST_BYTES)
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       return json({
-        error: "حجم التسجيل كبير جداً للإرسال. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.",
-        code: "AUDIO_PAYLOAD_TOO_LARGE",
+        error: "صيغة الطلب غير صالحة.",
+        code: "INVALID_AI_REQUEST",
         retryable: false,
-        diagnostics: { executedOn: "server", stage: "request", provider: "automatic-audio" },
-      }, 413)
+        diagnostics: { executedOn: "server", stage: "request", requestId },
+      }, 400, requestId)
     }
-    body = await req.json()
+    body = parsed as Record<string, any>
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error || "طلب غير صالح")
+    if (error instanceof RequestBodyError) {
+      return json({
+        error: error.message,
+        code: error.code,
+        retryable: false,
+        diagnostics: { executedOn: "server", stage: "request", requestId },
+      }, error.status, requestId)
+    }
     return json({
-      error: "تعذر قراءة التسجيل المرسل. تأكد من أن المقطع غير فارغ وبصيغة صوت مدعومة.",
-      code: "INVALID_AUDIO_REQUEST",
+      error: "تعذر قراءة الطلب المرسل.",
+      code: "INVALID_AI_REQUEST",
       retryable: false,
-      diagnostics: { executedOn: "server", stage: "request", reason: reason.slice(0, 200) },
-    }, 400)
+      diagnostics: { executedOn: "server", stage: "request", requestId },
+    }, 400, requestId)
   }
 
   const isAudioMode = typeof body?.mode === "string" && AUDIO_MODES.has(body.mode)
@@ -907,7 +921,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت مساعد المنصة الذكي، مساعد عر��ي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -1179,7 +1193,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
 
       const audio = { mimeType: normalizedMimeType, data: audioBase64 }
       let audioResult = await runAudio(
-        `المقطع المطلوب:\n${JSON.stringify({ surah, from, to, expectedText }).slice(0, 12_000)}\n\nاستمع إلى تلاوة الطالب، فرّغها بالعربية ثم صححها مقابل المقطع المطلوب. أعد JSON فقط.`,
+        `المقطع المطلوب:\n${JSON.stringify({ surah, from, to, expectedText }).slice(0, 12_000)}\n\nاستمع إلى تلاو�� الطالب، فرّغها بالعربية ثم صححها مقابل المقطع المطلوب. أعد JSON فقط.`,
         SYS_TRANSCRIBE,
         0.05,
         audio,

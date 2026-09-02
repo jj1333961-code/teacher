@@ -2,9 +2,29 @@ import { NextResponse } from 'next/server'
 import { and, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { antiCheatEvents, antiCheatGlobalConfig, antiCheatItemConfigs, antiCheatSessions } from '@/lib/db/schema'
-import { calculateRiskScore, defaultAntiCheatConfig, normalizeServerConfig, severityFor, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
+import { calculateRiskScore, normalizeServerConfig, severityFor, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
+import { guardRequest, rateLimit, readJsonBody, RequestBodyError } from '@/lib/request-guards'
 
+const MAX_REQUEST_BYTES = 96_000
+const MAX_CONFIG_BYTES = 16_000
+const MAX_METADATA_BYTES = 12_000
 const id = () => crypto.randomUUID()
+const clean = (value: unknown, maxLength: number) => typeof value === 'string' ? value.replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, maxLength) : ''
+const boundedObject = (value: unknown, maxBytes: number) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  try {
+    return Buffer.byteLength(JSON.stringify(value), 'utf8') <= maxBytes ? value : null
+  } catch {
+    return null
+  }
+}
+
+function invalidBody(error: unknown) {
+  return error instanceof RequestBodyError
+    ? NextResponse.json({ error: error.message, code: error.code }, { status: error.status })
+    : null
+}
+
 const clamp = (value: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(value) || 0))
 const validType = (value: unknown) => value === 'recitation' || value === 'exam' || value === 'task'
 const safeConfig = (value: unknown): AntiCheatConfig => normalizeServerConfig(value)
@@ -18,11 +38,17 @@ async function resolveConfig(itemId: string, itemType: string) {
 }
 
 export async function GET(request: Request) {
+  const guard = guardRequest(request, { maxBytes: MAX_REQUEST_BYTES })
+  if (guard) return guard
+  const limited = rateLimit(request, { bucket: 'anti-cheat-read', limit: 120, windowMs: 60_000 })
+  if (limited) return limited
+
   try {
     const { searchParams } = new URL(request.url)
-    const itemId = searchParams.get('itemId')
-    const itemType = searchParams.get('itemType')
-    const sessionId = searchParams.get('sessionId')
+    const itemId = clean(searchParams.get('itemId'), 120)
+    const itemType = clean(searchParams.get('itemType'), 20)
+    const sessionId = clean(searchParams.get('sessionId'), 120)
+    if (itemType && !validType(itemType)) return NextResponse.json({ error: 'نوع العنصر غير صالح' }, { status: 400 })
     if (sessionId) {
       const sessions = await db.select().from(antiCheatSessions).where(eq(antiCheatSessions.id, sessionId)).limit(1)
       if (!sessions[0]) return NextResponse.json({ error: 'جلسة المراقبة غير موجودة' }, { status: 404 })
@@ -39,14 +65,20 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const guard = guardRequest(request, { maxBytes: MAX_REQUEST_BYTES, requireJson: true })
+  if (guard) return guard
+  const limited = rateLimit(request, { bucket: 'anti-cheat-write', limit: 120, windowMs: 60_000 })
+  if (limited) return limited
+
   try {
-    const body = await request.json()
+    const body = await readJsonBody<Record<string, any>>(request, MAX_REQUEST_BYTES)
     const { action } = body ?? {}
     if (action === 'save-global') {
       const enabled = Boolean(body.enabled)
       const existingGlobal = await db.select().from(antiCheatGlobalConfig).where(eq(antiCheatGlobalConfig.id, true)).limit(1)
-      const config = body.config && typeof body.config === 'object' ? body.config : existingGlobal[0]?.config ?? {}
-      await db.insert(antiCheatGlobalConfig).values({ id: true, enabled, config }).onConflictDoUpdate({ target: antiCheatGlobalConfig.id, set: { enabled, config, updatedAt: new Date() } })
+      const config = body.config === undefined ? existingGlobal[0]?.config ?? {} : boundedObject(body.config, MAX_CONFIG_BYTES)
+      if (body.config !== undefined && !config) return NextResponse.json({ error: 'إعدادات مكافحة الغش غير صالحة' }, { status: 400 })
+      await db.insert(antiCheatGlobalConfig).values({ id: true, enabled, config: config ?? {} }).onConflictDoUpdate({ target: antiCheatGlobalConfig.id, set: { enabled, config: config ?? {}, updatedAt: new Date() } })
       const saved = await db.select().from(antiCheatGlobalConfig).where(eq(antiCheatGlobalConfig.id, true)).limit(1)
       return NextResponse.json({ ok: true, global: saved[0] })
     }
@@ -55,7 +87,9 @@ export async function POST(request: Request) {
       const itemType = String(body.item?.itemType ?? '')
       if (!itemId || !validType(itemType)) return NextResponse.json({ error: 'هوية العنصر غير صالحة' }, { status: 400 })
       const enabled = Boolean(body.item.enabled)
-      await db.insert(antiCheatItemConfigs).values({ itemId, itemType, enabled, isOverride: true, config: body.item.config ?? {} }).onConflictDoUpdate({ target: [antiCheatItemConfigs.itemId, antiCheatItemConfigs.itemType], set: { enabled, isOverride: true, config: body.item.config ?? {}, updatedAt: new Date() } })
+      const config = body.item.config === undefined ? {} : boundedObject(body.item.config, MAX_CONFIG_BYTES)
+      if (body.item.config !== undefined && !config) return NextResponse.json({ error: 'إعدادات العنصر غير صالحة' }, { status: 400 })
+      await db.insert(antiCheatItemConfigs).values({ itemId, itemType, enabled, isOverride: true, config: config ?? {} }).onConflictDoUpdate({ target: [antiCheatItemConfigs.itemId, antiCheatItemConfigs.itemType], set: { enabled, isOverride: true, config: config ?? {}, updatedAt: new Date() } })
       const saved = await db.select().from(antiCheatItemConfigs).where(and(eq(antiCheatItemConfigs.itemId, itemId), eq(antiCheatItemConfigs.itemType, itemType))).limit(1)
       return NextResponse.json({ ok: true, item: saved[0] })
     }
@@ -83,12 +117,18 @@ export async function POST(request: Request) {
       const riskScore = clamp(calculateRiskScore(signals, session.riskScore)), severity = severityFor(riskScore, resolved.config)
       const riskDelta = riskScore - session.riskScore
       const reason = String(event.reason || 'تم رصد إشارة قابلة للتفسير من مجموعة الفحوص').slice(0, 300)
-      const metadata = event.metadata && typeof event.metadata === 'object' ? event.metadata : { signalCount: signals.filter((signal) => signal.active).length, signalTypes: signals.filter((signal) => signal.active).map((signal) => signal.type) }
+      const metadata = boundedObject(event.metadata, MAX_METADATA_BYTES) ?? { signalCount: signals.filter((signal) => signal.active).length, signalTypes: signals.filter((signal) => signal.active).map((signal) => signal.type) }
       await db.insert(antiCheatEvents).values({ id: id(), sessionId: session.id, studentId: session.studentId, itemId: session.itemId, itemType: session.itemType, eventType: String(event.eventType).slice(0, 64), riskScore, riskDelta, severity, decision: severity, reason, durationMs: clamp(event.durationMs, 0, 86400000), metadata })
       await db.update(antiCheatSessions).set({ riskScore, severity, updatedAt: new Date() }).where(eq(antiCheatSessions.id, session.id))
       return NextResponse.json({ ok: true, riskScore, severity })
     }
     if (action === 'end' && body.session?.id) { await db.update(antiCheatSessions).set({ status: 'completed', endedAt: new Date(), updatedAt: new Date(), riskScore: clamp(body.session.riskScore), severity: String(body.session.severity || 'NORMAL') }).where(eq(antiCheatSessions.id, String(body.session.id))); return NextResponse.json({ ok: true }) }
     return NextResponse.json({ error: 'إجراء غير معروف' }, { status: 400 })
-  } catch (error) { console.error('[v0] POST /api/anti-cheat failed:', error instanceof Error ? error.message : error); return NextResponse.json({ error: 'تعذر حفظ بيانات المراقبة', code: 'ANTI_CHEAT_WRITE_FAILED' }, { status: 500 }) }
+  } catch (error) {
+    if (error instanceof RequestBodyError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: error.status })
+    }
+    console.error('[v0] POST /api/anti-cheat failed:', error instanceof Error ? error.message : error)
+    return NextResponse.json({ error: 'تعذر حفظ بيانات المراقبة', code: 'ANTI_CHEAT_WRITE_FAILED' }, { status: 500 })
+  }
 }

@@ -6,9 +6,7 @@
 <meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-  <script src="/islamic-data.js" defer></script>
-  <link rel="stylesheet" href="/islamic-hub.css">
-  <link rel="stylesheet" href="/prayer-screen.css">
+  <script src="/feature-loader.js"></script>
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -910,14 +908,14 @@ tr:hover { background: var(--table-hover); }
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
       <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
-      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 إعادة إرسال الكود</button>
+      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 ������عادة إرسال الكود</button>
     </div>
   </div>
 </div>
 
 <!-- إنشاء حساب: الخط��ة الثانية (البيانات) -->
 <div id="signupStep2" class="page hidden" style="max-width:720px; margin:40px auto;">
-  <div class="page-header"><h2>📝 بيانات طلب الانضمام</h2><button class="btn btn-secondary" onclick="showPage('signupStep1')">رجوع</button></div>
+  <div class="page-header"><h2>📝 بيانات طلب ا���انضمام</h2><button class="btn btn-secondary" onclick="showPage('signupStep1')">رجوع</button></div>
   <div id="signupStep2Alert"></div>
   <div class="alert alert-success" id="signupVerifiedNote">✅ تم التحقق من هويتك بنجاح.</div>
   <div class="form-row">
@@ -930,7 +928,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدو�� كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -1009,7 +1007,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
-    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;"><strong id="devProgressLabel">تحليل الطلب</strong><span id="devEta">الءءقت المتبقي: 02:00</span></div>
+    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;"><strong id="devProgressLabel">تحل��ل الطلب</strong><span id="devEta">الءءقت المتبقي: 02:00</span></div>
     <div style="height:9px;background:var(--border);border-radius:999px;overflow:hidden;"><div id="devProgressBar" style="height:100%;width:8%;background:var(--primary);transition:width .5s;"></div></div>
   </div>
   <div id="devAssistantResult" style="margin-top:20px;"></div>
@@ -1070,7 +1068,7 @@ tr:hover { background: var(--table-hover); }
       <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حظ الرم</button>
     </div>
   </div>
-  <div class="alert alert-info" style="margin-bottom:20px;">تفعل Google مركزي ومتاح لجميع الأجهزة عبر إعداد GOOGLE_CLIENT_ID في بيئة Vercel.</div>
+  <div class="alert alert-info" style="margin-bottom:20px;">��فعل Google مركزي ومتاح لجميع الأجهزة عبر إعداد GOOGLE_CLIENT_ID في بيئة Vercel.</div>
 
   <div class="form-row" style="margin-bottom:20px;">
     <div class="form-group"><label>رقم الموبايل</label><input type="text" id="newAdminMobile" placeholder="رقم الموبايل (11 رقم)" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
@@ -1163,7 +1161,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري لو��ي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
+    <div class="form-group"><label>الرقم السري لو��������ي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
     <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
@@ -1242,7 +1240,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
+  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بق��ء الوجه أمام الشاشة، تركيز الصفحة�� ووجو�� إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
   <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
@@ -1263,7 +1261,7 @@ tr:hover { background: var(--table-hover); }
 <p style="color:var(--text-light);margin:10px 0">اختبار رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الم��ضي من السور التي تسبقها في المراجعة حتى سورة الاس.</small></div>
- <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">اماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُ��سم الماضي إلى نصف ريب ونص بعيد.</small></div>
+ <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">اماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُ��سم الماضي إلى نصف ريب و��ص بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة اناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدويا قبل ءءقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
  <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.</small></div>
@@ -1299,7 +1297,7 @@ tr:hover { background: var(--table-hover); }
     <h4>📖 القراءة الإضافية <button class="add-item-btn" onclick="addReadingItem()">+</button></h4>
     <div id="readingItems"></div>
   </div>
-  <div class="form-group"><label>ملاحظات ال��سمي��</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
+  <div class="form-group"><label>ملاحظات ��ل��سمي��</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
   <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حفظ مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, var(--primary), var(--primary-hover));">🔒 حفظ نهائي (لا يمكن التعديل)</button></div>
 </div>
 
@@ -1407,7 +1405,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ملفا�� المسؤول للطالب -->
 <div id="studentFilesPage" class="page hidden">
-  <div class="page-header"><h2>📁 الملفات المرسلة لي</h2></div>
+  <div class="page-header"><h2>���� ال��لف��ت المرسلة لي</h2></div>
   <div id="studentFilesContent"></div>
 </div>
 
@@ -1469,7 +1467,7 @@ tr:hover { background: var(--table-hover); }
       <div class="side-sidebar-body">
         <button type="button" class="role-nav-item" onclick="showPage('parentInbox')"><span class="role-nav-icon" aria-hidden="true">💬</span><span>الرسائل</span></button><button type="button" class="role-nav-item" onclick="openQuranReader()"><span class="role-nav-icon" aria-hidden="true">📖</span><span>المصحف الشريف</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('parentFilesPage')"><span class="role-nav-icon" aria-hidden="true">📁</span><span>��لملفات</span></button>
-        <button type="button" class="role-nav-item" onclick="showPage('parentAIChat')"><span class="role-nav-icon" aria-hidden="true">✦</span><span>مساعد الذكا الاصطناعي</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('parentAIChat')"><span class="role-nav-icon" aria-hidden="true">✦</span><span>مساعد الذ��ا الاصطناعي</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('parentChartPage')"><span class="role-nav-icon" aria-hidden="true">📈</span><span>المخطط</span></button>
       </div>
     </aside>
@@ -1584,7 +1582,7 @@ tr:hover { background: var(--table-hover); }
   </div>
 </div>
   <div id="proctorWarning" class="proctor-warning hidden" role="alert" aria-live="assertive"></div>
-  <div id="proctorBlock" class="proctor-gate hidden" role="alertdialog" aria-modal="true" aria-labelledby="proctorBlockTitle"><div class="proctor-panel"><h2 id="proctorBlockTitle">تم إيقاف التحكم مؤقتاً</h2><p id="proctorBlockMessage">نحتاج إلى عودة الإشارات الطبيعية قبل استكمال المهمة. لا تُنهى المحاولة بسبب هذا التنبيه.</p><div class="proctor-checks"><div id="proctorBlockStatus" class="proctor-check bad">! جارٍ استعادة الفح��</div></div></div></div>
+  <div id="proctorBlock" class="proctor-gate hidden" role="alertdialog" aria-modal="true" aria-labelledby="proctorBlockTitle"><div class="proctor-panel"><h2 id="proctorBlockTitle">تم إيقاف التحكم مؤقتاً</h2><p id="proctorBlockMessage">نحتاج إلى عودة الإشارات الطبيعية قبل اس��كمال المهمة. لا تُنهى المحاولة بسبب هذا التنبيه.</p><div class="proctor-checks"><div id="proctorBlockStatus" class="proctor-check bad">! جارٍ استعادة الفح��</div></div></div></div>
 <div id="studentWorkModal" class="student-work-modal hidden" role="dialog" aria-modal="true" aria-labelledby="studentWorkModalTitle" onclick="if(event.target===this)closeStudentWorkModal()">
   <div class="student-work-dialog">
     <div class="student-work-dialog-header"><h3 id="studentWorkModalTitle">المطلوب</h3><button type="button" class="btn btn-secondary" onclick="closeStudentWorkModal()" aria-label="إغلاق النافذة">إغلاق</button></div>
@@ -1641,59 +1639,95 @@ window.alert = function(m){ showToast(m); };
     corePromise = new Promise(function(resolve, reject){
       const s = document.createElement('script');
       s.src = '/app-core.js';
-      s.async = false;
+      // لا ننفذ نواة التطبيق بشكل متزامن داخل معالج النقر؛ ذلك يحجز الـ main thread.
+      s.async = true;
       s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
       s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
       document.head.appendChild(s);
     });
     return corePromise;
   };
-  // توجيه خفيف لصفحة الدخول قبل تنزيل نواة التطبيق الكبيرة.
+  // توجيه خفيف لصفحة الدخول قبل ت��زيل نواة التطبيق الكبيرة.
   window.showPage = window.showPage || function(id){
     const authRoutes = {lockScreen:'/login', accountRecoveryPage:'/forgot-password', signupStep1:'/signup', signupStep2:'/signup/details'};
     location.assign(authRoutes[id] || '/login');
   };
 
-  // صفحات الدخول لا تحمل النواة الكبيرة إلا عند التفاعل؛ الصفحات المحمية تحتاجها فوراً.
+  // نحافظ على دخول /login خفيفاً، مع تهيئة المسارات العميقة حتى لا تعرض شاشة الدخو�� الخطأ.
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
-  if (/^\/(admin|student|parent)(\/|$)/.test(location.pathname) || location.pathname === '/quran-reader' || location.pathname === '/tuhfat') warm();
+  const path = location.pathname.replace(/\/+$/, '') || '/';
+  const params = new URLSearchParams(location.search);
+  // شاشة الدخول/التسجيل خفيفة عمدًا؛ تحميل app-core.js مبكرًا كان يحجز main thread
+  // قبل أول تفاعل. تُحمّل النواة عند طلب وظيفة تحتاجها أو عند فتح لوحة محمية.
+  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
+  if (needsCore) {
+    const start = function(){
+      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: 1200 });
+      else window.setTimeout(warm, 0);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+    else start();
+  }
 })();
 </script>
 <script>
 /* واجهة الدخول تعمل فوراً، والنظام الكامل جاهز مسبقاً أو يُحمّل عند الحاجة. */
 (function(){
   var wrappers = {};
+  var pendingCalls = {};
+  var errorBoxIds = { unifiedLogin: 'unifiedLoginAlert', openAccountRecovery: 'unifiedLoginAlert', startSignup: 'signupStep1Alert' };
+
   function runWhenCoreReady(name, args, button){
+    if (pendingCalls[name]) return pendingCalls[name];
     if (button) button.disabled = true;
-    if (name === 'unifiedLogin') {
-      var box = document.getElementById('unifiedLoginAlert');
-      if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
-    }
-    var loadWithTimeout = Promise.race([window.loadThimarAppCore(), new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })]);
-    return loadWithTimeout.then(function(){
-      if (button) button.disabled = false;
+    var boxId = errorBoxIds[name] || 'unifiedLoginAlert';
+    var box = document.getElementById(boxId);
+    if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
+
+    var timeoutId;
+    var loadWithTimeout = Promise.race([
+      window.loadThimarAppCore(),
+      new Promise(function(_, reject){ timeoutId = window.setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })
+    ]).finally(function(){ window.clearTimeout(timeoutId); });
+
+    var promise = loadWithTimeout.then(function(){
       var fn = window[name];
       if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
       return fn.apply(window, Array.prototype.slice.call(args || []));
     }).catch(function(err){
-      if (button) button.disabled = false;
       var message = '❌ تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
-      var box = document.getElementById('unifiedLoginAlert');
-      if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
+      var target = document.getElementById(boxId);
+      if (target) target.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
       console.error('App core failed to load', err);
       if (typeof showToast === 'function') showToast(message, 'error');
+    }).finally(function(){
+      if (button) button.disabled = false;
+      delete pendingCalls[name];
     });
+    pendingCalls[name] = promise;
+    return promise;
   }
 
-  ['unifiedLogin','startSignup'].forEach(function(name){
+  ['unifiedLogin','startSignup','openAccountRecovery'].forEach(function(name){
     wrappers[name] = function(){
-      var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : null;
+      var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : name === 'openAccountRecovery' ? document.querySelector('.thimar-forgot') : null;
       return runWhenCoreReady(name, arguments, btn);
     };
     window[name] = wrappers[name];
   });
 
   // هذه الوظائف تخص الواجهة فقط ولا تحتاج إلى انتظار تحميل النظام الكامل.
+  window.toggleUnifiedPassword = function(){
+    var input = document.getElementById('unifiedPass');
+    var button = document.getElementById('unifiedPassToggle');
+    if (!input || !button) return;
+    var showing = input.type === 'password';
+    input.type = showing ? 'text' : 'password';
+    button.classList.toggle('is-visible', showing);
+    button.setAttribute('aria-pressed', String(showing));
+    button.setAttribute('aria-label', showing ? 'إخفاء الرقم السري' : 'إظهار الرقم السري');
+  };
+
   window.togglePassVisibility = function(id, icon){
     var input = document.getElementById(id);
     if (!input) return;
@@ -1705,21 +1739,25 @@ window.alert = function(m){ showToast(m); };
     var html = document.documentElement;
     var btn = document.querySelector('.theme-toggle');
     var dark = html.getAttribute('data-theme') === 'dark';
-    if (dark) { html.removeAttribute('data-theme'); localStorage.setItem('theme','light'); if(btn) btn.textContent='🌙'; }
-    else { html.setAttribute('data-theme','dark'); localStorage.setItem('theme','dark'); if(btn) btn.textContent='☀️'; }
+    try {
+      if (dark) { html.removeAttribute('data-theme'); localStorage.setItem('theme','light'); if(btn) btn.textContent='🌙'; }
+      else { html.setAttribute('data-theme','dark'); localStorage.setItem('theme','dark'); if(btn) btn.textContent='☀️'; }
+    } catch (error) {
+      if (dark) { html.removeAttribute('data-theme'); if(btn) btn.textContent='🌙'; }
+      else { html.setAttribute('data-theme','dark'); if(btn) btn.textContent='☀️'; }
+    }
   };
 
   wrappers.toggleLang = function(){
     var next = document.documentElement.lang === 'en' ? 'ar' : 'en';
-    localStorage.setItem('lang', next);
+    try { localStorage.setItem('lang', next); } catch (error) {}
     document.documentElement.lang = next;
     document.documentElement.dir = next === 'en' ? 'ltr' : 'rtl';
     var btn = document.getElementById('langToggleBtn');
     if (btn) btn.textContent = next === 'en' ? 'ع' : 'EN';
-    window.loadThimarAppCore().then(function(){
-      window.dispatchEvent(new Event('languagechange'));
-      if (typeof window.applyLangToDom === 'function') window.applyLangToDom();
-    }).catch(function(err){ console.error('App core failed to load', err); });
+    // تبديل اتجاه/لغة الواجهة لا يحتاج تحميل النواة الثقيلة؛ تحميلها داخل النقرة كان
+    // يحجز main thread ويجعل الزر يبدو متجمداً. ستطبق النواة الترجمة عند تشغيلها لاحقاً.
+    window.dispatchEvent(new Event('languagechange'));
   };
   window.toggleLang = wrappers.toggleLang;
 })();
@@ -1739,16 +1777,12 @@ window.alert = function(m){ showToast(m); };
 
 
 <script>
-/* 🔔 صلاحيات الإشعرات والميكروفون عند أول تفاعل */
+  /* الصلاحيات لا تُطلب أثناء أي نقرة عامة؛ الطلب العام كان يحجب أول تفاعل في بعض المتصفحات. */
 (function(){
   var asked = false;
-  function askPerms(){
-    if(asked) return; asked = true;
-    try { if(window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch(e) {}
-  }
-  document.addEventListener('click', askPerms, { once: true });
   window.requestSitePermissions = async function(){
-    askPerms();
+    if(asked) return;
+    asked = true;
     try { const st = await window.safeGetMic(); st.getTracks().forEach(t=>t.stop()); return true; } catch(e) { return false; }
   };
 })();
@@ -1786,173 +1820,10 @@ window.alert = function(m){ showToast(m); };
   });
 })();
 </script>
-  <script>
-    (function(){
-      var MUSHAF_URL = '/quran/quran.pdf';           /* ملف المصحف الأصلي المرفق بالمشروع — لا يُستبدل ولا يُعاد توليد محتواه */
-      var MUSHAF_CACHE = 'thimar-mushaf-v1';
-      var currentPage = 1, totalPages = 569, pdfDocument = null, renderToken = 0, scaleFactor = 1.8;
-      var pdfLibPromise = null;
-      /* تخزين ملف المصحف محلياً في ذاكرة المتصفح حتى يفتح فوراً في الزيارات التالية دون انتظار تحميل */
-      function mushafBytes(){
-        if(!('caches' in window)) return fetch(MUSHAF_URL).then(function(r){ return r.arrayBuffer(); });
-        return caches.open(MUSHAF_CACHE).then(function(cache){
-          return cache.match(MUSHAF_URL).then(function(hit){
-            if(hit) return hit.arrayBuffer();
-            return fetch(MUSHAF_URL).then(function(response){
-              if(!response.ok) throw new Error('mushaf fetch failed');
-              try { cache.put(MUSHAF_URL, response.clone()); } catch(err){}
-              return response.arrayBuffer();
-            });
-          });
-        }).catch(function(){ return fetch(MUSHAF_URL).then(function(r){ return r.arrayBuffer(); }); });
-      }
-      function loadPdf(){
-        if(pdfDocument) return Promise.resolve(pdfDocument);
-        if(!pdfLibPromise) pdfLibPromise = Promise.all([
-          import('/vendor/pdfjs/pdf.min.mjs'),
-          mushafBytes()
-        ]).then(function(parts){
-          var pdfjs = parts[0].default || parts[0];
-          pdfjs.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
-          /* رسم الحروف من خطوط المصحف المدمجة داخل الملف نفسه (disableFontFace) لضمان تطابق الحروف والتشكيل حرفياً مع النسخة الأصلية */
-          return pdfjs.getDocument({
-            data: new Uint8Array(parts[1]),
-            cMapUrl: '/vendor/pdfjs/cmaps/',
-            cMapPacked: true,
-            standardFontDataUrl: '/vendor/pdfjs/standard_fonts/',
-            disableFontFace: true,
-            useSystemFonts: false
-          }).promise;
-        });
-        return pdfLibPromise.then(function(pdf){ pdfDocument=pdf; totalPages=pdf.numPages; return pdf; });
-      }
-      /* تجهيز الملف والصفحة الأولى في الخلفية بعد فتح الموقع */
-      if(typeof window.requestIdleCallback === 'function') window.requestIdleCallback(function(){ loadPdf().catch(function(){}); }, { timeout: 4000 });
-      else setTimeout(function(){ loadPdf().catch(function(){}); }, 2000);
-      function setPage(page){
-        var requestedPage = parseInt(page, 10) || 1;
-        if(requestedPage < 1 || (pdfDocument && requestedPage > totalPages)) return;
-        currentPage = Math.min(totalPages, Math.max(1, requestedPage));
-        if(typeof window.__quranResetZoom === 'function') window.__quranResetZoom();
-        var canvas=document.getElementById('quranOriginalCanvas'), token=++renderToken;
-        if(!canvas) return;
-        loadPdf().then(function(pdf){ return pdf.getPage(currentPage); }).then(function(pageObj){
-          if(token!==renderToken) return;
-          var base=pageObj.getViewport({scale:1}), frame=document.querySelector('.quran-reader-frame'), maxW=frame.clientWidth-24, maxH=frame.clientHeight-24;
-          var fit=Math.min(maxW/base.width,maxH/base.height); var viewport=pageObj.getViewport({scale:Math.max(fit,0.1)*scaleFactor});
-          var ratio=window.devicePixelRatio||1; canvas.width=Math.ceil(viewport.width*ratio); canvas.height=Math.ceil(viewport.height*ratio); canvas.style.width=Math.ceil(viewport.width)+'px'; canvas.style.height=Math.ceil(viewport.height)+'px';
-          return pageObj.render({canvasContext:canvas.getContext('2d',{alpha:false}),viewport:viewport,transform:ratio!==1?[ratio,0,0,ratio,0,0]:null}).promise;
-        }).catch(function(){});
-      }
-      window.openQuranReader = function(page){
-        if(typeof window.showPage === 'function') window.showPage('quranReaderPage');
-        setPage(page || 1);
-        var reader = document.getElementById('quranReaderPage');
-        if(reader && reader.requestFullscreen) reader.requestFullscreen().catch(function(){});
-      };
-      window.nextQuranPage = function(){ setPage(currentPage + 1); };
-      window.previousQuranPage = function(){ setPage(currentPage - 1); };
-      window.closeQuranReader = function(){
-        if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){});
-        if(typeof window.showPage === 'function') window.showPage('lockScreen');
-      };
-      document.addEventListener('keydown', function(event){
-        var reader = document.getElementById('quranReaderPage');
-        if(!reader || reader.classList.contains('hidden')) return;
-        if(event.key === 'ArrowRight') { event.preventDefault(); nextQuranPage(); }
-        if(event.key === 'ArrowLeft') { event.preventDefault(); previousQuranPage(); }
-        if(event.key === 'Escape') { event.preventDefault(); closeQuranReader(); }
-      });
-      /* تكبير بإصبعين، وسحب للتنقل بين الصفحات (يمين = التالية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
-      (function(){
-        var MIN_SCALE = 1, MAX_SCALE = 4;
-        var scale = 1, tx = 0, ty = 0;
-        var pointers = {}, pinch = null, pan = null, swipe = null;
-        function wrapEl(){ return document.getElementById('quranZoomWrap'); }
-        function frameEl(){ return document.querySelector('.quran-reader-frame'); }
-        function applyTransform(){
-          var w = wrapEl();
-          if(w) w.style.transform = 'translate3d('+tx+'px,'+ty+'px,0) scale('+scale+')';
-        }
-        function clampPan(){
-          if(scale <= 1.001) { tx = 0; ty = 0; return; }
-          var frame = frameEl();
-          if(!frame) return;
-          var maxX = (frame.clientWidth * (scale - 1)) / 2 + frame.clientWidth * 0.25;
-          var maxY = (frame.clientHeight * (scale - 1)) / 2 + frame.clientHeight * 0.25;
-          tx = Math.max(-maxX, Math.min(maxX, tx));
-          ty = Math.max(-maxY, Math.min(maxY, ty));
-        }
-        function resetZoom(){ scale = 1; tx = 0; ty = 0; applyTransform(); }
-        window.__quranResetZoom = resetZoom;
-        function dist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
-        function onPointerDown(event){
-          pointers[event.pointerId] = { x: event.clientX, y: event.clientY };
-          var ids = Object.keys(pointers);
-          if(ids.length === 1){
-            if(scale > 1.001) pan = { startX: event.clientX, startY: event.clientY, originX: tx, originY: ty };
-            else swipe = { startX: event.clientX, startY: event.clientY };
-          } else if(ids.length === 2){
-            swipe = null;
-            var pts = ids.map(function(id){ return pointers[id]; });
-            pinch = { startDist: dist(pts[0], pts[1]), startScale: scale, startTx: tx, startTy: ty };
-          }
-          try { event.target.setPointerCapture(event.pointerId); } catch(err){}
-        }
-        function onPointerMove(event){
-          if(!pointers[event.pointerId]) return;
-          pointers[event.pointerId] = { x: event.clientX, y: event.clientY };
-          var ids = Object.keys(pointers);
-          if(ids.length === 2 && pinch){
-            var pts = ids.map(function(id){ return pointers[id]; });
-            var ratio = dist(pts[0], pts[1]) / (pinch.startDist || 1);
-            scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, pinch.startScale * ratio));
-            tx = pinch.startTx; ty = pinch.startTy;
-            clampPan(); applyTransform();
-            event.preventDefault();
-          } else if(ids.length === 1 && pan){
-            tx = pan.originX + (event.clientX - pan.startX);
-            ty = pan.originY + (event.clientY - pan.startY);
-            clampPan(); applyTransform();
-            event.preventDefault();
-          } else if(ids.length === 1 && swipe){
-            if(Math.abs(event.clientX - swipe.startX) > 10) event.preventDefault();
-          }
-        }
-        function onPointerUp(event){
-          var finishedSwipe = swipe;
-          delete pointers[event.pointerId];
-          var ids = Object.keys(pointers);
-          if(ids.length < 2) pinch = null;
-          if(ids.length < 1) pan = null;
-          swipe = null;
-          if(finishedSwipe && scale <= 1.001){
-            var dx = event.clientX - finishedSwipe.startX, dy = event.clientY - finishedSwipe.startY;
-            if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)){
-              if(dx > 0) nextQuranPage(); else previousQuranPage();
-            }
-          }
-        }
-        function onDoubleClick(){
-          if(scale > 1.001) resetZoom();
-          else { scale = 2; clampPan(); applyTransform(); }
-        }
-        function bind(){
-          var surface = document.getElementById('quranSwipeSurface');
-          if(!surface) return setTimeout(bind, 60);
-          surface.addEventListener('pointerdown', onPointerDown);
-          surface.addEventListener('pointermove', onPointerMove);
-          surface.addEventListener('pointerup', onPointerUp);
-          surface.addEventListener('pointercancel', onPointerUp);
-          surface.addEventListener('dblclick', onDoubleClick);
-        }
-        bind();
-      })();
-    })();
-  </script>
+
   <section id="quranReaderPage" class="page quran-reader-page hidden" aria-label="قارئ المصحف">
     <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق قارئ المصحف" title="إغلاق">×</button>
-    <div class="quran-reader-frame"><div id="quranZoomWrap" class="quran-zoom-wrap"><canvas id="quranOriginalCanvas" class="quran-reader-canvas" aria-label="صفحة المصحف الأصلية"></canvas></div><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اسحب للتنقل بين صفحات المصحف أو قرّب بإصبعين للتكبير"></div></div>
+    <div class="quran-reader-frame"><div id="quranZoomWrap" class="quran-zoom-wrap"><canvas id="quranOriginalCanvas" class="quran-reader-canvas" aria-label="صفحة المصحف الأصلية"></canvas></div><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اسحب للتنقل بين صفحات المصحف أو قرّب بإصبعين للتك��ير"></div></div>
   </section>
   <script>
 /* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة والتحقق القديم دون أي تغيير) */
@@ -1986,13 +1857,5 @@ window.alert = function(m){ showToast(m); };
   })();
 })();
 </script>
-<link rel="stylesheet" href="/messaging.css">
-<link rel="stylesheet" href="/tuhfat.css">
-<script src="/tuhfat-data.js" defer></script>
-<script src="/tuhfat.js" defer></script>
-<script src="/legacy-i18n.js" defer></script>
-<script src="/prayer-screen.js" defer></script>
-<script src="/islamic-hub.js" defer></script>
-<script src="/messaging.js" defer></script>
  </body>
 </html>
