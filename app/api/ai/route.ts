@@ -591,15 +591,17 @@ async function resolveBranch(): Promise<string> {
 }
 
 async function githubGetFile(path: string, ref?: string) {
+  const normalizedPath = normalizeProjectPath(path)
+  if (!safeProjectPath(normalizedPath)) throw new Error(`المسار ${path} غير مسموح`)
   if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
   const branch = ref || (await resolveBranch())
-  const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${path.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(branch)}`
+  const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${normalizedPath.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(branch)}`
   const res = await fetch(url, { headers: githubHeaders(), cache: "no-store" })
-  if (!res.ok) throw new Error(`GitHub ${res.status}: تعذر قراءة ${path}`)
+  if (!res.ok) throw new Error(`GitHub ${res.status}: تعذر قراءة ${normalizedPath}`)
   const data = await res.json()
-  if (Array.isArray(data)) throw new Error(`المسار ${path} مجلد وليس ملفاً`)
+  if (Array.isArray(data)) throw new Error(`المسار ${normalizedPath} مجلد وليس ملفاً`)
   const content = typeof data.content === "string" ? Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8") : ""
-  return { path, sha: data.sha, content }
+  return { path: normalizedPath, sha: data.sha, content }
 }
 
 async function githubListTree(ref?: string) {
@@ -623,9 +625,10 @@ async function githubListTree(ref?: string) {
 }
 
 async function githubPutFile(path: string, content: string, sha?: string, message = "chore: apply AI development assistant change") {
-  if (!safeProjectPath(path)) throw new Error(`المسار ${path} غير مسموح`)
+  const normalizedPath = normalizeProjectPath(path)
+  if (!safeProjectPath(normalizedPath)) throw new Error(`المسار ${path} غير مسموح`)
   if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
-  const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${path.split("/").map(encodeURIComponent).join("/")}`
+  const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${normalizedPath.split("/").map(encodeURIComponent).join("/")}`
   const body: any = { message, content: Buffer.from(content, "utf8").toString("base64"), branch: await resolveBranch() }
   if (sha) body.sha = sha
   const res = await fetch(url, { method: "PUT", headers: githubHeaders(), body: JSON.stringify(body), cache: "no-store" })
@@ -645,12 +648,13 @@ const PROTECTED_PATHS = new Set([
 
 // حذف ملف واد من المستودع عبر Contents API (ينشئ commit ويحافظ على كامل تاريخ الإصدارات — لا force push).
 async function githubDeleteFile(path: string, message: string) {
+  const normalizedPath = normalizeProjectPath(path)
+  if (!safeProjectPath(normalizedPath)) throw new Error(`المسار ${path} غير مسموح`)
   if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
-  if (!safeProjectPath(path)) throw new Error(`المسار ${path} غير مسموح`)
-  if (PROTECTED_PATHS.has(path)) throw new Error(`الملف ${path} محمي ولا يمكن حذفه تلقائياً لأنه أساسي لعمل المشروع`)
+  if (PROTECTED_PATHS.has(normalizedPath)) throw new Error(`الملف ${normalizedPath} محمي ولا يمكن حذفه تلقائياً لأنه أساسي لعمل المشروع`)
   // نقرأ الملف أولاً للحصول على sha ولنتأكد أنه موجود فعلاً.
-  const file = await githubGetFile(path)
-  const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${path.split("/").map(encodeURIComponent).join("/")}`
+  const file = await githubGetFile(normalizedPath)
+  const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${normalizedPath.split("/").map(encodeURIComponent).join("/")}`
   const body = { message, sha: file.sha, branch: await resolveBranch() }
   const res = await fetch(url, { method: "DELETE", headers: githubHeaders(), body: JSON.stringify(body), cache: "no-store" })
   if (!res.ok) {
@@ -749,10 +753,15 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
   }
   // التحقق من ��لاحية الكتابة على محتوى المستودع (Contents: Read and write).
   const perms = repo?.permissions
-  if (perms && perms.push !== true && perms.admin !== true && perms.maintain !== true) {
+  const canWrite = perms?.push === true || perms?.admin === true || perms?.maintain === true
+  if (!perms || !canWrite || repo?.archived === true || repo?.disabled === true) {
     return {
       ok: false,
-      reason: `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
+      reason: repo?.archived === true
+        ? `المستودع ${GITHUB_OWNER}/${GITHUB_REPO} مؤرشف ولا يقبل الكتابة.`
+        : repo?.disabled === true
+          ? `المستودع ${GITHUB_OWNER}/${GITHUB_REPO} معطّل ولا يقبل الكتابة.`
+          : `الرمز GITHUB_TOKEN لا يملك صلاحية الكتابة على المستودع ${GITHUB_OWNER}/${GITHUB_REPO}. امنح الرمز صلاحية Contents: Read and write ثم أعد المحاولة.`,
     }
   }
   // التحقق من أن الفرع المحدد أو الافتراضي قابل للحل.
@@ -765,10 +774,14 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
   return { ok: true, details: { repo: `${GITHUB_OWNER}/${GITHUB_REPO}`, branch } }
 }
 
+function normalizeProjectPath(path: string) {
+  return String(path || "").replace(/\\/g, "/").replace(/^\/+/, "")
+}
+
 function safeProjectPath(path: string) {
-  const normalized = String(path || "").replace(/\\/g, "/").replace(/^\/+/, "")
-  if (!normalized || normalized.includes("..") || normalized === ".git" || normalized.startsWith(".git/")) return false
-  if (normalized === ".env" || normalized.startsWith(".env.") && !normalized.endsWith(".example")) return false
+  const normalized = normalizeProjectPath(path)
+  if (!normalized || /[\u0000-\u001f\u007f]/.test(normalized) || normalized.includes("..") || normalized === ".git" || normalized.startsWith(".git/")) return false
+  if (normalized === ".env" || (normalized.startsWith(".env.") && !normalized.endsWith(".example"))) return false
   return true
 }
 
@@ -809,17 +822,19 @@ async function autoApplyDevRequest(request: string, plan: any) {
   if (!pf.ok) throw new Error(pf.reason || "فشل الفحص المسبق لإعدادات التطبيق التلقائي")
   const tree = await githubListTree()
   const repoFiles = new Set(tree.files)
-  const selected = Array.isArray(plan?.files) ? plan.files.map((f:any) => String(f?.path || "")).filter((p:string) => safeProjectPath(p)) : []
+  const selected: string[] = Array.from(new Set<string>(
+    Array.isArray(plan?.files) ? plan.files.map((f:any) => normalizeProjectPath(String(f?.path || ""))).filter((p:string) => safeProjectPath(p)) : [],
+  ))
   if (!selected.length) throw new Error("لم يحدد الذكاء الاصطناعي ملفات صالحة للتعديل")
   if (selected.length > 12) throw new Error("الطلب يحتاج تعديل عدد كبير من الملفات؛ الحد التلقائي 12 ملفاً")
   for (const path of selected) {
-    const action = plan.files.find((f:any) => String(f?.path || "") === path)?.action
+    const action = plan.files.find((f:any) => normalizeProjectPath(String(f?.path || "")) === path)?.action
     if (action !== "create" && !repoFiles.has(path)) throw new Error(`الملف ${path} غير موجود في المستودع`)
   }
-  const current = []
+  const current: Array<{ path: string; sha?: string; content: string }> = []
   for (const path of selected) {
     try { current.push(await githubGetFile(path)) } catch (e:any) {
-      const action = plan.files.find((f:any) => f.path === path)?.action
+      const action = plan.files.find((f:any) => normalizeProjectPath(String(f?.path || "")) === path)?.action
       if (action === "create") current.push({ path, sha: undefined, content: "" })
       else throw e
     }
@@ -829,9 +844,12 @@ async function autoApplyDevRequest(request: string, plan: any) {
   if (!patches.length) throw new Error("لم ينتج الذكاء الاصطناعي عديلات قابلة للتطبيق")
   if (patches.length > 12) throw new Error("عدد التعديلات المقترحة يتجاوز الد الآمن")
   const currentMap = new Map(current.map(x => [x.path, x]))
+  const patchPaths = new Set<string>()
   // نتحقق من جميع الملفات قبل أول كتابة، حتى لا يبدأ التطبيق برد ناقص أو مسار غير مصرح به.
   const validatedPatches = patches.map((patch: any) => {
-    const path = String(patch?.path || "")
+    const path = normalizeProjectPath(String(patch?.path || ""))
+    if (patchPaths.has(path)) throw new Error(`مرحلة التحقق: تكرار تعديل الملف ${path}، ولم يُكتب أي ملف`)
+    patchPaths.add(path)
     const content = typeof patch?.content === "string" ? patch.content : null
     if (!safeProjectPath(path) || content === null || content.length > 500_000 || !selected.includes(path)) {
       throw new Error(`مرحلة التحقق: تعديل غير صالح للملف ${path || "غير المحدد"}، ولم يُكتب أي ملف`)

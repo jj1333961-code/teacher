@@ -34,19 +34,25 @@ function sessionValue(email: string, name: string, secret: string) {
   return `${payload}.${sign(payload, secret)}`
 }
 function verify(value: string, secret: string) {
-  const [payload, signature] = value.split(".")
+  const parts = value.split(".")
+  if (parts.length !== 2) return null
+  const [payload, signature] = parts
   if (!payload || !signature) return null
   const expected = sign(payload, secret)
-  if (signature.length !== expected.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null
+  const signatureBytes = Buffer.from(signature)
+  const expectedBytes = Buffer.from(expected)
+  if (signatureBytes.length !== expectedBytes.length || !timingSafeEqual(signatureBytes, expectedBytes)) return null
   try {
     const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"))
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null
     const now = Date.now()
     const email = typeof parsed.email === "string" ? parsed.email.trim().toLowerCase() : ""
+    const name = typeof parsed.name === "string" ? parsed.name.trim().slice(0, 160) : ""
     const issuedAt = Number(parsed.issuedAt)
     const expiresAt = Number(parsed.expiresAt)
     if (!email || parsed.emailVerified !== true || !Number.isFinite(issuedAt) || !Number.isFinite(expiresAt)) return null
-    if (issuedAt > now + 5 * 60 * 1000 || expiresAt <= now || expiresAt - issuedAt > SESSION_MAX_AGE_MS + 60_000) return null
-    return { ...parsed, email, issuedAt, expiresAt }
+    if (issuedAt > now + 5 * 60 * 1000 || expiresAt <= now || expiresAt <= issuedAt || expiresAt - issuedAt > SESSION_MAX_AGE_MS + 60_000) return null
+    return { email, name, emailVerified: true, issuedAt, expiresAt }
   } catch { return null }
 }
 function redirectUri() { return CALLBACK }
