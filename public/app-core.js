@@ -59,13 +59,20 @@ function toggleTheme() {
   const html = document.documentElement;
   const btn = document.querySelector('.theme-toggle');
   if(html.getAttribute('data-theme') === 'dark') {
-    html.removeAttribute('data-theme'); btn.textContent = '🌙'; localStorage.setItem('theme', 'light');
+    html.removeAttribute('data-theme'); btn.textContent = '🌙'; writeClientStorage('theme', 'light');
   } else {
-    html.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; localStorage.setItem('theme', 'dark');
+    html.setAttribute('data-theme', 'dark'); btn.textContent = '☀️'; writeClientStorage('theme', 'dark');
   }
 }
 // الوضع الأخضر (الداكن) هو الافتراضي، والفاتح يُطبَّق فقط عند اختيار المستخدم له.
-if(localStorage.getItem('theme') === 'light') {
+// التخزين قد يكون محظورًا في بعض المتصفحات/الإطارات؛ لا نسمح بفشل bootstrap بالكامل.
+function readClientStorage(key) {
+  try { return window.localStorage.getItem(key); } catch (error) { return null; }
+}
+function writeClientStorage(key, value) {
+  try { window.localStorage.setItem(key, value); } catch (error) { /* fallback للذاكرة فقط */ }
+}
+if(readClientStorage('theme') === 'light') {
   document.documentElement.removeAttribute('data-theme');
   const savedThemeButton = document.querySelector('.theme-toggle'); if(savedThemeButton) savedThemeButton.textContent = '🌙';
 } else {
@@ -171,7 +178,7 @@ const LANG_DICT = {
   'إعدادات العرض': 'Display settings',
   'تبديل الوضع': 'Toggle theme'
 };
-let currentLang = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
+let currentLang = readClientStorage('lang') === 'en' ? 'en' : 'ar';
 const LANG_ATTRS = ['placeholder','title','aria-label','alt'];
 const EN_LANG_DICT = Object.fromEntries(Object.entries(LANG_DICT).map(function(entry){ return [entry[1], entry[0]]; }));
 const LANG_TRANSLATION_KEYS = Object.keys(LANG_DICT).sort(function(a,b){ return b.length - a.length; });
@@ -233,7 +240,7 @@ function applyLangToDom(root) {
 window.applyLangToDom = applyLangToDom;
 function toggleLang() {
   currentLang = currentLang === 'ar' ? 'en' : 'ar';
-  localStorage.setItem('lang', currentLang);
+  writeClientStorage('lang', currentLang);
   applyLangToDom();
   window.dispatchEvent(new Event('languagechange'));
 }
@@ -507,7 +514,7 @@ function proctorLiveBar(){return ''}
 function bindLiveProctorHold(){}
 function proctorShowWarning(reason,startedAt){const grace=Math.ceil(getProctorSettings().gazeGraceMs/1000),left=Math.max(0,grace-Math.floor((Date.now()-startedAt)/1000)),w=document.getElementById('proctorWarning');if(w){w.textContent='تنبيه: '+reason+' — صحح الوضع خلال '+left+' ثانية';w.classList.remove('hidden')}}
 function proctorHandleLiveState(ok,reason){if(ok){proctor.warningAt=0;proctor.lastGoodAt=Date.now();if(proctor.blocked&&getProctorSettings().autoRestore&&Date.now()-proctor.stableSince>=1500){proctor.blocked=false;document.getElementById('proctorBlock')?.classList.add('hidden');document.getElementById('proctorWarning')?.classList.add('hidden');}if(!proctor.touchWarningAt)document.getElementById('proctorWarning')?.classList.add('hidden');return}proctor.stableSince=0;if(!proctor.warningAt)proctor.warningAt=Date.now();proctorShowWarning(reason,proctor.warningAt);if(Date.now()-proctor.warningAt>=getProctorSettings().gazeGraceMs)proctorBlockTask(reason)}
-function proctorBlockTask(reason){if(!proctor.active)return;proctor.blocked=true;proctor.stableSince=Date.now();const message=document.getElementById('proctorBlockMessage');if(message)message.textContent='تنبيه قابل للتفسير: '+reason+' — صحح الوضع أمام اشاة. تعد عناصر التحكم تلقائياً عند استقرار الإشارات.';document.getElementById('proctorBlock')?.classList.remove('hidden');recordProctorIncident(reason+' (حجب مؤقت قابل للاسترجاع)')}
+function proctorBlockTask(reason){if(!proctor.active)return;proctor.blocked=true;proctor.stableSince=Date.now();const message=document.getElementById('proctorBlockMessage');if(message)message.textContent='تنبيه ق��بل للتفسير: '+reason+' — صحح الوضع أمام اشاة. تعد عناصر التحكم تلقائياً عند استقرار الإشارات.';document.getElementById('proctorBlock')?.classList.remove('hidden');recordProctorIncident(reason+' (حجب مؤقت قابل للاسترجاع)')}
 function proctorHandleTouches(e){if(!proctor.active||!getProctorSettings().touch)return;const touches=e&&e.touches?Array.from(e.touches):[];proctor.touches=new Set(touches.map(t=>t.identifier));const count=proctor.touches.size,tooMany=count>1,status=document.getElementById('proctorTouchStatus');proctor.holding=count===1;if(!tooMany){proctor.touchWarningAt=0;if(status){status.textContent=count===1?'إصبع واحد':'جاهز للمسة واحدة';status.className='badge badge-success'}return}if(!proctor.touchWarningAt)proctor.touchWarningAt=Date.now();const reason='استخدم إصبعًا واحدًا فقط';if(status){status.textContent='أزل اللمسات الإضافية';status.className='badge badge-warning'}proctorShowWarning(reason,proctor.touchWarningAt);if(Date.now()-proctor.touchWarningAt>=getProctorSettings().touchGraceMs)cancelProctoredTask(reason)}
 ['touchstart','touchmove','touchend','touchcancel'].forEach(type=>document.addEventListener(type,proctorHandleTouches,{passive:true,capture:true}));
 function recordProctorIncident(reason){if(!currentUser)return;const incident={id:'pi_'+Date.now(),studentId:currentUser.id,studentName:currentUser.name,taskType:proctor.context?.type||'unknown',taskId:proctor.context?.id||'',reason,time:new Date().toLocaleString('ar-EG'),timestamp:Date.now(),status:'cancelled'};const incidents=getData('proctoringIncidents',[]);incidents.unshift(incident);setData('proctoringIncidents',incidents.slice(0,500));const messages=getData('messages',[]);messages.push({type:'system',sender:'نظام المراقبة',senderId:0,receiverType:'admin',text:'تنبيه مخالفة مراقبة: '+currentUser.name+' — '+proctorTaskLabel(proctor.context)+' — '+reason+' — '+incident.time,time:incident.time,approved:true,read:false,proctorIncidentId:incident.id});setData('messages',messages);return incident}
@@ -1591,7 +1598,7 @@ async function toggleStudentIntakeRecord(){
     const stream=await safeGetMic(),mimeType=preferredRecorderMimeType();studentIntakeChunks=[];studentIntakeRecorder=mimeType?new MediaRecorder(stream,{mimeType: mimeType}):new MediaRecorder(stream);
     const recorder=studentIntakeRecorder;
     recorder.ondataavailable=function(e){if(e.data.size)studentIntakeChunks.push(e.data)};
-    recorder.onerror=function(){status.textContent='حدث خطأ أثناء التسجيل. أعد المحاولة.'};
+    recorder.onerror=function(){status.textContent='حد�� خطأ أثناء التسجيل. أعد المحاولة.'};
     recorder.onstop=async function(){
       const blob=new Blob(studentIntakeChunks,{type:recorder.mimeType||mimeType||'audio/webm'});studentIntakeLastBlob=blob;studentIntakeChunks=[];
       try{
@@ -2281,7 +2288,7 @@ function renderRecordElementHTML(el, i, num) {
     html += '<div class="record-element" style="opacity:0.6; border-style:dashed;">';
     html += '<div class="record-element-header">';
     html += '<span class="record-element-title" style="text-decoration:line-through;">'+num+'. '+el.name+'</span>';
-    html += '<button class="btn btn-xs btn-success" onclick="restoreRecordElement('+i+')" title="استرجاع العنصر">↩ استرجاع</button>';
+    html += '<button class="btn btn-xs btn-success" onclick="restoreRecordElement('+i+')" title="استرجاع ��لعنصر">↩ استرجاع</button>';
     html += '</div>';
     html += '<div style="color:var(--text-light); font-size:0.9rem;">تم حذ هذا العنصر — لن يُحفظ ضمن التسميع.</div>';
     html += '</div>';
@@ -2701,7 +2708,7 @@ async function generateLocalQuranQuestions(base,lastSurah,plans){
   for(const plan of plans){for(let i=0;i<plan.count;i++){const src=sources[cursor%sources.length],requestedPosition=plan.position||'random',position=requestedPosition==='random'?randomPositions[cursor%randomPositions.length]:requestedPosition;cursor++;const third=Math.max(1,Math.ceil(src.ayahs.length/3));let min=1,max=src.ayahs.length;if(position==='start')max=Math.min(src.ayahs.length,third);else if(position==='middle'){min=Math.min(src.ayahs.length,third+1);max=Math.min(src.ayahs.length,third*2)}else if(position==='end')min=Math.min(src.ayahs.length,third*2+1);let from=min+Math.floor(Math.random()*Math.max(1,max-min+1));for(let tries=0;tries<=max-min&&used.has(src.surah+':'+from);tries++)from=from>=max?min:from+1;used.add(src.surah+':'+from);const ayah=src.ayahs[from-1]||src.text,next=src.ayahs[from]||ayah;let q={surah:src.surah,from,to:Math.min(from+(plan.type==='complete'?plan.completeAyahs-1:plan.type==='audio'?plan.reciteAyahs-1:0),src.ayahs.length),points:1,source:'local-browser',options:[],stem:ayah,correct:''};
     if(plan.type==='mcq'){const options=shuffled([src.surah].concat(shuffled(range.filter(s=>s!==src.surah)).slice(0,plan.optionsCount-1)));q.prompt='إلى أي سورة ينتمي المقطع المصور؟';q.options=options;q.correct=src.surah}
     else if(plan.type==='truefalse'){const truth=Math.random()>.5,shown=truth?src.surah:(shuffled(range.filter(s=>s!==src.surah))[0]||src.surah);q.prompt='هل المقطع المصور من سورة '+shown+'؟';q.options=['صح','خطأ'];q.correct=truth?'صح':'خطأ'}
-    else if(plan.type==='complete'){const words=ayah.split(/\s+/),cut=Math.max(2,Math.floor(words.length*.55));q.prompt='أكمل المقطع المخفي في صورة المصحف';q.correct=words.slice(cut).join(' ')||next}
+    else if(plan.type==='complete'){const words=ayah.split(/\s+/),cut=Math.max(2,Math.floor(words.length*.55));q.prompt='أكمل المقطع ا��مخفي في صورة المصحف';q.correct=words.slice(cut).join(' ')||next}
     else {q.prompt='سجّل تلاوة المقطع المعروض من المصحف';q.correct=src.ayahs.slice(from-1,q.to).join(' ')}
     q.stem='';q.questionImage='/api/quran-question-image?surah='+(ALL_SURAHS_ORDERED.indexOf(src.surah)+1)+'&ayah='+from+'&to='+q.to+'&type='+plan.type;
     out.push(cleanExamQuestion(q));}}
@@ -3027,7 +3034,7 @@ function reviewAudioExam(studentId,examId,accepted){let students=getData('studen
 function renderParentExamResults(s){
   let arr=s.examResults||[];if(!arr.length)return '';
   let h='<div class="page" style="margin-top:15px;border-right:5px solid var(--info)"><h4 style="color:var(--info)">🧪 نتائج الاختبارات</h4>';
-  arr.slice().reverse().forEach(ex=>{h+='<div class="history-element"><div class="history-element-name">📅 '+escapeHtml(ex.date||'')+'</div><div class="history-element-details"><div class="history-detail"><strong>الدرجة:</strong> '+ex.score+'/'+ex.maxScore+'</div><div class="history-detail"><strong>الوت:</strong> '+ex.totalDurationSeconds+' ثانية</div></div>';
+  arr.slice().reverse().forEach(ex=>{h+='<div class="history-element"><div class="history-element-name">📅 '+escapeHtml(ex.date||'')+'</div><div class="history-element-details"><div class="history-detail"><strong>الدر��ة:</strong> '+ex.score+'/'+ex.maxScore+'</div><div class="history-detail"><strong>الوت:</strong> '+ex.totalDurationSeconds+' ثانية</div></div>';
     if(ex.answers&&ex.questions){h+='<details style="margin-top:10px"><summary>ءء️ عرءء إجابات الطالب</summary>';ex.questions.forEach((q,i)=>{const a=ex.answers[i]||{},r=a.aiResult||{};h+='<div class="task-card"><strong>س'+(i+1)+':</strong> '+escapeHtml(q.prompt||'')+'<br><span>إجابة الطالب: '+escapeHtml(a.answer||'—')+'</span><br><span>النتيجة: '+(a.score>=1?'✅ كاملة':a.score===.5?'🟡 نصف درجة':'❌ غير صحيحة')+'</span>'+(r.reason?'<br><span>تقرير AI: '+escapeHtml(r.reason)+'</span>':'');if(q.type==='audio'&&a.audioData&&a.audioShareWithParent!==false){h+='<div style="margin-top:8px">🎙️ التسجيل: <audio controls src="'+a.audioData+'" style="height:38px"></audio></div>'}h+='</div>'});h+='</details>'}h+='</div>'});
   return h+'</div>';
 }
@@ -3877,7 +3884,7 @@ function toggleShareWithParent(idx) {
   msgs[idx].shareWithParent = !msgs[idx].shareWithParent;
   setData('messages', msgs);
   renderMessages();
-  alert(msgs[idx].shareWithParent ? '✅ أص��ح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعديءء).' : '🚫 تم منع ��لي الأ من الاطلاع على هذا الملف.');
+  alert(msgs[idx].shareWithParent ? '✅ أص��ح بإمكان ولي الأمر الاطلاع على هذ�� الملف (بدون تعديءء).' : '🚫 تم منع ��لي الأ من الاطلاع على هذا الملف.');
 }
 
 function openMessageFileById(msgId, readonly) {
@@ -5599,7 +5606,7 @@ function generateAIResponse(text, student) {
     r += '<br>💡 المهام التي عليها علامة 👁️ يمكنك عرض آياتها كسورة واضحة مع إمكانية التكبير.';
     return r;
   }
-  // الآيات ءءالصور
+  // ا��آيات ءءالصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
     return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُعرض بارم العثمانءء المشكَّل كصورة مطابقة تماماً لمحف.';
   }
