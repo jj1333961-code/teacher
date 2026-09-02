@@ -618,11 +618,12 @@ async function githubListTree(ref?: string) {
   const treeRes = await fetch(treeUrl, { headers: githubHeaders(), cache: "no-store" })
   if (!treeRes.ok) throw new Error(`GitHub ${treeRes.status}: تعذر قراءة شجرة المشروع`)
   const tree = await treeRes.json()
-  const files = Array.isArray(tree.tree) ? tree.tree.filter((x:any) => x.type === "blob").map((x:any) => x.path).filter(safeProjectPath).slice(0, 500) : []
+  const files = Array.isArray(tree.tree) ? tree.tree.filter((x:any) => x.type === "blob").map((x:any) => x.path).filter(safeProjectPath) : []
   return { files, commitSha }
 }
 
 async function githubPutFile(path: string, content: string, sha?: string, message = "chore: apply AI development assistant change") {
+  if (!safeProjectPath(path)) throw new Error(`المسار ${path} غير مسموح`)
   if (!GITHUB_OWNER || !GITHUB_REPO) throw new Error("إعدادات مستودع GitHub غير مكتملة")
   const url = `${GITHUB_API}/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${path.split("/").map(encodeURIComponent).join("/")}`
   const body: any = { message, content: Buffer.from(content, "utf8").toString("base64"), branch: await resolveBranch() }
@@ -766,7 +767,7 @@ async function preflightAutoApply(): Promise<{ ok: boolean; reason?: string; det
 
 function safeProjectPath(path: string) {
   const normalized = String(path || "").replace(/\\/g, "/").replace(/^\/+/, "")
-  if (!normalized || normalized.includes("..") || normalized.startsWith(".git/")) return false
+  if (!normalized || normalized.includes("..") || normalized === ".git" || normalized.startsWith(".git/")) return false
   if (normalized === ".env" || normalized.startsWith(".env.") && !normalized.endsWith(".example")) return false
   return true
 }
