@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر������������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر��������������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -257,27 +257,109 @@ function initLanguage(){
 let neonSaveTimer = null;
 let neonSaveInFlight = false;
 let neonSaveQueued = false;
+let neonHydrationPromise = null;
+let neonHydrationStarted = false;
+let neonHydrated = false;
+let neonUnavailable = false;
+let neonLocalRevision = 0;
+let neonDirtyDuringHydration = false;
 const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests','notifications','aiQuestionHistory'];
 function getData(key, def) { try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : (def || []); } catch (e) { console.warn('تعذر قراءة البيانات المحلية للمفتاح:', key, e); return def || []; } }
 function collectCloudData(){ const data={}; CLOUD_DATA_KEYS.forEach(function(key){ const raw=localStorage.getItem(key); if(raw!==null){ try{data[key]=JSON.parse(raw)}catch(e){} } }); return data; }
+function scheduleNeonSave(delay = 600){
+  if(!neonHydrated || neonUnavailable) return;
+  clearTimeout(neonSaveTimer);
+  neonSaveTimer = setTimeout(saveAllDataToNeon, delay);
+}
 async function saveAllDataToNeon(){
+  if(!neonHydrated || neonUnavailable) return;
   if(neonSaveInFlight){neonSaveQueued=true;return}
-  neonSaveInFlight=true;neonSaveQueued=false;
+  neonSaveInFlight=true;
+  neonSaveQueued=false;
   const status=document.getElementById('cloudSaveStatus');
-  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),8000);
-  try{ const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()}),signal:controller.signal}); if(!res.ok)throw new Error(); if(status)status.textContent='محفوظ في Neon'; }
-  catch(e){ if(status)status.textContent='تعذر الحفظ في Neon'; }
-  finally{clearTimeout(timeout);neonSaveInFlight=false;if(neonSaveQueued){clearTimeout(neonSaveTimer);neonSaveTimer=setTimeout(saveAllDataToNeon,500)}}
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),8000);
+  try{
+    const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()}),signal:controller.signal,credentials:'same-origin'});
+    if(!res.ok) throw new Error('cloud-save-failed');
+    if(status) status.textContent='محفوظ في Neon';
+  }catch(error){
+    if(status) status.textContent=error?.name==='AbortError'?'انتهت مهلة الحفظ في Neon':'تعذر الحفظ في Neon';
+  }finally{
+    clearTimeout(timeout);
+    neonSaveInFlight=false;
+    if(neonSaveQueued) scheduleNeonSave(600);
+  }
 }
-function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); if(sessionStorage.getItem('neon_unavailable_v1')==='1') return; clearTimeout(neonSaveTimer); neonSaveTimer=setTimeout(saveAllDataToNeon,500); }
+function setData(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+  if(!neonHydrationStarted) return;
+  neonLocalRevision += 1;
+  if(!neonHydrated){ neonDirtyDuringHydration=true; return; }
+  if(sessionStorage.getItem('neon_unavailable_v1')==='1') return;
+  scheduleNeonSave();
+}
 async function hydrateDataFromNeon(){
-  if(sessionStorage.getItem('neon_hydrated_v1'))return;
-  try{ const res=await fetch('/api/data',{cache:'no-store'}); const body=await res.json(); if(res.ok&&body.data){ const before=JSON.stringify(collectCloudData()); Object.keys(body.data).forEach(function(key){ localStorage.setItem(key,JSON.stringify(body.data[key])); }); sessionStorage.setItem('neon_hydrated_v1','1'); const changed=before!==JSON.stringify(collectCloudData()); if(changed && !sessionStorage.getItem('neon_reload_done_v1')){ sessionStorage.setItem('neon_reload_done_v1','1'); location.reload(); } } else if(body.unavailable){ sessionStorage.setItem('neon_hydrated_v1','1'); sessionStorage.setItem('neon_unavailable_v1','1'); } else { sessionStorage.setItem('neon_hydrated_v1','1'); await saveAllDataToNeon(); } }
-  catch(e){ sessionStorage.setItem('neon_hydrated_v1','1'); }
+  if(neonHydrationPromise) return neonHydrationPromise;
+  if(neonHydrated || neonUnavailable) return;
+  if(sessionStorage.getItem('neon_hydrated_v1')){
+    neonHydrationStarted=true;
+    neonHydrated=true;
+    neonUnavailable=sessionStorage.getItem('neon_unavailable_v1')==='1';
+    return;
+  }
+  neonHydrationStarted=true;
+  const revisionAtStart=neonLocalRevision;
+  neonHydrationPromise=(async function(){
+    let shouldSave=false;
+    let changed=false;
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),6000);
+    try{
+      const res=await fetch('/api/data',{cache:'no-store',credentials:'same-origin',signal:controller.signal});
+      const body=await res.json().catch(()=>({}));
+      if(body.unavailable){
+        neonUnavailable=true;
+      }else if(res.ok&&body.data&&typeof body.data==='object'&&!Array.isArray(body.data)){
+        const canApply=neonLocalRevision===revisionAtStart&&!neonDirtyDuringHydration;
+        if(canApply&&Object.keys(body.data).length){
+          const before=JSON.stringify(collectCloudData());
+          CLOUD_DATA_KEYS.forEach(function(key){
+            if(Object.prototype.hasOwnProperty.call(body.data,key)) localStorage.setItem(key,JSON.stringify(body.data[key]));
+          });
+          changed=before!==JSON.stringify(collectCloudData());
+        }else if(!canApply||!Object.keys(body.data).length){
+          shouldSave=true;
+        }
+      }else{
+        shouldSave=true;
+      }
+    }catch(error){
+      neonUnavailable=true;
+      if(error?.name!=='AbortError') console.warn('[v0] Neon hydration unavailable; local data retained');
+    }finally{
+      clearTimeout(timeout);
+      neonHydrated=true;
+      sessionStorage.setItem('neon_hydrated_v1','1');
+      if(neonUnavailable) sessionStorage.setItem('neon_unavailable_v1','1');
+      if(shouldSave||neonDirtyDuringHydration) neonSaveQueued=true;
+      if(neonSaveQueued&&!neonUnavailable) scheduleNeonSave(250);
+      neonHydrationPromise=null;
+      if(changed) window.setTimeout(refreshVisiblePageAfterHydration,0);
+    }
+  })();
+  return neonHydrationPromise;
 }
-  // لا نؤخر شاشة الترحيب بسبب الشبكة؛ تتم المزامنة بعد أول رسم وفي وقت خمول المتصفح.
-  const scheduleHydration = window.requestIdleCallback || function(cb){ window.setTimeout(cb, 1200); };
-  scheduleHydration(function(){ hydrateDataFromNeon(); });
+function refreshVisiblePageAfterHydration(){
+  const visible=document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
+  if(visible&&typeof showPage==='function') showPage(visible.id,{fromBrowser:true});
+}
+function scheduleCloudHydration(){
+  if(neonHydrationStarted||neonHydrated) return;
+  const run=function(){ void hydrateDataFromNeon(); };
+  if('requestIdleCallback' in window) window.requestIdleCallback(run,{timeout:2500});
+  else window.setTimeout(run,1200);
+}
 
 if(!localStorage.getItem('initialized_v7')) {
   setData('subjects', [
@@ -345,6 +427,8 @@ if(!localStorage.getItem('initialized_v7')) {
     });
     setData('students', students);
   }());
+  // يبدأ الاتصال بعد تجهيز البيانات المحلية والرسم الأول، ولا يسبق تهيئة القيم الافتراضية.
+  scheduleCloudHydration();
   
   let currentUser = null, currentType = null, currentAdminId = null;
 let voiceBlob = null, voiceChunks = [], mediaRecorder = null;
@@ -405,7 +489,6 @@ function bootstrapApp() {
   if (appBootstrapped) return;
   appBootstrapped = true;
   initLanguage();
-  loadGlobalProctorSettings();
   setupProctorHold(document.getElementById('proctorGateHold'), true);
   const params = new URLSearchParams(location.search);
   if (params.get('google') === 'success') {
@@ -1053,7 +1136,7 @@ function updateNotificationBadges() {
   document.querySelectorAll('[data-notification-count]').forEach(function(badge){ badge.textContent=String(count); badge.hidden=count===0; });
 }
 function notificationTypeLabel(type) {
-  return {account_recovery:'استرجاع حساب',false_alarm:'إنذار خاطئ',violation:'مخالفة',general:'تنبيه عام'}[type] || 'تنبيه عام';
+  return {account_recovery:'��سترجاع حساب',false_alarm:'إنذار خاطئ',violation:'مخالفة',general:'تنبيه عام'}[type] || 'تنبيه عام';
 }
 function renderNotifications() {
   const list=document.getElementById('notificationsList'); if(!list) return;
@@ -2058,7 +2141,7 @@ function renderRecordElementHTML(el, i, num) {
     }
     html += '<input type="text" placeholder="أو اكتب اسم اسور يدوياً..." value="'+(el.surah && !afterSurahs.includes(el.surah) ? el.surah : '')+'" onchange="updateRecordElement('+i+', ' + "'" + 'surah' + "'" + ', this.value)" style="width:100%;">';
     if(mainSurahIndex === -1) {
-      html += '<small style="color:var(--text-light)">لم يتم تحديد السورة الأساسية للطالب</small>';
+      html += '<small style="color:var(--text-light)">لم يتم تحديد السورة ال��ساسية للطالب</small>';
     } else {
       html += '<small style="color:var(--text-light)">يتم عرض السور من ��عد '+mainSurah+' حتى الناس</small>';
     }
@@ -2520,7 +2603,7 @@ async function generateExamQuestions(){
   if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على الأقل.','danger');return}
   const btns=document.querySelectorAll('#examBuilderSection button');btns.forEach(b=>b.disabled=true);
   const requestedTotal=plans.reduce((n,r)=>n+(parseInt(r.count)||0),0),sourceMode=getExamSourceMode();let generationSucceeded=false;
-  startExamGenerationProgress(requestedTotal);showExamAlert('جاري إنشاء دفعة جديدة من '+(sourceMode==='file'?'الملف المحدد':'الذكاء الاصطناعي مع التحقق القرآني')+'...','info');
+  startExamGenerationProgress(requestedTotal);showExamAlert('جاري إنشاء دفعة جديدة من '+(sourceMode==='file'?'الملف المحدد':'الذكاء الاصطنا��ي مع التحقق القرآني')+'...','info');
   try{
     if(sourceMode==='file'&&!examFilesCache.length)await loadExamFiles();
     const file=examFilesCache.find(f=>f.id===document.getElementById('examFileSource')?.value);if(sourceMode==='file'&&!file)throw new Error('اختر ملف ��لمرجع أولاً.');
@@ -2669,7 +2752,7 @@ const top=document.getElementById('studentExamTimer');if(top)top.textContent='ا
 function confirmStudentExamAnswer(i){
   const ex=currentUser&&currentUser.activeExam;if(!ex||i!==studentExamCurrentIndex||studentExamLockedIndices[i])return;
   if(ex.questions[i].type==='complete'){const el=document.getElementById('examComplete_'+i);studentExamAnswers[i]=el?el.value.trim():'';}
-  if(ex.questions[i].type!=='audio' && !studentExamAnswers[i]){showToast('اختر أو اكتب الإجابة أولاً','error');return;}
+  if(ex.questions[i].type!=='audio' && !studentExamAnswers[i]){showToast('اخ��ر أو اكتب الإجابة أولاً','error');return;}
   studentExamLockedIndices[i]=true; clearInterval(studentExamQuestionTimer); studentExamQuestionElapsed[i]=Math.max(0,Math.round((Date.now()-(studentExamQuestionStartedAt[i]||Date.now()))/1000));
   if(i<ex.questions.length-1){
     studentExamCurrentIndex=i+1;studentExamViewIndex=studentExamCurrentIndex;
@@ -2889,7 +2972,7 @@ function renderAdminExamHistory(s) {
     h+='<div class="history-day-header" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span>اءءتبار '+(exams.length-examIndex)+' — '+formatExamDate(submitted)+'</span><span class="score-badge">'+score+' / '+maxScore+' ('+percent+'٪)</span></div>';
     h+='<div class="history-element-details" style="margin:12px 0"><div class="history-detail"><strong>الحالة:</strong> '+examStatusLabel(ex)+'</div><div class="history-detail"><strong>الأسئلة:</strong> '+questions.length+'</div><div class="history-detail"><strong>السور:</strong> '+escapeHtml(range)+'</div><div class="history-detail"><strong>المدة:</strong> '+(Number(ex.totalDurationSeconds)||0)+' ثانية</div></div>';
     h+='<details><summary style="cursor:pointer;font-weight:700;color:var(--primary)">سجل الاختبار: عرض الإجابات والملحقات</summary>';
-    if(!questions.length)h+='<div class="alert alert-info" style="margin-top:10px">لا تتوفر تفاصيل الأسئلة لهذه النتيجة القديمة.</div>';
+    if(!questions.length)h+='<div class="alert alert-info" style="margin-top:10px">لا تتوفر تفاصيل ا��أسئلة لهذه النتيجة القديمة.</div>';
     questions.forEach(function(q,i){
       q=q||{};const a=answers[i]||{},r=a.aiResult||{},audio=safeExamAttachmentUrl(a.audioData),image=safeExamAttachmentUrl(q.questionImage);
       const answerScore=Number(a.score)||0,answerLabel=answerScore>=1?'صحيحة':answerScore>0?'جزئية':'غير صحيحة';
@@ -3192,7 +3275,7 @@ function openGithubSync(){
 }
 
 async function refreshGithubSync(){
-  if(currentType !== 'admin'){ showToast('❌ هئه الميزة متاحة للمسؤول فقط', 'error'); return; }
+  if(currentType !== 'admin'){ showToast('��� هئه الميزة متاحة للمسؤول فقط', 'error'); return; }
   const box = document.getElementById('githubSyncStatus');
   const btn = document.getElementById('githubSyncRefreshBtn');
   const link = document.getElementById('githubHistoryLink');
@@ -5156,7 +5239,7 @@ function renderUserFiles(role) {
   let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px;">';
   files.slice().reverse().forEach(f => {
     const sizeMB = (f.size / (1024*1024)).toFixed(2);
-    const icon = f.type && f.type.startsWith('image/') ? '🖼️' : f.type && f.type.startsWith('audio/') ? '🎵' : f.type && f.type.startsWith('video/') ? '🎬' : f.type && f.type.includes('pdf') ? '📄' : '📎';
+    const icon = f.type && f.type.startsWith('image/') ? '🖼️' : f.type && f.type.startsWith('audio/') ? '🎵' : f.type && f.type.startsWith('video/') ? '��' : f.type && f.type.includes('pdf') ? '📄' : '📎';
     html += '<div style="background:var(--table-header); border-radius:12px; padding:15px; border:2px solid var(--border);">';
     html += '<div style="font-size:2.5rem; text-align:center; margin-bottom:10px;">' + icon + '</div>';
     html += '<h5 style="color:var(--primary); margin-bottom:5px; word-break:break-word;">' + f.desc + '</h5>';
@@ -5256,7 +5339,7 @@ function generateWelcomeMessages(student) {
   if(last) {
     base.body += '<br><br>📊 آخر تسميعك النهائي كان بتاريخ '+last.date+' بمجموع <strong>'+last.totalScore+' درجة</strong>. ';
     if(last.totalScore >= 14) base.body += 'أداء رائع! استمر في هذا المستوى الممتاز. 🌟';
-    else if(last.totalScore >= 10) base.body += 'جيد جداً! مع قليل من المراجعة ستصل للتميز. 👍';
+    else if(last.totalScore >= 10) base.body += 'جيد جداً! مع قليل م�� المراجعة ستصل للتميز. 👍';
     else if(last.totalScore >= 6) base.body += 'مستوى جيد، لكن يحتاج لمزيد من التركيز والمراجعة اليومية. 📚';
     else base.body += 'لا تيأس! كل بداية صعبة. حافظ على التكرار وسترى التحسن قريباً. 💪';
   }
