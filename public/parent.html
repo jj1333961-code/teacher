@@ -1161,7 +1161,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري لولي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
+    <div class="form-group"><label>الرقم السري ل��لي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
     <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
@@ -1297,7 +1297,7 @@ tr:hover { background: var(--table-hover); }
     <h4>📖 القراءة الإضافية <button class="add-item-btn" onclick="addReadingItem()">+</button></h4>
     <div id="readingItems"></div>
   </div>
-  <div class="form-group"><label>ملاحظات التسميع</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
+  <div class="form-group"><label>ملاحظات التسمي��</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
   <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حفظ مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, var(--primary), var(--primary-hover));">🔒 حفظ نهائي (لا يمكن التعديل)</button></div>
 </div>
 
@@ -1791,170 +1791,7 @@ window.alert = function(m){ showToast(m); };
   });
 })();
 </script>
-  <script>
-    (function(){
-      var MUSHAF_URL = '/quran/quran.pdf';           /* ملف المصحف الأصلي المرفق بالمشروع — لا يُستبدل ولا يُعاد توليد محتواه */
-      var MUSHAF_CACHE = 'thimar-mushaf-v1';
-      var currentPage = 1, totalPages = 569, pdfDocument = null, renderToken = 0, scaleFactor = 1.8;
-      var pdfLibPromise = null;
-      /* تخزين ملف المصحف محلياً في ذاكرة المتصفح حتى يفتح فوراً في الزيارات التالية دون انتظار تحميل */
-      function mushafBytes(){
-        if(!('caches' in window)) return fetch(MUSHAF_URL).then(function(r){ return r.arrayBuffer(); });
-        return caches.open(MUSHAF_CACHE).then(function(cache){
-          return cache.match(MUSHAF_URL).then(function(hit){
-            if(hit) return hit.arrayBuffer();
-            return fetch(MUSHAF_URL).then(function(response){
-              if(!response.ok) throw new Error('mushaf fetch failed');
-              try { cache.put(MUSHAF_URL, response.clone()); } catch(err){}
-              return response.arrayBuffer();
-            });
-          });
-        }).catch(function(){ return fetch(MUSHAF_URL).then(function(r){ return r.arrayBuffer(); }); });
-      }
-      function loadPdf(){
-        if(pdfDocument) return Promise.resolve(pdfDocument);
-        if(!pdfLibPromise) pdfLibPromise = Promise.all([
-          import('/vendor/pdfjs/pdf.min.mjs'),
-          mushafBytes()
-        ]).then(function(parts){
-          var pdfjs = parts[0].default || parts[0];
-          pdfjs.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
-          /* رسم الحروف من خطوط المصحف المدمجة داخل الملف نفسه (disableFontFace) لضمان تطابق الحروف والتشكيل حرفياً مع النسخة الأصلية */
-          return pdfjs.getDocument({
-            data: new Uint8Array(parts[1]),
-            cMapUrl: '/vendor/pdfjs/cmaps/',
-            cMapPacked: true,
-            standardFontDataUrl: '/vendor/pdfjs/standard_fonts/',
-            disableFontFace: true,
-            useSystemFonts: false
-          }).promise;
-        });
-        return pdfLibPromise.then(function(pdf){ pdfDocument=pdf; totalPages=pdf.numPages; return pdf; });
-      }
-      /* تجهيز الملف والصفحة الأولى في الخلفية بعد فتح الموقع */
-      if(typeof window.requestIdleCallback === 'function') window.requestIdleCallback(function(){ loadPdf().catch(function(){}); }, { timeout: 4000 });
-      else setTimeout(function(){ loadPdf().catch(function(){}); }, 2000);
-      function setPage(page){
-        var requestedPage = parseInt(page, 10) || 1;
-        if(requestedPage < 1 || (pdfDocument && requestedPage > totalPages)) return;
-        currentPage = Math.min(totalPages, Math.max(1, requestedPage));
-        if(typeof window.__quranResetZoom === 'function') window.__quranResetZoom();
-        var canvas=document.getElementById('quranOriginalCanvas'), token=++renderToken;
-        if(!canvas) return;
-        loadPdf().then(function(pdf){ return pdf.getPage(currentPage); }).then(function(pageObj){
-          if(token!==renderToken) return;
-          var base=pageObj.getViewport({scale:1}), frame=document.querySelector('.quran-reader-frame'), maxW=frame.clientWidth-24, maxH=frame.clientHeight-24;
-          var fit=Math.min(maxW/base.width,maxH/base.height); var viewport=pageObj.getViewport({scale:Math.max(fit,0.1)*scaleFactor});
-          var ratio=window.devicePixelRatio||1; canvas.width=Math.ceil(viewport.width*ratio); canvas.height=Math.ceil(viewport.height*ratio); canvas.style.width=Math.ceil(viewport.width)+'px'; canvas.style.height=Math.ceil(viewport.height)+'px';
-          return pageObj.render({canvasContext:canvas.getContext('2d',{alpha:false}),viewport:viewport,transform:ratio!==1?[ratio,0,0,ratio,0,0]:null}).promise;
-        }).catch(function(){});
-      }
-      window.openQuranReader = function(page){
-        if(typeof window.showPage === 'function') window.showPage('quranReaderPage');
-        setPage(page || 1);
-        var reader = document.getElementById('quranReaderPage');
-        if(reader && reader.requestFullscreen) reader.requestFullscreen().catch(function(){});
-      };
-      window.nextQuranPage = function(){ setPage(currentPage + 1); };
-      window.previousQuranPage = function(){ setPage(currentPage - 1); };
-      window.closeQuranReader = function(){
-        if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){});
-        if(typeof window.showPage === 'function') window.showPage('lockScreen');
-      };
-      document.addEventListener('keydown', function(event){
-        var reader = document.getElementById('quranReaderPage');
-        if(!reader || reader.classList.contains('hidden')) return;
-        if(event.key === 'ArrowRight') { event.preventDefault(); nextQuranPage(); }
-        if(event.key === 'ArrowLeft') { event.preventDefault(); previousQuranPage(); }
-        if(event.key === 'Escape') { event.preventDefault(); closeQuranReader(); }
-      });
-      /* تكبير بإصبعين، وسحب للتنقل بين الصفحات (يمين = التالية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
-      (function(){
-        var MIN_SCALE = 1, MAX_SCALE = 4;
-        var scale = 1, tx = 0, ty = 0;
-        var pointers = {}, pinch = null, pan = null, swipe = null;
-        function wrapEl(){ return document.getElementById('quranZoomWrap'); }
-        function frameEl(){ return document.querySelector('.quran-reader-frame'); }
-        function applyTransform(){
-          var w = wrapEl();
-          if(w) w.style.transform = 'translate3d('+tx+'px,'+ty+'px,0) scale('+scale+')';
-        }
-        function clampPan(){
-          if(scale <= 1.001) { tx = 0; ty = 0; return; }
-          var frame = frameEl();
-          if(!frame) return;
-          var maxX = (frame.clientWidth * (scale - 1)) / 2 + frame.clientWidth * 0.25;
-          var maxY = (frame.clientHeight * (scale - 1)) / 2 + frame.clientHeight * 0.25;
-          tx = Math.max(-maxX, Math.min(maxX, tx));
-          ty = Math.max(-maxY, Math.min(maxY, ty));
-        }
-        function resetZoom(){ scale = 1; tx = 0; ty = 0; applyTransform(); }
-        window.__quranResetZoom = resetZoom;
-        function dist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
-        function onPointerDown(event){
-          pointers[event.pointerId] = { x: event.clientX, y: event.clientY };
-          var ids = Object.keys(pointers);
-          if(ids.length === 1){
-            if(scale > 1.001) pan = { startX: event.clientX, startY: event.clientY, originX: tx, originY: ty };
-            else swipe = { startX: event.clientX, startY: event.clientY };
-          } else if(ids.length === 2){
-            swipe = null;
-            var pts = ids.map(function(id){ return pointers[id]; });
-            pinch = { startDist: dist(pts[0], pts[1]), startScale: scale, startTx: tx, startTy: ty };
-          }
-          try { event.target.setPointerCapture(event.pointerId); } catch(err){}
-        }
-        function onPointerMove(event){
-          if(!pointers[event.pointerId]) return;
-          pointers[event.pointerId] = { x: event.clientX, y: event.clientY };
-          var ids = Object.keys(pointers);
-          if(ids.length === 2 && pinch){
-            var pts = ids.map(function(id){ return pointers[id]; });
-            var ratio = dist(pts[0], pts[1]) / (pinch.startDist || 1);
-            scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, pinch.startScale * ratio));
-            tx = pinch.startTx; ty = pinch.startTy;
-            clampPan(); applyTransform();
-            event.preventDefault();
-          } else if(ids.length === 1 && pan){
-            tx = pan.originX + (event.clientX - pan.startX);
-            ty = pan.originY + (event.clientY - pan.startY);
-            clampPan(); applyTransform();
-            event.preventDefault();
-          } else if(ids.length === 1 && swipe){
-            if(Math.abs(event.clientX - swipe.startX) > 10) event.preventDefault();
-          }
-        }
-        function onPointerUp(event){
-          var finishedSwipe = swipe;
-          delete pointers[event.pointerId];
-          var ids = Object.keys(pointers);
-          if(ids.length < 2) pinch = null;
-          if(ids.length < 1) pan = null;
-          swipe = null;
-          if(finishedSwipe && scale <= 1.001){
-            var dx = event.clientX - finishedSwipe.startX, dy = event.clientY - finishedSwipe.startY;
-            if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)){
-              if(dx > 0) nextQuranPage(); else previousQuranPage();
-            }
-          }
-        }
-        function onDoubleClick(){
-          if(scale > 1.001) resetZoom();
-          else { scale = 2; clampPan(); applyTransform(); }
-        }
-        function bind(){
-          var surface = document.getElementById('quranSwipeSurface');
-          if(!surface) return setTimeout(bind, 60);
-          surface.addEventListener('pointerdown', onPointerDown);
-          surface.addEventListener('pointermove', onPointerMove);
-          surface.addEventListener('pointerup', onPointerUp);
-          surface.addEventListener('pointercancel', onPointerUp);
-          surface.addEventListener('dblclick', onDoubleClick);
-        }
-        bind();
-      })();
-    })();
-  </script>
+
   <section id="quranReaderPage" class="page quran-reader-page hidden" aria-label="قارئ المصحف">
     <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق قارئ المصحف" title="إغلاق">×</button>
     <div class="quran-reader-frame"><div id="quranZoomWrap" class="quran-zoom-wrap"><canvas id="quranOriginalCanvas" class="quran-reader-canvas" aria-label="صفحة المصحف الأصلية"></canvas></div><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اسحب للتنقل بين صفحات المصحف أو قرّب بإصبعين للتكبير"></div></div>

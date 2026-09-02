@@ -10,6 +10,10 @@
       styles: ["/messaging.css"],
       scripts: ["/messaging.js"],
     },
+    quran: {
+      styles: [],
+      scripts: ["/quran-reader.js"],
+    },
     tuhfat: {
       styles: ["/tuhfat.css"],
       scripts: ["/tuhfat-data.js", "/tuhfat.js"],
@@ -85,6 +89,10 @@
 
   installProxy("openTuhfat", "tuhfat");
   installProxy("openIslamicSection", "islamic");
+  installProxy("openQuranReader", "quran");
+  installProxy("nextQuranPage", "quran");
+  installProxy("previousQuranPage", "quran");
+  installProxy("closeQuranReader", "quran");
 
   window.THIMAR_FEATURES = featureMap;
   window.loadThimarFeature = loadFeature;

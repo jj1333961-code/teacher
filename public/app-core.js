@@ -118,7 +118,7 @@ const LANG_DICT = {
   '💾 حفظ الرقم': '💾 Save Number',
   '🆕 إنشاء حساب — التحقق من الهوية': '🆕 Create Account — Identity Verification',
   'اختر طريقة التسجيل، وسيتم إرسال رسالة تحقق على واتساب للتأكد من هويتك قبل إدخال البيانات.': 'Choose a sign-up method; a WhatsApp verification message will confirm your identity before entering your data.',
-  ' التسجيل بحساب جوجل': '🔵 Sign up with Google',
+  ' التسجيل ��حساب جوجل': '🔵 Sign up with Google',
   '🟢 التسجيل برقم الهاتف (واتساب)': '🟢 Sign up with phone (WhatsApp)',
   'بريد حساب جوجل *': 'Google account email *',
   '📩 إرسال كود التحقق على واتساب': ' Send verification code on WhatsApp',
@@ -663,6 +663,7 @@ const PAGE_FEATURES = Object.freeze({
   messagesPage: 'messaging',
   studentInbox: 'messaging',
   parentInbox: 'messaging',
+  quranReaderPage: 'quran',
   tuhfatPage: 'tuhfat'
 });
 const featurePromises = Object.create(null);
@@ -803,17 +804,17 @@ function showPage(id, options = {}) {
   checkAndFinalizeDrafts();
   updateBackButton();
 
-  if(id === 'adminDashboard') { renderAdminStats(); updateMsgBadge(); renderActiveDrafts(); scheduleDashboardFeatures(); }
+  if(id === 'adminDashboard') { renderAdminStats(); updateMsgBadge(); renderActiveDrafts(); }
   if(id === 'studentsList') renderStudents();
   if(id === 'messagesPage') { const host = document.getElementById('messagesList'); if (host) host.innerHTML = '<div class="alert alert-info">جارٍ تحميل الرسائل...</div>'; }
   if(id === 'subjectsPage') renderSubjects();
   if(id === 'adminsPage') renderAdmins();
   if(id === 'addStudent') { renderSubjectSelect(); initJuzSelect(); voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null; document.getElementById('voicePreview').style.display='none'; document.getElementById('voiceRecordStatus').textContent='اضغط للتسجيءء (20 ثانية)'; }
   if(id === 'adminSettings') loadAdminSettings();
-  if(id === 'studentDashboard' && currentType === 'student') { renderStudentDashboard(); updateStudentMsgBadge(); scheduleDashboardFeatures(); }
+  if(id === 'studentDashboard' && currentType === 'student') { renderStudentDashboard(); updateStudentMsgBadge(); }
   if(id === 'studentInbox') { const host = document.getElementById('studentInboxList'); if (host) host.innerHTML = '<div class="alert alert-info">جارٍ تحميل الرسائل...</div>'; }
   if(id === 'studentRecordsPage') renderStudentRecordsBox();
-  if(id === 'parentDashboard' && currentType === 'parent') { renderParentDashboard(); updateParentMsgBadge(); scheduleDashboardFeatures(); }
+  if(id === 'parentDashboard' && currentType === 'parent') { renderParentDashboard(); updateParentMsgBadge(); }
   if(id === 'parentInbox') { const host = document.getElementById('parentInboxList'); if (host) host.innerHTML = '<div class="alert alert-info">جارٍ تحميل الرسائل...</div>'; }
   if(id === 'filesPage') { renderFileTargetSelect(); renderFiles(); loadExamFiles().catch(function(e){document.getElementById('examFilesList').innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message)+'</div>';}); }
   if(id === 'studentFilesPage') renderUserFiles('student');
@@ -833,7 +834,7 @@ function showPage(id, options = {}) {
     }).catch(function (error) {
       console.warn('[v0] Feature page failed to refresh', id, error);
       const visible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
-      if (visible && visible.id === id && typeof showToast === 'function') showToast('تعذر تحميل جزء من الصفحة. حاول مرة أخرى.', 'error');
+      if (visible && visible.id === id && typeof showToast === 'function') showToast('تعذر تحميل جزء من الصفحة. حاول مرة أ��رى.', 'error');
     });
   }
 
@@ -1026,7 +1027,7 @@ function checkAndFinalizeDrafts() {
           sess.finalizedAt = new Date().toLocaleString('ar-EG');
           changed = true;
           let messages = getData('messages');
-          const msgText = 'تم إغلاق تسميع '+s.name+' بتاريخ '+sess.date+' بشكل نهائي. المجموع: '+sess.totalScore+' درجات من 16. لا يمكن التعديل بعد الآن.';
+          const msgText = 'تم إغلاق تسميع '+s.name+' بتاريخ '+sess.date+' بشكل نهائي. المجموع: '+sess.totalScore+' درجات من 16. لا ي��كن التعديل بعد الآن.';
           messages.push({type:'system', sender:'النظام', senderId:0, receiverType:'student', receiverId:s.id, text:msgText, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
           messages.push({type:'system', sender:'النظام', senderId:0, receiverType:'parent', receiverName:s.parent, text:msgText, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
           setData('messages', messages);
@@ -1366,7 +1367,7 @@ function sendSignupCode() {
 function verifySignupCode() {
   const box = document.getElementById('signupStep1Alert');
   const code = document.getElementById('signupCode').value.trim();
-  if(!signupState.code) { box.innerHTML = '<div class="alert alert-danger">❌ أرسل كود التحقق أولاً</div>'; return; }
+  if(!signupState.code) { box.innerHTML = '<div class="alert alert-danger">❌ أرسل كو�� التحقق أولاً</div>'; return; }
   if(code !== signupState.code) { box.innerHTML = '<div class="alert alert-danger">❌ الكود غير صحيح، تأكد من الرسالة أو أعد الإرسال</div>'; return; }
   signupState.verified = true;
   box.innerHTML = '';
@@ -2769,7 +2770,7 @@ function startExamGenerationProgress(questionCount){
   const overlay=document.getElementById('examGenerationOverlay'),stage=document.getElementById('examGenerationStage'),bar=document.getElementById('examGenerationBar'),eta=document.getElementById('examGenerationEta');
   let elapsed=0,total=Math.max(45,Math.min(180,35+(Math.max(1,questionCount||1)*7)));overlay?.classList.remove('hidden');
   clearInterval(examGenerationTimer);
-  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'يتم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب ��لآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينءءقئ الذكاء الاصطناعي أسئلة المتشابهاتت ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والن��اية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
+  const update=function(){const remaining=Math.max(0,total-elapsed),progress=Math.min(94,6+(elapsed/total)*88);if(bar)bar.style.width=progress+'%';if(eta)eta.textContent=remaining>0?'الوقت المتبقي التقريبي: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'��تم الآن إكمال المراجعة النهائية...';if(stage)stage.textContent=elapsed<10?'جلب ��لآيات ومراجع الأسئلة...':elapsed<Math.round(total*.62)?'ينءءقئ الذكاء الاصطناعي أسئلة المتشابهاتت ويتحقق من الإجابات...':elapsed<Math.round(total*.84)?'تجهيز مراجع صور البداية والن��اية...':'المراجعة النهائية ونع كشف الإجابات...';elapsed++};
   update();examGenerationTimer=setInterval(update,1000);
 }
 function finishExamGenerationProgress(succeeded){clearInterval(examGenerationTimer);examGenerationTimer=null;const bar=document.getElementById('examGenerationBar'),stage=document.getElementById('examGenerationStage'),eta=document.getElementById('examGenerationEta');if(bar)bar.style.width=succeeded===false?'100%':'100%';if(stage)stage.textContent=succeeded===false?'توقف التوليد — يمكنك إعادة المحاولة':'اكتمل تجهيز الاختبار';if(eta)eta.textContent=succeeded===false?'لم يتم فقد إعداداتك':'الوقت المتبقي: 00:00';setTimeout(function(){document.getElementById('examGenerationOverlay')?.classList.add('hidden')},succeeded===false?900:450)}
@@ -3005,7 +3006,7 @@ async function recordStudentExamAudio(i){
       let usedTranscript=transcript;
       if(aiResult){ usedTranscript=aiResult.transcript||transcript; }
       else {
-        try{const expected=await fetchAyatText(q.surah,q.from,q.to);aiResult=await callStudentAI('grade_recitation',{surah:q.surah,from:q.from,to:q.to,expectedText:expected,studentTranscript:transcript,studentVoiceMatch:match},0.05)}catch(e){aiResult={accepted:false,score:0,matchedPercent:0,reason:'تعذر الاتصال بالذكاء الاصطنءءي لتصحيح محتوى التلاوة'};}
+        try{const expected=await fetchAyatText(q.surah,q.from,q.to);aiResult=await callStudentAI('grade_recitation',{surah:q.surah,from:q.from,to:q.to,expectedText:expected,studentTranscript:transcript,studentVoiceMatch:match},0.05)}catch(e){aiResult={accepted:false,score:0,matchedPercent:0,reason:'تعذر الاتصال بالذك��ء الاصطنءءي لتصحيح محتو�� التلاوة'};}
       }
       studentExamAudioAnswers[i]={dataUrl,transcript:usedTranscript,voiceMatch:match,aiResult};studentExamAnswers[i]=usedTranscript;
       const pct=aiResult.matchedPercent??0;status.textContent='تم استلام التسجيل بنجاح — النتيجة التفصيلية بانتظار مراجعة المسؤول';
@@ -3876,7 +3877,7 @@ function toggleShareWithParent(idx) {
   msgs[idx].shareWithParent = !msgs[idx].shareWithParent;
   setData('messages', msgs);
   renderMessages();
-  alert(msgs[idx].shareWithParent ? '✅ أصبح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعديءء).' : '🚫 تم منع ��لي الأ من الاطلاع على هذا الملف.');
+  alert(msgs[idx].shareWithParent ? '✅ أص��ح بإمكان ولي الأمر الاطلاع على هذا الملف (بدون تعديءء).' : '🚫 تم منع ��لي الأ من الاطلاع على هذا الملف.');
 }
 
 function openMessageFileById(msgId, readonly) {
@@ -5240,7 +5241,7 @@ function renderParentPendingTasks() {
         const hoursPassed = task.sentAt ? Math.floor((Date.now() - task.sentAt) / (1000 * 60 * 60)) : 0;
         const urgency = hoursPassed > 12 ? '<span class="badge badge-danger">🔴 عاجل</span>' : (hoursPassed > 6 ? '<span class="badge badge-warning">🟠 قريب</span>' : '<span class="badge badge-info">🟢 حديث</span>');
         html += '<div class="task-card" style="border-right-color:var(--warning);">';
-        html += '<h5>'+urgency+' '+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '📖 قراءة' : '🎙️ تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
+        html += '<h5>'+urgency+' '+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '📖 قراءة' : '🎙️ تسجيل ��وتي')+': '+(task.name || task.text || '')+'</h5>';
         if(task.surah) html += '<p><strong>السورة:</strong> '+task.surah+' | <strong>من آية:</strong> '+(task.from || '-')+' | <strong>إلى آية:</strong> '+(task.to || '-')+'</p>';
         html += '<p style="color:var(--text-light); font-size:0.9rem;">🕐 تم الإرسال: '+sentTime+'</p>';
         if(hoursPassed > 0) html += '<p style="color:var(--danger); font-size:0.85rem;">⏱️ مر '+hoursPassed+' ساعة على إرسال المهمة</p>';
@@ -5383,7 +5384,7 @@ function renderFileTargetSelect() {
   if(!catSel || !sel) return;
   const cat = catSel.value;
   const students = getData('students', []);
-  let html = '<option value="all">' + (cat === 'parent' ? 'كل أولياء الأمور' : 'كل الطلاب') + '</option>';
+  let html = '<option value="all">' + (cat === 'parent' ? 'كل أولياء الأمور' : '��ل الطلاب') + '</option>';
   students.forEach(st => {
     const label = cat === 'parent' ? ((st.parent || 'ولي أمر') + ' — ولي أمر ' + st.name) : st.name;
     html += '<option value="' + st.id + '">' + label + '</option>';
@@ -5499,7 +5500,7 @@ function generateAIReport(student) {
   if(avgScore >= 14) report = 'ممتاز يا '+student.name+'! 🌟 مستواك رائع جداً. أنت تحفظ بثباءء وتميز. استمر في المراجعة وستكون من حفاظ كتاب الله.';
   else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرارة.';
   else if(avgScore >= 6) report = 'جيد يا '+student.name+'! 📚 مستواك في تقدم مستمر. أنصحك بزيادة وقت المراجعة اليومي.';
-  else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على التكرار والمراجعة اليومية وسترى التحسن قريباً.';
+  else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على ��لتكرار والمراجعة اليومية وستر�� التحسن قريباً.';
   report += '<br><br>📊 متوسط آخر 3 تسميعات: <strong>'+avgScore.toFixed(1)+' / 16</strong><br>📈 عدد التسميعات المسجلة: '+finalizedSessions.length;
   return report;
 }
@@ -5511,7 +5512,7 @@ function generateWelcomeMessages(student) {
   const dayOfWeek = new Date().getDay();
   const templates = [
     {title: 'هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من شيء.'},
-    {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر ن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
+    {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر ن كل حر�� تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
     {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية وسترى الفرق في حياتك.'},
     {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
     {title: 'يوم مبارك يا '+student.name+'! ✨', body: 'حافظ على الاستمرارية في الحفظ، فالقرآن يُحفظ بالتكرار والمراجعة. ثق بالله، فهو معك في كل خطوة.'}
@@ -5583,7 +5584,7 @@ function generateAIResponse(text, student) {
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
     let r = '📈 <strong>تحليل تقدمك:</strong><br>• عدد التسميعات النهائية: '+scores.length+'<br>• التوسط العام: '+avg+' من 16<br>• أعلى درجة: '+Math.max.apply(null,scores)+'<br>• أقل درجة: '+Math.min.apply(null,scores)+'<br>';
-    r += '• آخ تغيّر: '+(diff>0?('ارتفاع بمقدار '+diff+' درجة 🎉'):(diff<0?('انخفاض بمقدار '+Math.abs(diff)+' درجة — لا بأس، عوّضها بمراجعة إضافية 💪'):'ثبات في المستوى '));
+    r += '• آخ تغيّر: '+(diff>0?('ارتفاع بمقدار '+diff+' درجة 🎉'):(diff<0?('انخفاض بمقدار '+Math.abs(diff)+' درجة — لا بأس، عوّضها بمراجعة إضافية 💪'):'ثبات في ال��ستوى '));
     return r;
   }
   // المهام / الواجب
