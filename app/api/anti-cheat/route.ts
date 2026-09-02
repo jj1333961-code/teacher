@@ -2,11 +2,29 @@ import { NextResponse } from 'next/server'
 import { and, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { antiCheatEvents, antiCheatGlobalConfig, antiCheatItemConfigs, antiCheatSessions } from '@/lib/db/schema'
-import { calculateRiskScore, defaultAntiCheatConfig, normalizeServerConfig, severityFor, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
-import { guardRequest, readJsonBody, RequestBodyError } from '@/lib/request-guards'
+import { calculateRiskScore, normalizeServerConfig, severityFor, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
+import { guardRequest, rateLimit, readJsonBody, RequestBodyError } from '@/lib/request-guards'
 
-const MAX_ANTI_CHEAT_REQUEST_BYTES = 256_000
+const MAX_REQUEST_BYTES = 96_000
+const MAX_CONFIG_BYTES = 16_000
+const MAX_METADATA_BYTES = 12_000
 const id = () => crypto.randomUUID()
+const clean = (value: unknown, maxLength: number) => typeof value === 'string' ? value.replace(/[\\u0000-\\u001F\\u007F]/g, '').trim().slice(0, maxLength) : ''
+const boundedObject = (value: unknown, maxBytes: number) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  try {
+    return Buffer.byteLength(JSON.stringify(value), 'utf8') <= maxBytes ? value : null
+  } catch {
+    return null
+  }
+}
+
+function invalidBody(error: unknown) {
+  return error instanceof RequestBodyError
+    ? NextResponse.json({ error: error.message, code: error.code }, { status: error.status })
+    : null
+}
+
 const clamp = (value: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(value) || 0))
 const validType = (value: unknown) => value === 'recitation' || value === 'exam' || value === 'task'
 const safeConfig = (value: unknown): AntiCheatConfig => normalizeServerConfig(value)
