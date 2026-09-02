@@ -1,15 +1,23 @@
 import { pool } from '@/lib/db'
+import { guardRequest, rateLimit } from '@/lib/request-guards'
 
 export const runtime = 'nodejs'
+const MAX_REQUEST_BYTES = 16_000
+const MAX_USER_ID_LENGTH = 120
 
 function json(data: unknown, status = 200) {
-  return Response.json(data, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } })
+  return Response.json(data, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin' } })
 }
 
 export async function GET(request: Request) {
+  const guard = guardRequest(request, { maxBytes: MAX_REQUEST_BYTES })
+  if (guard) return guard
+  const limited = rateLimit(request, { bucket: 'tuhfat-read', limit: 90, windowMs: 60_000 })
+  if (limited) return limited
+
   const { searchParams } = new URL(request.url)
-  const userId = searchParams.get('userId')?.trim().slice(0, 120)
-  if (!userId) return json({ error: 'معرف المستخدم مطلوب' }, 400)
+  const userId = searchParams.get('userId')?.trim()
+  if (!userId || userId.length > MAX_USER_ID_LENGTH) return json({ error: 'معرف المستخدم غير صالح' }, 400)
   try {
     const [verses, state, assignments, audioSources] = await Promise.all([
       pool.query('SELECT verse_number, chapter_id, text FROM tuhfat_verses ORDER BY verse_number'),

@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { createCanvas, loadImage, type Image } from "@napi-rs/canvas"
+import { guardRequest, rateLimit } from "@/lib/request-guards"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
