@@ -608,7 +608,7 @@ const PAGE_ROUTES = Object.freeze({
   parentLogin: '/login/parent', parentDashboard: '/parent', parentFilesPage: '/parent/files',
   parentInbox: '/parent/messages', parentAIChat: '/parent/ai', parentRecordsPage: '/parent/records',
   parentPendingTasksPage: '/parent/tasks', parentChartPage: '/parent/chart', quranReaderPage: '/quran-reader',
-  tuhotPage: '/tuhfat', tuhfatPage: '/tuhfat'
+  tuhfatPage: '/tuhfat'
 });
 const ROUTE_PAGES = Object.freeze(Object.fromEntries(Object.entries(PAGE_ROUTES).map(([page, route]) => [route, page])));
 let routingFromBrowser = false;
