@@ -846,28 +846,40 @@ async function autoApplyDevRequest(request: string, plan: any) {
 }
 
 export async function POST(req: Request) {
-  let body: any = {}
+  const guard = guardRequest(req, { maxBytes: AUDIO_MAX_REQUEST_BYTES, requireJson: true })
+  if (guard) return guard
+  const limited = rateLimit(req, { bucket: "ai-request", limit: 20, windowMs: 60_000 })
+  if (limited) return limited
+
+  let body: Record<string, any> = {}
   const requestId = crypto.randomUUID()
   safeAudioLog("request started", { requestId })
   try {
-    const contentLength = Number(req.headers.get("content-length") || 0)
-    if (contentLength > AUDIO_MAX_REQUEST_BYTES) {
+    const parsed = await readJsonBody<unknown>(req, AUDIO_MAX_REQUEST_BYTES)
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       return json({
-        error: "حجم التسجيل كبير جداً للإرسال. سجّل مقطعاً أقصر من دقيقة ونصف ثم أعد المحاولة.",
-        code: "AUDIO_PAYLOAD_TOO_LARGE",
+        error: "صيغة الطلب غير صالحة.",
+        code: "INVALID_AI_REQUEST",
         retryable: false,
-        diagnostics: { executedOn: "server", stage: "request", provider: "automatic-audio" },
-      }, 413)
+        diagnostics: { executedOn: "server", stage: "request", requestId },
+      }, 400, requestId)
     }
-    body = await req.json()
+    body = parsed as Record<string, any>
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error || "طلب غير صالح")
+    if (error instanceof RequestBodyError) {
+      return json({
+        error: error.message,
+        code: error.code,
+        retryable: false,
+        diagnostics: { executedOn: "server", stage: "request", requestId },
+      }, error.status, requestId)
+    }
     return json({
-      error: "تعذر قراءة التسجيل المرسل. تأكد من أن المقطع غير فارغ وبصيغة صوت مدعومة.",
-      code: "INVALID_AUDIO_REQUEST",
+      error: "تعذر قراءة الطلب المرسل.",
+      code: "INVALID_AI_REQUEST",
       retryable: false,
-      diagnostics: { executedOn: "server", stage: "request", reason: reason.slice(0, 200) },
-    }, 400)
+      diagnostics: { executedOn: "server", stage: "request", requestId },
+    }, 400, requestId)
   }
 
   const isAudioMode = typeof body?.mode === "string" && AUDIO_MODES.has(body.mode)

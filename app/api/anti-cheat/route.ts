@@ -9,7 +9,7 @@ const MAX_REQUEST_BYTES = 96_000
 const MAX_CONFIG_BYTES = 16_000
 const MAX_METADATA_BYTES = 12_000
 const id = () => crypto.randomUUID()
-const clean = (value: unknown, maxLength: number) => typeof value === 'string' ? value.replace(/[\\u0000-\\u001F\\u007F]/g, '').trim().slice(0, maxLength) : ''
+const clean = (value: unknown, maxLength: number) => typeof value === 'string' ? value.replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, maxLength) : ''
 const boundedObject = (value: unknown, maxBytes: number) => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   try {
