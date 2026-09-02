@@ -908,7 +908,7 @@ tr:hover { background: var(--table-hover); }
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
       <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
-      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 ������عادة إرسال الكود</button>
+      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 ��������عادة إرسال الكود</button>
     </div>
   </div>
 </div>
@@ -1234,13 +1234,13 @@ tr:hover { background: var(--table-hover); }
   <input type="hidden" id="recordStudentId">
   <div class="form-group"><label>اس�� الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
   <div class="form-row">
-    <div class="form-group"><label>��ا��يخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُ��دد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
+    <div class="form-group"><label>��ا��يخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُ��دد تلقا��ياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
     <div class="form-group"><label>الجزء</label><input type="text" id="recordJuz" readonly style="background:var(--table-header)"></div>
     <div class="form-group"><label>السور الأساسية</label><input type="text" id="recordSurahName" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بق��ء الوجه أمام الشاشة، تركيز الصفحة�� ووجو�� إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
+  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بق��ء الوجه أمام الشاشة، تركيز الص��حة�� ووجو�� إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
   <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
@@ -1467,7 +1467,7 @@ tr:hover { background: var(--table-hover); }
       <div class="side-sidebar-body">
         <button type="button" class="role-nav-item" onclick="showPage('parentInbox')"><span class="role-nav-icon" aria-hidden="true">💬</span><span>الرسائل</span></button><button type="button" class="role-nav-item" onclick="openQuranReader()"><span class="role-nav-icon" aria-hidden="true">📖</span><span>المصحف الشريف</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('parentFilesPage')"><span class="role-nav-icon" aria-hidden="true">📁</span><span>��لملفات</span></button>
-        <button type="button" class="role-nav-item" onclick="showPage('parentAIChat')"><span class="role-nav-icon" aria-hidden="true">✦</span><span>مساعد الذ��ا الاصطناعي</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('parentAIChat')"><span class="role-nav-icon" aria-hidden="true">✦</span><span>مساعد الذ��ا الاص��ناعي</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('parentChartPage')"><span class="role-nav-icon" aria-hidden="true">📈</span><span>المخطط</span></button>
       </div>
     </aside>
@@ -1657,13 +1657,13 @@ window.alert = function(m){ showToast(m); };
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
   const path = location.pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(location.search);
-  // شاشة الدخول/التسجيل خفيفة عمدًا؛ تحميل app-core.js مبكرًا كان يحجز main thread
-  // قبل أول تفاعل. تُحمّل النواة عند طلب وظيفة تحتاجها أو عند فتح لوحة محمية.
+  // نحمّل النواة خارج مسار النقر حتى لا يبدأ الضغط على تسجيل الدخول عملية parsing ثقيلة.
   const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
-  if (needsCore) {
+  const authNeedsCore = /^\/(login|signup)(\/|$)/.test(path) || path === '/forgot-password';
+  if (needsCore || authNeedsCore) {
     const start = function(){
-      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: 1200 });
-      else window.setTimeout(warm, 0);
+      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: needsCore ? 1200 : 3500 });
+      else window.setTimeout(warm, needsCore ? 0 : 1500);
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
     else start();
