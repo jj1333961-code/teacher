@@ -6,9 +6,7 @@
 <meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-  <script src="/islamic-data.js" defer></script>
-  <link rel="stylesheet" href="/islamic-hub.css">
-  <link rel="stylesheet" href="/prayer-screen.css">
+  <script src="/feature-loader.js"></script>
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1236,13 +1234,13 @@ tr:hover { background: var(--table-hover); }
   <input type="hidden" id="recordStudentId">
   <div class="form-group"><label>��سم الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
   <div class="form-row">
-    <div class="form-group"><label>تاريخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُ��دد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
+    <div class="form-group"><label>تا��يخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُ��دد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
     <div class="form-group"><label>الجزء</label><input type="text" id="recordJuz" readonly style="background:var(--table-header)"></div>
     <div class="form-group"><label>السور الأساسية</label><input type="text" id="recordSurahName" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلق��ئياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه و��حد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
+  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلق��ئياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وج�� و��حد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
   <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
@@ -1405,7 +1403,7 @@ tr:hover { background: var(--table-hover); }
   <div id="studentRecordsContent"></div>
 </div>
 
-<!-- ملفات ا��م��ؤول للطالب -->
+<!-- ملفا�� ا��م��ؤول للطالب -->
 <div id="studentFilesPage" class="page hidden">
   <div class="page-header"><h2>📁 الملفات المرسلة لي</h2></div>
   <div id="studentFilesContent"></div>
@@ -1432,7 +1430,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- إعدادات الطالب -->
 <div id="studentSettings" class="page hidden" style="max-width:500px;">
-  <div class="page-header"><h2>⚙️ تغيير الرقم السري</h2></div>
+  <div class="page-header"><h2>⚙️ تغيير ا��رقم السري</h2></div>
   <div id="studentSettingsAlert"></div>
   <div class="form-group"><label>الرقم السري الحالي</label><input type="password" id="currentStudentPass" placeholder="أدخل الرقم السري الحالي"></div>
   <div class="form-group"><label>الرقم السي الجديد</label><input type="password" id="newStudentPass" placeholder="أدخل الرقم السري لجديد"></div>
@@ -1993,12 +1991,5 @@ window.alert = function(m){ showToast(m); };
   })();
 })();
 </script>
-<link rel="stylesheet" href="/messaging.css">
-<link rel="stylesheet" href="/tuhfat.css">
-<script src="/tuhfat-data.js" defer></script>
-<script src="/tuhfat.js" defer></script>
-<script src="/prayer-screen.js" defer></script>
-<script src="/islamic-hub.js" defer></script>
-<script src="/messaging.js" defer></script>
  </body>
 </html>

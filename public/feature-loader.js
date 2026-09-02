@@ -70,6 +70,23 @@
     return featurePromises[name];
   }
 
+  function installProxy(name, feature) {
+    if (typeof window[name] === "function") return;
+    var proxy = function () {
+      var args = Array.prototype.slice.call(arguments);
+      return loadFeature(feature).then(function () {
+        var target = window[name];
+        if (typeof target === "function" && target !== proxy) return target.apply(window, args);
+        return undefined;
+      });
+    };
+    window[name] = proxy;
+  }
+
+  installProxy("openTuhfat", "tuhfat");
+  installProxy("openIslamicSection", "islamic");
+
   window.THIMAR_FEATURES = featureMap;
   window.loadThimarFeature = loadFeature;
+  window.ensureThimarFeature = loadFeature;
 })();

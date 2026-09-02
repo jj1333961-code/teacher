@@ -6,9 +6,7 @@
 <meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-  <script src="/islamic-data.js" defer></script>
-  <link rel="stylesheet" href="/islamic-hub.css">
-  <link rel="stylesheet" href="/prayer-screen.css">
+  <script src="/feature-loader.js"></script>
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>ثمار | منصة القرآن والتعليم</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -772,7 +770,7 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  /* قارئ مستقل يملأ الشاشة بالكامل���� مع إبقاء زر الإغلاق واضحًا فوق PDF */
+  /* قارئ مستقل يملأ الشاشة بالكامل������ مع إبقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
@@ -930,7 +928,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود ��لدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -1058,7 +1056,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- إدارة المسؤولين -->
 <div id="adminsPage" class="page hidden">
-  <div class="page-header"><h2>👨‍💼 إدارة المسؤولين</h2></div>
+  <div class="page-header"><h2>👨‍💼 إدارة ا��مسؤولين</h2></div>
   <div id="adminsAlert"></div>
   <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
     <div class="form-group" style="margin-bottom:0;">
@@ -1649,7 +1647,7 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // نحافظ على دخول /login خفيفاً ونجهز المسارات العميقة فقط عند الحاجة.
+  // نحافظ على دخول /login خفيفاً ونجهز المسار��ت العميقة فقط عند الحاجة.
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
   const path = location.pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(location.search);
@@ -1993,12 +1991,5 @@ window.alert = function(m){ showToast(m); };
   })();
 })();
 </script>
-<link rel="stylesheet" href="/messaging.css">
-<link rel="stylesheet" href="/tuhfat.css">
-<script src="/tuhfat-data.js" defer></script>
-<script src="/tuhfat.js" defer></script>
-<script src="/prayer-screen.js" defer></script>
-<script src="/islamic-hub.js" defer></script>
-<script src="/messaging.js" defer></script>
  </body>
 </html>
