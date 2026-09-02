@@ -811,8 +811,29 @@ tr:hover { background: var(--table-hover); }
 
 <div class="container">
 
+<!-- الصفحة الرئيسية العامة: تظهر عند فتح الموقع لأول مرة -->
+<div id="homePage" class="page home-page hidden" aria-labelledby="homePageTitle">
+  <div class="home-orn" aria-hidden="true"><span></span></div>
+  <h1 id="homePageTitle">منصة ثمار لحفظ القرآن الكريم</h1>
+  <p>تعلّم، راجع، وسجّل تقدّمك في بيئة هادئة ومترابطة للطلاب وأولياء الأمور والمعلمين.</p>
+  <div class="cards" role="list">
+    <button class="card" type="button" onclick="showPage('studentLogin')" role="listitem">
+      <span class="icon" aria-hidden="true">كتاب</span>
+      <span><strong>دخول الطالب</strong><small>الوصول إلى المهام والاختبارات وسجل الحفظ</small></span>
+    </button>
+    <button class="card" type="button" onclick="showPage('parentLogin')" role="listitem">
+      <span class="icon" aria-hidden="true">متابعة</span>
+      <span><strong>دخول ولي الأمر</strong><small>متابعة إنجاز الأبناء والتقارير والرسائل</small></span>
+    </button>
+    <button class="card" type="button" onclick="showPage('lockScreen')" role="listitem">
+      <span class="icon" aria-hidden="true">حساب</span>
+      <span><strong>تسجيل الدخول أو إنشاء حساب</strong><small>للوصول إلى جميع خدمات منصة ثمار</small></span>
+    </button>
+  </div>
+</div>
+
 <!-- شاشة القفل الموحدة -->
-<div id="lockScreen" class="page thimar-auth">
+<div id="lockScreen" class="page thimar-auth hidden">
   <div class="thimar-arch" aria-hidden="true">
     <svg viewBox="0 0 400 700" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M18 698 L18 300 C18 206 118 184 178 62 C193 30 207 30 222 62 C282 184 382 206 382 300 L382 698"
@@ -1052,7 +1073,7 @@ tr:hover { background: var(--table-hover); }
 
 <div id="notificationsPage" class="page hidden">
   <div class="page-header"><h2>التنبيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد الكل كمقروء</button></div>
-  <p style="color:var(--text-light);margin-bottom:18px;">جميع طلبات استرجاع الحساب والإنذارات والمخالفات والتنبيهات العامة في مكان واحد.</p>
+  <p style="color:var(--text-light);margin-bottom:18px;">جميع طلبات استرجاع الحساب والإنذارات والمخالفات و��لتنبيهات العامة في مكان واحد.</p>
   <div id="notificationsList" class="notifications-grid" aria-live="polite"></div>
 </div>
 
@@ -1656,7 +1677,7 @@ window.alert = function(m){ showToast(m); };
 
   // صفحات الدخول لا تحمل النواة الكبيرة إلا عند التفاعل؛ الصفحات المحمية تحتاجها فوراً.
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
-  if (/^\/(admin|student|parent)(\/|$)/.test(location.pathname) || location.pathname === '/quran-reader' || location.pathname === '/tuhfat') warm();
+  if (location.pathname === '/' || /^\/(admin|student|parent)(\/|$)/.test(location.pathname) || location.pathname === '/quran-reader' || location.pathname === '/tuhfat') warm();
 })();
 </script>
 <script>
@@ -1955,7 +1976,7 @@ window.alert = function(m){ showToast(m); };
     <div class="quran-reader-frame"><div id="quranZoomWrap" class="quran-zoom-wrap"><canvas id="quranOriginalCanvas" class="quran-reader-canvas" aria-label="صفحة المصحف الأصلية"></canvas></div><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اسحب للتنقل بين صفحات المصحف أو قرّب بإصبعين للتكبير"></div></div>
   </section>
   <script>
-/* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة والتحقق القديم دون أي تغيير) */
+/* واجهة ثمار: زر ��تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة والتحقق القديم دون أي تغيير) */
 (function(){
   function el(id){ return document.getElementById(id); }
 

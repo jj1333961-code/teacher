@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 
-// النسخة القديمة: الجذر يبدأ بصفحة الترحيب في public/index.html.
-// هذه صفحة احتياطية في حال لم يُطبَّق الـ rewrite في next.config.mjs.
+// يبقى مسار App Router احتياطياً فقط؛ المسار العام يُعاد كتابته إلى app.html.
 export default function Page() {
-  redirect('/index.html')
+  redirect('/')
 }
