@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 
 const OLD_HOST = "teacher.vercel.app"
-const CANONICAL_ORIGIN = "https://teacher-three-ashen.vercel.app"
+const configuredProductionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
+const CANONICAL_ORIGIN = configuredProductionHost
+  ? (configuredProductionHost.startsWith("http") ? configuredProductionHost.replace(/\/$/, "") : `https://${configuredProductionHost}`)
+  : "https://teacher-nine-blush.vercel.app"
 const LEGACY_PAGE_ROUTES: Record<string, string> = {
   lockScreen: "/login",
   accountRecoveryPage: "/forgot-password",

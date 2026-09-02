@@ -4,7 +4,10 @@ import { NextRequest, NextResponse } from "next/server"
 export const dynamic = "force-dynamic"
 const COOKIE = "teacher_google_state"
 const SESSION = "teacher_google_session"
-const DOMAIN = "https://teacher-three-ashen.vercel.app"
+const configuredProductionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
+const DOMAIN = configuredProductionHost
+  ? (configuredProductionHost.startsWith("http") ? configuredProductionHost.replace(/\/$/, "") : `https://${configuredProductionHost}`)
+  : "https://teacher-nine-blush.vercel.app"
 const APP_PAGE = `${DOMAIN}/login`
 const CALLBACK = `${DOMAIN}/api/auth/google`
 
