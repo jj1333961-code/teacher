@@ -353,16 +353,16 @@ function setData(key, val) {
   if(!CLOUD_DATA_KEY_SET.has(key)) return;
   neonPendingKeys.add(key);
   if(!neonHydrated){ neonDirtyDuringHydration=true; return; }
-  if(neonUnavailable || sessionStorage.getItem('neon_unavailable_v1')==='1') return;
+  if(neonUnavailable || readSessionValue('neon_unavailable_v1')==='1') return;
   scheduleNeonSave();
 }
 async function hydrateDataFromNeon(){
   if(neonHydrationPromise) return neonHydrationPromise;
   if(neonHydrated || neonUnavailable) return;
-  if(sessionStorage.getItem('neon_hydrated_v1')){
-    neonHydrationStarted=true;
-    neonHydrated=true;
-    neonUnavailable=sessionStorage.getItem('neon_unavailable_v1')==='1';
+  if(readSessionValue('neon_hydrated_v1')){
+  neonHydrationStarted=true;
+  neonHydrated=true;
+  neonUnavailable=readSessionValue('neon_unavailable_v1')==='1';
     return;
   }
   neonHydrationStarted=true;
@@ -400,8 +400,8 @@ async function hydrateDataFromNeon(){
     }finally{
       clearTimeout(timeout);
       neonHydrated=true;
-      sessionStorage.setItem('neon_hydrated_v1','1');
-      if(neonUnavailable) sessionStorage.setItem('neon_unavailable_v1','1');
+  writeSessionValue('neon_hydrated_v1','1');
+  if(neonUnavailable) writeSessionValue('neon_unavailable_v1','1');
       if(shouldSave||neonDirtyDuringHydration) neonSaveQueued=true;
       if(neonSaveQueued&&!neonUnavailable) scheduleNeonSave(250);
       neonHydrationPromise=null;
@@ -509,7 +509,7 @@ function isTouchDevice(){return Boolean((navigator.maxTouchPoints||0)>0||('ontou
 function proctorTaskLabel(ctx){return ctx&&ctx.type==='exam'?'الاختبار':'مهمة '+(ctx&&ctx.type==='reading'?'القراءة':'التسميع')}
 function proctorStopCamera(){clearInterval(proctor.scanTimer);proctor.scanTimer=null;proctor.analyzing=false;proctor.faceMeshResults=null;if(proctor.detectorType==='mediapipe')try{proctor.detector?.close()}catch(e){}proctor.detector=null;proctor.detectorType='';if(proctor.stream){proctor.stream.getTracks().forEach(t=>t.stop());proctor.stream=null}const v=document.getElementById('proctorVideo');if(v)v.srcObject=null;const scan=document.getElementById('proctorScanBtn');if(scan)scan.disabled=false}
 function closeProctorGate(){proctorStopCamera();proctor.onReady=null;proctor.context=null;document.getElementById('proctorGate')?.classList.add('hidden')}
-function openProctorGate(context,onReady){proctorStopCamera();proctor.active=false;proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبع واحد':'هذه المهمة تعم�� على هاتف بشاشة لمس فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبع واحد هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اض����ط تشغيل الفحص للسماح بالكاميرا'}
+function openProctorGate(context,onReady){proctorStopCamera();proctor.active=false;proctor.context=context;proctor.onReady=onReady;proctor.cancelled=false;proctor.stableSince=0;proctor.baseline=null;proctor.gazeSamples=[];proctor.eyeSamples=[];proctor.touches.clear();document.getElementById('proctorGate')?.classList.remove('hidden');setProctorCheck('proctorTouchCheck',isTouchDevice(),isTouchDevice()?'شاشة لمس جاهزة — يلزم إصبع واحد':'هذه المهمة تعم���� على هاتف بشاشة لمس فقط');setProctorCheck('proctorLightCheck',false,'الإضاءة غير مفحوصة');setProctorCheck('proctorFaceCheck',false,'الوجه غير مفحوص');setProctorCheck('proctorGazeCheck',false,'العينان غير مفحوصتين');const hold=document.getElementById('proctorGateHold');if(hold){hold.setAttribute('aria-disabled','true');hold.classList.remove('holding');hold.textContent='بعد نجاح الفحص: ضع إصبع واحد هنا للبدء'}document.getElementById('proctorCameraStatus').textContent='اض����ط تشغيل الفحص للسماح بالكاميرا'}
 async function startProctorScan(){if(!navigator.mediaDevices?.getUserMedia){document.getElementById('proctorHelp').textContent='الكاميرا تحتاج متصفحاً حديثاً واتصال HTTPS.';return}try{proctor.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:640},height:{ideal:480}},audio:false});const video=document.getElementById('proctorVideo');video.srcObject=proctor.stream;await video.play();if('FaceDetector' in window){proctor.detector=new FaceDetector({fastMode:true,maxDetectedFaces:2});proctor.detectorType='native'}else if(window.FaceMesh){const mesh=new FaceMesh({locateFile:file=>'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/'+file});mesh.setOptions({maxNumFaces:2,refineLandmarks:true,minDetectionConfidence:.55,minTrackingConfidence:.55});mesh.onResults(results=>{proctor.faceMeshResults=results.multiFaceLandmarks||[]});proctor.detector=mesh;proctor.detectorType='mediapipe'}else{throw new Error('face-model-unavailable')}document.getElementById('proctorScanBtn').disabled=true;document.getElementById('proctorHelp').textContent='يمل الفحص عى Chrome وSafari وFirefox وEdge الحديثة.';proctor.scanTimer=setInterval(proctorAnalyzeFrame,350);proctorAnalyzeFrame()}catch(e){proctorStopCamera();const name=e&&e.name||'';document.getElementById('proctorHelp').textContent=e&&e.message==='face-model-unavailable'?'تعذر تحميل نموذج فحص الوجه. تحقق من اتصال الإنترنت ثم أعد المحاولة.':name==='NotAllowedError'?'تم رفض إذن الكاميرا. اسمح به من إعدادات الموقع ثم أعد المحاولة.':name==='NotFoundError'?'لم يتم العثور على كاميرا متاحة.':name==='NotReadableError'?'ا��كاميرا مستخدمة في تطبيق آخر. أغلقه ثم أعد المحاولة.':name==='SecurityError'?'افتح الصفحة عبر HTTPS للسماح بالكاميرا.':'تعذر فتح الكاميرا. تحقق من إذن المتصفح ثم أعد المحاوة.'}}
 async function proctorDetectFaces(video){if(proctor.detectorType==='native')return await proctor.detector.detect(video);if(proctor.detectorType==='mediapipe'){await proctor.detector.send({image:video});return (proctor.faceMeshResults||[]).map(points=>{let minX=1,minY=1,maxX=0,maxY=0;points.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});return{boundingBox:{x:minX*video.videoWidth,y:minY*video.videoHeight,width:(maxX-minX)*video.videoWidth,height:(maxY-minY)*video.videoHeight},landmarks:points}})}return[]}
 function proctorAverage(list){return list.length?list.reduce((a,b)=>a+b,0)/list.length:0}
@@ -596,46 +596,86 @@ function bootstrapAppWhenReady() {
 window.addEventListener('popstate', function() {
   const id = pageFromUrl();
   if (!id || !pageAllowedForUser(id)) {
-    showPage(currentType === 'admin' ? 'adminDashboard' : currentType === 'student' ? 'studentDashboard' : currentType === 'parent' ? 'parentDashboard' : 'lockScreen', { fromBrowser: true });
+    pageHistory = [];
+    showPage(roleHomePage(), { fromBrowser: true });
     return;
   }
+  if (id === 'lockScreen' || id === 'adminDashboard' || id === 'studentDashboard' || id === 'parentDashboard') pageHistory = [];
   showPage(id, { fromBrowser: true });
 });
 
 // ====== SESSION PERSISTENCE ======
+const SESSION_TYPES = new Set(['admin', 'student', 'parent']);
+function readSessionValue(key) {
+  try { return window.sessionStorage.getItem(key); } catch(e) { return null; }
+}
+function writeSessionValue(key, value) {
+  try { window.sessionStorage.setItem(key, value); } catch(e) { /* جلسة الذاكرة تكفي حتى إغلاق التبويب */ }
+}
+function removeSessionValue(key) {
+  try { window.sessionStorage.removeItem(key); } catch(e) {}
+}
+function sessionRecordMatches(type, user) {
+  if(type === 'admin' && user && typeof user === 'object') {
+    return getData('admins', []).some(function(admin) {
+      return String(admin.id ?? '') === String(user.id ?? '') || (admin.mobile && admin.mobile === user.mobile);
+    });
+  }
+  if(type === 'student' && user && typeof user === 'object') {
+    return getData('students', []).some(function(student) {
+      return String(student.id ?? '') === String(user.id ?? '') || (student.username && student.username === user.username);
+    });
+  }
+  if(type === 'parent' && Array.isArray(user) && user.length) {
+    const students = getData('students', []);
+    return user.every(function(child) {
+      return child && students.some(function(student) {
+        return String(student.id ?? '') === String(child.id ?? '') || (student.name && student.name === child.name && student.parent === child.parent);
+      });
+    });
+  }
+  return false;
+}
 function saveSessionState() {
   try {
-    if(currentUser && currentType) {
-      sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-      sessionStorage.setItem('currentType', currentType);
-      sessionStorage.setItem('currentAdminId', currentAdminId || '');
-      sessionStorage.setItem('pageHistory', JSON.stringify(pageHistory));
+    if(currentUser && SESSION_TYPES.has(currentType) && sessionRecordMatches(currentType, currentUser)) {
+      writeSessionValue('currentUser', JSON.stringify(currentUser));
+      writeSessionValue('currentType', currentType);
+      writeSessionValue('currentAdminId', currentAdminId || '');
+      writeSessionValue('pageHistory', JSON.stringify(Array.isArray(pageHistory) ? pageHistory.slice(-20) : []));
     }
   } catch(e) { console.error('saveSessionState error:', e); }
 }
 function restoreSession() {
   try {
-    const savedUser = sessionStorage.getItem('currentUser');
-    const savedType = sessionStorage.getItem('currentType');
-    const savedHistory = sessionStorage.getItem('pageHistory');
-    if(savedUser && savedType) {
-      currentUser = JSON.parse(savedUser);
-      currentType = savedType;
-      currentAdminId = sessionStorage.getItem('currentAdminId') || null;
-      if(savedHistory) pageHistory = JSON.parse(savedHistory);
-      return true;
+    const savedUser = readSessionValue('currentUser');
+    const savedType = readSessionValue('currentType');
+    const savedHistory = readSessionValue('pageHistory');
+    if(!savedUser || !SESSION_TYPES.has(savedType)) return false;
+    const restoredUser = JSON.parse(savedUser);
+    const restoredHistory = savedHistory ? JSON.parse(savedHistory) : [];
+    if(!sessionRecordMatches(savedType, restoredUser) || !Array.isArray(restoredHistory)) {
+      clearSession();
+      return false;
     }
-  } catch(e) { console.error('restoreSession error:', e); }
+    currentUser = restoredUser;
+    currentType = savedType;
+    currentAdminId = readSessionValue('currentAdminId') || null;
+    pageHistory = restoredHistory.filter(function(id) { return typeof id === 'string'; }).slice(-20);
+    return true;
+  } catch(e) {
+    clearSession();
+    console.error('restoreSession error:', e);
+  }
   return false;
 }
 function clearSession() {
-  try {
-    sessionStorage.removeItem('currentUser');
-    sessionStorage.removeItem('currentType');
-    sessionStorage.removeItem('currentAdminId');
-    sessionStorage.removeItem('pageHistory');
-    pageHistory = [];
-  } catch(e) { console.error('clearSession error:', e); }
+  removeSessionValue('currentUser');
+  removeSessionValue('currentType');
+  removeSessionValue('currentAdminId');
+  removeSessionValue('pageHistory');
+  removeSessionValue('thimar_pending_google_signup');
+  pageHistory = [];
 }
 
 const PAGE_ROUTE_PARAM = 'page';
@@ -781,6 +821,8 @@ function showPage(id, options = {}) {
       }
       if (typeof window.openTuhfat === 'function') window.openTuhfat();
       else showPage(id, { fromBrowser: true, featureRetry: true });
+    }).catch(function () {
+      showToast('تعذر تحميل صفحة تحفة الأطفال. تحقق من الاتصال ثم أعد المحاولة.', 'error');
     });
     return;
   }
@@ -890,8 +932,10 @@ function updateBackButton() {
   // Don't show on home page or login pages
   if(currentId === 'lockScreen' || currentId === 'homePage' || currentId === 'adminLogin' || currentId === 'studentLogin' || currentId === 'parentLogin') return;
 
-  // Don't show if no history
-  if(pageHistory.length === 0) return;
+  // عند استخدام pushState يكون سجل المتصفح هو مصدر الحقيقة؛ القائمة المحلية
+  // تبقى فقط كخطة بديلة للبيئات التي لا تدعم history.
+  const canUseBrowserBack = Boolean(window.history && window.history.state?.thimarRoute);
+  if(!canUseBrowserBack && pageHistory.length === 0) return;
 
   const btn = document.createElement('div');
   btn.id = 'globalBackBtn';
@@ -1734,35 +1778,54 @@ function deleteAdmin(id) {
 }
 
 function adminLogin() {
-  const mobile = document.getElementById('adminMobile').value.trim();
-  const pass = document.getElementById('adminPass').value;
+  const mobileInput = document.getElementById('adminMobile');
+  const passInput = document.getElementById('adminPass');
+  const alertBox = document.getElementById('adminLoginAlert');
+  if(!mobileInput || !passInput || !alertBox) return;
+  const mobile = normalizeLoginDigits(mobileInput.value);
+  const pass = normalizeLoginText(passInput.value);
   const admins = getData('admins');
-  const admin = admins.find(a => a.mobile === mobile && a.password === pass);
+  const admin = admins.find(function(item) {
+    return normalizeLoginDigits(item.mobile) === mobile && normalizeLoginText(item.password) === pass;
+  });
   if(admin) {
     currentUser = admin; currentType = 'admin'; currentAdminId = admin.id;
-    saveSessionState();
+    pageHistory = [];
     const devices = getData('devices');
     devices.push({type:'admin', user:mobile, time:new Date().toLocaleString('ar-EG'), agent:navigator.userAgent});
-    localStorage.setItem('devices', JSON.stringify(devices));
-    document.getElementById('adminDeviceInfo').textContent = '📱 جهازك مسجل: ' + new Date().toLocaleString('ar-EG');
+    setData('devices', devices);
+    saveSessionState();
+    const deviceInfo = document.getElementById('adminDeviceInfo');
+    if(deviceInfo) deviceInfo.textContent = '📱 جهازك مسجل: ' + new Date().toLocaleString('ar-EG');
     showPage('adminDashboard');
     updateNotificationBadges();
-    document.getElementById('adminLoginAlert').innerHTML = '';
+    alertBox.innerHTML = '';
   } else {
-    document.getElementById('adminLoginAlert').innerHTML = '<div class="alert alert-danger">❌ رقم الوبايل أ�� الرقم السري غير صحيح</div>';
+    alertBox.innerHTML = '<div class="alert alert-danger">❌ رقم الموبايل أو الرقم السري غير صحيح</div>';
   }
 }
 
-// ====== شاشة القفل الموحدة: توجءءه لقائي للصفحة المناسبة ======
+// ====== شاشة القفل الموحدة: توجيه تلقائي للصفحة المناسبة ======
+function normalizeLoginDigits(value) {
+  return String(value || '').replace(/[٠-٩]/g, function(digit) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)); }).trim();
+}
+function normalizeLoginText(value) {
+  return String(value || '').normalize('NFKC').trim();
+}
 function unifiedLogin() {
-  const u = (document.getElementById('unifiedUser').value || '').trim();
-  const p = (document.getElementById('unifiedPass').value || '').trim();
+  const userInput = document.getElementById('unifiedUser');
+  const passInput = document.getElementById('unifiedPass');
   const box = document.getElementById('unifiedLoginAlert');
+  if(!userInput || !passInput || !box) return;
+  const u = normalizeLoginText(userInput.value);
+  const p = normalizeLoginText(passInput.value);
   box.innerHTML = '';
   if(!u || !p) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل اسم المستخدم والرقم السري</div>'; return; }
 
   // 1) مسؤول (اسم المستخدم = رقم الموبايل)
-  const admin = getData('admins').find(a => a.mobile === u && a.password === p);
+  const admin = getData('admins').find(function(item) {
+    return normalizeLoginDigits(item.mobile) === normalizeLoginDigits(u) && normalizeLoginText(item.password) === p;
+  });
   if(admin) {
     currentUser = admin; currentType = 'admin'; currentAdminId = admin.id;
     pageHistory = []; saveSessionState();
@@ -1773,7 +1836,7 @@ function unifiedLogin() {
     updateNotificationBadges();
     const di = document.getElementById('adminDeviceInfo');
     if(di) di.textContent = '📱 جهازك مسجل: ' + new Date().toLocaleString('ar-EG');
-    document.getElementById('unifiedPass').value = '';
+    passInput.value = '';
     showToast('✅ مرحباً بك في صفحة المسؤول', 'success');
     return;
   }
@@ -1781,7 +1844,9 @@ function unifiedLogin() {
   const students = getData('students');
 
   // 2) طالب
-  const st = students.find(x => x.username === u && x.studentPass === p);
+  const st = students.find(function(item) {
+    return normalizeLoginText(item.username) === u && normalizeLoginText(item.studentPass || item.password) === p;
+  });
   if(st) {
     currentUser = st; currentType = 'student'; currentAdminId = null;
     pageHistory = []; saveSessionState();
@@ -1789,13 +1854,20 @@ function unifiedLogin() {
     devices.push({type:'student', user:st.name, time:new Date().toLocaleString('ar-EG'), agent:navigator.userAgent});
     setData('devices', devices);
     renderStudentDashboard(); showPage('studentDashboard');
-    document.getElementById('unifiedPass').value = '';
+    passInput.value = '';
     showToast('✅ مرحباً ' + st.name, 'success');
     return;
   }
 
   // 3) ولي أمر (الاسم أو رقم الهاتف)
-  const kids = students.filter(x => (x.parent === u || x.parentPhone === u || x.phone === u) && x.parentPass === p);
+  const normalizedParentPhone = normalizeLoginDigits(u);
+  const kids = students.filter(function(item) {
+    const parentNameMatches = normalizeLoginText(item.parent || item.parentName) === u;
+    const phoneMatches = [item.parentPhone, item.phone].some(function(phone) {
+      return phone && normalizeLoginDigits(phone) === normalizedParentPhone;
+    });
+    return (parentNameMatches || phoneMatches) && normalizeLoginText(item.parentPass || item.parentPassword) === p;
+  });
   if(kids.length > 0) {
     currentUser = kids; currentType = 'parent'; currentAdminId = null;
     pageHistory = []; saveSessionState();
@@ -1803,7 +1875,7 @@ function unifiedLogin() {
     devices.push({type:'parent', user:u, time:new Date().toLocaleString('ar-EG'), agent:navigator.userAgent});
     setData('devices', devices);
     renderParentDashboard(); showPage('parentDashboard');
-    document.getElementById('unifiedPass').value = '';
+    passInput.value = '';
     showToast('✅ مرحباً بك في صفحة ولي الأمر', 'success');
     return;
   }
@@ -4999,7 +5071,7 @@ function renderStudentInbox() {
     if(m.sourceMsgId) {
       const src = allMsgs.find(x => x.id === m.sourceMsgId);
       if(src && src.fileData && src.shareWithParent) {
-        fileBtn = '<div style="margin:8px 0;"><button class="btn btn-sm btn-info" onclick="openMessageFileById(\''+m.sourceMsgId+'\', true)">👁️ الاطلاع على الملف ��لمرسل (عرض فقط)</button></div>';
+        fileBtn = '<div style="margin:8px 0;"><button class="btn btn-sm btn-info" onclick="openMessageFileById(\''+m.sourceMsgId+'\', true)">👁️ الاطلاع على الم��ف ��لمرسل (عرض فقط)</button></div>';
       }
     }
     html += '<div class="msg-item"><span class="sender">'+m.sender+'</span><span class="badge badge-primary">'+m.type+'</span><p style="margin:8px 0">'+m.text+'</p>'+voiceAudioHTML(m)+fileBtn+(m.reply ? '<div class="msg-reply"><strong>رد المسؤول:</strong> '+m.reply+(m.replyVoice ? ' <audio controls src="'+m.replyVoice+'" style="height:38px; vertical-align:middle;"></audio>' : '')+'</div>' : '')+'<span class="time">🕐 '+m.time+'</span></div>';
@@ -5361,7 +5433,7 @@ function renderFiles() {
   const categoryLabels = {student:'👨‍🎓 الطالب', parent:'👨‍👩‍👧 ولي ءءلأمر', general:'عام', quran:'قرآن', lessons:'دروس', exams:'اختبارات', reports:'تقارير'};
 
   if(files.length === 0) {
-    document.getElementById('filesList').innerHTML = '<div class="alert alert-info">لا توجد لفات مرفوعة عد</div>';
+    document.getElementById('filesList').innerHTML = '<div class="alert alert-info">ل�� توجد لفات مرفوعة عد</div>';
     return;
   }
 
@@ -5524,7 +5596,7 @@ function generateWelcomeMessages(student) {
   const last = finalizedSessions.length > 0 ? finalizedSessions[finalizedSessions.length - 1] : null;
   const dayOfWeek = new Date().getDay();
   const templates = [
-    {title: 'هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من شيء.'},
+    {title: 'هلاً بك يا '+student.name+'! ���', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من شيء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر ن كل حر�� تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
     {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية وسترى الفرق في حياتك.'},
     {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
