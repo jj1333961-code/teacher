@@ -1661,14 +1661,12 @@ window.alert = function(m){ showToast(m); };
   const params = new URLSearchParams(location.search);
   // نحمّل النواة خارج مسار النقر حتى لا يبدأ الضغط على تسجيل الدخول عملية parsing ثقيلة.
   const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
-  if (needsCore) {
-    const start = function(){
-      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: needsCore ? 1200 : 3500 });
-      else window.setTimeout(warm, needsCore ? 0 : 1500);
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
-    else start();
-  }
+  const start = function(){
+    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: needsCore ? 1200 : 800 });
+    else window.setTimeout(warm, needsCore ? 0 : 300);
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
 })();
 </script>
 <script>
@@ -1683,7 +1681,7 @@ window.alert = function(m){ showToast(m); };
     if (button) button.disabled = true;
     var boxId = errorBoxIds[name] || 'unifiedLoginAlert';
     var box = document.getElementById(boxId);
-    if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
+    if (box) box.innerHTML = '<div class="alert alert-info">جارٍ فتح الصفحة...</div>';
 
     var timeoutId;
     var loadWithTimeout = Promise.race([
