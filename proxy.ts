@@ -71,24 +71,9 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(target, 308)
   }
 
-  // Public HTML shells are selected here so every supported URL works on a
-  // direct request as well as after client-side navigation. Keeping the
-  // browser URL unchanged lets app-core resolve the role-aware page.
-  const path = request.nextUrl.pathname
-  const shell = path === '/admin' || path.startsWith('/admin/')
-    ? '/admin.html'
-    : path === '/student' || path.startsWith('/student/')
-      ? '/student.html'
-      : path === '/parent' || path.startsWith('/parent/')
-        ? '/parent.html'
-        : path === '/login' || path.startsWith('/login/') || path === '/signup' || path.startsWith('/signup/') || path === '/register' || path.startsWith('/register/') || path === '/forgot-password' || path === '/dashboard' || path === '/students' || path === '/profile' || path === '/settings' || path === '/quran-reader' || path === '/tuhfat'
-          ? '/app.html'
-          : null
-
-  if (shell) {
-    return NextResponse.rewrite(new URL(shell, request.url))
-  }
-
+  // Route-to-shell mapping belongs in next.config.mjs. Keeping proxy focused
+  // on canonical redirects prevents two rewrite systems from competing and
+  // makes direct requests resolve through one deterministic Next.js pipeline.
   return NextResponse.next()
 }
 
