@@ -1,5 +1,5 @@
 import { pool } from '@/lib/db'
-import { guardRequest, readJsonBody, RequestBodyError } from '@/lib/request-guards'
+import { guardRequest, rateLimit, readJsonBody, RequestBodyError } from '@/lib/request-guards'
 
 export const runtime = 'nodejs'
 const MAX_MESSAGE_REQUEST_BYTES = 64_000
@@ -45,19 +45,31 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const guard = guardRequest(request, { maxBytes: MAX_MESSAGE_REQUEST_BYTES, requireJson: true })
+  if (guard) return guard
+
   try {
-    const body = await request.json()
-    const fields = ['senderId', 'senderName', 'senderRole', 'recipientId', 'recipientName', 'recipientRole', 'text']
-    if (!body || fields.some((key) => typeof body[key] !== 'string' || !body[key].trim())) return response({ error: 'بيانات الرسالة غير مكتملة' }, 400)
-    if (body.text.length > 5000) return response({ error: 'الرسالة طويلة جدًا' }, 400)
+    const body = await readJsonBody<Record<string, unknown>>(request, MAX_MESSAGE_REQUEST_BYTES)
+    const senderRole = clean(body?.senderRole, 20)
+    const recipientRole = clean(body?.recipientRole, 20)
+    const senderId = clean(body?.senderId, 120)
+    const recipientId = clean(body?.recipientId, 120)
+    const senderName = clean(body?.senderName, 160)
+    const recipientName = clean(body?.recipientName, 160)
+    const text = clean(body?.text, 5000)
+    if (!senderId || !senderName || !recipientId || !recipientName || !text || !MESSAGE_ROLES.has(senderRole) || !MESSAGE_ROLES.has(recipientRole)) {
+      return response({ error: 'بيانات الرسالة غير مكتملة' }, 400)
+    }
     const result = await pool.query(
       `INSERT INTO messages (sender_id, sender_name, sender_role, recipient_id, recipient_name, recipient_role, body)
        VALUES ($1,$2,$3,$4,$5,$6,$7)
        RETURNING id, sender_id AS "senderId", sender_name AS "senderName", sender_role AS "senderRole", recipient_id AS "recipientId", recipient_name AS "recipientName", recipient_role AS "recipientRole", body, created_at AS "createdAt"`,
-      [body.senderId.trim(), body.senderName.trim(), body.senderRole.trim(), body.recipientId.trim(), body.recipientName.trim(), body.recipientRole.trim(), body.text.trim()],
+      [senderId, senderName, senderRole, recipientId, recipientName, recipientRole, text],
     )
     return response({ message: result.rows[0], saved: true })
-  } catch {
+  } catch (error) {
+    const invalidBody = bodyError(error)
+    if (invalidBody) return invalidBody
     return response({ saved: false, unavailable: true }, 200)
   }
 }

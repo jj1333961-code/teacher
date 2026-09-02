@@ -23,6 +23,37 @@ function errorResponse(message: string, status: 400 | 403 | 413 | 415, code: str
   })
 }
 
+const rateBuckets = new Map<string, { count: number; resetAt: number }>()
+
+function requestClientKey(request: Request) {
+  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  return request.headers.get('x-real-ip')?.trim() || forwarded || 'unknown'
+}
+
+export function rateLimit(request: Request, options: { bucket: string; limit: number; windowMs: number }) {
+  const now = Date.now()
+  if (rateBuckets.size > 5_000) {
+    for (const [key, value] of rateBuckets) {
+      if (value.resetAt <= now) rateBuckets.delete(key)
+    }
+  }
+
+  const key = `${options.bucket}:${requestClientKey(request)}`
+  const current = rateBuckets.get(key)
+  const bucket = !current || current.resetAt <= now
+    ? { count: 0, resetAt: now + options.windowMs }
+    : current
+  bucket.count += 1
+  rateBuckets.set(key, bucket)
+  if (bucket.count <= options.limit) return null
+
+  const retryAfter = Math.max(1, Math.ceil((bucket.resetAt - now) / 1000))
+  return Response.json({ error: 'تم تجاوز عدد الطلبات المسموح مؤقتًا', code: 'RATE_LIMITED' }, {
+    status: 429,
+    headers: { ...SECURITY_HEADERS, 'Retry-After': String(retryAfter) },
+  })
+}
+
 function sameOrigin(request: Request) {
   const origin = request.headers.get('origin')
   if (origin) {

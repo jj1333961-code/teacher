@@ -3,7 +3,9 @@ import { and, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { antiCheatEvents, antiCheatGlobalConfig, antiCheatItemConfigs, antiCheatSessions } from '@/lib/db/schema'
 import { calculateRiskScore, defaultAntiCheatConfig, normalizeServerConfig, severityFor, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
+import { guardRequest, readJsonBody, RequestBodyError } from '@/lib/request-guards'
 
+const MAX_ANTI_CHEAT_REQUEST_BYTES = 256_000
 const id = () => crypto.randomUUID()
 const clamp = (value: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(value) || 0))
 const validType = (value: unknown) => value === 'recitation' || value === 'exam' || value === 'task'
@@ -18,6 +20,9 @@ async function resolveConfig(itemId: string, itemType: string) {
 }
 
 export async function GET(request: Request) {
+  const guard = guardRequest(request, { maxBytes: MAX_ANTI_CHEAT_REQUEST_BYTES })
+  if (guard) return guard
+
   try {
     const { searchParams } = new URL(request.url)
     const itemId = searchParams.get('itemId')
@@ -39,8 +44,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const guard = guardRequest(request, { maxBytes: MAX_ANTI_CHEAT_REQUEST_BYTES, requireJson: true })
+  if (guard) return guard
+
   try {
-    const body = await request.json()
+    const body = await readJsonBody<Record<string, any>>(request, MAX_ANTI_CHEAT_REQUEST_BYTES)
     const { action } = body ?? {}
     if (action === 'save-global') {
       const enabled = Boolean(body.enabled)
@@ -90,5 +98,11 @@ export async function POST(request: Request) {
     }
     if (action === 'end' && body.session?.id) { await db.update(antiCheatSessions).set({ status: 'completed', endedAt: new Date(), updatedAt: new Date(), riskScore: clamp(body.session.riskScore), severity: String(body.session.severity || 'NORMAL') }).where(eq(antiCheatSessions.id, String(body.session.id))); return NextResponse.json({ ok: true }) }
     return NextResponse.json({ error: 'إجراء غير معروف' }, { status: 400 })
-  } catch (error) { console.error('[v0] POST /api/anti-cheat failed:', error instanceof Error ? error.message : error); return NextResponse.json({ error: 'تعذر حفظ بيانات المراقبة', code: 'ANTI_CHEAT_WRITE_FAILED' }, { status: 500 }) }
+  } catch (error) {
+    if (error instanceof RequestBodyError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: error.status })
+    }
+    console.error('[v0] POST /api/anti-cheat failed:', error instanceof Error ? error.message : error)
+    return NextResponse.json({ error: 'تعذر حفظ بيانات المراقبة', code: 'ANTI_CHEAT_WRITE_FAILED' }, { status: 500 })
+  }
 }
