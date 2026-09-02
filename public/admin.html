@@ -771,7 +771,7 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  /* قارئ مستقل يملأ الشاشة بالكامل، مع ��بقاء زر الإغلاق واضحًا فوق PDF */
+  /* قارئ مستقل يملأ الشاشة بالكامل، مع ����بقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
@@ -990,7 +990,7 @@ tr:hover { background: var(--table-hover); }
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد Gemini / Groq الإداري</h2></div>
   <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بانات الموقع عندما تكون مرتبطة بسؤالك.</p>
-  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أ��لياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانا��� الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
+  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أ��لياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيان����� الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
@@ -1241,7 +1241,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائي��ً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجو��� وجه واحد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
+  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائي��ً عند بدء العنصر. يعتمد على إشارات تفسيري�� فقط: وجو��� وجه واحد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
   <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
@@ -1640,7 +1640,7 @@ window.alert = function(m){ showToast(m); };
     corePromise = new Promise(function(resolve, reject){
       const s = document.createElement('script');
       s.src = '/app-core.js';
-      s.async = false;
+      s.async = true;
       s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
       s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظ��م.')); };
       document.head.appendChild(s);
@@ -1652,8 +1652,16 @@ window.alert = function(m){ showToast(m); };
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
   const path = location.pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(location.search);
-  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || /^\/login\//.test(path) || /^\/signup(\/|$)/.test(path) || path === '/forgot-password' || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
-  if (needsCore) warm();
+  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
+  const authNeedsCore = /^\/(login|signup)(\/|$)/.test(path) || path === '/forgot-password';
+  if (needsCore || authNeedsCore) {
+    const start = function(){
+      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: needsCore ? 1200 : 3500 });
+      else window.setTimeout(warm, needsCore ? 0 : 1500);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+    else start();
+  }
 })();
 </script>
 <script>
@@ -1722,10 +1730,7 @@ window.alert = function(m){ showToast(m); };
     document.documentElement.dir = next === 'en' ? 'ltr' : 'rtl';
     var btn = document.getElementById('langToggleBtn');
     if (btn) btn.textContent = next === 'en' ? 'ع' : 'EN';
-    window.loadThimarAppCore().then(function(){
-      window.dispatchEvent(new Event('languagechange'));
-      if (typeof window.applyLangToDom === 'function') window.applyLangToDom();
-    }).catch(function(err){ console.error('App core failed to load', err); });
+    window.dispatchEvent(new Event('languagechange'));
   };
   window.toggleLang = wrappers.toggleLang;
 })();
@@ -1816,16 +1821,20 @@ window.alert = function(m){ showToast(m); };
   };
 
   /* عند العودة لشاشة الدخول (تسجيل الخروج مثلاً) نعيد عرض الأزرار الرئيسية */
-  (function patchShowPage(){
-    if(typeof window.showPage !== 'function') return setTimeout(patchShowPage, 60);
-    if(window.__thimarShowPagePatched) return;
-    window.__thimarShowPagePatched = true;
-    var original = window.showPage;
-    window.showPage = function(id){
-      var out = original.apply(this, arguments);
-      if(id === 'lockScreen') window.thimarResetAuthView();
-      return out;
-    };
+  (function patchShowPageWhenReady(){
+  if(window.__thimarShowPagePatched) return;
+  var patch = function(){
+  if(window.__thimarShowPagePatched || typeof window.showPage !== 'function') return;
+  window.__thimarShowPagePatched = true;
+  var original = window.showPage;
+  window.showPage = function(id){
+  var out = original.apply(this, arguments);
+  if(id === 'lockScreen') window.thimarResetAuthView();
+  return out;
+  };
+  };
+  if(typeof window.showPage === 'function') patch();
+  else if(typeof window.loadThimarAppCore === 'function') window.loadThimarAppCore().then(patch).catch(function(err){ console.error('[v0] showPage patch failed', err); });
   })();
 })();
 </script>
