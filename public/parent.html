@@ -772,7 +772,7 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  /* قارئ مستقل يملأ الشاشة بالكامل�� مع إبقاء زر الإغلاق واضحًا فوق PDF */
+  /* قارئ مستقل يملأ الشاشة بالكامل���� مع إبقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
@@ -1649,40 +1649,52 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // صفحات الدخول لا تحمل النواة الكبيرة إلا عند التفاعل؛ الصفحات المحمية تحتاجها فوراً.
+  // نحافظ على دخول /login خفيفاً ونجهز المسارات العميقة فقط عند الحاجة.
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core load failed', err); }); };
-  if (/^\/(admin|student|parent|signup)(\/|$)/.test(location.pathname) || location.pathname === '/forgot-password' || location.pathname === '/quran-reader' || location.pathname === '/tuhfat') warm();
+  const path = location.pathname.replace(/\/+$/, '') || '/';
+  const params = new URLSearchParams(location.search);
+  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || /^\/login\//.test(path) || /^\/signup(\/|$)/.test(path) || path === '/forgot-password' || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
+  if (needsCore) warm();
 })();
 </script>
 <script>
 /* واجهة الدخول تعمل فوراً، والنظام الكامل جاهز مسبقاً أو يُحمّل عند الحاجة. */
 (function(){
   var wrappers = {};
+  var pendingCalls = {};
+  var errorBoxIds = { unifiedLogin: 'unifiedLoginAlert', openAccountRecovery: 'unifiedLoginAlert', startSignup: 'signupStep1Alert' };
   function runWhenCoreReady(name, args, button){
+    if (pendingCalls[name]) return pendingCalls[name];
     if (button) button.disabled = true;
-    if (name === 'unifiedLogin') {
-      var box = document.getElementById('unifiedLoginAlert');
-      if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
-    }
-    var loadWithTimeout = Promise.race([window.loadThimarAppCore(), new Promise(function(_, reject){ setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })]);
-    return loadWithTimeout.then(function(){
-      if (button) button.disabled = false;
+    var boxId = errorBoxIds[name] || 'unifiedLoginAlert';
+    var box = document.getElementById(boxId);
+    if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
+    var timeoutId;
+    var loadWithTimeout = Promise.race([
+      window.loadThimarAppCore(),
+      new Promise(function(_, reject){ timeoutId = window.setTimeout(function(){ reject(new Error('انتهت مهلة تحميل النظام')); }, 12000); })
+    ]).finally(function(){ window.clearTimeout(timeoutId); });
+    var promise = loadWithTimeout.then(function(){
       var fn = window[name];
       if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
       return fn.apply(window, Array.prototype.slice.call(args || []));
     }).catch(function(err){
-      if (button) button.disabled = false;
-      var message = '❌ تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
-      var box = document.getElementById('unifiedLoginAlert');
-      if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
+      var message = 'تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
+      var target = document.getElementById(boxId);
+      if (target) target.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
       console.error('App core failed to load', err);
       if (typeof showToast === 'function') showToast(message, 'error');
+    }).finally(function(){
+      if (button) button.disabled = false;
+      delete pendingCalls[name];
     });
+    pendingCalls[name] = promise;
+    return promise;
   }
 
-  ['unifiedLogin','startSignup'].forEach(function(name){
+  ['unifiedLogin','startSignup','openAccountRecovery','showPage'].forEach(function(name){
     wrappers[name] = function(){
-      var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : null;
+      var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : name === 'openAccountRecovery' ? document.querySelector('.thimar-forgot') : null;
       return runWhenCoreReady(name, arguments, btn);
     };
     window[name] = wrappers[name];
@@ -1985,7 +1997,6 @@ window.alert = function(m){ showToast(m); };
 <link rel="stylesheet" href="/tuhfat.css">
 <script src="/tuhfat-data.js" defer></script>
 <script src="/tuhfat.js" defer></script>
-<script src="/legacy-i18n.js" defer></script>
 <script src="/prayer-screen.js" defer></script>
 <script src="/islamic-hub.js" defer></script>
 <script src="/messaging.js" defer></script>
