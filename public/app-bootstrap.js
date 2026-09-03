@@ -232,11 +232,35 @@
   }
 
   function installCoreProxy(name, boxId) {
-    var proxy = function () {
-      return runWhenCoreReady(name, arguments, null, boxId);
-    };
-    proxyFunctions[name] = proxy;
-    window[name] = proxy;
+  var proxy = function () {
+  // التنقل إلى الصفحات العامة لا يجب أن ينتظر تحميل النواة؛ هذا يمنع تجمد زر إنشاء الحساب عند بطء الشبكة.
+  if (name === 'startSignup' || name === 'openAccountRecovery') {
+  var publicId = name === 'startSignup' ? 'signupStep1' : 'accountRecoveryPage';
+  var publicPage = showPublicPage(publicId);
+  if (publicPage) {
+  loadCore().catch(function (error) {
+  console.error('[v0] public page core bootstrap failed', name, error);
+  });
+  return publicPage;
+  }
+  }
+  return runWhenCoreReady(name, arguments, null, boxId);
+  };
+  proxyFunctions[name] = proxy;
+  window[name] = proxy;
+  }
+
+  function openSignupPageNow() {
+  var page = document.getElementById('signupStep1');
+  if (!page) return;
+  document.querySelectorAll('.page, .home-page, .chart-page').forEach(function (item) { item.classList.add('hidden'); });
+  page.classList.remove('hidden');
+  if (window.history && window.history.pushState && window.location.pathname !== '/signup') {
+  window.history.pushState({ page: 'signupStep1', thimarRoute: true }, '', '/signup');
+  }
+  window.setTimeout(function () {
+  loadCore().catch(function (error) { console.error('[v0] signup bootstrap failed', error); });
+  }, 250);
   }
 
   function toggleUnifiedPassword() {
@@ -282,6 +306,7 @@
   window.loadThimarAppCore = loadCore;
   window.unifiedLogin = lightweightLogin;
   window.showPage = showPage;
+  window.openSignupPageNow = openSignupPageNow;
   window.toggleUnifiedPassword = toggleUnifiedPassword;
   window.togglePassVisibility = togglePassVisibility;
   window.toggleTheme = toggleTheme;

@@ -14,18 +14,15 @@ const nextConfig = {
         { source: '/register/:path*', destination: '/app.html' },
         { source: '/register', destination: '/app.html' },
         { source: '/forgot-password', destination: '/app.html' },
-        { source: '/dashboard', destination: '/app.html' },
-        { source: '/students', destination: '/app.html' },
-        { source: '/profile', destination: '/app.html' },
-        { source: '/settings', destination: '/app.html' },
+        // Dashboard, students, profile, and settings are App Router pages.
+        // Only legacy screens below still use their role-specific static shell.
+        { source: '/quran-reader/:path*', destination: '/app.html' },
         { source: '/quran-reader', destination: '/app.html' },
+        { source: '/tuhfat/:path*', destination: '/app.html' },
         { source: '/tuhfat', destination: '/app.html' },
         { source: '/admin/:path*', destination: '/admin.html' },
-        { source: '/admin', destination: '/admin.html' },
         { source: '/student/:path*', destination: '/student.html' },
-        { source: '/student', destination: '/student.html' },
         { source: '/parent/:path*', destination: '/parent.html' },
-        { source: '/parent', destination: '/parent.html' },
       ],
     }
   },

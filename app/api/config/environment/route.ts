@@ -2,40 +2,43 @@ import { NextResponse } from "next/server"
 
 export const dynamic = "force-dynamic"
 
-const REQUIRED_SERVER_VARS = [
-  "DATABASE_URL",
-  "GOOGLE_CLIENT_ID",
-  "GOOGLE_CLIENT_SECRET",
-  "GEMINI_API_KEY",
-  "GROQ_API_KEY",
-  "GITHUB_TOKEN",
-  "GITHUB_OWNER",
-  "GITHUB_REPO",
-  "GITHUB_BRANCH",
-  "GITHUB_PUBLISHER_EMAILS",
-  "DEV_ASSISTANT_AUTO_APPLY",
-] as const
-
-const OPTIONAL_SERVER_VARS = [
-  "BLOB_READ_WRITE_TOKEN",
-  "SPEAKER_VERIFICATION_API_KEY",
-  "SPEAKER_VERIFICATION_URL",
-  "VERCEL_DEPLOY_HOOK_URL",
-] as const
+const SERVICE_VARIABLES = {
+  core: ["DATABASE_URL"],
+  google: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+  ai: ["GEMINI_API_KEY", "GROQ_API_KEY"],
+  github: [
+    "GITHUB_TOKEN",
+    "GITHUB_OWNER",
+    "GITHUB_REPO",
+    "GITHUB_BRANCH",
+    "GITHUB_PUBLISHER_EMAILS",
+    "DEV_ASSISTANT_AUTO_APPLY",
+  ],
+  optional: [
+    "BLOB_READ_WRITE_TOKEN",
+    "SPEAKER_VERIFICATION_API_KEY",
+    "SPEAKER_VERIFICATION_URL",
+    "VERCEL_DEPLOY_HOOK_URL",
+  ],
+} as const
 
 function status(name: string) {
-  return { name, status: process.env[name]?.trim() ? "Configured" : "Missing" }
+  return { name, configured: Boolean(process.env[name]?.trim()) }
 }
 
 export async function GET() {
-  const required = REQUIRED_SERVER_VARS.map(status)
-  const optional = OPTIONAL_SERVER_VARS.map(status)
+  const services = Object.fromEntries(
+    Object.entries(SERVICE_VARIABLES).map(([service, variables]) => [service, variables.map(status)]),
+  )
 
   return NextResponse.json(
     {
       serverSide: true,
-      required,
-      optional,
+      services,
+      notes: {
+        coreRequiredForApp: ["DATABASE_URL"],
+        googleAiGithubAreFeatureScoped: true,
+      },
       secretsNeverReturned: true,
     },
     { headers: { "Cache-Control": "no-store" } },

@@ -61,7 +61,11 @@ export async function GET(request: Request) {
       db.select().from(antiCheatItemConfigs).orderBy(desc(antiCheatItemConfigs.updatedAt)),
     ])
     return NextResponse.json({ global: global[0] ?? { id: true, enabled: false, config: {} }, items })
-  } catch (error) { console.error('[v0] GET /api/anti-cheat failed:', error instanceof Error ? error.message : error); return NextResponse.json({ error: 'تعذر تحميل إعدادات مكافحة الغش', code: 'ANTI_CHEAT_READ_FAILED' }, { status: 500 }) }
+  } catch (error) {
+    console.error('[v0] GET /api/anti-cheat failed:', error instanceof Error ? error.message : error)
+    // مكافحة الغش ميزة اختيارية؛ غياب جداولها لا يجب أن يحجب لوحة المسؤول أو يجمد بقية الأدوات.
+    return NextResponse.json({ global: { id: true, enabled: false, config: {} }, items: [], degraded: true, code: 'ANTI_CHEAT_STORAGE_UNAVAILABLE' })
+  }
 }
 
 export async function POST(request: Request) {

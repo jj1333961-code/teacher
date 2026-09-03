@@ -329,7 +329,8 @@ tr:hover { background: var(--table-hover); }
 .draft-section { background: linear-gradient(135deg, rgba(255,193,7,0.15), rgba(255,152,0,0.15)); border: 2px solid var(--warning); border-radius: 15px; padding: 20px; margin-bottom: 20px; }
 
 /* Back Button Fixed at Bottom */
-  .back-btn-container, .back-btn, button[onclick="goBack()"], button[onclick^="showPage("][class*="btn-secondary"] { display:none !important; }
+  .back-btn-container { display:flex; justify-content:center; width:100%; margin:18px 0; }
+  .back-btn { display:inline-flex; align-items:center; justify-content:center; }
 .back-btn {
   background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   color: #fff;
@@ -652,7 +653,9 @@ tr:hover { background: var(--table-hover); }
   .thimar-signup-row span { color:var(--thimar-ink-soft); font-size:.9rem; font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; }
   .thimar-signup-inline { background:transparent; border:1px solid var(--thimar-gold-line); border-radius:999px; color:var(--thimar-gold); padding:9px 18px; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; }
   .thimar-signup-inline:hover { background:var(--thimar-gold-fade); }
-  .thimar-password-toggle { position:absolute; right:16px; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--thimar-gold); cursor:pointer; }
+  .thimar-password-toggle { position:absolute; left:58px; right:auto; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--thimar-gold); cursor:pointer; }
+  .thimar-password-toggle:hover, .thimar-password-toggle:active { transform:translateY(-50%); }
+  .thimar-field.has-password-toggle input { padding-left:104px; }
   .thimar-password-toggle::after { content:''; position:absolute; width:22px; height:2px; border-radius:2px; background:currentColor; transform:rotate(-42deg); transition:opacity .15s ease; }
   .thimar-password-toggle.is-visible::after { opacity:0; }
   .thimar-field.has-password-toggle input { padding-right:58px; }
@@ -770,7 +773,7 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  /* قارئ مستقل يملأ الشاشة بالكامل، مع إبقاء زر الإغلاق واضحًا فوق PDF */
+  /* قارئ مستقل يملأ الشاش�� بالكامل، مع إبقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
@@ -858,7 +861,7 @@ tr:hover { background: var(--table-hover); }
       </div>
       <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
       <div class="thimar-signup-row">
-        <button type="button" class="thimar-signup-inline" onclick="startSignup()">إنشاء حساب جديد</button>
+        <button type="button" class="thimar-signup-inline" onclick="openSignupPageNow()">إنشاء حساب جديد</button>
       </div>
     </div>
 
@@ -1220,12 +1223,12 @@ tr:hover { background: var(--table-hover); }
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
   <div class="form-group"><label>ملاحظات</label><textarea id="editNotes" rows="2"></textarea></div>
-  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التعديلات</button>
+  <button class="btn btn-success" onclick="updateStudent()">���� حفظ التعديلات</button>
 </div>
 
 <!-- تسجيل تسميع جديد -->
 <div id="recordSession" class="page hidden">
-  <div class="page-header"><h2>🎙️ تسجيل تسميع جديد</h2></div>
+  <div class="page-header"><h2>🎙️ تسجيل تسمي���� جديد</h2></div>
   <div id="recordAlert"></div>
   <input type="hidden" id="recordStudentId">
   <div class="form-group"><label>اس�� الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
@@ -1413,7 +1416,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- دردشة AI للطاب -->
 <div id="studentAIChat" class="page hidden">
-  <div class="page-header"><h2>🤖 مساعدك الذكي في القرآن</h2></div>
+  <div class="page-header"><h2>🤖 مساعدك الذكي في ��لقرآن</h2></div>
   <div class="ai-chat">
     <div id="studentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
@@ -1542,7 +1545,7 @@ tr:hover { background: var(--table-hover); }
     <div class="file-upload" onclick="document.getElementById('fileInput').click()" style="padding:30px;">
       <div style="font-size:3rem; margin-bottom:10px;">📎</div>
       <div style="font-size:1.1rem; font-weight:600;">اضغط هنا لاختيار ملف أو اسحب الملف هنا</div>
-      <div style="color:var(--text-light); margin-top:5px;">PDF, Word, Excel, Images, Audio, Video — أي نوع</div>
+      <div style="color:var(--text-light); margin-top:5px;">PDF, Word, Excel, Images, Audio, Video — أي ن��ع</div>
     </div>
     <input type="file" id="fileInput" style="display:none" onchange="uploadFile(this)">
     <div id="fileUploadProgress" style="margin-top:15px;"></div>
@@ -1663,7 +1666,7 @@ window.alert = function(m){ showToast(m); };
     return promise;
   }
 
-  ['unifiedLogin','startSignup','openAccountRecovery'].forEach(function(name){
+  ['startSignup','openAccountRecovery'].forEach(function(name){
     wrappers[name] = function(){
       var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : name === 'openAccountRecovery' ? document.querySelector('.thimar-forgot') : null;
       return runWhenCoreReady(name, arguments, btn);
@@ -1801,6 +1804,6 @@ window.alert = function(m){ showToast(m); };
 })();
 </script>
   <script src="/app-routes.js"></script>
-  <script src="/app-bootstrap.js"></script>
+  <script src="/app-bootstrap.js?v=signup-fix-2"></script>
  </body>
 </html>

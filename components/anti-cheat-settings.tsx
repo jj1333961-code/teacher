@@ -14,7 +14,24 @@ const defaultItems: Item[] = [{ itemId: 'demo-quiz', itemType: 'recitation', lab
 export function AntiCheatSettings({ value, onChange, items = defaultItems }: { value: AntiCheatConfig; onChange: (value: AntiCheatConfig) => void; items?: Item[] }) {
   const [global, setGlobal] = useState(false); const [overrides, setOverrides] = useState<Record<string, boolean>>({}); const [status, setStatus] = useState(''); const [loading, setLoading] = useState(true)
   const key = (item: Item) => `${item.itemId}:${item.itemType}`
-  const load = async () => { setLoading(true); try { const response = await fetch('/api/anti-cheat'); if (!response.ok) throw new Error(); const data = await response.json(); setGlobal(Boolean(data.global?.enabled)); setOverrides(Object.fromEntries((data.items ?? []).map((item: { itemId: string; itemType: string; enabled: boolean }) => [`${item.itemId}:${item.itemType}`, item.enabled]))) } catch { setStatus('تعذر تحميل الإعدادات من الخادم') } finally { setLoading(false) } }
+  const load = async () => {
+    setLoading(true)
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 2500)
+    try {
+      const response = await fetch('/api/anti-cheat', { signal: controller.signal })
+      if (!response.ok) throw new Error()
+      const data = await response.json()
+      setGlobal(Boolean(data.global?.enabled))
+      setOverrides(Object.fromEntries((data.items ?? []).map((item: { itemId: string; itemType: string; enabled: boolean }) => [`${item.itemId}:${item.itemType}`, item.enabled])))
+      if (data.degraded) setStatus('الحماية غير متاحة حاليًا، وبقية الأدوات تعمل بشكل طبيعي')
+    } catch {
+      setStatus('الحماية غير متاحة حاليًا، وبقية الأدوات تعمل بشكل طبيعي')
+    } finally {
+      window.clearTimeout(timeout)
+      setLoading(false)
+    }
+  }
   useEffect(() => { void load() }, [])
   const update = (patch: Partial<AntiCheatConfig>) => onChange({ ...value, ...patch })
   const saveGlobal = async (enabled: boolean) => { setStatus('Saving...'); try { const response = await fetch('/api/anti-cheat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'save-global', enabled }) }); if (!response.ok) throw new Error(); const data = await response.json(); setGlobal(Boolean(data.global.enabled)); setStatus('Saved') } catch { setStatus('Error') } }
