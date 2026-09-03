@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     )
     return response({ messages: result.rows })
   } catch {
-    return response({ error: 'تعذر تحميل الرسائل' }, 503)
+    return response({ messages: [], unavailable: true })
   }
 }
 
