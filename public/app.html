@@ -647,11 +647,10 @@ tr:hover { background: var(--table-hover); }
   .thimar-signup-row span { color:var(--thimar-ink-soft); font-size:.9rem; font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; }
   .thimar-signup-inline { background:transparent; border:1px solid var(--thimar-gold-line); border-radius:999px; color:var(--thimar-gold); padding:9px 18px; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; }
   .thimar-signup-inline:hover { background:var(--thimar-gold-fade); }
-  .thimar-password-toggle { position:absolute; right:16px; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--thimar-gold); cursor:pointer; }
-  .thimar-password-toggle::after { content:''; position:absolute; width:22px; height:2px; border-radius:2px; background:currentColor; transform:rotate(-42deg); transition:opacity .15s ease; }
-  .thimar-password-toggle.is-visible::after { opacity:0; }
-  .thimar-field.has-password-toggle input { padding-right:58px; }
-  .thimar-forgot { display:inline-flex; margin-top:10px; border:0; background:transparent; color:var(--thimar-gold); font:inherit; font-size:.9rem; font-weight:700; cursor:pointer; text-decoration:underline; text-underline-offset:4px; }
+  .thimar-password-toggle { position:absolute; left:16px; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--thimar-gold); cursor:pointer; }
+  .thimar-password-toggle:focus-visible { outline:2px solid var(--thimar-gold); outline-offset:2px; }
+  .thimar-field.has-password-toggle input { padding-right:20px; }
+  .thimar-forgot { display:inline-flex; justify-self:center; margin-top:10px; border:0; background:transparent; color:var(--thimar-gold); font:inherit; font-size:.75rem; font-weight:600; cursor:pointer; text-decoration:none; }
   @media (min-width: 640px) {
     .thimar-login-fields { grid-template-columns:repeat(2, minmax(0, 1fr)); align-items:start; }
     .thimar-login-fields .thimar-forgot { grid-column:1 / -1; justify-self:start; margin-top:0; }
@@ -825,16 +824,15 @@ tr:hover { background: var(--table-hover); }
     <div class="thimar-logo-en">THMAR</div>
     <p class="thimar-tagline">منصة ثِمار<br>لحفظ القرآن الكريم</p>
 
-    <div class="thimar-ayah-wrap">
+      <div class="thimar-ayah-wrap">
       <svg class="thimar-orn" viewBox="0 0 24 120" fill="none" aria-hidden="true">
-        <path d="M12 4c7 10 7 16 0 22-7 6-7 12 0 18 7 6 7 12 0 18-7 6-7 12 0 18 7 6 7 12 0 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-        <path d="M12 26c-4-3-4-7 0-10 4 3 4 7 0 10Zm0 34c-4-3-4-7 0-10 4 3 4 7 0 10Zm0 34c-4-3-4-7 0-10 4 3 4 7 0 10Z" fill="currentColor" opacity=".55"/>
+      <path d="M12 4c7 10 7 16 0 22-7 6-7 12 0 18 7 6 7 12 0 18-7 6-7 12 0 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M12 26c-4-3-4-7 0-10 4 3 4 7 0 10Zm0 34c-4-3-4-7 0-10 4 3 4 7 0 10Zm0 34c-4-3-4-7 0-10 4 3 4 7 0 10Z" fill="currentColor" opacity=".55"/>
       </svg>
       <p class="thimar-ayah">
         أَلَمْ تَرَ كَيْفَ ضَرَبَ اللَّهُ مَثَلًا كَلِمَةً طَيِّبَةً كَشَجَرَةٍ طَيِّبَةٍ أَصْلُهَا ثَابِتٌ وَفَرْعُهَا فِي السَّمَاءِ
         <span class="thimar-ayah-ref">(إبراهيم: 24)</span>
       </p>
-      <span class="thimar-orn" aria-hidden="true">❁</span>
     </div>
 
     <div id="unifiedLoginAlert"></div>
@@ -847,12 +845,11 @@ tr:hover { background: var(--table-hover); }
           <label class="sr-only" for="unifiedUser">اسم المستخدم</label>
           <input type="text" id="unifiedUser" placeholder="اسم المستخدم" autocomplete="username" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
         </div>
-        <div class="thimar-field has-password-toggle">
-          <span class="thimar-field-icon" aria-hidden="true">🔒</span>
-          <label class="sr-only" for="unifiedPass">الرقم السري</label>
-          <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
-          <button type="button" id="unifiedPassToggle" class="thimar-password-toggle" onclick="toggleUnifiedPassword()" aria-label="Show password" data-ar-aria-label="إظهار الرقم السري" aria-pressed="false"><span aria-hidden="true">👁</span></button>
-        </div>
+  <div class="thimar-field has-password-toggle">
+  <label class="sr-only" for="unifiedPass">الرقم السري</label>
+  <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
+  <button type="button" id="unifiedPassToggle" class="thimar-password-toggle" onclick="toggleUnifiedPassword()" aria-label="Show password" data-ar-aria-label="إظهار الرقم السري" aria-pressed="false"><span aria-hidden="true">👁</span></button>
+  </div>
         <button type="button" class="thimar-forgot" onclick="openAccountRecovery()">هل نسيت الرقم السري؟</button>
       </div>
       <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
@@ -913,7 +910,7 @@ tr:hover { background: var(--table-hover); }
   <div class="alert alert-success" id="signupVerifiedNote">✅ تم التحقق من هويتك بنجاح.</div>
   <div class="form-row">
     <div class="form-group"><label>نوع الحساب *</label><select id="signupRole" onchange="syncSignupRelationshipField()"><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div>
-    <div class="form-group"><label>الاسم بالكامل *</label><input type="text" id="signupName" placeholder="ال��سم كما في البطاقة"></div>
+    <div class="form-group"><label>الاسم بالكامل *</label><input type="text" id="signupName" placeholder="��ل��سم كما في البطاقة"></div>
   </div>
   <div class="form-group" id="signupRelationshipGroup">
     <label id="signupRelationshipLabel">اسم ولي الأمر *</label>
