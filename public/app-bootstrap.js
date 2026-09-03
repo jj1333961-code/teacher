@@ -331,6 +331,8 @@
       /^\/login\/(admin|student|parent)(\/|$)/.test(path) ||
       path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
     if (!needsCore) return;
+    // صفحات التطبيق legacy تعتمد على النواة لربط الأحداث. تأجيل تحميلها إلى idle
+    // جعل الواجهة تظهر صحيحة لكنها غير تفاعلية عند أول نقرات المستخدم.
     var start = function () {
       loadCore().catch(function (error) {
         console.error('[v0] protected route bootstrap failed', error);
@@ -338,7 +340,6 @@
         if (alert) alert.innerHTML = '<div class="alert alert-danger">تعذر فتح الصفحة. أعد المحاولة من فضلك.</div>';
       });
     };
-    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(start, { timeout: 900 });
-    else window.setTimeout(start, 50);
+    start();
   }, { once: true });
 }());
