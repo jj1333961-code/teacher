@@ -609,16 +609,16 @@ tr:hover { background: var(--table-hover); }
     color:var(--thimar-ink);
   }
   #lockScreen.thimar-auth::before, #lockScreen.thimar-auth::after { content:none !important; display:none !important; }
-  .thimar-arch { position:absolute; left:0; right:0; top:clamp(6px,2vw,14px); display:flex; justify-content:center; pointer-events:none; opacity:.9; }
+  .thimar-arch { display:none !important; }
   .thimar-arch svg { width:min(100%,400px); height:auto; }
   .thimar-arch svg path { stroke:var(--thimar-gold); }
   .thimar-inner { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:0; }
   .thimar-leaf { width:clamp(46px,13vw,66px); height:auto; display:block; margin-bottom:-8px; filter:drop-shadow(0 6px 12px rgba(0,0,0,.28)); }
   .thimar-logo { font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-weight:900; color:var(--thimar-logo); line-height:1; font-size:clamp(3.2rem,17vw,5rem); text-shadow:0 6px 22px rgba(0,0,0,.20); letter-spacing:0; }
-  .thimar-logo-en { font-family:'Segoe UI',Tahoma,sans-serif; color:var(--thimar-gold); letter-spacing:.42em; text-indent:.42em; font-size:clamp(1rem,4.6vw,1.5rem); font-weight:600; margin-top:6px; }
+  .thimar-logo-en { font-family:'Segoe UI',Tahoma,sans-serif; color:var(--thimar-gold); letter-spacing:.42em; text-indent:.42em; font-size:clamp(1rem,4.6vw,1.5rem); font-style:italic; font-weight:600; text-align:center; width:100%; margin-top:6px; }
   .thimar-tagline { font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; color:var(--thimar-ink); font-size:clamp(1rem,4.4vw,1.3rem); line-height:1.85; margin-top:clamp(14px,4vw,22px); text-wrap:balance; }
-  .thimar-ayah-wrap { display:flex; align-items:center; justify-content:center; gap:clamp(6px,2.5vw,14px); margin-top:clamp(16px,5vw,26px); width:100%; }
-  .thimar-orn { flex:0 0 auto; width:clamp(14px,4.5vw,22px); height:clamp(70px,22vw,110px); color:var(--thimar-gold); opacity:.95; }
+  .thimar-ayah-wrap { display:flex; align-items:center; justify-content:center; gap:0; margin:clamp(16px,5vw,26px) auto 0; width:100%; text-align:center; }
+  .thimar-orn { display:none !important; }
   .thimar-orn:last-of-type { transform:scaleX(-1); }
   .thimar-ayah { font-family:'Amiri',serif; color:var(--thimar-ink); font-size:clamp(1rem,4.6vw,1.35rem); line-height:2.1; text-wrap:balance; }
   .thimar-ayah-ref { display:block; color:var(--thimar-gold); font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-size:clamp(.75rem,3.2vw,.9rem); margin-top:10px; }
@@ -656,6 +656,8 @@ tr:hover { background: var(--table-hover); }
   .thimar-signup-inline { background:transparent; border:1px solid var(--thimar-gold-line); border-radius:999px; color:var(--thimar-gold); padding:9px 18px; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; }
   .thimar-signup-inline:hover { background:var(--thimar-gold-fade); }
   .thimar-password-toggle { position:absolute; right:16px; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--thimar-gold); cursor:pointer; }
+  .thimar-eye-icon { width:22px; height:14px; border:2px solid currentColor; border-radius:50% / 60%; position:relative; display:block; }
+  .thimar-eye-icon::after { content:''; position:absolute; width:5px; height:5px; border-radius:50%; background:currentColor; inset:0; margin:auto; }
   .thimar-password-toggle::after { content:''; position:absolute; width:22px; height:2px; border-radius:2px; background:currentColor; transform:rotate(-42deg); transition:opacity .15s ease; }
   .thimar-password-toggle.is-visible::after { opacity:0; }
   .thimar-password-toggle:focus-visible { outline:2px solid var(--thimar-gold); outline-offset:2px; }
@@ -827,7 +829,7 @@ tr:hover { background: var(--table-hover); }
   <div class="thimar-inner">
     <img class="thimar-leaf" src="/images/thimar-leaves.png" alt="" aria-hidden="true">
     <h1 class="thimar-logo">ثمار</h1>
-    <div class="thimar-logo-en">THMAR</div>
+    <div class="thimar-logo-en">THIMAR</div>
     <p class="thimar-tagline">منصة ثِمار<br>لحفظ القرآن الكريم</p>
 
     <div class="thimar-ayah-wrap">
@@ -837,7 +839,7 @@ tr:hover { background: var(--table-hover); }
       </svg>
       <p class="thimar-ayah">
         أَلَمْ تَرَ كَيْفَ ضَرَبَ اللَّهُ مَثَلًا كَلِمَةً طَيِّبَةً كَشَجَرَةٍ طَيِّبَةٍ أَصْلُهَا ثَابِتٌ وَفَرْعُهَا فِي السَّمَاءِ
-        <span class="thimar-ayah-ref">(إبراهيم: 24)</span>
+        <span class="thimar-ayah-ref" data-no-translate>(إبراهيم: 24)</span>
       </p>
       <span class="thimar-orn" aria-hidden="true">❁</span>
     </div>
@@ -859,10 +861,9 @@ tr:hover { background: var(--table-hover); }
           <input type="text" id="unifiedUser" placeholder="اسم المستخدم" autocomplete="username" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
         </div>
         <div class="thimar-field has-password-toggle">
-          <span class="thimar-field-icon" aria-hidden="true">🔒</span>
-          <label class="sr-only" for="unifiedPass">الرقم السري</label>
+                  <label class="sr-only" for="unifiedPass">الرقم السري</label>
           <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
-          <button type="button" id="unifiedPassToggle" class="thimar-password-toggle" onclick="toggleUnifiedPassword()" aria-label="إظهار الرقم السري" aria-pressed="false"><span aria-hidden="true">👁</span></button>
+          <button type="button" id="unifiedPassToggle" class="thimar-password-toggle" onclick="toggleUnifiedPassword()" aria-label="إظهار الرقم السري" aria-pressed="false"><span class="thimar-eye-icon" aria-hidden="true"></span></button>
         </div>
         <button type="button" class="thimar-forgot" onclick="openAccountRecovery()">هل نسيت الرقم السري؟</button>
       </div>
@@ -875,7 +876,7 @@ tr:hover { background: var(--table-hover); }
     <div class="thimar-footer">
       <span class="lbl">قال تعالى:</span>
       <span class="ayah">﴿ وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا ﴾</span>
-      <span class="ref">(المزمل: 4)</span>
+      <span class="ref" data-no-translate>(المزمل: 4)</span>
     </div>
   </div>
 </div>
@@ -993,7 +994,7 @@ tr:hover { background: var(--table-hover); }
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد Gemini / Groq الإداري</h2></div>
   <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بانات الموقع عندما تكون مرتبطة بسؤالك.</p>
-  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أ��لياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
+  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو ألياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
@@ -1053,8 +1054,8 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="notificationsPage" class="page hidden">
-  <div class="page-header"><h2>ا��ت����بيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد الكل كمقروء</button></div>
-  <p style="color:var(--text-light);margin-bottom:18px;">جميع طلبات استرجاع الحساب والإنذارات والمخالفات و��لتنبيهات العامة في مكان واحد.</p>
+  <div class="page-header"><h2>اتبيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد الكل كمقروء</button></div>
+  <p style="color:var(--text-light);margin-bottom:18px;">جميع طلبات استرجاع الحساب والإنذارات والمخالفات ولتنبيهات العامة في مكان واحد.</p>
   <div id="notificationsList" class="notifications-grid" aria-live="polite"></div>
 </div>
 
@@ -1066,7 +1067,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group" style="margin-bottom:0;">
       <label>رقم واتساب المسؤول لاستلام طلبات الامام</label>
       <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
-      <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة ��لى واتساب (بصيغة الدولة، مثال: 201554542019)</small>
+      <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابا الجديدة لى واتساب (بصيغة الدولة، مثال: 201554542019)</small>
     </div>
     <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
       <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حظ الرقم</button>
@@ -1265,7 +1266,7 @@ tr:hover { background: var(--table-hover); }
 <p style="color:var(--text-light);margin:10px 0">اختبار رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الاس.</small></div>
- <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القري�� والبعيد</option><option value="near">اماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قرب ونص بعيد.</small></div>
+ <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي اقري والبعيد</option><option value="near">اماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قرب ونص بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة اناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدويا قبل ءءقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
  <div class="form-group"><label for="examSourceMode">المرجع الأساسي</label><select id="examSourceMode" onchange="updateExamSourceDistribution()"><option value="ai">الذكاء الاصطناعي</option><option value="file">من الملفات</option></select><small id="examSourceDistribution" style="color:var(--text-light)">توليد ذكي مع التحقق من النص القرآني والمراجع الموثوقة.</small></div>
@@ -1398,7 +1399,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ندوق التسجيلات لطالب -->
 <div id="studentExamPage" class="page hidden">
-  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">ر������ءءع</button></div>
+  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رءءع</button></div>
   <div id="studentExamContent"></div>
 </div>
 
@@ -1721,7 +1722,7 @@ window.alert = function(m){ showToast(m); };
     <button onclick="closeFileModal()" style="position:absolute; top:15px; left:15px; background:var(--danger); color:#fff; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:1.3rem; z-index:10;">×</button>
     <div id="fileModalContent" style="margin-top:10px;"></div>
     <div style="margin-top:20px; text-align:center;">
-      <a id="fileModalDownload" href="#" download class="btn btn-success" style="text-decoration:none;">⬇️ تحميل الملف على جهازي</a>
+      <a id="fileModalDownload" href="#" download class="btn btn-success" style="text-decoration:none;">️ تحميل الملف على جهازي</a>
       <button onclick="closeFileModal()" class="btn btn-secondary" style="margin-right:10px;">إغلاق</button>
     </div>
   </div>
@@ -1804,7 +1805,7 @@ window.alert = function(m){ showToast(m); };
         ]).then(function(parts){
           var pdfjs = parts[0].default || parts[0];
           pdfjs.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.min.mjs';
-          /* رسم الحروف من خطوط المصحف ��لمدمجة داخل الملف نفسه (disableFontFace) لضمان تطابق الحروف والتشكيل حرفياً مع النسخة الأصلية */
+          /* رسم الحروف من خطوط المصحف لمدمجة داخل الملف نفسه (disableFontFace) لضمان تطابق الحروف والتشكيل حرفياً مع النسخة الأصلية */
           return pdfjs.getDocument({
             data: new Uint8Array(parts[1]),
             cMapUrl: '/vendor/pdfjs/cmaps/',
@@ -1942,7 +1943,7 @@ window.alert = function(m){ showToast(m); };
   </script>
   <section id="quranReaderPage" class="page quran-reader-page hidden" aria-label="قارئ المصحف">
     <button type="button" class="quran-reader-close" onclick="closeQuranReader()" aria-label="إغلاق قارئ المصحف" title="إغلاق">×</button>
-    <div class="quran-reader-frame"><div id="quranZoomWrap" class="quran-zoom-wrap"><canvas id="quranOriginalCanvas" class="quran-reader-canvas" aria-label="صفحة المصحف الأصلية"></canvas></div><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اس��ب للتنقل بين صفحات المصحف أو قرّب بإصبعين للتكبير"></div></div>
+    <div class="quran-reader-frame"><div id="quranZoomWrap" class="quran-zoom-wrap"><canvas id="quranOriginalCanvas" class="quran-reader-canvas" aria-label="صفحة المصحف الأصلية"></canvas></div><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اسب للتنقل بين صفحات المصحف أو قرّب بإصبعين للتكبير"></div></div>
   </section>
   <script>
 /* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة والتحقق القديم دون أي تغيير) */

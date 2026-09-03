@@ -18,10 +18,13 @@
       'المتصفح لا يدعم الكاميرا': 'This browser does not support the camera', 'حدث خطأ أثناء تشغيل الكاميرا': 'An error occurred while starting the camera',
       'البصمة الصوتية': 'Voiceprint', 'بدء التسجيل': 'Start recording', 'إيقاف التسجيل': 'Stop recording', 'تسجيل الصوت': 'Record audio',
       'إعدادات العرض': 'Display settings', 'تبديل الوضع': 'Toggle theme', 'تغيير اللغة / Change language': 'Change language', 'Change language / Change language': 'Change language', 'فتح قائمة الأدوات': 'Open tools menu', 'إغلاق القائمة': 'Close menu',
-      'قال تعالى:': 'Allah Almighty said:', 'مصحف مفتوح على حامل خشبي': 'An open Quran on a wooden stand', 'الأدوات': 'Tools', 'الوقت المتبقي': 'Time remaining', 'النتيجة': 'Result'
+      'قال تعالى:': 'Allah Almighty said:', 'مصحف مفتوح على حامل خشبي': 'An open Quran on a wooden stand', 'الأدوات': 'Tools', 'الوقت المتبقي': 'Time remaining', 'النتيجة': 'Result',
+      'مرحباً بك — اختر طريقة استخدامك للموقع': 'Welcome — choose how you want to use the site', 'التحكم الكامل في النظام والطلاب': 'Full control over the system and students', 'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization', 'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports', 'هل نسيت الرقم السري؟': 'Forgot your password?', 'إظهار الرقم السري': 'Show password', 'إخفاء الرقم السري': 'Hide password',
+      'إنشاء حساب — التحقق من الهوية': 'Create account — identity verification', 'بيانات طلب الانضمام': 'Join request details', 'اختر طريقة التسجيل': 'Choose a sign-up method', 'الاسم بالكامل': 'Full name', 'الرقم القومي': 'National ID', 'رقم الموبايل': 'Mobile number', 'إرسال الطلب للمسؤول': 'Send request to admin', 'إعادة إرسال الكود': 'Resend code', 'تأكيد الهوية والمتابعة': 'Verify identity and continue',
+      'استرداد الحساب': 'Account recovery', 'طلب استرداد الحساب': 'Account recovery request', 'تعذر تحميل البيانات': 'Could not load data', 'لا توجد بيانات': 'No data available', 'جاري التحميل...': 'Loading...', 'حدث خطأ': 'An error occurred', 'خطأ في الشبكة': 'Network error', 'تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin'
     }
   };
-  var religiousSelector = '[data-no-translate],.quran-text,.ayah,.hadith,.dhikr,[lang="ar-QA"]';
+  var religiousSelector = '[data-no-translate],.quran-text,.ayah,.hadith,.dhikr,.thimar-ayah,.thimar-ayah-ref,.thimar-footer,[lang="ar-QA"]';
   var locale = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
   var originals = new WeakMap();
 
