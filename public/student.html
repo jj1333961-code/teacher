@@ -862,7 +862,7 @@ tr:hover { background: var(--table-hover); }
           <span class="thimar-field-icon" aria-hidden="true">🔒</span>
           <label class="sr-only" for="unifiedPass">الرقم السري</label>
           <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
-          <button type="button" id="unifiedPassToggle" class="thimar-password-toggle" onclick="toggleUnifiedPassword()" aria-label="إظهار الرقم السري" aria-pressed="false"><span aria-hidden="true">👁</span></button>
+          <button type="button" id="unifiedPassToggle" class="thimar-password-toggle" onclick="toggleUnifiedPassword()" aria-label="��ظهار الرقم السري" aria-pressed="false"><span aria-hidden="true">👁</span></button>
         </div>
         <button type="button" class="thimar-forgot" onclick="openAccountRecovery()">هل نسيت الرقم السري؟</button>
       </div>
@@ -1653,7 +1653,7 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواجهة.
+  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواج��ة.
   const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core warmup failed', err); }); };
   if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
   else setTimeout(warm, 350);
@@ -1986,9 +1986,6 @@ window.alert = function(m){ showToast(m); };
 })();
 </script>
 <link rel="stylesheet" href="/messaging.css">
-<link rel="stylesheet" href="/tuhfat.css">
-<script src="/tuhfat-data.js" defer></script>
-<script src="/tuhfat.js" defer></script>
 <script src="/legacy-i18n.js" defer></script>
 <script src="/prayer-screen.js" defer></script>
 <script src="/islamic-hub.js" defer></script>
