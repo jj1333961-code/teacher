@@ -180,8 +180,8 @@
       if (btn && host.contains(btn)) openSection(btn.getAttribute("data-isl-open"));
     });
     paintCards();
-    // تحميل المصحف مسبقًا في الخلفية حتى يكون جاهزًا فور الخول دون انتظار
-    scheduleWarmMushaf();
+    // لا نحمّل ملف المصحف الكبير أثناء فتح لوحة التحكم؛ يُحمّل عند اختيار القرآن فقط.
+    // هذا يحافظ على تفاعل الصفحة الأولى ويمنع حجز المعاينة أثناء تحميل PDF.
   }
 
   function scheduleWarmMushaf() {

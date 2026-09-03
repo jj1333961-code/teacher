@@ -928,7 +928,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود ��لدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود ����دولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -1231,7 +1231,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- تسجيل تسميع جديد -->
 <div id="recordSession" class="page hidden">
-  <div class="page-header"><h2>🎙️ تسجيل تسميع جديد</h2></div>
+  <div class="page-header"><h2>���️ تسجيل تسميع جديد</h2></div>
   <div id="recordAlert"></div>
   <input type="hidden" id="recordStudentId">
   <div class="form-group"><label>اسم الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
@@ -1262,7 +1262,7 @@ tr:hover { background: var(--table-hover); }
     </div>
 <p style="color:var(--text-light);margin:10px 0">اختبار رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
     <div class="form-row">
-<div class="form-group"><label for="examBaseSurah">آخر سو������ة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الاس.</small></div>
+<div class="form-group"><label for="examBaseSurah">آخر سو��������ة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الاس.</small></div>
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">اماضي القريب</option><option value="far">الماضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">ي��قسم الماضي إلى نصف ريب ونص بعيد.</small></div>
  <div class="form-group"><label for="examLastSurah">نهاية الماضي (اختياري)</label><select id="examLastSurah" onchange="syncExamSurahRange()"><option value="">سورة اناس تلقائياً</option></select><small style="color:var(--text-light)">يمكن تضييق نطاق الماضي يدويا قبل ءءقسيمه.</small></div>
  <div class="form-group"><label for="examDeadline">موعد انتهاء الإتاحة</label><input id="examDeadline" type="datetime-local"></div>
@@ -1631,40 +1631,6 @@ function showToast(msg, type){
   setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 300); }, 5000);
 }
 window.alert = function(m){ showToast(m); };
-</script>
-<script>
-(function(){
-  let corePromise = null;
-  window.loadThimarAppCore = function(){
-    if (window.__thimarAppCoreLoaded) return Promise.resolve();
-    if (corePromise) return corePromise;
-    corePromise = new Promise(function(resolve, reject){
-      const s = document.createElement('script');
-      s.src = '/app-core.js';
-      s.async = true;
-      s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
-      s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
-      document.head.appendChild(s);
-    });
-    return corePromise;
-  };
-
-  // نحافظ على دخول /login خفيفاً ونجهز المسار��ت العميقة فقط عند الحاجة.
-  // The shared bootstrap owns loading. Keep the login document free of the heavy core.
-  const warm = function() {};
-  const path = location.pathname.replace(/\/+$/, '') || '/';
-  const params = new URLSearchParams(location.search);
-  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
-  const authNeedsCore = /^\/(login|signup)(\/|$)/.test(path) || path === '/forgot-password';
-  if (needsCore || authNeedsCore) {
-    const start = function(){
-      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: needsCore ? 1200 : 3500 });
-      else window.setTimeout(warm, needsCore ? 0 : 1500);
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
-    else start();
-  }
-})();
 </script>
 <script>
 /* واجهة الدخول تعمل فوراً، والنظام الكامل جاهز مسبقاً أو يُحمّل عند الحاجة. */
