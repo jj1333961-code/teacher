@@ -1,4 +1,6 @@
 import { getReferenceContext, normalizeQuranText } from "@/lib/quran-reference"
+import { rejectCrossOrigin } from "@/lib/request-security"
+import { requireUser, requireAdmin } from "@/lib/server-auth"
 
 export const runtime = "nodejs"
 export const maxDuration = 300
@@ -384,7 +386,7 @@ async function runAudio(prompt: string, system: string, temperature: number, aud
       const transcript = await groqTranscribe(audio)
       const biometricMode = /بصمة صوتية|هوية المتحدث|خصائص الصوت نفسه|الصوت فقط/.test(system)
       const fallbackSystem = biometricMode
-        ? `أنت بديل نصي آمن لخدمة تحقق صوتي غير متاحة. لا يمكن استنتاج البصمة أو هوية المتحدث من التفريغ النصي. أعد JSON فقط: ${system.includes("sameSpeaker") ? '{"sameSpeaker":false,"matchPercent":0,"confidence":"low","quality":"too-short","reason":"تعذر إجراء مقارنة بيومترية للصوت عبر المزوّد الاحتياطي","profile":{"gender":"unknown","pitch":"medium","pitchHz":0,"timbre":"غير متاح","speed":"medium"}}' : '{"speaker":{"gender":"unknown","ageRange":"unknown","pitch":"medium","pitchHz":0,"timbre":"غير متاح","speed":"medium","nasality":"low","breathiness":"low","accent":"غير متاح","distinctiveTraits":[]},"quality":"too-short","usable":false,"reason":"تعذر إنشاء بصمة بيومترية عبر المزوّد الاحتياطي"}'}`
+        ? `أنت بديل نصي آمن لخدمة تحقق صوتي غير متاحة. لا يمكن استنتاج البصمة أو هوية المتحدث من التفريغ النصي. أعد JSON فقط: ${system.includes("sameSpeaker") ? '{"sameSpeaker":false,"matchPercent":0,"confidence":"low","quality":"too-short","reason":"تعذر إجراء مقارنة بيومترية للصوت عبر المزوّد الاحتياطي","profile":{"gender":"unknown","pitch":"medium","pitchHz":0,"timbre":"غير متاح","speed":"medium"}}' : '{"speaker":{"gender":"unknown","ageRange":"unknown","pitch":"medium","pitchHz":0,"timbre":"غير متاح","speed":"medium","nasality":"low","breathiness":"low","accent":"غير متاح","distinctiveTraits":[]},"quality":"too-short","usable":false,"reason":"تعذر إ��شاء بصمة بيومترية عبر المزوّد الاحتياطي"}'}`
         : system
       const fallbackPrompt = `${prompt}\n\nهذا هو التفريغ الصوتي من Groq Whisper:\n${transcript}`
       const text = await groqText(fallbackPrompt, fallbackSystem, temperature)
@@ -455,9 +457,9 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 شكل كل عنصر:
 {"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"نص السؤال","stem":"","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
 
-تحقق قبل الإخراج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs، وأن لكل سؤال إجابة واحدة قطعية.`
+تحقق قبل الإ��راج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs، وأن لكل سؤال إجابة واحدة قطعية.`
 
-const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاختبارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
+const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاخت��ارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
 كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
 احسب matchedPercent (0-100) لمدى مطابقة المعنى والألفاظ للنص المرجعي.
 score: 1 إذا كان صحيحاً (ولو بأخطاء ميسورة)، 0.5 إذا نصت آية واحدة أو خطأ جوهي بسيط، 0 إذا كان مختلفاً أو ناقصاً كثيراً.
@@ -514,7 +516,7 @@ const SYS_DEV_ASSISTANT = `أنت مهندس برمجيات Senior ومساعد 
 {
  "understanding": "إعادة صياغة موجزة لفهمك للطلب",
  "feasible": true/false,
- "summary": "ملخص عام للخطة في جملة أو جملتين",
+ "summary": "ملخص عام للخطة ��ي جملة أو جملتين",
  "files": [ { "path": "مسار الملف", "action": "modify"|"create", "reason": "لماذا يُعدّل هذا الملف", "changes": ["تغيير مقترح 1","تغيير مقترح 2"] } ],
  "steps": ["خطوة تنفيذ 1","خطوة 2"],
  "risks": ["مخاطرة أو أثر جانبي محتمل"],
@@ -844,6 +846,10 @@ async function autoApplyDevRequest(request: string, plan: any) {
 }
 
 export async function POST(req: Request) {
+  const originError = rejectCrossOrigin(req)
+  if (originError) return originError
+  const auth = await requireUser(req)
+  if (auth.response) return auth.response
   let body: any = {}
   const requestId = crypto.randomUUID()
   safeAudioLog("request started", { requestId })
@@ -884,7 +890,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    // 1) وضع لنص الحر (صندوق اختبار الذاء الاصطناعي)
+    // 1) وضع لنص الحر (صندوق اختبار الذاء الا��طناعي)
     if (typeof body.prompt === "string" && body.prompt.trim() && !body.mode) {
       const prompt = body.prompt.trim().slice(0, 6000)
       const reference = await getReferenceContext(prompt).catch(() => "")
@@ -899,6 +905,10 @@ export async function POST(req: Request) {
     const mode = body.mode as string
     const payload = body.payload || {}
     const temperature = typeof body.temperature === "number" ? body.temperature : 0.15
+    if (mode === "admin_assistant" || mode === "dev_assistant" || mode === "github_sync") {
+      const admin = await requireAdmin(req)
+      if (admin.response) return admin.response
+    }
 
     // 1.ب) المساعد الذكي للالب/ولي الأمر (ص حر مع سياق بيانات الطالب)
     if (mode === "assistant") {
@@ -907,7 +917,7 @@ export async function POST(req: Request) {
       const reference = await getReferenceContext(prompt).catch(() => "")
       const text = await runText(
         `${reference ? `${reference}\n\n` : ""}السؤال:\n${prompt.slice(0, 6000)}`,
-        "أنت مساعد المنصة الذكي، مساعد عربي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
+        "أنت مساعد المنصة الذكي، مساعد عر��ي طبيعي ودقيق. أجب عن أي سؤال مسموح داخل المنصة أو خارجها، وأعط الأولوية لبيانات المنصة فقط عندما تكون ذات صلة. اجعل طول الجواب على قدر السؤال: جواب مباشر وقصير للسؤال البسيط، وتفصيل منظم فقط عند طلبه. تعامل مع التحيات والعبارات الاجتماعية بصورة طبيعية؛ مثال: إذا قال المستخدم السلام عليكم فرد: وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك! استخدم الرموز التعبيرية باعتدال في الحديث الودي فقط، وتجنبها في الإجابات العلمية أو الحساسة. استخدم لغة عربية بسيطة واحترافية ولا تكرر السؤال. في القرآن والمتشابهات استخدم مقتطفات المرجعين للتحقق عند توفها، لكن لا تحصر معرفتك فيهما، ولا تختلق آية أو معلومة.",
         typeof body.temperature === "number" ? body.temperature : 0.35,
       )
       return json({ result: text.trim(), diagnostics })
@@ -1279,7 +1289,7 @@ detectedLanguage يجب أن تكون ar أو en أو mixed. subjects مصفوف
         "app/globals.css", "next.config.mjs", "package.json", "components/ui/button.tsx",
         "lib/utils.ts", ".env.example", "DEPLOY.md",
       ] }
-      const userPrompt = `بنية المشروع الحالية:\n${PROJECT_MANIFEST}\n\nقائمة الملفات الفعلية في المسودع:\n${tree.files.join("\n")}\n\nطلب المسؤول:\n${request}\n\nحلّل الطلب وأعد خطة التعديل بصيغة JSON فقط كما هو محدد. اختر الملفات الفعلية من قائمة المستودع كلما أمكن.`
+      const userPrompt = `بنية المشروع الحالية:\n${PROJECT_MANIFEST}\n\nقائمة الملفات الفعلية في المسودع:\n${tree.files.join("\n")}\n\nطلب المسؤول:\n${request}\n\nحلّل الطلب وأعد خطة ا��تعديل بصيغة JSON فقط كما هو محدد. اختر الملفات الفعلية من قائمة المستودع كلما أمكن.`
       const text = await runText(userPrompt, SYS_DEV_ASSISTANT, 0.2)
       const parsed = extractJson(text)
       if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.files)) {

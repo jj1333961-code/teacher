@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { antiCheatEvents, antiCheatGlobalConfig, antiCheatItemConfigs, antiCheatSessions } from '@/lib/db/schema'
 import { calculateRiskScore, defaultAntiCheatConfig, normalizeServerConfig, severityFor, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
 import { rejectCrossOrigin } from '@/lib/request-security'
+import { requireUser } from '@/lib/server-auth'
 
 const id = () => crypto.randomUUID()
 const clamp = (value: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(value) || 0))
@@ -19,6 +20,8 @@ async function resolveConfig(itemId: string, itemType: string) {
 }
 
 export async function GET(request: Request) {
+  const auth = await requireUser(request)
+  if (auth.response) return auth.response
   try {
     const { searchParams } = new URL(request.url)
     const itemId = searchParams.get('itemId')
@@ -42,6 +45,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const originError = rejectCrossOrigin(request)
   if (originError) return originError
+  const auth = await requireUser(request)
+  if (auth.response) return auth.response
   try {
     const body = await request.json()
     const { action } = body ?? {}

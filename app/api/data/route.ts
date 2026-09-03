@@ -1,5 +1,6 @@
 import { pool } from '@/lib/db'
 import { rejectCrossOrigin } from '@/lib/request-security'
+import { requireAdmin, requireUser } from '@/lib/server-auth'
 
 export const runtime = 'nodejs'
 const SNAPSHOT_ID = 'teacher-platform-v1'
@@ -15,7 +16,9 @@ function response(data: unknown, status = 200) {
   })
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const auth = await requireUser(request)
+  if (auth.response) return auth.response
   try {
     const result = await pool.query(
       'SELECT data, updated_at FROM app_snapshots WHERE id = $1',
@@ -31,6 +34,8 @@ export async function GET() {
 export async function PUT(request: Request) {
   const originError = rejectCrossOrigin(request)
   if (originError) return originError
+  const auth = await requireAdmin(request)
+  if (auth.response) return auth.response
   try {
     const body = await request.json()
     if (!body || typeof body.data !== 'object' || Array.isArray(body.data)) {
