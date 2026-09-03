@@ -98,6 +98,13 @@ const LANG_DICT = {
   'للمسؤول فقط': 'for the admin only',
   'تغيير اللغة': 'Change language',
   'تبديل اللغة': 'Switch language',
+  'اختر الدولة': 'Choose country',
+  'كود دولة الهاتف': 'Phone country code',
+  'كود دولة الواتساب': 'WhatsApp country code',
+  'مصر': 'Egypt', 'السعودية': 'Saudi Arabia', 'الإمارات': 'United Arab Emirates', 'قطر': 'Qatar', 'الكويت': 'Kuwait', 'الأردن': 'Jordan', 'المغرب': 'Morocco', 'الجزائر': 'Algeria', 'تونس': 'Tunisia', 'أمريكا/كندا': 'United States/Canada', 'بريطانيا': 'United Kingdom', 'ألمانيا': 'Germany', 'تركيا': 'Turkey',
+  'الرقم بدون كود الدولة': 'Number without country code', 'الرقم الدولي': 'International number', 'الرقم القومي المسجل': 'Registered national ID', 'الاسم المسجل بالحساب': 'Name registered on the account', 'أدخل اسم المستخدم': 'Enter username', 'أدخل اسمك كما سجله المسؤول': 'Enter your name as registered by the admin',
+  'التنبيهات': 'Notifications', 'المحادثة مع الذكاء الاصطناعي': 'AI chat', 'مخطط التقييم': 'Evaluation chart', 'صندوق التسجيلات': 'Recordings inbox', 'مساعد الذكاء الاصطناعي': 'AI assistant',   'الملفات المرسلة لي': 'Files sent to me', 'الملفات المرفوعة': 'Uploaded files', 'مساعد تطوير الموقع': 'Site development assistant', 'مزامنة GitHub': 'GitHub Sync', 'أدوات المسؤول': 'Admin tools', 'أدوات الطالب': 'Student tools', 'أدوات ولي الأمر': 'Parent tools',
+  'قال تعالى:': 'Allah Almighty said:', 'صدق الله العظيم': 'Allah Almighty has spoken the truth',
   'مرحباً بك — اختر طريقة استخدامك للموقع': 'Welcome — choose how you want to use the site',
   'المسؤول': 'Admin',
   'الطالب': 'Student',
@@ -183,7 +190,7 @@ function langTextNodes() {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const nodes = []; let node;
   while((node = walker.nextNode())) {
-      if(node.parentElement && (['SCRIPT','STYLE','NOSCRIPT'].includes(node.parentElement.tagName) || node.parentElement.closest('.thimar-ayah-frame,.thimar-ayah-ref,.thimar-footer,[data-no-translate]'))) continue;
+      if(node.parentElement && (['SCRIPT','STYLE','NOSCRIPT'].includes(node.parentElement.tagName) || node.parentElement.closest('.thimar-ayah-frame,.thimar-ayah-ref,.thimar-footer .ayah,.thimar-footer .ref,.thimar-footer-sidq,[data-no-translate]'))) continue;
     if(node.nodeValue && node.nodeValue.trim()) nodes.push(node);
   }
   return nodes;
@@ -213,6 +220,12 @@ function applyLangToDom() {
       const source = node.__arText;
       const translated = translateValue(source);
       node.nodeValue = currentLang === 'en' ? translated : source;
+    });
+    document.querySelectorAll('.side-sidebar-head h3, .role-nav-item > span:not(.role-nav-icon):not(.notification-count)').forEach(function(el){
+      if(!el.hasAttribute('data-ar-text')) el.setAttribute('data-ar-text', el.textContent);
+      let source = el.getAttribute('data-ar-text') || '';
+      if(source.includes('المرفوعة')) { source = 'الملفات المرفوعة'; el.setAttribute('data-ar-text', source); }
+      el.textContent = currentLang === 'en' ? translateValue(source) : source;
     });
     document.querySelectorAll('*').forEach(function(el){
       LANG_ATTRS.forEach(function(attr){
@@ -1276,7 +1289,7 @@ async function retryStudentIntakeAnalysis(){
     const audio=await voiceAudioPayload(blob),data=await callStudentAI('student_voice_intake',{role:'admin',audioBase64:audio.audioBase64,mimeType:audio.mimeType},0.05),filled=applyStudentVoiceFields(data.fields||{});
     if(!filled.length)throw new Error('لم أتعرف على بيانات واضحة من التسجيل المحفوظ.');
     result.innerHTML='<div class="alert alert-success">تم ملء '+filled.length+' خانة من التسجيل المحفوظ.<br><small>النص المسموع: '+escapeHtml(data.transcript||'لم يُرجع تفريغاً')+'</small></div>';
-    if(status)status.textContent='اكتمل التحليل';
+    if(status)status.textContent='أكمل التحليل';
   }catch(e){result.innerHTML='<div class="alert alert-danger">تعذر إعادة تحليل التسجيل: '+escapeHtml(e.message||'خطأ غير معروف')+'<br><button type="button" class="btn btn-sm btn-primary" onclick="retryStudentIntakeAnalysis()">إعادة تحليل نفس التسجيل</button></div>';if(status)status.textContent='فشل التحليل';}
 }
 function preferredRecorderMimeType(){
@@ -2329,7 +2342,7 @@ function localSmartChatReply(message,role){
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
-      return 'ملخص ابيانات المحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
+      return 'ملخص ابيانات ��لمحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
     }
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
@@ -2552,7 +2565,7 @@ function renderExamQuestions(){
     '<div class="form-group"><label>لمستوى</label><select onchange="updateExamQuestion('+i+',\'level\',this.value)"><option value="easy" '+(q.level==='easy'?'selected':'')+'>سهل</option><option value="medium" '+(q.level==='medium'?'selected':'')+'>متوسط</option><option value="hard" '+(q.level==='hard'?'selected':'')+'>ءءعب</option></select></div>'+
     '<div class="form-group"><label>زمن السؤال</label><div style="display:flex;gap:6px"><input aria-label="الساعات" type="number" min="0" max="23" value="'+Math.floor((q.timeLimit||30)/3600)+'" onchange="setQuestionTime('+i+',\'hours\',this.value)"><input aria-label="الدقائق" type="number" min="0" max="59" value="'+Math.floor(((q.timeLimit||30)%3600)/60)+'" onchange="setQuestionTime('+i+',\'minutes\',this.value)"><input aria-label="الثواني" type="number" min="0" max="59" value="'+((q.timeLimit||30)%60)+'" onchange="setQuestionTime('+i+',\'seconds\',this.value)"></div><small style="color:var(--text-light)">ساعات : دقائق : ثوانٍ</small></div>'+ 
     (q.type==='complete'?'<div class="form-group"><label>عدد آيات الإكمال</label><input type="number" min="1" max="20" value="'+(q.completeAyahs||1)+'" onchange="updateExamQuestion('+i+',\'completeAyahs\',parseInt(this.value)||1)"></div>':'')+
-    (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مسموح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
+    (q.type==='audio'?'<div class="form-group"><label>التسجيل لولي الأمر</label><select onchange="updateExamQuestion('+i+',\'audioShareWithParent\',this.value===\'true\')"><option value="true" '+(q.audioShareWithParent!==false?'selected':'')+'>مس��وح</option><option value="false" '+(q.audioShareWithParent===false?'selected':'')+'>إخفاء</option></select></div>':'')+
     '<div class="form-group"><label>فحص الغش لهذا السؤال</label><select onchange="updateExamQuestion('+i+',\'proctorEnabled\',this.value===\'true\')"><option value="true" '+(q.proctorEnabled!==false?'selected':'')+'>مفعّل</option><option value="false" '+(q.proctorEnabled===false?'selected':'')+'>غير مفعّل</option></select></div></div>'+
     '<div class="form-group"><label>تعليمات السؤال (ئن دون الإجابة)</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+ 
     '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآيات محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
@@ -5315,9 +5328,9 @@ function generateAIResponse(text, student) {
     r += '<br>💡 المهام التي عليها علامة 👁️ يمكنك عرض آياتها كسورة واضحة مع إمكانية التكبير.';
     return r;
   }
-  // الآيات ءءالصور
+  // الآيات ء��الصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُعرض بارم العثمانءء المشكَّل كصورة مطابقة تما��اً لمحف.';
+    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُع��ض بارم العثمانءء المشكَّل كصورة مطابقة تما��اً لمحف.';
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صءءت','ميكروفون','تحق')) {

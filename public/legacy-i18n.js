@@ -21,10 +21,13 @@
       'قال تعالى:': 'Allah Almighty said:', 'مصحف مفتوح على حامل خشبي': 'An open Quran on a wooden stand', 'الأدوات': 'Tools', 'الوقت المتبقي': 'Time remaining', 'النتيجة': 'Result',
       'مرحباً بك — اختر طريقة استخدامك للموقع': 'Welcome — choose how you want to use the site', 'التحكم الكامل في النظام والطلاب': 'Full control over the system and students', 'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization', 'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports', 'هل نسيت الرقم السري؟': 'Forgot your password?', 'إظهار الرقم السري': 'Show password', 'إخفاء الرقم السري': 'Hide password',
       'إنشاء حساب — التحقق من الهوية': 'Create account — identity verification', 'بيانات طلب الانضمام': 'Join request details', 'اختر طريقة التسجيل': 'Choose a sign-up method', 'الاسم بالكامل': 'Full name', 'الرقم القومي': 'National ID', 'رقم الموبايل': 'Mobile number', 'إرسال الطلب للمسؤول': 'Send request to admin', 'إعادة إرسال الكود': 'Resend code', 'تأكيد الهوية والمتابعة': 'Verify identity and continue',
-      'استرداد الحساب': 'Account recovery', 'طلب استرداد الحساب': 'Account recovery request', 'تعذر تحميل البيانات': 'Could not load data', 'لا توجد بيانات': 'No data available', 'جاري التحميل...': 'Loading...', 'حدث خطأ': 'An error occurred', 'خطأ في الشبكة': 'Network error', 'تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin'
+      'استرداد الحساب': 'Account recovery', 'طلب استرداد الحساب': 'Account recovery request', 'تعذر تحميل البيانات': 'Could not load data', 'لا توجد بيانات': 'No data available', 'جاري التحميل...': 'Loading...', 'حدث خطأ': 'An error occurred', 'خطأ في الشبكة': 'Network error', 'تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+      'اختر الدولة': 'Choose country', 'كود دولة الهاتف': 'Phone country code', 'كود دولة الواتساب': 'WhatsApp country code', 'مصر': 'Egypt', 'السعودية': 'Saudi Arabia', 'الإمارات': 'United Arab Emirates', 'قطر': 'Qatar', 'الكويت': 'Kuwait', 'الأردن': 'Jordan', 'المغرب': 'Morocco', 'الجزائر': 'Algeria', 'تونس': 'Tunisia', 'أمريكا/كندا': 'United States/Canada', 'بريطانيا': 'United Kingdom', 'ألمانيا': 'Germany', 'تركيا': 'Turkey',
+      'الرقم بدون كود الدولة': 'Number without country code', 'الرقم الدولي': 'International number', 'الرقم القومي المسجل': 'Registered national ID', 'الاسم المسجل بالحساب': 'Name registered on the account', 'أدخل اسم المستخدم': 'Enter username', 'أدخل الكود الذي وصلك': 'Enter the code you received', 'الاسم كما في البطاقة': 'Name as shown on the ID', 'اكتب اسم ولي الأمر بالكامل': 'Enter the parent full name', 'أي معلومات إضافية تريد إبلاغ المسؤول بها': 'Any additional information for the admin',
+      'الملفات المرفوعة': 'Uploaded files', 'الملفات': 'Files', 'التنبيهات': 'Notifications', 'المحادثة مع الذكاء الاصطناعي': 'AI chat', 'مخطط التقييم': 'Evaluation chart', 'صندوق التسجيلات': 'Recordings inbox', 'مساعد الذكاء الاصطناعي': 'AI assistant', 'الملفات المرسلة لي': 'Files sent to me', 'مساعد تطوير الموقع': 'Site development assistant', 'أدوات المسؤول': 'Admin tools', 'أدوات الطالب': 'Student tools', 'أدوات ولي الأمر': 'Parent tools', 'صدق الله العظيم': 'Allah Almighty has spoken the truth'
     }
   };
-  var religiousSelector = '[data-no-translate],.quran-text,.ayah,.hadith,.dhikr,.thimar-ayah-frame,.thimar-ayah-ref,.thimar-footer,[lang="ar-QA"]';
+  var religiousSelector = '[data-no-translate],.quran-text,.ayah,.hadith,.dhikr,.thimar-ayah-frame,.thimar-ayah-ref,.thimar-footer .ayah,.thimar-footer .ref,.thimar-footer-sidq,[lang="ar-QA"]';
   var locale = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
   var originals = new WeakMap();
 
@@ -57,6 +60,12 @@
         var translated = translate(source);
         el.setAttribute(attr, locale === 'ar' ? source : translated);
       });
+    });
+    document.querySelectorAll('.side-sidebar-head h3, .role-nav-item > span:not(.role-nav-icon):not(.notification-count)').forEach(function(el){
+      if(!el.hasAttribute('data-i18n-ar-text')) el.setAttribute('data-i18n-ar-text', el.textContent);
+      var source = el.getAttribute('data-i18n-ar-text') || '';
+      if(source.indexOf('المرفوعة') !== -1) { source = 'الملفات المرفوعة'; el.setAttribute('data-i18n-ar-text', source); }
+      el.textContent = locale === 'en' ? translate(source) : source;
     });
     document.querySelectorAll('.thimar-ayah-heading').forEach(function(el){ el.textContent = locale === 'en' ? 'Allah Almighty said:' : 'قال تعالى:'; });
     document.documentElement.lang = locale;

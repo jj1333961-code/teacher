@@ -1428,7 +1428,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>️ تغيير الرقم السري</h2></div>
   <div id="studentSettingsAlert"></div>
   <div class="form-group"><label>الرقم السري الحالي</label><input type="password" id="currentStudentPass" placeholder="أدخل الرقم السري الحالي"></div>
-  <div class="form-group"><label>الرقم السي الجديد</label><input type="password" id="newStudentPass" placeholder="أدخل الرقم السري لجديد"></div>
+  <div class="form-group"><label>الرقم السي الجديد</label><input type="password" id="newStudentPass" placeholder="أدخل الرقم السري الجديد"></div>
   <button class="btn btn-success" onclick="saveStudentPass()">💾 حفظ</button>
   
 </div>
@@ -1936,7 +1936,7 @@ window.alert = function(m){ showToast(m); };
     <div class="quran-reader-frame"><div id="quranZoomWrap" class="quran-zoom-wrap"><canvas id="quranOriginalCanvas" class="quran-reader-canvas" aria-label="صفحة المصحف الأصلية"></canvas></div><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اسحب للتنقل بين صفحات المصحف أو قرّب بإصبعين للتكبير"></div></div>
   </section>
   <script>
-/* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة التقق القديم دون أي تغيير) */
+/* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها دون تغيير الوظيفة القديمة */
 (function(){
   function el(id){ return document.getElementById(id); }
 
@@ -1969,6 +1969,7 @@ window.alert = function(m){ showToast(m); };
 </script>
 <link rel="stylesheet" href="/messaging.css">
 
+<script src="/legacy-i18n.js" defer></script>
 <script src="/prayer-screen.js" defer></script>
 <script src="/islamic-hub.js" defer></script>
 <script src="/messaging.js" defer></script>
