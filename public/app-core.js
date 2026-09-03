@@ -52,6 +52,55 @@ const RATING_COLORS = {
   '0': '#dc3545'
 };
 
+// ====== COUNTRY-AWARE IDENTITY AND PHONE FIELDS ======
+let countryRules = [];
+function countryDisplayName(iso2) {
+  try { return new Intl.DisplayNames([currentLang === 'en' ? 'en' : 'ar'], { type: 'region' }).of(iso2) || iso2; }
+  catch { return iso2; }
+}
+function countryRuleForValue(value) {
+  return countryRules.find(function(rule) { return rule.iso2 === String(value || '').toUpperCase(); }) || countryRules.find(function(rule) { return rule.iso2 === 'EG'; });
+}
+function populateCountrySelect(select) {
+  if(!select || !countryRules.length) return;
+  const previous = select.dataset.countryIso || (select.value === '20' ? 'EG' : '');
+  select.innerHTML = countryRules.map(function(rule) { return '<option value="' + rule.iso2 + '">' + escapeHtml(countryDisplayName(rule.iso2)) + ' (+' + rule.dialCode + ')</option>'; }).join('');
+  const selected = countryRules.some(function(rule) { return rule.iso2 === previous; }) ? previous : 'EG';
+  select.value = selected;
+  select.dataset.countryIso = selected;
+  select.addEventListener('change', function() { select.dataset.countryIso = select.value; updateCountryFieldHints(select); });
+  updateCountryFieldHints(select);
+}
+function updateCountryFieldHints(select) {
+  const rule = countryRuleForValue(select?.value);
+  if(!rule) return;
+  const phoneId = select.id === 'recoveryCountry' ? 'recoveryPhone' : select.id === 'signupWhatsCountry' ? 'signupWhats' : select.id === 'signupPhoneCountry' ? 'signupPhone' : select.id === 'stNationalCountry' ? 'stPhone' : 'editPhone';
+  const phone = document.getElementById(phoneId);
+  const identityId = select.id === 'recoveryCountry' ? 'recoveryNid' : select.id === 'signupPhoneCountry' ? 'signupNid' : select.id === 'stNationalCountry' ? 'stNational' : select.id === 'editNationalCountry' ? 'editNational' : '';
+  const identity = document.getElementById(identityId);
+  if(phone) { phone.placeholder = currentLang === 'en' ? 'Local number without country code' : 'الرقم المحلي بدون رمز الدولة'; phone.inputMode = 'tel'; }
+  if(identity) { identity.inputMode = rule.identity === 'numeric' ? 'numeric' : 'text'; identity.placeholder = rule.identity === 'numeric' ? (currentLang === 'en' ? '6–20 digits' : 'من 6 إلى 20 رقماً') : (currentLang === 'en' ? 'Letters and numbers, or passport number' : 'حروف وأرقام أو رقم جواز السفر'); }
+  const hint = document.getElementById(identityId + 'Hint');
+  if(hint) hint.textContent = currentLang === 'en' ? (rule.identity === 'numeric' ? 'Format check only: 6–20 digits.' : 'Format check only: letters/numbers, 6–24 characters.') : (rule.identity === 'numeric' ? 'تحقق شكلي فقط: من 6 إلى 20 رقماً.' : 'تحقق شكلي فقط: حروف وأرقام من 6 إلى 24 خانة.');
+  updateSignupInternationalNumber(phoneId, select.id, phoneId + 'International');
+}
+async function loadCountryRules() {
+  try {
+    const response = await fetch('/api/countries', { cache: 'force-cache' });
+    const payload = await response.json();
+    countryRules = Array.isArray(payload.countries) ? payload.countries : [];
+    document.querySelectorAll('#recoveryCountry,#signupWhatsCountry,#signupPhoneCountry,#stNationalCountry,#editNationalCountry').forEach(populateCountrySelect);
+  } catch(error) { console.warn('[v0] country rules unavailable'); }
+}
+function validateCountryFields(countryId, identityId, phoneId) {
+  const rule = countryRuleForValue(document.getElementById(countryId)?.value);
+  const identity = String(document.getElementById(identityId)?.value || '').trim().replace(/[\\s-]/g, '');
+  const phone = String(document.getElementById(phoneId)?.value || '').replace(/\\D/g, '').replace(/^0+/, '');
+  const identityValid = rule && (rule.identity === 'numeric' ? /^\\d{6,20}$/.test(identity) : /^[A-Za-z0-9]{6,24}$/.test(identity));
+  const phoneValid = rule && rule.phoneLengths.includes(phone.length);
+  return { identityValid, phoneValid };
+}
+
 // ====== NAVIGATION HISTORY ======
 let pageHistory = [];
 
@@ -214,7 +263,7 @@ function applyLangToDom() {
     document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
     document.querySelectorAll('.thimar-ayah-heading').forEach(function(el){ el.textContent = currentLang === 'en' ? 'Allah Almighty said:' : 'قال تعالى:'; });
     document.querySelectorAll('.thimar-ayah-ref').forEach(function(el){ el.textContent = '(إبراهيم: 24)'; });
-    document.querySelectorAll('.thimar-footer .ref').forEach(function(el){ el.textContent = '(المزمل: 4)'; });
+    document.querySelectorAll('.thimar-footer .ref').forEach(function(el){ el.textContent = '(المزم��: 4)'; });
     langTextNodes().forEach(function(node){
       if(node.__arText === undefined) node.__arText = node.nodeValue;
       const source = node.__arText;
@@ -436,7 +485,7 @@ function finishGoogleLogin(user){
 }
 function restorePendingGoogleSignup(){try{const raw=sessionStorage.getItem('thimar_pending_google_signup');if(!raw)return false;const pending=JSON.parse(raw);if(!pending?.email)return false;signupState.method='google';signupState.email=String(pending.email).trim().toLowerCase();signupState.name=String(pending.name||'');signupState.whats='';signupState.verified=true;const note=document.getElementById('signupVerifiedNote');if(note)note.innerHTML='تم التحقق من هويتك عبر Google — '+escapeHtml(signupState.email);const name=document.getElementById('signupName');if(name&&!name.value)name.value=signupState.name;initSignupJuzSelect();showPage('signupStep2');return true}catch(e){try{sessionStorage.removeItem('thimar_pending_google_signup')}catch(ignore){}return false}}
 
-function initializeThimarApp(){if(window.__thimarAppInitialized)return;window.__thimarAppInitialized=true;loadGlobalProctorSettings();setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store',credentials:'same-origin'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('عذر قراءة جلسة Google');finishGoogleLogin(data.user);history.replaceState({},'',pageUrl(document.querySelector('.page:not(.hidden)')?.id))}).catch(()=>{history.replaceState({},'',location.pathname);const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر استكمال تسجيل الدخول عبر Google.</div>'})}else if(restoreSession()){
+function initializeThimarApp(){if(window.__thimarAppInitialized)return;window.__thimarAppInitialized=true;loadCountryRules();loadGlobalProctorSettings();setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store',credentials:'same-origin'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('عذر قراءة جلسة Google');finishGoogleLogin(data.user);history.replaceState({},'',pageUrl(document.querySelector('.page:not(.hidden)')?.id))}).catch(()=>{history.replaceState({},'',location.pathname);const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر استكمال تسجيل الدخول عبر Google.</div>'})}else if(restoreSession()){
   const expectedRole = /\/(?:admin|admin\.html)$/.test(location.pathname) ? 'admin' : /\/(?:student|student\.html)$/.test(location.pathname) ? 'student' : /\/(?:parent|parent\.html)$/.test(location.pathname) ? 'parent' : null;
   if(expectedRole && expectedRole !== currentType){
     history.replaceState({ page: defaultPageForRole(currentType) }, '', roleShellPath(currentType));
@@ -622,7 +671,7 @@ function updateBackButton() {
   const btn = document.createElement('div');
   btn.id = 'globalBackBtn';
   btn.className = 'back-btn-container';
-  btn.innerHTML = '<button class="back-btn" onclick="goBack()">🔙 رجوع للصفحة السابة</button>';
+  btn.innerHTML = '<button class="back-btn" onclick="goBack()">🔙 ��جوع للصفحة السابة</button>';
   document.body.appendChild(btn);
 }
 
@@ -949,7 +998,9 @@ function handleGoogleCredential(resp) {
 
 function getInternationalNumber(inputId, countryId) {
   const raw = String(document.getElementById(inputId)?.value || '').replace(/\D/g, '');
-  const country = String(document.getElementById(countryId)?.value || '20').replace(/\D/g, '');
+  const selector = document.getElementById(countryId);
+  const selectedRule = countryRuleForValue(selector?.value);
+  const country = selectedRule ? selectedRule.dialCode : String(selector?.value || '20').replace(/\D/g, '');
   return country + raw.replace(/^0+/, '');
 }
 function updateSignupInternationalNumber(inputId, countryId, outputId) {
@@ -1011,7 +1062,8 @@ function submitAccountRecovery() {
   const name=document.getElementById('recoveryName')?.value.trim() || '';
   const nid=String(document.getElementById('recoveryNid')?.value || '').replace(/\D/g,'');
   const phone=getInternationalNumber('recoveryPhone','recoveryCountry');
-  if(!name || !nid || phone.length < 8) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال نوع الحساب والاسم والرقم القومي ورقم الهاتف بصورة صحيحة.</div>'; return; }
+  const recoveryValidation = validateCountryFields('recoveryCountry','recoveryNid','recoveryPhone');
+  if(!name || !recoveryValidation.identityValid || !recoveryValidation.phoneValid) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال الاسم وكود الهوية ورقم الهاتف وفق صيغة الدولة المختارة. التحقق شكلي فقط.</div>'; return; }
   const students=getData('students', []);
   const matched=students.find(function(student){
     const expectedName=role === 'student' ? student.name : (student.parent || student.parentName);
@@ -1144,9 +1196,8 @@ function submitSignupRequest() {
   const juz = document.getElementById('signupJuz').value;
   const surah = document.getElementById('signupSurah').value;
   const notes = document.getElementById('signupNotes').value.trim();
-  if(!name || !relationshipName || !nid || !phone) { box.innerHTML = '<div class="alert alert-danger">❌ الاسم واسم الطرف المرتبط والرقم القومي ورقم الهاتف مطلوبة</div>'; return; }
-  if(phone.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم هاتف صحيحًا مع اختيار كود الدولة</div>'; return; }
-  if(nid.length !== 14) { box.innerHTML = '<div class="alert alert-danger">❌ الرقم القومي يجب أن يكون 14 رقم</div>'; return; }
+  const signupValidation = validateCountryFields('signupPhoneCountry','signupNid','signupPhone');
+  if(!name || !relationshipName || !signupValidation.identityValid || !signupValidation.phoneValid) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل الاسم والبيانات المطلوبة وفق صيغة الدولة المختارة. التحقق شكلي فقط.</div>'; return; }
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
   const time = new Date().toLocaleString('ar-EG');
   const details = '📋 طلب ئنشاء حساب جديد\n'
@@ -2121,7 +2172,7 @@ html += '</div>';
 const _sur = el.name === 'اللوح' || el.name === 'اسورة' ? (el.surah || mainSurah) : el.surah;
   html += '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">';
   html += '<button class="btn btn-xs btn-info" onclick="openAyatViewer(\''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">📖 عض الآيات (صورة)</button>';
-  html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineAyat_'+i+'\', \''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">👁️ معاين داخل الصفحة</button>';
+  html += '<button class="btn btn-xs btn-secondary" onclick="toggleInlineAyat(\'inlineAyat_'+i+'\', \''+(_sur||'').replace(/'/g,"")+'\', \''+(el.from||'')+'\', \''+(el.to||el.from||'')+'\')">👁️ مع��ين داخل الصفحة</button>';
   html += '</div><div id="inlineAyat_'+i+'" data-open="0" style="margin-top:10px;"></div>';
 
   // Rating
@@ -2323,7 +2374,7 @@ async function loadExamFiles(){
     const previous=document.getElementById('examFileSource')?.value||'';
     const res=await fetch('/api/exam-files',{cache:'no-store'});const data=await readApiJson(res,'تعذر تحميل ملفات الاختبارات');examFilesCache=Array.isArray(data.files)?data.files:[];
     const select=document.getElementById('examFileSource');if(select){select.innerHTML='<option value="">اختر مرجعاً...</option>'+examFilesCache.map(f=>'<option value="'+f.id+'">'+escapeHtml(f.name)+(f.pinned?' — مثبت دائماً':'')+'</option>').join('');select.value=examFilesCache.some(f=>f.id===previous)?previous:(examFilesCache[0]?.id||'')}
-    if(box)box.innerHTML=(data.warning?'<div class="alert alert-warning">'+escapeHtml(data.warning)+'</div>':'')+(examFilesCache.length?examFilesCache.map(f=>'<div class="exam-plan-row"><strong>'+escapeHtml(f.name)+(f.pinned?' <span class="badge badge-primary">مرجع مثبت</span>':'')+'</strong><div style="color:var(--text-light);font-size:.85rem">'+(f.text||'').length+' حرف'+(f.pinned?' — متاح دائماً':' — '+new Date(f.uploadedAt).toLocaleString('ar-EG'))+'</div>'+(f.pinned?'':'<button class="btn btn-sm btn-danger" onclick="deleteExamFile(\''+f.id+'\')">حذف الملف</button>')+'</div>').join(''):'<div class="alert alert-info">لا توجد ملفات ختبارات محفوظة.</div>');
+    if(box)box.innerHTML=(data.warning?'<div class="alert alert-warning">'+escapeHtml(data.warning)+'</div>':'')+(examFilesCache.length?examFilesCache.map(f=>'<div class="exam-plan-row"><strong>'+escapeHtml(f.name)+(f.pinned?' <span class="badge badge-primary">مرجع مثب��</span>':'')+'</strong><div style="color:var(--text-light);font-size:.85rem">'+(f.text||'').length+' حرف'+(f.pinned?' — متاح دائماً':' — '+new Date(f.uploadedAt).toLocaleString('ar-EG'))+'</div>'+(f.pinned?'':'<button class="btn btn-sm btn-danger" onclick="deleteExamFile(\''+f.id+'\')">حذف الملف</button>')+'</div>').join(''):'<div class="alert alert-info">لا توجد ملفات ختبارات محفوظة.</div>');
     updateExamSourceDistribution();
   }catch(e){examFilesCache=[];if(box)box.innerHTML='<div class="alert alert-danger">'+escapeHtml(e.message||'تعذر تحميل املفات')+' <button class="btn btn-sm btn-primary" onclick="loadExamFiles()">إعادة المحاولة</button></div>';throw e}
 }
@@ -2532,7 +2583,7 @@ async function generateExamQuestions(){
       raw=await generateLocalQuranQuestions(range.start,range.end,expandedPlans);showExamAlert('استخدم النظام المولد القرآني الاحتياطي بعد تعذر مزودي الذكاء الاصطناعي.','warning')
     }
     const unique=[];for(const q of raw.map(cleanExamQuestion).filter(q=>q.prompt&&q.correct!==undefined)){const fingerprint=examQuestionFingerprint(q);if(existingSet.has(fingerprint))continue;existingSet.add(fingerprint);unique.push(q);if(unique.length===requestedTotal)break}
-    if(!unique.length)throw new Error('لم تُنتج ادفعة أسئلة جديدة غير مكررة. غيّر النطاق أو الخطة ثم أعد المحاولة.');
+    if(!unique.length)throw new Error('لم تُنتج ادفعة أسئلة جديدة ��ير مكررة. غيّر النطاق أو الخطة ثم أعد المحاولة.');
     const stamp=Date.now(),added=unique.map((q,index)=>{const plan=expandedPlans[index]||normalizedPlans[0];return {id:'exam_'+stamp+'_'+index,type:plan.type,level:plan.level,surah:q.surah||base,prompt:q.prompt||'',stem:q.stem||'',options:Array.isArray(q.options)?q.options:[],correct:q.correct||'',from:parseInt(q.from)||1,to:parseInt(q.to)||parseInt(q.from)||1,surahNumber:parseInt(q.surahNumber)||0,timeLimit:plan.timeLimit,completeAyahs:plan.completeAyahs,reciteAyahs:plan.reciteAyahs,audioShareWithParent:plan.audioShareWithParent!==false,proctorEnabled:plan.proctorEnabled!==false,points:typeof q.points==='number'?q.points:1,rejected:false,weakened:false,source:q.source||(sourceMode==='file'?'file':'ai-verified'),sourceFileId:q.sourceFileId||'',sourceFileName:q.sourceFileName||'',questionImage:q.questionImage||'',optionsCount:plan.optionsCount||4,pastScope:range.scope}});
     const previousCount=examQuestions.length;examQuestions=examQuestions.concat(added);examEditorActiveIndex=previousCount;
     const now=Date.now(),historyByFingerprint=new Map(savedHistory.map(item=>[String(item.fingerprint),item]));
@@ -3517,7 +3568,7 @@ async function sendComposeMessage() {
   const person = document.getElementById('composePerson').value;
   const text = document.getElementById('composeText').value.trim();
   const voice = voiceMsgStore['compose'] || '';
-  if(!person || (!text && !voice)) return showToast(' اختر المستلم واكتب رسالة أو سجّل رسالة صوتية', 'error');
+  if(!person || (!text && !voice)) return showToast(' اختر المستلم واكتب رسالة أو سجّل رسالة صوتي��', 'error');
   let messages = getData('messages');
   const parts = person.split('_');
   const type = parts[0];
@@ -5230,7 +5281,7 @@ function generateAIReport(student) {
   else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرارة.';
   else if(avgScore >= 6) report = 'جيد يا '+student.name+'! 📚 مستواك في تقدم مستمر. أنصحك بزيادة وقت المراجعة اليومي.';
   else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على التكرار والمراجعة اليومية وسترى التحسن قريباً.';
-  report += '<br><br>📊 متوسط آخر 3 تسميعات: <strong>'+avgScore.toFixed(1)+' / 16</strong><br>📈 عدد التسميعات المسجلة: '+finalizedSessions.length;
+  report += '<br><br>📊 متوسط آخر 3 تس��يعات: <strong>'+avgScore.toFixed(1)+' / 16</strong><br>📈 عدد التسميعات المسجلة: '+finalizedSessions.length;
   return report;
 }
 

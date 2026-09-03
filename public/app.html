@@ -876,7 +876,7 @@ tr:hover { background: var(--table-hover); }
   <p style="color:var(--text-light);margin-bottom:20px;">أدخل البيانات المسجلة بالحساب. لن يتم إرسال الطلب إلا بعد مطابقتها بالكامل.</p>
   <div id="recoveryResult" aria-live="polite"></div>
   <div class="form-row"><div class="form-group"><label for="recoveryRole">نوع الحساب *</label><select id="recoveryRole"><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div><div class="form-group"><label for="recoveryName">الاسم بالكامل *</label><input id="recoveryName" type="text" autocomplete="name" placeholder="الاسم المسجل بالحساب"></div></div>
-  <div class="form-group"><label for="recoveryNid">الرقم القومي *</label><input id="recoveryNid" type="text" inputmode="numeric" autocomplete="off" placeholder="الرقم القومي المسجل" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+  <div class="form-group"><label for="recoveryNid">كود الهوية أو جواز السفر *</label><div style="display:flex;gap:8px;direction:ltr;"><input id="recoveryNid" type="text" autocomplete="off" placeholder="كود الهوية أو رقم جواز السفر" style="flex:1;"></div><small id="recoveryNidHint" style="color:var(--text-light)">تحقق شكلي فقط حسب الدولة المختارة.</small></div>
   <div class="form-group"><label for="recoveryPhone">رقم الهاتف *</label><div style="display:flex;gap:8px;direction:ltr;"><select id="recoveryCountry" aria-label="كود دولة الهاتف" onchange="updateSignupInternationalNumber('recoveryPhone','recoveryCountry','recoveryPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input id="recoveryPhone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="الرقم بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'');updateSignupInternationalNumber('recoveryPhone','recoveryCountry','recoveryPhoneInternational')" style="flex:1;direction:ltr;"></div><small id="recoveryPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   <button type="button" class="btn btn-primary" onclick="submitAccountRecovery()" style="width:100%">استرجاع الحساب</button>
 </div>
@@ -922,7 +922,7 @@ tr:hover { background: var(--table-hover); }
     <input type="text" id="signupRelationshipName" placeholder="اكتب اسم ولي الأمر بالكامل">
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" maxlength="14" placeholder="14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" autocomplete="off" placeholder="كود الهوية أو رقم جواز السفر"><small id="signupNidHint" style="color:var(--text-light)">تحقق شكلي فقط حسب الدولة المختارة.</small></div>
     <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاتف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
@@ -1144,8 +1144,8 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم المستخدم *</label><input type="text" id="stUsername" placeholder="اسم المستخدم لتسجيل الدخول"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم القومي * (14 رقم)</label><input type="text" id="stNational" maxlength="14" placeholder="أدخل 14 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الهاتف (11 رقم)</label><input type="text" id="stPhone" maxlength="11" placeholder="أدخل 11 رقم" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div class="form-group"><label>كود الهوية أو جواز السفر *</label><input type="text" id="stNational" autocomplete="off" placeholder="كود الهوية أو رقم جواز السفر"></div>
+    <div class="form-group"><label>الدولة ورقم الهاتف</label><div style="display:flex;gap:8px;direction:ltr;"><select id="stNationalCountry" aria-label="اختر الدولة" style="max-width:180px;"><option value="20">مصر (+20)</option></select><input type="tel" id="stPhone" autocomplete="tel" placeholder="الرقم المحلي" style="flex:1;"></div></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ الميلاد *</label><input type="date" id="stBirth" onchange="calcAge()"></div>
