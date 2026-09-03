@@ -3,9 +3,9 @@
 
   var dictionaries = {
     en: {
-      'منصة ثمار': 'Thimar Platform', 'منصة ثِمار': 'Thimar Platform', 'لحفظ القرآن الكريم': 'for memorizing the Holy Quran',
+      'منصة ثمار': 'Thimar Platform', 'منصة ثِمار': 'Thimar Platform', 'لحفظ القرآن الكريم': 'for memorizing the Holy Quran', 'إظهار الرقم السري': 'Show password', 'إظهار Password': 'Show password', 'إخفاء الرقم السري': 'Hide password', 'إخفاء Password': 'Hide password', 'هل نسيت الرقم السري؟': 'Forgot your password?', 'هل نسيت Password؟': 'Forgot your password?', 'تغيير اللغة / Change language': 'Change language',
       'تسجيل الدخول': 'Log in', 'تسجيل الخروج': 'Log out', 'إنشاء حساب جديد': 'Create account', 'ليس لديك حساب؟': "Don't have an account?", 'أليس لديك حساب؟': "Don't have an account?",
-      'اسم المستخدم': 'Username', 'الرقم السري': 'Password', 'رقم الهاتف': 'Phone number', 'تاريخ الميلاد': 'Date of birth', 'الصف الدراسي': 'Grade',
+      'اسم المستخدم': 'Username', 'الرقم السري': 'Password', 'رقم الهاتف': 'Phone number', 'تاريخ الميلاد': 'Date of birth', 'الصف الدراسي': 'Grade', 'أدخل الرقم السري': 'Enter your password', 'أدخل اسم المستخدم والرقم السري': 'Enter your username and password', 'الرئيسية': 'Home', 'الصفحة الرئيسية': 'Home',
       'المسؤول': 'Admin', 'الطالب': 'Student', 'المعلم': 'Teacher', 'ولي الأمر': 'Parent', 'الطلاب': 'Students', 'المعلمين': 'Teachers', 'أولياء الأمور': 'Parents',
       'الرئيسية': 'Home', 'لوحة التحكم': 'Dashboard', 'الإعدادات': 'Settings', 'الرسائل': 'Messages', 'محادثة': 'Chat', 'الإشعارات': 'Notifications',
       'المصحف الشريف': 'Holy Quran', 'القرآن الكريم': 'The Holy Quran', 'الاختبارات': 'Exams', 'قائمة الاختبار': 'Exam list', 'توليد الأسئلة بالذكاء الاصطناعي': 'Generate questions with AI',
@@ -17,7 +17,7 @@
       'الكاميرا غير متاحة': 'Camera unavailable', 'تم رفض صلاحية الكاميرا': 'Camera permission was denied', 'الكاميرا مستخدمة بواسطة تطبيق آخر': 'Camera is being used by another app',
       'المتصفح لا يدعم الكاميرا': 'This browser does not support the camera', 'حدث خطأ أثناء تشغيل الكاميرا': 'An error occurred while starting the camera',
       'البصمة الصوتية': 'Voiceprint', 'بدء التسجيل': 'Start recording', 'إيقاف التسجيل': 'Stop recording', 'تسجيل الصوت': 'Record audio',
-      'إعدادات العرض': 'Display settings', 'تبديل الوضع': 'Toggle theme', 'تغيير اللغة / Change language': 'Change language', 'فتح قائمة الأدوات': 'Open tools menu', 'إغلاق القائمة': 'Close menu',
+      'إعدادات العرض': 'Display settings', 'تبديل الوضع': 'Toggle theme', 'تغيير اللغة / Change language': 'Change language', 'Change language / Change language': 'Change language', 'فتح قائمة الأدوات': 'Open tools menu', 'إغلاق القائمة': 'Close menu',
       'قال تعالى:': 'Allah Almighty said:', 'مصحف مفتوح على حامل خشبي': 'An open Quran on a wooden stand', 'الأدوات': 'Tools', 'الوقت المتبقي': 'Time remaining', 'النتيجة': 'Result'
     }
   };
@@ -51,7 +51,8 @@
         var key = 'data-i18n-source-' + attr;
         if (!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr));
         var source = el.getAttribute(key) || '';
-        el.setAttribute(attr, locale === 'ar' ? source : translate(source));
+        var translated = dictionary()[source] || source;
+        el.setAttribute(attr, locale === 'ar' ? source : translated);
       });
     });
     document.documentElement.lang = locale;

@@ -1008,7 +1008,7 @@ tr:hover { background: var(--table-hover); }
     <label>طلب التطوير</label>
     <textarea id="devAssistantInput" rows="4" placeholder="اكتب ما ترد إضافته أو تعديله ف الموقع..."></textarea>
   </div>
-  <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطناعي</button>
+  <button class="btn btn-primary" id="devAssistantBtn" onclick="runDevAssistant()" style="width:100%">تنفيذ التعديل بالذكاء الاصطن��عي</button>
   <div id="devProgressPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:12px;">
     <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;"><strong id="devProgressLabel">تحليل الطلب</strong><span id="devEta">الءءقت المتبقي: 02:00</span></div>
     <div style="height:9px;background:var(--border);border-radius:999px;overflow:hidden;"><div id="devProgressBar" style="height:100%;width:8%;background:var(--primary);transition:width .5s;"></div></div>
@@ -1643,7 +1643,7 @@ window.alert = function(m){ showToast(m); };
     if (corePromise) return corePromise;
     corePromise = new Promise(function(resolve, reject){
       const s = document.createElement('script');
-      s.src = '/app-core.js';
+      s.src = '/app-core.js?v=20260903';
       s.async = false;
       s.onload = function(){ window.__thimarAppCoreLoaded = true; const p=document.createElement('script'); p.src='/proctoring-v2.js'; p.onload=resolve; p.onerror=reject; document.head.appendChild(p); };
       s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
@@ -1667,7 +1667,7 @@ window.alert = function(m){ showToast(m); };
       if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
       return fn.apply(window, Array.prototype.slice.call(args || []));
     }).catch(function(err){
-      var message = 'تعذر تنفيذ الطلب. أعد المحاولة.';
+      var message = 'تعذر تنفيذ الط��ب. أعد المحاولة.';
       var box = document.getElementById('unifiedLoginAlert');
       if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
       console.error('[v0] App core failed to load', err);
