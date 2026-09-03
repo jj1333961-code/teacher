@@ -101,7 +101,7 @@ const LANG_DICT = {
   'أو رقم الموبايل للمسؤول': 'or admin mobile number',
   'أدخل الرقم السري': 'Enter your password',
   'أدخل اسم المستخدم والرقم السري': 'Enter your username and password',
-  'للمسؤول': 'for the admin',
+  'للمس��ول': 'for the admin',
   'للمسؤول فقط': 'for the admin only',
   'تغيير اللغة': 'Change language',
   'تبديل اللغة': 'Switch language',
@@ -233,6 +233,13 @@ function applyLangToDom(root) {
   if(!walkRoot) return;
   document.documentElement.lang = currentLang;
   document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
+  // العربية هي لغة المصدر؛ لا نمر على آلاف العناصر ولا نضيف data-ar-* لكل عنصر
+  // في كل انتقال. هذا المسح غير الضروري كان يحجز الخيط الرئيسي ويعطل النقرات.
+  if (currentLang === 'ar') {
+    const arabicButton = document.getElementById('langToggleBtn');
+    if (arabicButton) arabicButton.textContent = 'EN';
+    return;
+  }
   if(walkRoot.nodeType === 3) {
     applyLangTextNode(walkRoot);
   } else {
@@ -899,7 +906,11 @@ function showPage(id, options = {}) {
   if(id === 'studentExamPage') renderStudentExam();
   if(id === 'parentPendingTasksPage') renderParentPendingTasks();
   if(id === 'parentChartPage') renderParentFullChart();
-  applyLangToDom(el);
+  // لا نحجز خيط الواجهة أثناء ترجمة صفحة كاملة؛ إظهار الصفحة وربط التنقل
+  // يجب أن يكتمل أولاً، ثم تُطبّق الترجمة في دورة لاحقة.
+  window.setTimeout(function () {
+    if (el && el.isConnected) applyLangToDom(el);
+  }, 0);
   
   const featureName = pageFeature(id);
   if (featureName) {
@@ -1358,7 +1369,7 @@ function submitAccountRecovery() {
       && String(expectedNid || '').replace(/\D/g,'') === nid
       && recoveryPhoneMatches(expectedPhone, phone);
   });
-  if(!matched) { box.innerHTML='<div class="alert alert-danger">لا يوجد بيانات مسجلة بهذا الشكل</div>'; return; }
+  if(!matched) { box.innerHTML='<div class="alert alert-danger">لا يوجد بيانات مسجلة بهذا الشك��</div>'; return; }
   const now=Date.now(), signature=[role,normalizeRecoveryText(name),nid,phone].join('|');
   if(signature === lastRecoverySignature && now-lastRecoveryAt < 30000) { box.innerHTML='<div class="alert alert-info">تم تسجيل هذا الطلب بالفعل. يرجى الانتظار قبل إعادة المحاولة.</div>'; return; }
   lastRecoverySignature=signature; lastRecoveryAt=now;
@@ -1792,7 +1803,7 @@ function editAdmin(id) {
 }
 
 function deleteAdmin(id) {
-  if(!confirm('هل أنت متأكد من حذف هذا المسؤول؟')) return;
+  if(!confirm('هل أنت متأكد من حذف هذا ا��مسؤول؟')) return;
   let admins = getData('admins');
   admins = admins.filter(a => a.id !== id);
   setData('admins', admins); renderAdmins();
@@ -2946,7 +2957,7 @@ function renderExamQuestions(){
     '<div class="form-group"><label>فحص الغش لهذا السؤال</label><select onchange="updateExamQuestion('+i+',\'proctorEnabled\',this.value===\'true\')"><option value="true" '+(q.proctorEnabled!==false?'selected':'')+'>مفعّل</option><option value="false" '+(q.proctorEnabled===false?'selected':'')+'>غير مفعّل</option></select></div></div>'+
     '<div class="form-group"><label>تعليمات السؤال (ئن دون الإجابة)</label><input value="'+escapeHtml(q.prompt||'')+'" onchange="updateExamQuestion('+i+',\'prompt\',this.value)"></div>'+ 
     '<div class="form-group"><label>السورة</label><input value="'+escapeHtml(q.surah||'')+'" onchange="updateExamQuestion('+i+',\'surah\',this.value)"><small style="color:var(--text-light)">حدود الآيات محفوظة داخلياً للصورة والتصحيح ولا تظهر كخانات في السؤال.</small></div>';
-  if(q.type==='mcq'||q.type==='truefalse')h+='<div class="form-group"><label>الاختيارات (كل اختيار في سطر)</label><textarea rows="4" onchange="updateExamQuestion('+i+',\'options\',this.value.split(/\\n/).map(x=>x.trim()).filter(Boolean))">'+escapeHtml((q.options||[]).join('\n'))+'</textarea></div><div class="form-group"><label>الإجابة الصحيحة — لا تظهر للطالب</label><input value="'+escapeHtml(q.correct||'')+'" onchange="updateExamQuestion('+i+',\'correct\',this.value)"></div>';
+  if(q.type==='mcq'||q.type==='truefalse')h+='<div class="form-group"><label>الاختيارات (كل اختيار في سطر)</label><textarea rows="4" onchange="updateExamQuestion('+i+',\'options\',this.value.split(/\\n/).map(x=>x.trim()).filter(Boolean))">'+escapeHtml((q.options||[]).join('\n'))+'</textarea></div><div class="form-group"><label>الإجا��ة الصحيحة — لا تظهر للطالب</label><input value="'+escapeHtml(q.correct||'')+'" onchange="updateExamQuestion('+i+',\'correct\',this.value)"></div>';
   else if(q.type==='complete')h+='<div class="form-group"><label>الإجابة المرجعية — لا تظهر للطالب</label><textarea rows="3" onchange="updateExamQuestion('+i+',\'correct\',this.value)">'+escapeHtml(q.correct||'')+'</textarea></div>';
   else h+='<div class="alert alert-info">سيتم التحقق من بصمة الطالب أولا��، ثم من محتوى التلاوة. إذا كانت البصمة غير طابقة فلن يُحفظ التسجيل.</div>';
   h+='</div>';c.innerHTML=h;
@@ -3554,7 +3565,7 @@ function githubAuthErrorMessage(error) {
   if(error && error.status === 401) return 'يجب تسجيل الدخول باستخدام Google الموثق قبل نشر التغييرات.';
   if(error && error.status === 403) return 'حساب Google الحالي غير موجود في قائمة المسؤولين المسموح لهم بالنشر.';
   if(error && error.code === 'GITHUB_PUBLISHER_ALLOWLIST_MISSING') return 'لم تُضبط قائمة حسابات Google المسموح لها بالنشر على الخادم.';
-  return error && error.message ? error.message : 'تعذر تنفيذ عملية GitHub.';
+  return error && error.message ? error.message : 'تعذر تنفيذ ��ملية GitHub.';
 }
 
 // ===== مزامنة GitHub (لمسؤول فقط) =====
