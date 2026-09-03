@@ -14,16 +14,8 @@ const nextConfig = {
         { source: '/register/:path*', destination: '/app.html' },
         { source: '/register', destination: '/app.html' },
         { source: '/forgot-password', destination: '/app.html' },
-        // The legacy client runtime owns these screens. Keep one explicit shell
-        // per role, but cover every deep-link so refresh never falls through to 404.
-        { source: '/dashboard/:path*', destination: '/app.html' },
-        { source: '/dashboard', destination: '/app.html' },
-        { source: '/students/:path*', destination: '/app.html' },
-        { source: '/students', destination: '/app.html' },
-        { source: '/profile/:path*', destination: '/app.html' },
-        { source: '/profile', destination: '/app.html' },
-        { source: '/settings/:path*', destination: '/app.html' },
-        { source: '/settings', destination: '/app.html' },
+        // Dashboard, students, profile, and settings are App Router pages.
+        // Only legacy screens below still use their role-specific static shell.
         { source: '/quran-reader/:path*', destination: '/app.html' },
         { source: '/quran-reader', destination: '/app.html' },
         { source: '/tuhfat/:path*', destination: '/app.html' },
