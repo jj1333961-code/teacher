@@ -183,7 +183,7 @@ function langTextNodes() {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const nodes = []; let node;
   while((node = walker.nextNode())) {
-      if(node.parentElement && (['SCRIPT','STYLE','NOSCRIPT'].includes(node.parentElement.tagName) || node.parentElement.closest('.thimar-ayah,.thimar-ayah-ref,.thimar-footer,[data-no-translate]'))) continue;
+      if(node.parentElement && (['SCRIPT','STYLE','NOSCRIPT'].includes(node.parentElement.tagName) || node.parentElement.closest('.thimar-ayah-frame,.thimar-ayah-ref,.thimar-footer,[data-no-translate]'))) continue;
     if(node.nodeValue && node.nodeValue.trim()) nodes.push(node);
   }
   return nodes;
@@ -205,12 +205,13 @@ function applyLangToDom() {
     langApplyFrame = 0;
     document.documentElement.lang = currentLang;
     document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
+    document.querySelectorAll('.thimar-ayah-heading').forEach(function(el){ el.textContent = currentLang === 'en' ? 'Allah Almighty said:' : 'قال تعالى:'; });
     document.querySelectorAll('.thimar-ayah-ref').forEach(function(el){ el.textContent = '(إبراهيم: 24)'; });
     document.querySelectorAll('.thimar-footer .ref').forEach(function(el){ el.textContent = '(المزمل: 4)'; });
     langTextNodes().forEach(function(node){
       if(node.__arText === undefined) node.__arText = node.nodeValue;
       const source = node.__arText;
-      const translated = LANG_DICT[source.trim()] || source;
+      const translated = translateValue(source);
       node.nodeValue = currentLang === 'en' ? translated : source;
     });
     document.querySelectorAll('*').forEach(function(el){
@@ -219,11 +220,13 @@ function applyLangToDom() {
         const key = 'data-ar-' + attr;
         if(!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr));
         const source = el.getAttribute(key) || '';
-        const translated = LANG_DICT[source] || source;
+        const translated = translateValue(source);
         el.setAttribute(attr, currentLang === 'en' ? translated : source);
       });
     });
     const btn=document.getElementById('langToggleBtn'); if(btn) btn.textContent=currentLang==='en'?'ع':'EN';
+    if(typeof syncSignupRelationshipField === 'function') syncSignupRelationshipField();
+    document.querySelectorAll('input,textarea,select').forEach(function(el){ el.style.direction = currentLang === 'en' ? 'ltr' : 'rtl'; el.style.textAlign = currentLang === 'en' ? 'left' : 'right'; });
   };
   if (typeof requestAnimationFrame === 'function') langApplyFrame = requestAnimationFrame(run);
   else run();
@@ -938,7 +941,7 @@ function getInternationalNumber(inputId, countryId) {
 }
 function updateSignupInternationalNumber(inputId, countryId, outputId) {
   const output = document.getElementById(outputId);
-  if(output) output.textContent = 'الرقم الدولي: +' + getInternationalNumber(inputId, countryId);
+  if(output) output.textContent = (currentLang === 'en' ? 'International number: +' : 'الرقم الدولي: +') + getInternationalNumber(inputId, countryId);
 }
 function syncSignupRelationshipField() {
   const role = document.getElementById('signupRole')?.value || 'student';
@@ -946,8 +949,8 @@ function syncSignupRelationshipField() {
   const input = document.getElementById('signupRelationshipName');
   if(!label || !input) return;
   const isStudent = role === 'student';
-  label.textContent = isStudent ? 'اسم ولي الأمر *' : 'اسم الطالب *';
-  input.placeholder = isStudent ? 'اكتب اسم ولي الأمر بالكامل' : 'اكتب اسم الطالب بالكامل';
+  label.textContent = currentLang === 'en' ? (isStudent ? 'Parent name *' : 'Student name *') : (isStudent ? 'اسم ولي الأمر *' : 'اسم الطالب *');
+  input.placeholder = currentLang === 'en' ? (isStudent ? 'Enter the parent\'s full name' : 'Enter the student\'s full name') : (isStudent ? 'اكتب اسم ولي الأمر بالكامل' : 'اكتب اسم الطالب بالكامل');
 }
 function normalizeWaNumber(phone, countryCode) {
   let p = String(phone || '').replace(/\D/g, '');
@@ -1349,7 +1352,7 @@ async function toggleVoiceRecord() {
   } catch(e) {
   voiceProfileGemini = null; voiceFingerprint = null; voiceDataUrl = null;
   status.textContent = 'تعذّر تحليل الصوت بواسطة Gemini';
-  showToast((e&&e.message)||'تعذّر اتصال Gemini — أعد التسجيءء', 'error');
+  showToast((e&&e.message)||'تعذّر اتصال Gemini — أعد التسجيل', 'error');
   }
     };
     mediaRecorder.start();
@@ -1393,7 +1396,7 @@ function addAdmin() {
   const pass = document.getElementById('newAdminPass').value.trim();
   const type = document.getElementById('newAdminType').value;
   if(!mobile || !pass) return alert('يرجى ملء جميع الحقول');
-  if(mobile.length !== 11) return alert('رقئ الموبايل يجب أن يكون 11 رقم');
+  if(mobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
   const admins = getData('admins');
   if(admins.find(a => a.mobile === mobile)) return alert('هذا لرقم مسجل مسبقاً');
   admins.push({id: Date.now(), mobile, password: pass, isMain: type === 'main'});
@@ -1412,7 +1415,7 @@ function editAdmin(id) {
   if(newMobile === null) return;
   const newPass = prompt('الرقم السري الجديد:', a.password);
   if(newPass === null) return;
-  const newType = confirm('هل تريد جعله مسؤول رئيسي؟ (موافق = رئيسي، إغاء = فرعي)');
+  const newType = confirm('هل تريد جعله مسؤول رئيسي؟ (موافق = رئيسي، إلغاء = فرعي)');
   if(newMobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
   if(admins.find(x => x.id !== id && x.mobile === newMobile)) return alert('هذا لرقم مسجل لمسؤول آخر');
   a.mobile = newMobile; a.password = newPass; a.isMain = newType;
@@ -1506,7 +1509,7 @@ async function unifiedLogin() {
     return;
   }
 
-  box.innerHTML = '<div class="alert alert-danger">❌ اسم المستدم أو الرقم السري غير صحيح</div>';
+  box.innerHTML = '<div class="alert alert-danger">❌ اسم المستخدم أو الرقم السري غير صحيح</div>';
   showToast('❌ بيانات الدخول غير صحيحة', 'error');
 }
 
@@ -1726,7 +1729,7 @@ async function saveStudent() {
   setData('students', students);
   voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null;
   alertBox.innerHTML = '<div class="alert alert-success">✅ تم حفظ الطالب بنجاح!</div>';
-  showToast('تم حفظ الطالب "' + name + '" بنجاح' + (voiceProfile ? ' مع بمة Gemini الصوتية' : ' (بدئن بصمة صوتية)'), 'success');
+  showToast('تم حفظ الطالب "' + name + '" بنجاح' + (voiceProfile ? ' مع بصمة Gemini الصوتية' : ' (بدون بصمة صوتية)'), 'success');
   ['stName','stUsername','stNational','stPhone','stBirth','stAge','stStudentPass','stParent','stParentPass','stNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('stJuz').value = '';
   document.getElementById('stSurah').innerHTML = '<option value="">اختر الجزء أولاً...</option>';
@@ -5227,7 +5230,7 @@ function generateWelcomeMessages(student) {
     {title: 'هلاً بك يا '+student.name+'! 🌟', body: 'يوم جديد، فرصة جديدة للتقرب من كتاب الله. اجعل لنفسك ورداً يومياً لا يفوتك، فالقرآن نور يُهدى به الله من شيء.'},
     {title: 'صباح التفاؤل يا '+student.name+'! ☀️', body: 'تذكر ن كل حرف تقرأه في كتاب الله له أجر عظيم. لا تستهن بمراجعة صفحة واحدة، فالقليل الدائم خير من الكثير المنقطع.'},
     {title: 'مرحباً يا '+student.name+'! 📖', body: 'القرآن كلام الله، فاجعل له قلباً خاشعاً ولساناً رطباً. ابدأ يومك بآية، وانتهِ به بآية وسترى الفرق في حياتك.'},
-    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تُثبت الحفظ وتجعله متياً.'},
+    {title: 'مساء الخير يا '+student.name+'! 🌙', body: 'اللهم اجعل القرآن ربيع قلبك. خصص وقتاً للمراجعة قبل النوم، فإنها تثبت الحفظ وتجعله متياً.'},
     {title: 'يوم مبارك يا '+student.name+'! ✨', body: 'حافظ على الاستمرارية في الحفظ، فالقرآن يُحفظ بالتكرار والمراجعة. ثق بالله، فهو معك في كل خطوة.'}
   ];
   const base = templates[dayOfWeek % templates.length];
@@ -5246,7 +5249,7 @@ function generateParentWelcome(student) {
   const finalizedSessions = sessions.filter(sess => !sess.isDraft);
   const last = finalizedSessions.length > 0 ? finalizedSessions[finalizedSessions.length - 1] : null;
   const templates = [
-    {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
+    {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطوات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
     {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخر. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
     {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر لمن يتب في سبيله.'}
   ];
@@ -5314,11 +5317,11 @@ function generateAIResponse(text, student) {
   }
   // الآيات ءءالصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُعرض بارم العثمانءء المشكَّل كصورة مطابقة تماماً لمحف.';
+    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُعرض بارم العثمانءء المشكَّل كصورة مطابقة تما��اً لمحف.';
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صءءت','ميكروفون','تحق')) {
-    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوءءك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيعي واضح.';
+    return '🎙️ <strong>البصمة الصوتية:</strong> عند تسجيلك أول مرة حُفظت بصمة صوتك في النظام. عند إرسالك أي تسجيل، يحلله الذكاء الاصطناعي ويطابقه ببصمتك تلقائياً، ولا يُقبل التسجيل إلا إذا كان صوتك أنت.<br><br>لأفضل نتيجة: سجّل في مكان هادئ، وقرّب الميكروفون، وتحدث بصوت طبيع�� واضح.';
   }
   // خطة الحفظ
   if(has('خطة','جدول','تنظيم','وقت','كيف احفظ','كيف أحفظ')) {
