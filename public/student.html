@@ -621,7 +621,8 @@ tr:hover { background: var(--table-hover); }
   .thimar-orn { display:none !important; }
   .thimar-orn:last-of-type { transform:scaleX(-1); }
   .thimar-ayah-heading { display:block; margin-bottom:6px; color:var(--thimar-gold); font-family:'Amiri',serif; font-size:.9rem; }
-  .thimar-ayah-frame { display:inline-block; padding:4px 12px; border:1px solid var(--thimar-gold-line); border-radius:18px; }
+  .thimar-ayah-frame { display:inline-block; padding:4px 12px; border:1px solid var(--thimar-gold-line); border-radius:18px; direction:rtl; unicode-bidi:isolate; }
+  .thimar-ayah-ref { direction:rtl; unicode-bidi:isolate; }
   .thimar-ayah { font-family:'Amiri',serif; color:var(--thimar-ink); font-size:clamp(1rem,4.6vw,1.35rem); line-height:2.1; text-wrap:balance; }
   .thimar-ayah-ref { display:block; color:var(--thimar-gold); font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-size:clamp(.75rem,3.2vw,.9rem); margin-top:10px; }
   .thimar-quran { width:min(100%,370px); height:auto; display:block; margin:clamp(6px,2vw,14px) auto clamp(10px,3vw,18px); filter:var(--thimar-quran-glow); border-radius:28px; mix-blend-mode:screen; opacity:.94; transform:translateY(2px); }
@@ -657,12 +658,13 @@ tr:hover { background: var(--table-hover); }
   .thimar-signup-row span { color:var(--thimar-ink-soft); font-size:.9rem; font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; }
   .thimar-signup-inline { background:transparent; border:1px solid var(--thimar-gold-line); border-radius:999px; color:var(--thimar-gold); padding:9px 18px; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; }
   .thimar-signup-inline:hover { background:var(--thimar-gold-fade); }
-  .thimar-password-toggle { position:absolute; right:16px; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:#2f80ed; cursor:pointer; flex:0 0 38px; }
+  .thimar-password-toggle { position:absolute; left:16px; right:auto; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:#2f80ed; cursor:pointer; flex:0 0 38px; }
   .thimar-eye-icon { width:22px; height:14px; border:2px solid currentColor; border-radius:50% / 60%; position:relative; display:block; }
   .thimar-eye-icon::after { content:''; position:absolute; width:5px; height:5px; border-radius:50%; background:currentColor; inset:0; margin:auto; }
-  .thimar-password-toggle::after { content:''; position:absolute; width:22px; height:2px; border-radius:2px; background:currentColor; transform:rotate(-42deg); transition:opacity .15s ease; }
+  .thimar-password-toggle::after { content:''; position:absolute; width:22px; height:2px; border-radius:2px; background:currentColor; transform:rotate(-42deg); transition:none; }
   .thimar-password-toggle.is-visible::after { opacity:0; }
-  .thimar-field.has-password-toggle input { padding-right:58px; }
+  .thimar-password-toggle:focus-visible { outline:2px solid #2f80ed; outline-offset:2px; }
+  .thimar-field.has-password-toggle input { padding-left:58px; padding-right:20px; text-align:start; }
   .thimar-forgot { display:inline-flex; margin-top:10px; border:0; background:transparent; color:var(--thimar-gold); font:inherit; font-size:.9rem; font-weight:700; cursor:pointer; text-decoration:underline; text-underline-offset:4px; }
   .notification-count { min-width:22px; height:22px; display:inline-grid; place-items:center; padding:0 6px; border-radius:999px; background:var(--danger); color:#fffdf7; font-size:.75rem; }
   .notifications-grid { display:grid; gap:14px; }
