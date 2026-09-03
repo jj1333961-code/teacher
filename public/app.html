@@ -1225,7 +1225,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- تسجيل تسميع جديد -->
 <div id="recordSession" class="page hidden">
-  <div class="page-header"><h2>🎙️ تسجيل تسميع جديد</h2></div>
+  <div class="page-header"><h2>🎙️ تسجيل تسمي�� جديد</h2></div>
   <div id="recordAlert"></div>
   <input type="hidden" id="recordStudentId">
   <div class="form-group"><label>اس�� الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
@@ -1663,7 +1663,7 @@ window.alert = function(m){ showToast(m); };
     return promise;
   }
 
-  ['unifiedLogin','startSignup','openAccountRecovery'].forEach(function(name){
+  ['startSignup','openAccountRecovery'].forEach(function(name){
     wrappers[name] = function(){
       var btn = name === 'unifiedLogin' ? document.querySelector('#lockScreen .btn-primary') : name === 'openAccountRecovery' ? document.querySelector('.thimar-forgot') : null;
       return runWhenCoreReady(name, arguments, btn);
