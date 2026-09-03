@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#1f5845">
 <meta name="description" content="ثمار — منصة قرآنية هادئة للتسميع والاختبارات والمهام والنمو العلمي.">
 <meta name="referrer" content="no-referrer-when-downgrade">
-  <link rel="preload" href="/app-core.js" as="script" fetchpriority="high">
   <script src="/islamic-data.js" defer></script>
   <link rel="stylesheet" href="/islamic-hub.css">
   <link rel="stylesheet" href="/prayer-screen.css">
@@ -1164,7 +1163,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري لولي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
+    <div class="form-group"><label>الرقم السري لو��ي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
     <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
@@ -1237,13 +1236,13 @@ tr:hover { background: var(--table-hover); }
   <input type="hidden" id="recordStudentId">
   <div class="form-group"><label>اس�� الطالب</label><input type="text" id="recordName" readonly style="background:var(--table-header)"></div>
   <div class="form-row">
-    <div class="form-group"><label>��ا��يخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُ��دد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
+    <div class="form-group"><label>����ا��يخ التسميع</label><input type="date" id="recordDate"><small style="color:var(--text-light)">يُ��دد تلقائياً بتاريخ اليوم — يمكنك تغييره يدوياً</small></div>
     <div class="form-group"><label>الجزء</label><input type="text" id="recordJuz" readonly style="background:var(--table-header)"></div>
     <div class="form-group"><label>السور الأساسية</label><input type="text" id="recordSurahName" readonly style="background:var(--table-header)"></div>
   </div>
   <div class="page" style="margin:15px 0;border:2px solid var(--primary);padding:14px;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><strong>إعدادات فحص الغش الموحدة لجميع عناصر التسميع والاختبار والواجب</strong><button class="btn btn-secondary btn-sm" type="button" onclick="toggleGlobalProctorSettings()">إخفاء الإعدادات</button></div>
-  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، بقاء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
+  <p style="color:var(--text-light);line-height:1.8;margin:10px 0">يبدأ الفحص تلقائياً عند بدء العنصر. يعتمد على إشارات تفسيرية فقط: وجود وجه واحد، ظهور العينين، اتجاه النظر، ب��اء الوجه أمام الشاشة، تركيز الصفحة، ووجود إصبع واحد. لا يتم حفظ أو إرسال فيديو خام، ولا تُتخذ نتيجة من إشارة واحدة منفردة.</p>
   <div id="globalProctorSettings" style="margin-top:12px;"><div class="form-row"><div class="form-group"><label><input id="globalProctorEnabled" type="checkbox" checked> تفعيل الكاميرا وفحص الإشارات</label></div><div class="form-group"><label><input id="globalFocusEnabled" type="checkbox" checked> فحص التركيز ومغادرة الصفحة</label></div><div class="form-group"><label><input id="globalTouchEnabled" type="checkbox" checked> التحقق من إصبع واحد</label></div></div><div class="form-row"><div class="form-group"><label>مهلة ابتعاد العين/الوجه (ثانية)</label><input id="globalGazeGrace" type="number" min="3" max="120" value="12"></div><div class="form-group"><label>مهلة ترك الشاشة أو الخروج (ثانية)</label><input id="globalLeaveGrace" type="number" min="1" max="60" value="5"></div><div class="form-group"><label>عدد الإشارات قبل الحجب</label><input id="globalMaxViolations" type="number" min="1" max="10" value="2"></div></div><div class="form-row"><div class="form-group"><label><input id="globalFullscreen" type="checkbox"> طلب ملء الشاشة</label></div><div class="form-group"><label><input id="globalAutoRestore" type="checkbox" checked> استعادة تلقائية بعد عودة الوضع الطبيعي</label></div></div><button class="btn btn-primary" type="button" onclick="applyGlobalProctorSettings()">تطبيق على جميع العناصر</button></div>
   </div>
   <div id="recordElementsContainer"></div>
@@ -1300,7 +1299,7 @@ tr:hover { background: var(--table-hover); }
     <h4>📖 القراءة الإضافية <button class="add-item-btn" onclick="addReadingItem()">+</button></h4>
     <div id="readingItems"></div>
   </div>
-  <div class="form-group"><label>ملاحظات التسميع</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
+  <div class="form-group"><label>ملاحظات ا��تسميع</label><textarea id="recordNotes" rows="2" placeholder="ملاحظات إضافية..."></textarea></div>
   <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;"><button class="btn btn-success" onclick="saveSession(false)" style="flex:1; min-width:200px;">💾 حفظ مؤقت (مسودة)</button><button class="btn btn-primary" onclick="saveSession(true)" style="flex:1; min-width:200px; background:linear-gradient(135deg, var(--primary), var(--primary-hover));">🔒 حفظ نهائي (لا يمكن التعديل)</button></div>
 </div>
 
@@ -1406,7 +1405,7 @@ tr:hover { background: var(--table-hover); }
   <div id="studentRecordsContent"></div>
 </div>
 
-<!-- ملفا�� المسؤول للطالب -->
+<!-- مل��ا�� المسؤول للطالب -->
 <div id="studentFilesPage" class="page hidden">
   <div class="page-header"><h2>📁 الملفات المرسلة لي</h2></div>
   <div id="studentFilesContent"></div>
@@ -1433,7 +1432,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- إعدادات الطالب -->
 <div id="studentSettings" class="page hidden" style="max-width:500px;">
-  <div class="page-header"><h2>⚙️ تغيير الرقم السري</h2></div>
+  <div class="page-header"><h2>��️ تغيير الرقم السري</h2></div>
   <div id="studentSettingsAlert"></div>
   <div class="form-group"><label>الرقم السري الحالي</label><input type="password" id="currentStudentPass" placeholder="أدخل الرقم السري الحالي"></div>
   <div class="form-group"><label>الرقم السي الجديد</label><input type="password" id="newStudentPass" placeholder="أدخل الرقم السري لجديد"></div>
@@ -1652,10 +1651,8 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // تجهيز النظام بعد ظهور الصفحة، بدون حجب أزرار الدخول أو إعدادات الواجهة.
-  const warm = function(){ window.loadThimarAppCore().catch(function(err){ console.error('App core warmup failed', err); }); };
-  if ('requestIdleCallback' in window) requestIdleCallback(warm, {timeout:1500});
-  else setTimeout(warm, 350);
+  // لا نحمّل النظام الكامل أثناء شاشة الدخول؛ يُحمّل عند أول إجراء يحتاجه.
+  // هذا يحافظ على استجابة الحقول والأزرار ولا يحجز الخيط الرئيسي بعد الرسم الأول.
 })();
 </script>
 <script>
@@ -1668,19 +1665,24 @@ window.alert = function(m){ showToast(m); };
       var box = document.getElementById('unifiedLoginAlert');
       if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
     }
-    return window.loadThimarAppCore().then(function(){
-      if (button) button.disabled = false;
-      var fn = window[name];
-      if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
-      return fn.apply(window, Array.prototype.slice.call(args || []));
-    }).catch(function(err){
-      if (button) button.disabled = false;
-      var message = '❌ تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
-      var box = document.getElementById('unifiedLoginAlert');
-      if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
-      console.error('App core failed to load', err);
-      if (typeof showToast === 'function') showToast(message, 'error');
-    });
+    var run = function(){
+      window.loadThimarAppCore().then(function(){
+        if (button) button.disabled = false;
+        var fn = window[name];
+        if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
+        return fn.apply(window, Array.prototype.slice.call(args || []));
+      }).catch(function(err){
+        if (button) button.disabled = false;
+        var message = '❌ تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
+        var box = document.getElementById('unifiedLoginAlert');
+        if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
+        console.error('App core failed to load', err);
+        if (typeof showToast === 'function') showToast(message, 'error');
+      });
+    };
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(run, {timeout: 100});
+    else setTimeout(run, 0);
+    return Promise.resolve();
   }
 
   ['unifiedLogin','startSignup'].forEach(function(name){
@@ -1953,7 +1955,7 @@ window.alert = function(m){ showToast(m); };
     <div class="quran-reader-frame"><div id="quranZoomWrap" class="quran-zoom-wrap"><canvas id="quranOriginalCanvas" class="quran-reader-canvas" aria-label="صفحة المصحف الأصلية"></canvas></div><div id="quranSwipeSurface" class="quran-swipe-surface" aria-label="اسحب للتنقل بين صفحات المصحف أو قرّب بإصبعين للتكبير"></div></div>
   </section>
   <script>
-/* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة والت��قق القديم دون أي تغيير) */
+/* واجهة ثمار: زر «تسجيل الدخول» يفتح حقول الدخول نفسها (نفس الوظيفة ��الت��قق القديم دون أي تغيير) */
 (function(){
   function el(id){ return document.getElementById(id); }
 

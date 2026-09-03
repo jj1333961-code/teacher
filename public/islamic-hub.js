@@ -180,14 +180,6 @@
       if (btn && host.contains(btn)) openSection(btn.getAttribute("data-isl-open"));
     });
     paintCards();
-    // تحميل المصحف مسبقًا في الخلفية حتى يكون جاهزًا فور الخول دون انتظار
-    scheduleWarmMushaf();
-  }
-
-  function scheduleWarmMushaf() {
-    var run = function () { try { warmMushaf(); } catch (e) {} };
-    if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(run, { timeout: 2500 });
-    else setTimeout(run, 1200);
   }
 
   function mountAll() {
@@ -1066,6 +1058,8 @@
 
   /* ---------------- التهيئة ---------------- */
   async function boot() {
+    var lockScreen = document.getElementById('lockScreen');
+    if (lockScreen && !lockScreen.classList.contains('hidden')) return;
     mountAll();
     if (state.loc) {
       try {

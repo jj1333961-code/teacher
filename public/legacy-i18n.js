@@ -65,9 +65,38 @@
     apply(document.body);
   }
   window.ThimarI18n = { apply: apply, setLocale: setLocale, t: translate, getLocale: function(){ return locale; } };
-  window.addEventListener('languagechange', function(){ setLocale(localStorage.getItem('lang')); });
-  var observer = new MutationObserver(function(records){
-    records.forEach(function(record){ record.addedNodes.forEach(function(added){ if (added.nodeType === 1 || added.nodeType === 3) apply(added.nodeType === 3 ? added.parentElement : added); }); });
+  window.addEventListener('languagechange', function(){
+    var lockScreen = document.getElementById('lockScreen');
+    var activePage = document.querySelector('.page:not(.hidden):not(#lockScreen), .home-page:not(.hidden), .chart-page:not(.hidden)');
+    if (!activePage && lockScreen) setLocale(localStorage.getItem('lang'));
   });
-  document.addEventListener('DOMContentLoaded', function(){ apply(document.body); observer.observe(document.body, { childList: true, subtree: true }); });
+  var observerFrame = 0;
+  var pendingRoots = [];
+  function scheduleApply(root) {
+    if (!root) return;
+    if (pendingRoots.indexOf(root) === -1) pendingRoots.push(root);
+    if (observerFrame) return;
+    var flush = function(){
+      observerFrame = 0;
+      var roots = pendingRoots.splice(0, pendingRoots.length);
+      roots.slice(0, 8).forEach(apply);
+      if (roots.length > 8) {
+        pendingRoots = roots.slice(8).concat(pendingRoots);
+        scheduleApply(pendingRoots[0]);
+      }
+    };
+    if (typeof requestAnimationFrame === 'function') observerFrame = requestAnimationFrame(flush);
+    else observerFrame = setTimeout(flush, 0);
+  }
+  var observer = new MutationObserver(function(records){
+    records.forEach(function(record){
+      record.addedNodes.forEach(function(added){
+        if (added.nodeType === 1 || added.nodeType === 3) scheduleApply(added.nodeType === 3 ? added.parentElement : added);
+      });
+    });
+  });
+  document.addEventListener('DOMContentLoaded', function(){
+    scheduleApply(document.body);
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
 })();

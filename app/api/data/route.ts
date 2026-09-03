@@ -21,11 +21,8 @@ export async function GET() {
     )
     return response({ data: result.rows[0]?.data ?? null, updatedAt: result.rows[0]?.updated_at ?? null })
   } catch (error) {
-    // التخزين السحابي اختياري؛ لا نحول تعذر Neon إلى خطأ يعطل الواجهة.
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('[v0] GET /api/data unavailable; continuing with local data')
-    }
-    return response({ data: null, unavailable: true })
+    console.error('[v0] GET /api/data failed', error)
+    return response({ error: 'تعذر الاتصال بقاعدة البيانات' }, 503)
   }
 }
 
@@ -42,16 +39,13 @@ export async function PUT(request: Request) {
     const result = await pool.query(
       `INSERT INTO app_snapshots (id, data, updated_at)
        VALUES ($1, $2::jsonb, now())
-       ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = now()
+       ON CONFLICT (id) DO UPDATE SET data = app_snapshots.data || EXCLUDED.data, updated_at = now()
        RETURNING updated_at`,
       [SNAPSHOT_ID, serialized],
     )
     return response({ saved: true, updatedAt: result.rows[0].updated_at })
   } catch (error) {
-    // تبقى البيانات المحلية هي المصدر الاحتياطي عند غياب قاعدة البيانات.
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('[v0] PUT /api/data unavailable; local data was retained')
-    }
-    return response({ saved: false, unavailable: true }, 200)
+    console.error('[v0] PUT /api/data failed', error)
+    return response({ error: 'تعذر حفظ البيانات في قاعدة البيانات' }, 503)
   }
 }
