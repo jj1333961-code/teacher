@@ -1044,7 +1044,7 @@ tr:hover { background: var(--table-hover); }
     <h3 style="margin:0 0 8px; color:#dc3545;">🗑️ حذف ملف من المستودع</h3>
     <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">ءءُءءشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأساية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
     <div class="form-group"><label>مسر الملف المراد حذفه</label><input id="githubDeletePath" placeholder="مثال: public/old-file.js" /></div>
-    <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أ������ني أريد حذف هذا الملف نهائياً من المستودع</label>
+    <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أ��������ني أريد حذف هذا الملف نهائياً من المستودع</label>
     <button class="btn" style="background:#dc3545; color:#fff;" onclick="deleteGithubFile()">حذف الملف</button>
     <div id="githubDeleteResult" style="margin-top:12px;"></div>
   </div>
@@ -1631,40 +1631,6 @@ function showToast(msg, type){
   setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 300); }, 5000);
 }
 window.alert = function(m){ showToast(m); };
-</script>
-<script>
-(function(){
-  let corePromise = null;
-  window.loadThimarAppCore = function(){
-    if (window.__thimarAppCoreLoaded) return Promise.resolve();
-    if (corePromise) return corePromise;
-    corePromise = new Promise(function(resolve, reject){
-      const s = document.createElement('script');
-      s.src = '/app-core.js';
-      s.async = true;
-      s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
-      s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
-      document.head.appendChild(s);
-    });
-    return corePromise;
-  };
-
-  // نحافظ على دخول /login خفيفاً ونجه�� المسارات العميقة فقط عند الحاجة.
-  // The shared bootstrap owns loading. Keep the login document free of the heavy core.
-  const warm = function() {};
-  const path = location.pathname.replace(/\/+$/, '') || '/';
-  const params = new URLSearchParams(location.search);
-  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
-  const authNeedsCore = /^\/(login|signup)(\/|$)/.test(path) || path === '/forgot-password';
-  if (needsCore || authNeedsCore) {
-    const start = function(){
-      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: needsCore ? 1200 : 3500 });
-      else window.setTimeout(warm, needsCore ? 0 : 1500);
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
-    else start();
-  }
-})();
 </script>
 <script>
 /* واجهة الدخول تعمل فوراً، والنظام الكامل جاهز مسبقاً أو يُحمّل عند الحاجة. */

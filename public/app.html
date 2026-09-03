@@ -838,12 +838,6 @@ tr:hover { background: var(--table-hover); }
       <span class="thimar-orn" aria-hidden="true">❁</span>
     </div>
 
-    <div class="thimar-quran-wrap">
-  <span class="thimar-cloud thimar-cloud-left" aria-hidden="true"></span>
-  <img class="thimar-quran" src="/images/thimar-quran-rehl.png" alt="مصحف مفتوح على حامل خشبي">
-  <span class="thimar-cloud thimar-cloud-right" aria-hidden="true"></span>
-  </div>
-
     <div id="unifiedLoginAlert"></div>
 
     <!-- شاشة تسجيل الدخول (نفس الحقول والوظائف السابقة) -->
@@ -908,7 +902,7 @@ tr:hover { background: var(--table-hover); }
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
       <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
-      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 ����������������������عادة إرسال الكود</button>
+      <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 ��������������������������عادة إرسال الكود</button>
     </div>
   </div>
 </div>
@@ -923,7 +917,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>الاسم بالكامل *</label><input type="text" id="signupName" placeholder="الاسم كما في البطاقة"></div>
   </div>
   <div class="form-group" id="signupRelationshipGroup">
-    <label id="signupRelationshipLabel">اسم ولي الأمر *</label>
+    <label id="signupRelationshipLabel">اسم ولي ��لأ��ر *</label>
     <input type="text" id="signupRelationshipName" placeholder="اكتب اسم ولي الأمر بالكامل">
   </div>
   <div class="form-row">
@@ -1044,7 +1038,7 @@ tr:hover { background: var(--table-hover); }
     <h3 style="margin:0 0 8px; color:#dc3545;">🗑️ حذف ملف من المستودع</h3>
     <p style="color:var(--text-light); font-size:0.88rem; margin-bottom:10px;">ءءُءءشئ الحذف Commit في مستودعك ويحافظ على الإصدارات السابقة في السجل. الملفات الأساية للمشروع محمية ولا يمكن حذفها. يتطلب الحذف تأكيداً صريحاً.</p>
     <div class="form-group"><label>مسر الملف المراد حذفه</label><input id="githubDeletePath" placeholder="مثال: public/old-file.js" /></div>
-    <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> أؤكد أنني أر��د حذف هذا الملف نهائياً من المستودع</label>
+    <label style="display:flex; gap:8px; align-items:center; font-size:0.88rem; margin-bottom:10px;"><input type="checkbox" id="githubDeleteConfirm" style="width:auto;" /> ��ؤكد أنني أر��د حذف هذا الملف نهائياً من المستودع</label>
     <button class="btn" style="background:#dc3545; color:#fff;" onclick="deleteGithubFile()">حذف الملف</button>
     <div id="githubDeleteResult" style="margin-top:12px;"></div>
   </div>
@@ -1464,7 +1458,7 @@ tr:hover { background: var(--table-hover); }
     <aside class="side-sidebar" aria-label="أدوات ولي الأمر">
       <div class="side-sidebar-head">
         <h3>الأدوات</h3>
-        <button type="button" class="side-sidebar-close" onclick="closeRoleSidebar('parent')" aria-label="إغلاق القائمة">×</button>
+        <button type="button" class="side-sidebar-close" onclick="closeRoleSidebar('parent')" aria-label="إغلاق ا��قائم��">×</button>
       </div>
       <div class="side-sidebar-body">
         <button type="button" class="role-nav-item" onclick="showPage('parentInbox')"><span class="role-nav-icon" aria-hidden="true">💬</span><span>الرسائل</span></button><button type="button" class="role-nav-item" onclick="openQuranReader()"><span class="role-nav-icon" aria-hidden="true">📖</span><span>المصحف الشريف</span></button>
@@ -1631,44 +1625,6 @@ function showToast(msg, type){
   setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 300); }, 5000);
 }
 window.alert = function(m){ showToast(m); };
-</script>
-<script>
-(function(){
-  let corePromise = null;
-  window.loadThimarAppCore = function(){
-    if (window.__thimarAppCoreLoaded) return Promise.resolve();
-    if (corePromise) return corePromise;
-    corePromise = new Promise(function(resolve, reject){
-      const s = document.createElement('script');
-      s.src = '/app-core.js';
-      // لا ننفذ نواة التطبيق بشكل متزا��ن داخل معالج النقر؛ ذلك يحجز الـ main thread.
-      s.async = true;
-      s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
-      s.onerror = function(){ corePromise = null; reject(new Error('تعذر تحميل ملفات النظام.')); };
-      document.head.appendChild(s);
-    });
-    return corePromise;
-  };
-  // توجيه خفيف لصفحة الدخول قبل ت��زيل نواة التطبيق الكبيرة.
-  window.showPage = window.showPage || function(id){
-    const authRoutes = {lockScreen:'/login', accountRecoveryPage:'/forgot-password', signupStep1:'/signup', signupStep2:'/signup/details'};
-    location.assign(authRoutes[id] || '/login');
-  };
-
-  // نحافظ على دخول /login خفي��اً، مع تهيئة المسارات العميقة حتى لا تعرض شاشة الدخو�� الخطأ.
-  // The shared bootstrap owns loading. Keep the login document free of the heavy core.
-  const warm = function() {};
-  const path = location.pathname.replace(/\/+$/, '') || '/';
-  const params = new URLSearchParams(location.search);
-  // نحمّل النواة خارج مسار النقر حتى لا يبدأ الضغط على تسجيل الدخول عملية parsing ثقيلة.
-  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
-  const start = function(){
-    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: needsCore ? 1200 : 800 });
-    else window.setTimeout(warm, needsCore ? 0 : 300);
-  };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
-  else start();
-})();
 </script>
 <script>
 /* واجهة الدخول تعمل فوراً، والنظام الكامل جاهز مسبقاً أو يُحمّل عند الحاجة. */

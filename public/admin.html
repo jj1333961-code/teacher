@@ -771,7 +771,7 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  /* قارئ مستقل يملأ الشاشة بالكامل، مع ������������بقاء زر الإغلاق واضحًا فوق PDF */
+  /* قارئ مستقل يملأ الشاشة بالكامل، مع ��������������بقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
@@ -1261,7 +1261,7 @@ tr:hover { background: var(--table-hover); }
       <h4 style="color:var(--primary);margin:0">🧪 اختبار مستقل بعد السورة الأساسية</h4>
       <span class="badge badge-primary">لا يختلط بعناصر التسميع</span>
     </div>
-<p style="color:var(--text-light);margin:10px 0">اختبار رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنويع الأسئلة تلقائيًا.</p>
+<p style="color:var(--text-light);margin:10px 0">اختبار رآني مستقل. اختبر نطاق السوءء والنوع والمستوى والوقت وعدد الآيات، وسيتولى النظام تنوي�� الأسئلة تلقائيًا.</p>
     <div class="form-row">
 <div class="form-group"><label for="examBaseSurah">آخر سورة محفوظة للطالب</label><select id="examBaseSurah" onchange="syncExamSurahRange()"></select><small style="color:var(--text-light)">يُبنى الماضي من السور التي تسبقها في المراجعة حتى سورة الاس.</small></div>
  <div class="form-group"><label for="examPastScope">نوع الماضي</label><select id="examPastScope" onchange="syncExamSurahRange()"><option value="both">الماضي القريب والبعيد</option><option value="near">اماضي القريب</option><option value="far">الم��ضي البعيد</option></select><small id="examPastScopeHelp" style="color:var(--text-light)">يُقسم الماضي إلى نصف قرب ونص بعيد.</small></div>
@@ -1632,40 +1632,6 @@ function showToast(msg, type){
   setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 300); }, 5000);
 }
 window.alert = function(m){ showToast(m); };
-</script>
-<script>
-(function(){
-  let corePromise = null;
-  window.loadThimarAppCore = function(){
-    if (window.__thimarAppCoreLoaded) return Promise.resolve();
-    if (corePromise) return corePromise;
-    corePromise = new Promise(function(resolve, reject){
-      const s = document.createElement('script');
-      s.src = '/app-core.js';
-      s.async = true;
-      s.onload = function(){ window.__thimarAppCoreLoaded = true; resolve(); };
-      s.onerror = function(){ corePromise = null; reject(new Error('تع��ر تحميل ملفات النظ��م.')); };
-      document.head.appendChild(s);
-    });
-    return corePromise;
-  };
-
-  // نحافظ على دخول /login خفيفاً ونجهز المسارات ال��ميقة فقط عند الحاجة.
-  // The shared bootstrap owns loading. Keep the login document free of the heavy core.
-  const warm = function() {};
-  const path = location.pathname.replace(/\/+$/, '') || '/';
-  const params = new URLSearchParams(location.search);
-  const needsCore = /^\/(admin|student|parent)(\/|$)/.test(path) || path === '/quran-reader' || path === '/tuhfat' || params.has('page') || params.has('google');
-  const authNeedsCore = /^\/(login|signup)(\/|$)/.test(path) || path === '/forgot-password';
-  if (needsCore || authNeedsCore) {
-    const start = function(){
-      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(warm, { timeout: needsCore ? 1200 : 3500 });
-      else window.setTimeout(warm, needsCore ? 0 : 1500);
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
-    else start();
-  }
-})();
 </script>
 <script>
 /* واجهة الدخول تعمل فوراً، والنظام الكامل جاهز مسبقاً أو يُحمّل عند الحاجة. */
