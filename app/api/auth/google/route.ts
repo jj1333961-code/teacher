@@ -28,7 +28,10 @@ function verify(value: string, secret: string) {
   if (signature.length !== expected.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null
   try {
     const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"))
-    return typeof parsed.email === "string" ? parsed : null
+    const issuedAt = Number(parsed.issuedAt)
+    const maxAge = 60 * 60 * 24 * 7 * 1000
+    if (typeof parsed.email !== "string" || !Number.isFinite(issuedAt) || Date.now() - issuedAt < 0 || Date.now() - issuedAt > maxAge) return null
+    return parsed
   } catch { return null }
 }
 function redirectUri() { return CALLBACK }

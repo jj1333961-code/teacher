@@ -685,7 +685,7 @@ tr:hover { background: var(--table-hover); }
   .thimar-footer .ref { display:block; font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; color:var(--thimar-gold); font-size:.75rem; margin-top:6px; }
   .thimar-footer-sidq { display:block; margin-top:4px; color:var(--thimar-ink-soft); font-family:'Amiri',serif; font-size:.78rem; }
   #lockScreen.thimar-auth .btn:disabled { opacity:.7; }
-  /* الهوية الإسلامية التراثية الجديدة — ن��افظ على أماكن البطاقات كما هي */
+  /* الهوية الإسلامية التراثية الجديدة — ن����افظ على أماكن البطاقات كما هي */
   :root { --bg:#f4efe3; --card-bg:#fffdf7; --text:#203c32; --text-light:#65766b; --border:#d9c9a5; --primary:#1f5845; --primary-hover:#174334; --success:#477b61; --warning:#b38a43; --input-bg:#fffdf7; --table-header:#edf2e9; --table-hover:#f3f5ed; --shadow:0 12px 30px rgba(31,88,69,.12); --chart-bg:#fffdf7; --chart-grid:#ded6c4; --chart-text:#203c32; }
   [data-theme="dark"] { --bg:#142c23; --card-bg:#1d3b30; --text:#f4efe3; --text-light:#bfd0c2; --border:#456858; --primary:#d3ad61; --primary-hover:#e1c177; --input-bg:#203f32; --table-header:#26493a; --table-hover:#2b5141; --shadow:0 14px 34px rgba(0,0,0,.28); --chart-bg:#1d3b30; --chart-grid:#3c5c4c; --chart-text:#f4efe3; }
   * { font-family:'Cairo','Tajawal','Segoe UI',Tahoma,sans-serif; }
@@ -887,7 +887,7 @@ tr:hover { background: var(--table-hover); }
   <p style="color:var(--text-light);margin-bottom:20px;">أدخل البيانات المسجلة بالحساب. لن يتم إرسال الطلب إلا بعد مطابقتها بالكامل.</p>
   <div id="recoveryResult" aria-live="polite"></div>
   <div class="form-row"><div class="form-group"><label for="recoveryRole">نوع الحساب *</label><select id="recoveryRole"><option value="student">طالب</option><option value="parent">ولي أمر</option></select></div><div class="form-group"><label for="recoveryName">الاسم بالكامل *</label><input id="recoveryName" type="text" autocomplete="name" placeholder="الاسم المسجل بالحساب"></div></div>
-  <div class="form-group"><label for="recoveryNid">كود الهوية أو جواز السفر *</label><div style="display:flex;gap:8px;direction:ltr;"><input id="recoveryNid" type="text" autocomplete="off" placeholder="كود الهوية أو رقم جواز السفر" style="flex:1;"></div><small id="recoveryNidHint" style="color:var(--text-light)">تحقق شكلي فقط حسب الدولة المختارة.</small></div>
+  <div class="form-group"><label for="recoveryNid">كود الهوية أو جواز السفر *</label><div style="display:flex;gap:8px;direction:ltr;"><select id="recoveryIdentityCountry" aria-label="دولة كود الهوية" style="max-width:145px;"><option value="EG">مصر (+20)</option></select><input id="recoveryNid" type="text" autocomplete="off" placeholder="كود الهوية أو رقم جواز السفر" style="flex:1;"></div><small id="recoveryNidHint" style="color:var(--text-light)">تحقق شكلي فقط حسب الدولة المختارة.</small></div>
   <div class="form-group"><label for="recoveryPhone">رقم الهاتف *</label><div style="display:flex;gap:8px;direction:ltr;"><select id="recoveryCountry" aria-label="كود دولة الهاتف" onchange="updateSignupInternationalNumber('recoveryPhone','recoveryCountry','recoveryPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input id="recoveryPhone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="الرقم بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'');updateSignupInternationalNumber('recoveryPhone','recoveryCountry','recoveryPhoneInternational')" style="flex:1;direction:ltr;"></div><small id="recoveryPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   <button type="button" class="btn btn-primary" onclick="submitAccountRecovery()" style="width:100%">استرجاع الحساب</button>
 </div>
@@ -913,7 +913,7 @@ tr:hover { background: var(--table-hover); }
     <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
     <div id="signupVerifyBox" class="hidden" style="margin-top:18px; padding-top:15px; border-top:2px solid var(--border);">
       <div class="form-group"><label>كود التحقق (6 أرقام) *</label><input type="text" id="signupCode" maxlength="6" placeholder="أدخل الكود الذي وصلك" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-      <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية والمتابعة</button>
+      <button class="btn btn-success" onclick="verifySignupCode()" style="width:100%">✅ تأكيد الهوية وا��متابعة</button>
       <button class="btn btn-outline" onclick="sendSignupCode()" style="width:100%; margin-top:10px;">🔁 إعادة إرسال الكود</button>
     </div>
   </div>
@@ -933,7 +933,7 @@ tr:hover { background: var(--table-hover); }
     <input type="text" id="signupRelationshipName" placeholder="اكتب اسم ولي الأمر بالكامل">
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم القومي *</label><input type="text" id="signupNid" autocomplete="off" placeholder="كود الهوية أو رقم جواز السفر"><small id="signupNidHint" style="color:var(--text-light)">تحقق شكلي فقط حسب الدولة المختارة.</small></div>
+    <div class="form-group"><label>كود الهوية أو جواز السفر *</label><div style="display:flex;gap:8px;direction:ltr;"><select id="signupIdentityCountry" aria-label="دولة كود الهوية" style="max-width:145px;"><option value="EG">مصر (+20)</option></select><input type="text" id="signupNid" autocomplete="off" placeholder="كود الهوية أو رقم جواز السفر" style="flex:1;"></div><small id="signupNidHint" style="color:var(--text-light)">تحقق شكلي فقط حسب الدولة المختارة.</small></div>
     <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
@@ -1039,7 +1039,7 @@ tr:hover { background: var(--table-hover); }
   <div id="githubSyncAlert"></div>
   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
     <button class="btn btn-primary" id="githubSyncRefreshBtn" onclick="refreshGithubSync()">🔄 تحقق من حالة المزامنة</button>
-    <a class="btn btn-secondary" id="githubHistoryLink" href="#" target="_blank" rel="noopener" style="display:none;">📜 فتح سجل التعديلات عل GitHub</a>
+    <a class="btn btn-secondary" id="githubHistoryLink" href="#" target="_blank" rel="noopener" style="display:none;">📜 فتح سجل ا��تعديلات عل GitHub</a>
   </div>
   <div id="githubSyncStatus" style="margin-bottom:20px;"></div>
 
@@ -1155,7 +1155,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم المستخدم *</label><input type="text" id="stUsername" placeholder="اسم المستخدم لتسجيل الدخول"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>كود الهوية أو جواز السفر *</label><input type="text" id="stNational" autocomplete="off" placeholder="كود الهوية أو رقم جواز السفر"></div>
+    <div class="form-group"><label>كود الهوية أو جواز السفر *</label><div style="display:flex;gap:8px;direction:ltr;"><select id="stIdentityCountry" aria-label="دولة كود الهوية" style="max-width:180px;"><option value="EG">مصر (+20)</option></select><input type="text" id="stNational" autocomplete="off" placeholder="كود الهوية أو رقم جواز السفر" style="flex:1;"></div></div>
     <div class="form-group"><label>الدولة ورقم الهاتف</label><div style="display:flex;gap:8px;direction:ltr;"><select id="stNationalCountry" aria-label="اختر الدولة" style="max-width:180px;"><option value="20">مصر (+20)</option></select><input type="tel" id="stPhone" autocomplete="tel" placeholder="الرقم المحلي" style="flex:1;"></div></div>
   </div>
   <div class="form-row">
@@ -1201,8 +1201,8 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم المستخدم</label><input type="text" id="editUsername"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم القومي (14 رقم)</label><input type="text" id="editNational" maxlength="14" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-    <div class="form-group"><label>رقم الاتف (11 رقم)</label><input type="text" id="editPhone" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+<div class="form-group"><label>كود الهوية أو جواز السفر</label><div style="display:flex;gap:8px;direction:ltr;"><select id="editNationalCountry" aria-label="دولة كود الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="editNational" autocomplete="off" placeholder="كود الهوية أو رقم جواز السفر" style="flex:1;"></div></div>
+  <div class="form-group"><label>الدولة ورقم الهاتف</label><div style="display:flex;gap:8px;direction:ltr;"><select id="editPhoneCountry" aria-label="كود دولة الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="editPhone" autocomplete="tel" placeholder="الرقم المحلي" style="flex:1;"></div></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>
@@ -1331,7 +1331,7 @@ tr:hover { background: var(--table-hover); }
 <!-- قائمة الطلاب -->
 <div id="studentsList" class="page hidden">
   <div class="page-header"><h2>👥 قائمة الطلاب المسجلين (<span id="studentsCount">0</span>)</h2></div>
-  <div class="search-box"><input type="text" id="searchStudent" placeholder="🔍 ابحث باسم الطالب أو اسم المستخدم أو الرقم القومي..." onkeyup="renderStudents()"></div>
+  <div class="search-box"><input type="text" id="searchStudent" placeholder="🔍 ابحث باسم الطالب أو اسم المستخدم أو كود الهوية..." onkeyup="renderStudents()"></div>
   <div id="studentsTable"></div>
 </div>
 
@@ -1731,7 +1731,7 @@ window.alert = function(m){ showToast(m); };
 
 
 <script>
-/* 🔔 صلاحيات الإشعرات والميكروفون عند أول تفاعل */
+/* 🔔 صلا��يات الإشعرات والميكروفون عند أول تفاعل */
 (function(){
   var asked = false;
   function askPerms(){
