@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { antiCheatEvents, antiCheatGlobalConfig, antiCheatItemConfigs, antiCheatSessions } from '@/lib/db/schema'
 import { calculateRiskScore, defaultAntiCheatConfig, normalizeServerConfig, severityFor, type AntiCheatConfig } from '@/lib/anti-cheat-engine'
 import { rejectCrossOrigin } from '@/lib/request-security'
-import { requireUser } from '@/lib/server-auth'
+import { requireAdmin, requireUser } from '@/lib/server-auth'
 
 const id = () => crypto.randomUUID()
 const clamp = (value: unknown, min = 0, max = 100) => Math.max(min, Math.min(max, Number(value) || 0))
@@ -28,12 +28,16 @@ export async function GET(request: Request) {
     const itemType = searchParams.get('itemType')
     const sessionId = searchParams.get('sessionId')
     if (sessionId) {
+      const admin = await requireAdmin(request)
+      if (admin.response) return admin.response
       const sessions = await db.select().from(antiCheatSessions).where(eq(antiCheatSessions.id, sessionId)).limit(1)
       if (!sessions[0]) return NextResponse.json({ error: 'جلسة المراقبة غير موجودة' }, { status: 404 })
       const events = await db.select().from(antiCheatEvents).where(eq(antiCheatEvents.sessionId, sessionId)).orderBy(desc(antiCheatEvents.timestamp))
       return NextResponse.json({ session: sessions[0], events })
     }
     if (itemId && itemType && validType(itemType)) return NextResponse.json(await resolveConfig(itemId, itemType))
+    const admin = await requireAdmin(request)
+    if (admin.response) return admin.response
     const [global, items] = await Promise.all([
       db.select().from(antiCheatGlobalConfig).where(eq(antiCheatGlobalConfig.id, true)).limit(1),
       db.select().from(antiCheatItemConfigs).orderBy(desc(antiCheatItemConfigs.updatedAt)),
@@ -48,8 +52,14 @@ export async function POST(request: Request) {
   const auth = await requireUser(request)
   if (auth.response) return auth.response
   try {
+    const contentLength = Number(request.headers.get('content-length') || 0)
+    if (contentLength > 256_000) return NextResponse.json({ error: 'بيانات المراقبة أكبر من الحد المسموح' }, { status: 413 })
     const body = await request.json()
     const { action } = body ?? {}
+    if (action === 'save-global' || action === 'save-config') {
+      const admin = await requireAdmin(request)
+      if (admin.response) return admin.response
+    }
     if (action === 'save-global') {
       const enabled = Boolean(body.enabled)
       const existingGlobal = await db.select().from(antiCheatGlobalConfig).where(eq(antiCheatGlobalConfig.id, true)).limit(1)

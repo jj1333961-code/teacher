@@ -416,7 +416,7 @@ const SYS_VOICE_PRINT = `أنت محرك بصمة صوتية. تستمع إلى 
 أعد JSON فقط بلا markdown:
 {"speaker":{"gender":"male|female|unknown","ageRange":"child|teen|adult|senior|unknown","pitch":"very-low|low|medium|high|very-high","pitchHz":number,"timbre":"وصف موجز","speed":"slow|medium|fast","nasality":"low|medium|high","breathiness":"low|medium|high","accent":"وصف موجز","distinctiveTraits":["سمات مميزة موجزة"]},"quality":"good|noisy|too-short","usable":true/false,"reason":"سبب موجز بالعربية"}`
 
-const SYS_VOICE_MATCH = `أنت محرك تحقق من هوية المتحدث بالبصمة الصوتية. لديك تسجيل صوتي حديث، ووصف بصمة صوتية مرجعية محفوظة لنفس الشخص المتوقع (referenceProfile)، وقد يصلك تسجيل مرجعي أيضاً.
+const SYS_VOICE_MATCH = `أنت محرك تحقق من هوية المتحدث بالبصمة الصوتية. لديك تسجيل صوتي حديث، ووصف بصمة ص��تية مرجعية محفوظة لنفس الشخص المتوقع (referenceProfile)، وقد يصلك تسجيل مرجعي أيضاً.
 حلّل خصائص الصوت في التسجيل الحديث ثم قارنها بالمرجع: الطبقة، الون الصوتي، الجرس، الأنفية، السرعة، اللكنة.
 تجاهل اختلاف الكلمات أو النص المقرءءء تماماً؛ المقارنة على الصوت فقط. راعِ اختلاف الميكروفون والضجيج.
 أعد JSON فقط بلا markdown:
@@ -455,9 +455,9 @@ const SYS_EXAM = `أنت خبير متخصص في القرآن الكريم وا
 - أعد مصفوفة JSON فقط، دون Markdown أو شرح.
 
 شكل كل عنصر:
-{"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"نص السؤال","stem":"","options":[],"correct":"الإجابة الصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
+{"type":"mcq|truefalse|complete|audio","level":"easy|medium|hard","surah":"اسم السورة","prompt":"نص السؤال","stem":"","options":[],"correct":"الإجابة ��لصحيحة","from":1,"to":1,"timeLimit":60,"completeAyahs":1,"reciteAyahs":1,"points":1}
 
-تحقق قبل الإ��راج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs، وأن لكل سؤال إجابة واحدة قطعية.`
+تحقق قبل الإ��راج من أن عدد العناصر لكل plan يساوي count تماماً، وأن كل سؤال يخدم topic، وأن الآيات المستخدمة موجودة فعلاً في sourceSurahs�� وأن لكل سؤال إجابة واحدة قطعية.`
 
 const SYS_GRADE_TEXT = `أنت مصحّح متسامح لاخت��ارات حفظ القرآن. صحّح إجابة الطالب في نوع "أكمل".
 كن متساهلاً مع الأخطاء الميسورة: الأخطاء الإملائية البسيطة، اختلاف التشكيل، الهمزات، التاء المربوطة/المفتوحة، حذف/إضافة الألف. هذه لا تُنقص الدرجة.
@@ -736,6 +736,7 @@ function safeProjectPath(path: string) {
   const normalized = String(path || "").replace(/\\/g, "/").replace(/^\/+/, "")
   if (!normalized || normalized.includes("..") || normalized.startsWith(".git/")) return false
   if (normalized === ".env" || normalized.startsWith(".env.") && !normalized.endsWith(".example")) return false
+  if (normalized.startsWith(".github/workflows/") || normalized === "vercel.json" || normalized === "next.config.js" || normalized === "next.config.mjs" || normalized === "next.config.ts") return false
   return true
 }
 
@@ -910,7 +911,7 @@ export async function POST(req: Request) {
       if (admin.response) return admin.response
     }
 
-    // 1.ب) المساعد الذكي للالب/ولي الأمر (ص حر مع سياق بيانات الطالب)
+    // 1.ب) المساعد الذكي للالب/ولي الأمر (ص حر مع سياق ب��انات الطالب)
     if (mode === "assistant") {
       const prompt = typeof body.prompt === "string" ? body.prompt.trim() : ""
       if (!prompt) return json({ error: "لم يصل نص السؤال", diagnostics }, 400)

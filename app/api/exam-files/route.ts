@@ -187,6 +187,8 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const originError = rejectCrossOrigin(request)
   if (originError) return originError
+  const auth = await requireAdmin(request)
+  if (auth.response) return auth.response
   try {
     ensureBlobConfigured()
     const { pathname, metadataPathname } = await request.json()
