@@ -148,7 +148,7 @@ const LANG_DICT = {
   '📥 الرسائل الواردة': '📥 Inbox',
   '✉️ التواصل': '✉️ Compose',
   '⚙️ إعدادات المسؤول': '⚙️ Admin Settings',
-  'الاختبارات': 'Exams', 'المهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل الصوتي': 'Audio recording',
+  'الاختبارات': 'Exams', 'المهام': 'Tasks', 'التسميع': 'Recitation', 'التسجيل ��لصوتي': 'Audio recording',
   'مكافحة الغش': 'Anti-cheat', 'تحليل التسجيل': 'Analyze recording', 'جاري التحليل...': 'Analyzing...',
   'تعذ تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
   'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا تود بيانات': 'No data available',
@@ -525,10 +525,13 @@ function showPage(id, options = {}) {
 
   let el = document.getElementById(id);
   if(!el || !pageAllowedForUser(id)) {
-    id = currentType === 'admin' ? 'adminDashboard' : currentType === 'student' ? 'studentDashboard' : currentType === 'parent' ? 'parentDashboard' : 'homePage';
-    el = document.getElementById(id) || document.getElementById('homePage');
+    id = defaultPageForRole(currentType);
+    el = document.getElementById(id) || document.getElementById('lockScreen');
     if (!options.fromBrowser && window.history && window.history.replaceState) window.history.replaceState({ page: id }, '', pageUrl(id));
   }
+  // A deep link can be opened before a role session exists. Keep the lock screen
+  // as the final safe fallback instead of calling classList on a missing element.
+  if(!el) return;
   document.querySelectorAll('.page, .home-page, .chart-page').forEach(node => node.classList.add('hidden'));
   el.classList.remove('hidden');
 
@@ -822,7 +825,7 @@ function updateSurahSelect() {
   const hint=document.getElementById('juzBoundaryHint');
   if(hint) hint.textContent='حدود الجزء: '+ranges.map(r=>'سورة '+(ALL_SURAHS_ORDERED[r[0]-1]||r[0])+' '+r[1]+'–'+r[2]).join(' | ');
 }
-// ====== إنشاء حساب جديد (طلب انضمام) ======
+// ====== إنشاء حساب جد��د (طلب انضمام) ======
 let signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
 
 // ====== إعداد تسجيل الدخو بحساب جوجل (Google Identity Services) ======
@@ -2635,7 +2638,7 @@ function startStudentExamTimer(ex){
     if(studentExamLockedIndices[i]){clearInterval(studentExamQuestionTimer);return;}
     studentExamQuestionRemaining[i]=Math.max(0,studentExamQuestionRemaining[i]-1);
 const el=document.getElementById('examQTimer_'+i);if(el)el.textContent='الوقت: '+formatExamTime(studentExamQuestionRemaining[i]);
-const top=document.getElementById('studentExamTimer');if(top)top.textContent='الوقت: '+formatExamTime(studentExamQuestionRemaining[i]);
+const top=document.getElementById('studentExamTimer');if(top)top.textContent='الو��ت: '+formatExamTime(studentExamQuestionRemaining[i]);
     if(studentExamQuestionRemaining[i]===0){clearInterval(studentExamQuestionTimer);expireExamQuestion(i);}
   },1000);
 }
@@ -2672,7 +2675,7 @@ async function submitStudentExam(auto){
     if(q.type==='mcq'||q.type==='truefalse'){
       result.accepted=normalizeExamText(a)===normalizeExamText(q.correct);result.score=result.accepted?1:0;result.matchedPercent=result.accepted?100:0;result.reason=result.accepted?'إجابة صحيحة':'الإجابة غير صحيحة';
     }else if(q.type==='complete'){
-      try{result=await callStudentAI('grade_text',{question:q.prompt,expected:q.correct,studentAnswer:a,sourceAyah:q.stem},0.05)}catch(e){result.accepted=normalizeExamText(a)===normalizeExamText(q.correct);result.score=result.accepted?1:0;result.reason='ءءم التصحيح محلياً بسبب تعذر الذكاء الاصطناعي'}
+      try{result=await callStudentAI('grade_text',{question:q.prompt,expected:q.correct,studentAnswer:a,sourceAyah:q.stem},0.05)}catch(e){result.accepted=normalizeExamText(a)===normalizeExamText(q.correct);result.score=result.accepted?1:0;result.reason='ءءم التصحيح ��حلياً بسبب تعذر الذكاء الاصطناعي'}
     }else if(q.type==='audio'){
       result=audio&&audio.aiResult?audio.aiResult:{accepted:false,score:0,reason:'لم يتم تسجيل إجابة صوتية',matchedPercent:0};
       a=audio&&audio.transcript?audio.transcript:'';
@@ -4079,7 +4082,7 @@ function renderStudentTasks() {
   const extraTasks=Array.from(temp.querySelectorAll('[data-task-category="extra"]')).map(el=>el.outerHTML).join('');
   const exam=s.activeExam&&s.activeExam.status==='pending'?s.activeExam:null;
   const examHtml=exam?'<p>لديك اختبار نشط من '+(exam.questions?.length||0)+' سؤال.</p><button class="btn btn-primary" onclick="showPage(\'studentExamPage\')">فتح الاختبار</button>':'<p style="color:var(--text-light)">لا يوجد اختبار نشط حاليًا.</p>';
-  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المها�� اءءإضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمءءت ءءضافية حالية.</p>')+'</section></div>';
+  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المها�� اءءإضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمءءت ءءضافية حال��ة.</p>')+'</section></div>';
   if(proctor.active)bindLiveProctorHold();
 }
 
@@ -5242,7 +5245,7 @@ function generateParentWelcome(student) {
   const last = finalizedSessions.length > 0 ? finalizedSessions[finalizedSessions.length - 1] : null;
   const templates = [
     {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطات جميلة في رحلته مع القرآن. دعمه وتحفيزه هما سر التقدم.'},
-    {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخير. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
+    {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخ��ر. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
     {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر لمن يتب في سبيله.'}
   ];
   const base = templates[Math.floor(Math.random() * templates.length)];
