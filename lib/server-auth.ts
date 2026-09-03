@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { session } from '@/app/api/auth/google/route'
 
 export async function requireUser(request: Request) {
-  const user = await session(new NextRequest(request))
+  const nextRequest = request instanceof NextRequest ? request : new NextRequest(request.url, { headers: request.headers })
+  const user = await session(nextRequest)
   if (!user) return { response: NextResponse.json({ error: 'يجب تسجيل الدخول أولاً' }, { status: 401 }), user: null }
   return { response: null, user }
 }
