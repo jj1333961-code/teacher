@@ -773,7 +773,7 @@ tr:hover { background: var(--table-hover); }
   th { background:linear-gradient(90deg, var(--table-header), color-mix(in srgb, var(--table-header) 75%, var(--warning))); }
   .role-nav { border-color:rgba(169,123,44,.35); background:color-mix(in srgb, var(--card-bg) 92%, var(--warning)); }
   @media(max-width:620px){ .page-header { min-height:96px; padding:18px; background-position:58% center; } .page-header h2 { font-size:1.2rem; } }
-  /* قارئ مستقل يملأ الشاشة بالكامل، مع إبقاء زر الإغلاق واضحًا فوق PDF */
+  /* قارئ مستقل يملأ الشاش�� بالكامل، مع إبقاء زر الإغلاق واضحًا فوق PDF */
   .quran-reader-page { position:fixed !important; inset:0; z-index:10000; width:100vw; height:100dvh; max-width:none; margin:0; padding:0; border:0; border-radius:0; background:#fff; overflow:hidden; }
   .quran-reader-toolbar { display:none; }
   .quran-reader-toolbar h2,.quran-reader-toolbar p { display:none; }
@@ -861,7 +861,7 @@ tr:hover { background: var(--table-hover); }
       </div>
       <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
       <div class="thimar-signup-row">
-        <button type="button" class="thimar-signup-inline" onclick="startSignup()">إنشاء حساب جديد</button>
+        <button type="button" class="thimar-signup-inline" onclick="openSignupPageNow()">إنشاء حساب جديد</button>
       </div>
     </div>
 
@@ -1223,7 +1223,7 @@ tr:hover { background: var(--table-hover); }
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
   <div class="form-group"><label>ملاحظات</label><textarea id="editNotes" rows="2"></textarea></div>
-  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التعديلات</button>
+  <button class="btn btn-success" onclick="updateStudent()">���� حفظ التعديلات</button>
 </div>
 
 <!-- تسجيل تسميع جديد -->
@@ -1416,7 +1416,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- دردشة AI للطاب -->
 <div id="studentAIChat" class="page hidden">
-  <div class="page-header"><h2>🤖 مساعدك الذكي في القرآن</h2></div>
+  <div class="page-header"><h2>🤖 مساعدك الذكي في ��لقرآن</h2></div>
   <div class="ai-chat">
     <div id="studentChatMessages" class="ai-chat-messages"></div>
     <div class="ai-input">
@@ -1804,6 +1804,6 @@ window.alert = function(m){ showToast(m); };
 })();
 </script>
   <script src="/app-routes.js"></script>
-  <script src="/app-bootstrap.js"></script>
+  <script src="/app-bootstrap.js?v=signup-fix-2"></script>
  </body>
 </html>

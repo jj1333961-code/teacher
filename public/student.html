@@ -861,7 +861,7 @@ tr:hover { background: var(--table-hover); }
       </div>
       <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
       <div class="thimar-signup-row">
-        <button type="button" class="thimar-signup-inline" onclick="startSignup()">إنشاء حساب جديد</button>
+        <button type="button" class="thimar-signup-inline" onclick="openSignupPageNow()">إنشاء حساب جديد</button>
       </div>
     </div>
 
@@ -1223,7 +1223,7 @@ tr:hover { background: var(--table-hover); }
     <audio id="editVoicePreview" controls style="display:none;height:40px;margin-top:8px"></audio>
   </div>
   <div class="form-group"><label>ملاحظات</label><textarea id="editNotes" rows="2"></textarea></div>
-  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التعديلات</button>
+  <button class="btn btn-success" onclick="updateStudent()">💾 حفظ التعدي��ات</button>
 </div>
 
 <!-- تسجيل تسميع جديد -->
@@ -1787,6 +1787,6 @@ window.alert = function(m){ showToast(m); };
 })();
 </script>
   <script src="/app-routes.js"></script>
-  <script src="/app-bootstrap.js"></script>
+  <script src="/app-bootstrap.js?v=signup-fix-2"></script>
  </body>
 </html>

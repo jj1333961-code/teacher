@@ -861,7 +861,7 @@ tr:hover { background: var(--table-hover); }
       </div>
       <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
       <div class="thimar-signup-row">
-        <button type="button" class="thimar-signup-inline" onclick="startSignup()">إنشاء حساب جديد</button>
+        <button type="button" class="thimar-signup-inline" onclick="openSignupPageNow()">إنشاء حساب جديد</button>
       </div>
     </div>
 
@@ -1059,7 +1059,7 @@ tr:hover { background: var(--table-hover); }
   <div id="adminsAlert"></div>
   <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
     <div class="form-group" style="margin-bottom:0;">
-      <label>رقم واتساب المسؤول لاستلام طلبات الامام</label>
+      <label>رقم واتس��ب المسؤول لاستلام طلبات الامام</label>
       <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
       <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة على واتساب (بص��غة الدولة، مثال: 201554542019)</small>
     </div>
@@ -1787,6 +1787,6 @@ window.alert = function(m){ showToast(m); };
 })();
 </script>
   <script src="/app-routes.js"></script>
-  <script src="/app-bootstrap.js"></script>
+  <script src="/app-bootstrap.js?v=signup-fix-2"></script>
  </body>
 </html>
