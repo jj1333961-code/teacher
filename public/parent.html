@@ -1402,7 +1402,7 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="studentRecordsPage" class="page hidden">
-  <div class="page-header"><h2>��� صنوق التسجيلات</h2></div>
+  <div class="page-header"><h2>���� صنوق التسجيلات</h2></div>
   <div id="studentRecordsContent"></div>
 </div>
 
@@ -1652,8 +1652,8 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // لا نحمّل النظام الكامل أثناء شاشة الدخول؛ يُحمّل عند أول إجراء يحتاجه.
-  // هذا يحافظ على استجابة الحقول والأزرار ولا يحجز الخيط الرئيسي بعد الرسم الأول.
+  // يبدأ تحميل النظام مرة واحدة فور قراءة هذا السكربت، قبل أي نقرة.
+  window.loadThimarAppCore();
 })();
 </script>
 <script>
@@ -1662,28 +1662,16 @@ window.alert = function(m){ showToast(m); };
   var wrappers = {};
   function runWhenCoreReady(name, args, button){
     if (button) button.disabled = true;
-    if (name === 'unifiedLogin') {
+    return window.loadThimarAppCore().then(function(){
+      var fn = window[name];
+      if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
+      return fn.apply(window, Array.prototype.slice.call(args || []));
+    }).catch(function(err){
+      var message = 'تعذر تنفيذ الطلب. أعد المحاولة.';
       var box = document.getElementById('unifiedLoginAlert');
-      if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
-    }
-    var run = function(){
-      window.loadThimarAppCore().then(function(){
-        if (button) button.disabled = false;
-        var fn = window[name];
-        if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
-        return fn.apply(window, Array.prototype.slice.call(args || []));
-      }).catch(function(err){
-        if (button) button.disabled = false;
-        var message = '❌ تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
-        var box = document.getElementById('unifiedLoginAlert');
-        if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
-        console.error('App core failed to load', err);
-        if (typeof showToast === 'function') showToast(message, 'error');
-      });
-    };
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(run, {timeout: 100});
-    else setTimeout(run, 0);
-    return Promise.resolve();
+      if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
+      console.error('[v0] App core failed to load', err);
+    }).finally(function(){ if (button) button.disabled = false; });
   }
 
   ['unifiedLogin','startSignup'].forEach(function(name){

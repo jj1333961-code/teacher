@@ -993,7 +993,7 @@ tr:hover { background: var(--table-hover); }
 <div id="adminAIPage" class="page hidden" style="max-width:820px;margin:40px auto;">
   <div class="page-header"><h2>مساعد Gemini / Groq الإداري</h2></div>
   <p style="color:var(--text-light);margin-bottom:15px;">محادثة ذكية دقيقة للأسئلة الإدارية والعامة، مع الاستفادة من بانات الموقع عندما تكون مرتبطة بسؤالك.</p>
-  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أولياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
+  <div class="ai-chat"><div id="adminChatMessages" class="ai-chat-messages"><div class="ai-msg bot">كيف يمكنني مساعدتك في متابعة الطلاب أو أ��لياء الأمور أو لاختبارات؟</div></div><div class="ai-input"><span class="badge badge-primary">Gemini / Groq</span><input id="adminChatInput" placeholder="اسأل عن بيانات الموقع..." onkeypress="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)sendAdminChat()"><button class="btn btn-primary" onclick="sendAdminChat()">إرسال</button></div></div>
 </div>
 
 <!-- مساعد تطوير الموقع بالذكاء الاصطناعي (للمسؤول فقط) -->
@@ -1053,7 +1053,7 @@ tr:hover { background: var(--table-hover); }
 </div>
 
 <div id="notificationsPage" class="page hidden">
-  <div class="page-header"><h2>الت��بيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد الكل كمقروء</button></div>
+  <div class="page-header"><h2>الت����بيهات</h2><button type="button" class="btn btn-outline" onclick="markAllNotificationsRead()">تحديد الكل كمقروء</button></div>
   <p style="color:var(--text-light);margin-bottom:18px;">جميع طلبات استرجاع الحساب والإنذارات والمخالفات والتنبيهات العامة في مكان واحد.</p>
   <div id="notificationsList" class="notifications-grid" aria-live="polite"></div>
 </div>
@@ -1066,7 +1066,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group" style="margin-bottom:0;">
       <label>رقم واتساب المسؤول لاستلام طلبات الامام</label>
       <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
-      <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة على واتساب (بصيغة الدولة، مثال: 201554542019)</small>
+      <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة ��لى واتساب (بصيغة الدولة، مثال: 201554542019)</small>
     </div>
     <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
       <button class="btn btn-primary" onclick="saveAdminWhatsapp()">💾 حظ الرقم</button>
@@ -1653,8 +1653,8 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // لا نحمّل النظام الكامل أثناء شاشة الدخول؛ يُحمّل عند أول إجراء يحتاجه.
-  // هذا يحافظ على استجابة الحقول والأزرار ولا يحجز الخيط الرئيسي بعد الرسم الأول.
+  // يبدأ تحميل النظام مرة واحدة فور قراءة هذا السكربت، قبل أي نقرة.
+  window.loadThimarAppCore();
 })();
 </script>
 <script>
@@ -1663,28 +1663,16 @@ window.alert = function(m){ showToast(m); };
   var wrappers = {};
   function runWhenCoreReady(name, args, button){
     if (button) button.disabled = true;
-    if (name === 'unifiedLogin') {
+    return window.loadThimarAppCore().then(function(){
+      var fn = window[name];
+      if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
+      return fn.apply(window, Array.prototype.slice.call(args || []));
+    }).catch(function(err){
+      var message = 'تعذر تنفيذ الطلب. أعد المحاولة.';
       var box = document.getElementById('unifiedLoginAlert');
-      if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
-    }
-    var run = function(){
-      window.loadThimarAppCore().then(function(){
-        if (button) button.disabled = false;
-        var fn = window[name];
-        if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
-        return fn.apply(window, Array.prototype.slice.call(args || []));
-      }).catch(function(err){
-        if (button) button.disabled = false;
-        var message = '❌ تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
-        var box = document.getElementById('unifiedLoginAlert');
-        if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
-        console.error('App core failed to load', err);
-        if (typeof showToast === 'function') showToast(message, 'error');
-      });
-    };
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(run, {timeout: 100});
-    else setTimeout(run, 0);
-    return Promise.resolve();
+      if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
+      console.error('[v0] App core failed to load', err);
+    }).finally(function(){ if (button) button.disabled = false; });
   }
 
   ['unifiedLogin','startSignup','showPage'].forEach(function(name){

@@ -1163,7 +1163,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم ولي الأمر *</label><input type="text" id="stParent"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم السري لو��ي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
+    <div class="form-group"><label>الرقم السري لو����ي الأمر *</label><input type="password" id="stParentPass" placeholder="رقم سري خاص بولي الأمر" oninput="syncStudentPass('st')"></div>
     <div class="form-group"><label>المواد الدراسية *</label><select id="stSubject" multiple class="subjects-select" onchange="toggleQuranFields()"></select><small style="color:var(--text-light)">اضغط Ctrl لاختيار أكثر من مادة</small></div>
   </div>
   <div id="quranFields" class="quran-section hidden">
@@ -1651,8 +1651,8 @@ window.alert = function(m){ showToast(m); };
     return corePromise;
   };
 
-  // لا نحمّل النظام الكامل أثناء شاشة الدخول؛ يُحمّل عند أول إجراء يحتاجه.
-  // هذا يحافظ على استجابة الحقول والأزرار ولا يحجز الخيط الرئيسي بعد الرسم الأول.
+  // يبدأ تحميل النظام مرة واحدة فور قراءة هذا السكربت، قبل أي نقرة.
+  window.loadThimarAppCore();
 })();
 </script>
 <script>
@@ -1661,28 +1661,16 @@ window.alert = function(m){ showToast(m); };
   var wrappers = {};
   function runWhenCoreReady(name, args, button){
     if (button) button.disabled = true;
-    if (name === 'unifiedLogin') {
+    return window.loadThimarAppCore().then(function(){
+      var fn = window[name];
+      if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
+      return fn.apply(window, Array.prototype.slice.call(args || []));
+    }).catch(function(err){
+      var message = 'تعذر تنفيذ الطلب. أعد المحاولة.';
       var box = document.getElementById('unifiedLoginAlert');
-      if (box) box.innerHTML = '<div class="alert alert-info">جارٍ تجهيز النظام...</div>';
-    }
-    var run = function(){
-      window.loadThimarAppCore().then(function(){
-        if (button) button.disabled = false;
-        var fn = window[name];
-        if (typeof fn !== 'function' || fn === wrappers[name]) throw new Error('الدالة المطلوبة غير متاحة');
-        return fn.apply(window, Array.prototype.slice.call(args || []));
-      }).catch(function(err){
-        if (button) button.disabled = false;
-        var message = '❌ تعذر تجهيز النظام. تحقق من الاتصال ثم أعد المحاولة.';
-        var box = document.getElementById('unifiedLoginAlert');
-        if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
-        console.error('App core failed to load', err);
-        if (typeof showToast === 'function') showToast(message, 'error');
-      });
-    };
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(run, {timeout: 100});
-    else setTimeout(run, 0);
-    return Promise.resolve();
+      if (box) box.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
+      console.error('[v0] App core failed to load', err);
+    }).finally(function(){ if (button) button.disabled = false; });
   }
 
   ['unifiedLogin','startSignup'].forEach(function(name){
