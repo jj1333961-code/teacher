@@ -27,9 +27,10 @@ const nextConfig = {
         { source: '/students', destination: '/app.html?page=studentsPage' },
         { source: '/profile', destination: '/app.html?page=profilePage' },
         { source: '/settings', destination: '/app.html?page=settingsPage' },
-        { source: '/admin', destination: '/admin.html' },
-        { source: '/student', destination: '/student.html' },
-        { source: '/parent', destination: '/parent.html' },
+        // كل الأدوار تستخدم shell واحدًا للحفاظ على حالة التطبيق والتنقل SPA.
+        { source: '/admin', destination: '/app.html' },
+        { source: '/student', destination: '/app.html' },
+        { source: '/parent', destination: '/app.html' },
       ],
     }
   },

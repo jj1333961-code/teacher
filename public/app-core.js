@@ -284,8 +284,8 @@ async function hydrateDataFromNeon(){
   }
 }
 // التفضيلات فقط محلية؛ بيانات الطلاب والمستخدمين والرسائل لا تُحفظ في المتصفح.
-const scheduleHydration = window.requestIdleCallback || function(cb){ window.setTimeout(cb, 1200); };
-scheduleHydration(function(){ hydrateDataFromNeon(); });
+// ابدأ مزامنة Neon فورًا بالتوازي مع الرسم، مع منع أي طلب مكرر.
+const neonHydrationPromise = hydrateDataFromNeon();
 
 if(!runtimeData.initialized_v7) {
   runtimeData.subjects = [
@@ -413,8 +413,7 @@ function restorePendingGoogleSignup(){try{const raw=sessionStorage.getItem('thim
 function initializeThimarApp(){if(window.__thimarAppInitialized)return;window.__thimarAppInitialized=true;loadGlobalProctorSettings();setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store',credentials:'same-origin'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('عذر قراءة جلسة Google');finishGoogleLogin(data.user);history.replaceState({},'',pageUrl(document.querySelector('.page:not(.hidden)')?.id))}).catch(()=>{history.replaceState({},'',location.pathname);const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر استكمال تسجيل الدخول عبر Google.</div>'})}else if(restoreSession()){
   const expectedRole = /\/(?:admin|admin\.html)$/.test(location.pathname) ? 'admin' : /\/(?:student|student\.html)$/.test(location.pathname) ? 'student' : /\/(?:parent|parent\.html)$/.test(location.pathname) ? 'parent' : null;
   if(expectedRole && expectedRole !== currentType){
-    location.replace(roleShellPath(currentType));
-    return;
+    history.replaceState({ page: defaultPageForRole(currentType) }, '', roleShellPath(currentType));
   }
   const routed=pageFromUrl();
   if(routed && pageAllowedForUser(routed)) showPage(routed,{fromBrowser:true});
@@ -500,13 +499,8 @@ function roleShellPath(role) {
 }
 
 function showPage(id, options = {}) {
-  /* كل دور يُفتح في ملف HTML مستقل مع تحميل كامل من السيرفر. */
+  // كل الأدوار موجودة داخل shell واحد؛ التنقل بينها محلي بلا إعادة تحميل.
   const dashboardRole = id === 'adminDashboard' ? 'admin' : id === 'studentDashboard' ? 'student' : id === 'parentDashboard' ? 'parent' : null;
-  if (!options.fromBrowser && dashboardRole && (location.pathname === '/login' || location.pathname === '/app.html')) {
-    const query = new URLSearchParams(location.search).toString();
-    location.assign(roleShellPath(dashboardRole) + (query ? '?' + query : ''));
-    return;
-  }
   const currentVisible = document.querySelector('.page:not(.hidden), .home-page:not(.hidden), .chart-page:not(.hidden)');
   const currentId = currentVisible ? currentVisible.id : null;
 
@@ -1745,7 +1739,7 @@ function openEdit(id) {
   document.getElementById('editNotes').value = s.notes || '';
   editVoiceBlob=null; editVoiceFingerprint=null; editVoiceDataUrl=null; editVoiceProfileGemini=null;
   const evp=document.getElementById('editVoicePreview'); if(evp){evp.style.display='none';evp.removeAttribute('src');}
-  const evs=document.getElementById('editVoiceStatus'); if(evs)evs.textContent=(s.voiceProfile||s.voicePrintVec)?('البصمة الصوتية موجودئ'+(s.voiceProfile?' (جميناي)':'')+'. يمكنك استبدالها بتسءءيل جديد.'):'لا توجد بصمة صوتية محفوظة حالاً.';
+  const evs=document.getElementById('editVoiceStatus'); if(evs)evs.textContent=(s.voiceProfile||s.voicePrintVec)?('البصمة الصوتية موجودئ'+(s.voiceProfile?' (جميناي)':'')+'. يمكنك استبدالها بتسءءيل جديد.'):'لا توجد بصمة صوتية مح��وظة حالاً.';
   renderEditSubjectSelect(s.subjectIds);
   initEditJuzSelect(s.juz);
   const isQuran = s.subjects && s.subjects.some(sub => sub.name.includes('قرآن'));
