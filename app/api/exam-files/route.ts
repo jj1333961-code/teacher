@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { del, get, list, put } from "@vercel/blob"
 import mammoth from "mammoth"
+import { rejectCrossOrigin } from "@/lib/request-security"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -146,6 +147,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const originError = rejectCrossOrigin(request)
+  if (originError) return originError
   let uploadedPathname = ""
   try {
     ensureBlobConfigured()
@@ -177,6 +180,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const originError = rejectCrossOrigin(request)
+  if (originError) return originError
   try {
     ensureBlobConfigured()
     const { pathname, metadataPathname } = await request.json()

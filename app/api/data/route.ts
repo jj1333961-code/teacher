@@ -1,7 +1,9 @@
 import { pool } from '@/lib/db'
+import { rejectCrossOrigin } from '@/lib/request-security'
 
 export const runtime = 'nodejs'
 const SNAPSHOT_ID = 'teacher-platform-v1'
+const ALLOWED_DATA_KEYS = new Set(['subjects', 'students', 'messages', 'devices', 'admins', 'files', 'devAuditLog', 'proctoringIncidents', 'recordElements', 'extraElements', 'adminWhatsapp', 'joinRequests', 'notifications', 'aiQuestionHistory'])
 
 function response(data: unknown, status = 200) {
   return Response.json(data, {
@@ -27,12 +29,15 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const originError = rejectCrossOrigin(request)
+  if (originError) return originError
   try {
     const body = await request.json()
     if (!body || typeof body.data !== 'object' || Array.isArray(body.data)) {
       return response({ error: 'صيغة البيانات غير صالحة' }, 400)
     }
-    const serialized = JSON.stringify(body.data)
+    const sanitizedData = Object.fromEntries(Object.entries(body.data).filter(([key]) => ALLOWED_DATA_KEYS.has(key)))
+    const serialized = JSON.stringify(sanitizedData)
     if (serialized.length > 5_000_000) {
       return response({ error: 'حجم البيانات أكبر من الحد المسموح' }, 413)
     }
