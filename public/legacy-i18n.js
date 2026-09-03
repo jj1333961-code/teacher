@@ -24,7 +24,7 @@
       'استرداد الحساب': 'Account recovery', 'طلب استرداد الحساب': 'Account recovery request', 'تعذر تحميل البيانات': 'Could not load data', 'لا توجد بيانات': 'No data available', 'جاري التحميل...': 'Loading...', 'حدث خطأ': 'An error occurred', 'خطأ في الشبكة': 'Network error', 'تسجيل بجوجل أو رقم الواتساب ثم إرسال طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin'
     }
   };
-  var religiousSelector = '[data-no-translate],.quran-text,.ayah,.hadith,.dhikr,.thimar-ayah,.thimar-ayah-ref,.thimar-footer,[lang="ar-QA"]';
+  var religiousSelector = '[data-no-translate],.quran-text,.ayah,.hadith,.dhikr,.thimar-ayah-frame,.thimar-ayah-ref,.thimar-footer,[lang="ar-QA"]';
   var locale = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
   var originals = new WeakMap();
 
@@ -54,10 +54,11 @@
         var key = 'data-i18n-source-' + attr;
         if (!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr));
         var source = el.getAttribute(key) || '';
-        var translated = dictionary()[source] || source;
+        var translated = translate(source);
         el.setAttribute(attr, locale === 'ar' ? source : translated);
       });
     });
+    document.querySelectorAll('.thimar-ayah-heading').forEach(function(el){ el.textContent = locale === 'en' ? 'Allah Almighty said:' : 'قال تعالى:'; });
     document.documentElement.lang = locale;
     document.documentElement.dir = locale === 'en' ? 'ltr' : 'rtl';
     var button = document.getElementById('langToggleBtn');
