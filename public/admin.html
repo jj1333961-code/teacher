@@ -658,7 +658,8 @@ tr:hover { background: var(--table-hover); }
   .thimar-signup-row span { color:var(--thimar-ink-soft); font-size:.9rem; font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; }
   .thimar-signup-inline { background:transparent; border:1px solid var(--thimar-gold-line); border-radius:999px; color:var(--thimar-gold); padding:9px 18px; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; }
   .thimar-signup-inline:hover { background:var(--thimar-gold-fade); }
-  .thimar-password-toggle { position:absolute; left:16px; right:auto; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:#2f80ed; cursor:pointer; flex:0 0 38px; }
+  .thimar-password-toggle { position:absolute; left:16px; right:auto; top:50%; transform:translateY(-50%) !important; width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:#2f80ed; cursor:pointer; flex:0 0 38px; transition:none; }
+  .thimar-password-toggle:hover, .thimar-password-toggle:active, .thimar-password-toggle:focus-visible { transform:translateY(-50%) !important; }
   .thimar-eye-icon { width:22px; height:14px; border:2px solid currentColor; border-radius:50% / 60%; position:relative; display:block; }
   .thimar-eye-icon::after { content:''; position:absolute; width:5px; height:5px; border-radius:50%; background:currentColor; inset:0; margin:auto; }
   .thimar-password-toggle::after { content:''; position:absolute; width:22px; height:2px; border-radius:2px; background:currentColor; transform:rotate(-42deg); transition:none; }
@@ -1254,7 +1255,7 @@ tr:hover { background: var(--table-hover); }
     <h4 style="color:var(--info)">🖼️ تعديل اللوح/الصورة يدوياً</h4>
     <p style="color:var(--text-light)">الاختيار التلقائي للسورة والآيات يظل كما هو، ويمكن للمسؤول تعديل اللوح والصورة يدوياً دون تعطيل الاختيار التلقائي.</p>
     <div class="form-row">
-      <div class="form-group"><label>نص اللوح/التعديل اليدوي</label><textarea id="manualBoardText" rows="3" placeholder="اكتب التعديل المطلوب..."></textarea></div>
+      <div class="form-group"><label>نص اللوح/ال��عديل اليدوي</label><textarea id="manualBoardText" rows="3" placeholder="اكتب التعديل المطلوب..."></textarea></div>
       <div class="form-group"><label>رابط صورة اللوح (اختياري)</label><input id="manualBoardImage" type="url" placeholder="https://..."></div>
     </div>
     <button class="btn btn-info" onclick="saveManualBoardEdit()">💾 حفظ التعديل اليدوي</button>
