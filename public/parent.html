@@ -329,7 +329,8 @@ tr:hover { background: var(--table-hover); }
 .draft-section { background: linear-gradient(135deg, rgba(255,193,7,0.15), rgba(255,152,0,0.15)); border: 2px solid var(--warning); border-radius: 15px; padding: 20px; margin-bottom: 20px; }
 
 /* Back Button Fixed at Bottom */
-  .back-btn-container, .back-btn, button[onclick="goBack()"], button[onclick^="showPage("][class*="btn-secondary"] { display:none !important; }
+  .back-btn-container { display:flex; justify-content:center; width:100%; margin:18px 0; }
+  .back-btn { display:inline-flex; align-items:center; justify-content:center; }
 .back-btn {
   background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   color: #fff;
@@ -652,7 +653,9 @@ tr:hover { background: var(--table-hover); }
   .thimar-signup-row span { color:var(--thimar-ink-soft); font-size:.9rem; font-family:'Noto Kufi Arabic','Segoe UI',Tahoma,sans-serif; }
   .thimar-signup-inline { background:transparent; border:1px solid var(--thimar-gold-line); border-radius:999px; color:var(--thimar-gold); padding:9px 18px; font-family:'Noto Kufi Arabic','Segoe UI',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; }
   .thimar-signup-inline:hover { background:var(--thimar-gold-fade); }
-  .thimar-password-toggle { position:absolute; right:16px; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--thimar-gold); cursor:pointer; }
+  .thimar-password-toggle { position:absolute; left:58px; right:auto; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--thimar-gold); cursor:pointer; }
+  .thimar-password-toggle:hover, .thimar-password-toggle:active { transform:translateY(-50%); }
+  .thimar-field.has-password-toggle input { padding-left:104px; }
   .thimar-password-toggle::after { content:''; position:absolute; width:22px; height:2px; border-radius:2px; background:currentColor; transform:rotate(-42deg); transition:opacity .15s ease; }
   .thimar-password-toggle.is-visible::after { opacity:0; }
   .thimar-field.has-password-toggle input { padding-right:58px; }
@@ -838,12 +841,6 @@ tr:hover { background: var(--table-hover); }
       <span class="thimar-orn" aria-hidden="true">❁</span>
     </div>
 
-    <div class="thimar-quran-wrap">
-  <span class="thimar-cloud thimar-cloud-left" aria-hidden="true"></span>
-  <img class="thimar-quran" src="/images/thimar-quran-rehl.png" alt="مصحف مفتوح على حامل خشبي">
-  <span class="thimar-cloud thimar-cloud-right" aria-hidden="true"></span>
-  </div>
-
     <div id="unifiedLoginAlert"></div>
 
     <!-- شاشة تسجيل الدخول (نفس الحقول والوظائف السابقة) -->
@@ -901,7 +898,7 @@ tr:hover { background: var(--table-hover); }
     <div id="googleBtnContainer" style="display:flex; justify-content:center; margin:10px 0;"></div>
     <p style="color:var(--text-light); font-size:0.9rem; margin-top:5px;">اضغط لعرض حسابات جوجل الموجودة على جهازك واختيار أحدها. لن يُطلب منك رقم هاتف أو كود تحقق.</p>
   </div>
-  <!-- منطقة التسجيل برقم اءءءءهاتف: تظهر خانة الواتساب وكود التحقق فقط -->
+  <!-- منطقة التسجيل برقم اءءءءهاتف: تظهر خانة ال��اتساب وكود التحقق فقط -->
   <div id="signupPhoneBox" style="display:none;">
     <div class="form-group"><label>رقم الواتساب لاستلام كود التحقق *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupWhatsCountry" aria-label="كود دولة الواتساب" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمارات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupWhats" placeholder="رقم واتساب بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,''); updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational')" style="flex:1; direction:ltr;"></div><small id="signupWhatsInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
     <button class="btn btn-primary" id="signupSendCodeBtn" onclick="sendSignupCode()" style="width:100%">📩 إرسال كود التحقق على واتساب</button>
