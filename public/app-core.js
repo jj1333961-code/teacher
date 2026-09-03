@@ -97,7 +97,7 @@ const LANG_DICT = {
   'التحكم الكامل في النظام والطلاب': 'Full control over the system and students',
   'متابعة المواد والواجبات والحفظ': 'Track subjects, homework and memorization',
   'متابعة ابنك/ابنتك والتقارير': 'Follow your child and reports',
-  'تسجيل بجوجل أو رقم الواتساب ثم إر����ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
+  'تسجيل بجوجل أو رقم الواتساب ثم إر������ل طلب للمسؤول': 'Sign up with Google or WhatsApp, then send a request to the admin',
   '📊 لوحة تحكم المسؤول': '📊 Admin Dashboard',
   '⚙️ الإعدادات': '⚙️ Settings',
   'خروج': 'Logout',
@@ -364,17 +364,17 @@ function finishGoogleLogin(user){
 function restorePendingGoogleSignup(){try{const raw=sessionStorage.getItem('thimar_pending_google_signup');if(!raw)return false;const pending=JSON.parse(raw);if(!pending?.email)return false;signupState.method='google';signupState.email=String(pending.email).trim().toLowerCase();signupState.name=String(pending.name||'');signupState.whats='';signupState.verified=true;const note=document.getElementById('signupVerifiedNote');if(note)note.innerHTML='تم التحقق من هويتك عبر Google — '+escapeHtml(signupState.email);const name=document.getElementById('signupName');if(name&&!name.value)name.value=signupState.name;initSignupJuzSelect();showPage('signupStep2');return true}catch(e){try{sessionStorage.removeItem('thimar_pending_google_signup')}catch(ignore){}return false}}
 
 document.addEventListener('DOMContentLoaded',()=>{loadGlobalProctorSettings();setupProctorHold(document.getElementById('proctorGateHold'),true);const params=new URLSearchParams(location.search);if(params.get('google')==='success'){fetch('/api/auth/google/session',{cache:'no-store',credentials:'same-origin'}).then(r=>r.json()).then(data=>{if(!data.authenticated||!data.user?.email)throw new Error('عذر قراءة جلسة Google');finishGoogleLogin(data.user);history.replaceState({},'',pageUrl(document.querySelector('.page:not(.hidden)')?.id))}).catch(()=>{history.replaceState({},'',location.pathname);const box=document.getElementById('signupStep1Alert');if(box)box.innerHTML='<div class="alert alert-danger">تعذر استكمال تسجيل الدخول عبر Google.</div>'})}else if(restoreSession()){
-  const expectedRole = location.pathname.endsWith('/admin.html') ? 'admin' : location.pathname.endsWith('/student.html') ? 'student' : location.pathname.endsWith('/parent.html') ? 'parent' : null;
+  const expectedRole = /\/(?:admin|admin\.html)$/.test(location.pathname) ? 'admin' : /\/(?:student|student\.html)$/.test(location.pathname) ? 'student' : /\/(?:parent|parent\.html)$/.test(location.pathname) ? 'parent' : null;
   if(expectedRole && expectedRole !== currentType){
     location.replace(roleShellPath(currentType));
     return;
   }
   const routed=pageFromUrl();
-  if(routed&&pageAllowedForUser(routed))showPage(routed,{fromBrowser:true});
-  else{const home=currentType==='admin'?'adminDashboard':currentType==='student'?'studentDashboard':currentType==='parent'?'parentDashboard':'homePage';showPage(home,{fromBrowser:true});}
+  if(routed && pageAllowedForUser(routed)) showPage(routed,{fromBrowser:true});
+  else showPage(defaultPageForRole(currentType),{fromBrowser:true});
 }else restorePendingGoogleSignup()});
 
-window.addEventListener('popstate',()=>{const id=pageFromUrl();if(!id||!pageAllowedForUser(id)){showPage(currentType==='admin'?'adminDashboard':currentType==='student'?'studentDashboard':currentType==='parent'?'parentDashboard':'homePage',{fromBrowser:true});return;}showPage(id,{fromBrowser:true});});
+window.addEventListener('popstate',()=>{const id=pageFromUrl();if(!id||!pageAllowedForUser(id)){showPage(defaultPageForRole(),{fromBrowser:true});return;}showPage(id,{fromBrowser:true});});
 
 // ====== SESSION PERSISTENCE ======
 function saveSessionState() {
@@ -422,9 +422,16 @@ function pageUrl(id) {
   return url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash;
 }
 
+function defaultPageForRole(role = currentType) {
+  if (role === 'admin') return 'adminDashboard';
+  if (role === 'student') return 'studentDashboard';
+  if (role === 'parent') return 'parentDashboard';
+  return 'lockScreen';
+}
+
 function pageFromUrl() {
   const id = new URLSearchParams(window.location.search).get(PAGE_ROUTE_PARAM);
-  return id && document.getElementById(id) ? id : 'homePage';
+  return id && document.getElementById(id) ? id : defaultPageForRole();
 }
 
 function pageAllowedForUser(id) {
@@ -2248,7 +2255,7 @@ function generateLocalFileQuestions(file,plans){const sentences=String(file.text
 function localSmartChatReply(message,role){
   const q=normalizeAr(String(message||'')).toLowerCase(),students=getData('students',[]),messages=getData('messages',[]);
   const roleLabel=role==='admin'?'المسؤول':role==='parent'?'ولي الأمر':'الطالب';
-  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم السلام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|محبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنن مساعدتك؟';
+  if(/السلام عليكم|سلام عليكم/.test(q))return 'وعليكم ال��لام ورحمة الله وبركاته 🥰 هل لديك سؤال؟ أنا في خدمتك!';if(/سلام|محبا|اهلا/.test(q))return 'مرحباً بك 🥰 كيف يمكنن مساعدتك؟';
   if(/طالب|طلاب|اختبار|نتيج|درج|تسميع|حفظ|مراجع/.test(q)){
     if(role==='admin'){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
@@ -2706,7 +2713,7 @@ function saveSession(isFinal) {
     homeworkItems.forEach(h=>students[idx].tasks.push({type:'homework',text:h.text,approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++}));
     readingItems.forEach(r=>students[idx].tasks.push({type:'reading',text:r.text,surah:r.surah,from:r.from,to:r.to,showAyat:!!r.showAyat,audio:r.audio||'',approved:false,rejected:false,submitted:false,date,sentAt:Date.now(),originalTaskIndex:taskCounter++}));
     setData('students',students);
-    sendSystemSessionMessage(students[idx], 'تم حفظ تسميع '+students[idx].name+' بتاريخ '+date+' كمسودة. المهام الحالية ما زالت ظاهرة للطالب.');
+    sendSystemSessionMessage(students[idx], 'تم حفظ تسميع '+students[idx].name+' بتاريخ '+date+' كمسودة. المهام الحالية ما زالت ��اهرة للطالب.');
     showToast('💾 ءءم الحفظ كمسودة والمهام ما زالت متاحة للطالب', 'success');
     return;
   }
@@ -4010,7 +4017,7 @@ function renderStudentTasks() {
   const extraTasks=Array.from(temp.querySelectorAll('[data-task-category="extra"]')).map(el=>el.outerHTML).join('');
   const exam=s.activeExam&&s.activeExam.status==='pending'?s.activeExam:null;
   const examHtml=exam?'<p>لديك اختبار نشط من '+(exam.questions?.length||0)+' سؤال.</p><button class="btn btn-primary" onclick="showPage(\'studentExamPage\')">فتح الاختبار</button>':'<p style="color:var(--text-light)">لا يوجد اختبار نشط حاليًا.</p>';
-  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المهات اءءإضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمءءت ءءضافية حالية.</p>')+'</section></div>';
+  document.getElementById('studentTasksSection').innerHTML='<div class="student-work-grid" style="margin-top:20px"><section class="page student-work-card"><h4 style="color:var(--primary)">الاختبارات <span class="badge badge-primary">'+(exam?1:0)+'</span></h4>'+examHtml+'</section><section class="page student-work-card"><h4 style="color:var(--success)">التسميع <span class="badge badge-success">'+(recitationTasks?temp.querySelectorAll('[data-task-category="recitation"]').length:0)+'</span></h4>'+(recitationTasks||'<p style="color:var(--text-light)">لا توجد مهمات تسميع حالية.</p>')+'</section><section class="page student-work-card"><h4 style="color:var(--warning)">المها�� اءءإضافية <span class="badge badge-warning">'+(extraTasks?temp.querySelectorAll('[data-task-category="extra"]').length:0)+'</span></h4>'+(extraTasks||'<p style="color:var(--text-light)">لا توجد مهمءءت ءءضافية حالية.</p>')+'</section></div>';
   if(proctor.active)bindLiveProctorHold();
 }
 
@@ -4455,7 +4462,7 @@ async function geminiVoiceProfile(blob){
 }
 async function verifyVoiceIdentity(blob,student){
   const profile=(student&&student.voiceProfile)?student.voiceProfile:null;
-  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية محفوءءة لهذا الطالءء');
+  if(!profile)throw new Error('لا توجد بصمة Gemini مرجعية م��فوءءة لهذا الطالءء');
   const audio=await voiceAudioPayload(blob);
   const data=await callStudentAI('voice_match',Object.assign({referenceProfile:profile},audio),0.05);
   if(!data||typeof data.matchPercent!=='number')throw new Error('لم يُرجع Gemini نتيجة مطابقة صالحة');
@@ -5292,21 +5299,3 @@ function logout() {
 }
 
 initLanguage();
-
-// Restore session on page load
-if(restoreSession()) {
-  if(currentType === 'admin' && currentUser) {
-    showPage('adminDashboard');
-  } else if(currentType === 'student' && currentUser) {
-    renderStudentDashboard();
-    showPage('studentDashboard');
-  } else if(currentType === 'parent' && currentUser) {
-    renderParentDashboard();
-    showPage('parentDashboard');
-  } else {
-    showPage('lockScreen');
-  }
-} else {
-  // الصفحة الرئيسية الأصلية هي شاشة الدخول الموحدة؛ لا نعرض بطاقات اختيار المسؤول/الطالب/ولي الأمر.
-  showPage('lockScreen');
-}
