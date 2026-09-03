@@ -37,7 +37,9 @@ const nextConfig = {
     return [
       { source: '/:path*', headers: securityHeaders },
       { source: '/:path*.(woff2|png|jpg|jpeg|svg|webp)', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
-      { source: '/:path*.(js|css)', headers: [{ key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' }] },
+      // ملفات JavaScript/CSS legacy تحمل حالة التطبيق وربط الأحداث. لأنها غير مُجزأة
+      // بأسماء hash، لا نسمح للمتصفح أو CDN بإبقاء نسخة قديمة بعد النشر.
+      { source: '/:path*.(js|css)', headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }] },
       { source: '/quran/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
     ]
   },
