@@ -5,6 +5,7 @@ import { requireAdmin, requireUser } from '@/lib/server-auth'
 export const runtime = 'nodejs'
 const SNAPSHOT_ID = 'teacher-platform-v1'
 const ALLOWED_DATA_KEYS = new Set(['subjects', 'students', 'messages', 'devices', 'admins', 'files', 'devAuditLog', 'proctoringIncidents', 'recordElements', 'extraElements', 'adminWhatsapp', 'joinRequests', 'notifications', 'aiQuestionHistory'])
+const USER_DATA_KEYS = new Set(['subjects', 'recordElements', 'extraElements', 'notifications'])
 
 function response(data: unknown, status = 200) {
   return Response.json(data, {
@@ -24,7 +25,29 @@ export async function GET(request: Request) {
       'SELECT data, updated_at FROM app_snapshots WHERE id = $1',
       [SNAPSHOT_ID],
     )
-    return response({ data: result.rows[0]?.data ?? null, updatedAt: result.rows[0]?.updated_at ?? null })
+    const storedData = result.rows[0]?.data
+    const admin = await requireAdmin(request)
+    if (!admin.response) return response({ data: storedData ?? null, updatedAt: result.rows[0]?.updated_at ?? null })
+    const email = String(auth.user?.email || '').trim().toLowerCase()
+    const rawData = storedData && typeof storedData === 'object' && !Array.isArray(storedData) ? storedData as Record<string, unknown> : {}
+    const data = Object.fromEntries(Object.entries(rawData).filter(([key]) => USER_DATA_KEYS.has(key)).map(([key, value]) => {
+      if (key === 'students' && Array.isArray(value)) {
+        return [key, value.filter((student) => {
+          if (!student || typeof student !== 'object') return false
+          const record = student as Record<string, unknown>
+          return [record.email, record.googleEmail, record.parentEmail, record.parentGoogleEmail].some((candidate) => String(candidate || '').trim().toLowerCase() === email)
+        })]
+      }
+      if (key === 'notifications' && Array.isArray(value)) {
+        return [key, value.filter((notification) => {
+          if (!notification || typeof notification !== 'object') return false
+          const record = notification as Record<string, unknown>
+          return [record.userId, record.email, record.recipientId].some((candidate) => String(candidate || '').trim().toLowerCase() === email)
+        })]
+      }
+      return [key, value]
+    }))
+    return response({ data, updatedAt: result.rows[0]?.updated_at ?? null })
   } catch (error) {
     console.error('[v0] GET /api/data failed', error)
     return response({ error: 'تعذر الاتصال بقاعدة البيانات' }, 503)
