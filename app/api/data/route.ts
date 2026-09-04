@@ -1,11 +1,13 @@
-import { pool } from '@/lib/db'
+import { db } from '@/lib/db'
+import { appSnapshots } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 import { rejectCrossOrigin } from '@/lib/request-security'
 import { requireAdmin, requireUser } from '@/lib/server-auth'
 
 export const runtime = 'nodejs'
 const SNAPSHOT_ID = 'teacher-platform-v1'
 const ALLOWED_DATA_KEYS = new Set(['subjects', 'students', 'messages', 'devices', 'admins', 'files', 'devAuditLog', 'proctoringIncidents', 'recordElements', 'extraElements', 'adminWhatsapp', 'joinRequests', 'notifications', 'aiQuestionHistory'])
-const USER_DATA_KEYS = new Set(['subjects', 'recordElements', 'extraElements', 'notifications'])
+const USER_DATA_KEYS = new Set(['subjects', 'students', 'recordElements', 'extraElements', 'notifications'])
 
 function response(data: unknown, status = 200) {
   return Response.json(data, {
@@ -21,13 +23,14 @@ export async function GET(request: Request) {
   const auth = await requireUser(request)
   if (auth.response) return auth.response
   try {
-    const result = await pool.query(
-      'SELECT data, updated_at FROM app_snapshots WHERE id = $1',
-      [SNAPSHOT_ID],
-    )
-    const storedData = result.rows[0]?.data
+    const result = await db.select({ data: appSnapshots.data, updatedAt: appSnapshots.updatedAt })
+      .from(appSnapshots)
+      .where(eq(appSnapshots.id, SNAPSHOT_ID))
+      .limit(1)
+    const snapshot = result[0]
+    const storedData = snapshot?.data
     const admin = await requireAdmin(request)
-    if (!admin.response) return response({ data: storedData ?? null, updatedAt: result.rows[0]?.updated_at ?? null })
+    if (!admin.response) return response({ data: storedData ?? null, updatedAt: snapshot?.updatedAt ?? null })
     const email = String(auth.user?.email || '').trim().toLowerCase()
     const rawData = storedData && typeof storedData === 'object' && !Array.isArray(storedData) ? storedData as Record<string, unknown> : {}
     const data = Object.fromEntries(Object.entries(rawData).filter(([key]) => USER_DATA_KEYS.has(key)).map(([key, value]) => {
@@ -47,7 +50,7 @@ export async function GET(request: Request) {
       }
       return [key, value]
     }))
-    return response({ data, updatedAt: result.rows[0]?.updated_at ?? null })
+    return response({ data, updatedAt: snapshot?.updatedAt ?? null })
   } catch (error) {
     console.error('[v0] GET /api/data failed', error)
     return response({ error: 'تعذر الاتصال بقاعدة البيانات' }, 503)
@@ -69,14 +72,22 @@ export async function PUT(request: Request) {
     if (serialized.length > 5_000_000) {
       return response({ error: 'حجم البيانات أكبر من الحد المسموح' }, 413)
     }
-    const result = await pool.query(
-      `INSERT INTO app_snapshots (id, data, updated_at)
-       VALUES ($1, $2::jsonb, now())
-       ON CONFLICT (id) DO UPDATE SET data = app_snapshots.data || EXCLUDED.data, updated_at = now()
-       RETURNING updated_at`,
-      [SNAPSHOT_ID, serialized],
-    )
-    return response({ saved: true, updatedAt: result.rows[0].updated_at })
+    const existing = await db.select({ data: appSnapshots.data })
+      .from(appSnapshots)
+      .where(eq(appSnapshots.id, SNAPSHOT_ID))
+      .limit(1)
+    const existingData = existing[0]?.data && typeof existing[0].data === 'object' && !Array.isArray(existing[0].data)
+      ? existing[0].data as Record<string, unknown>
+      : {}
+    const mergedData = { ...existingData, ...sanitizedData }
+    const result = await db.insert(appSnapshots)
+      .values({ id: SNAPSHOT_ID, data: mergedData, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: appSnapshots.id,
+        set: { data: mergedData, updatedAt: new Date() },
+      })
+      .returning({ updatedAt: appSnapshots.updatedAt })
+    return response({ saved: true, updatedAt: result[0]?.updatedAt ?? new Date() })
   } catch (error) {
     console.error('[v0] PUT /api/data failed', error)
     return response({ error: 'تعذر حفظ البيانات في قاعدة البيانات' }, 503)
