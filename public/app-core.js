@@ -53,52 +53,147 @@ const RATING_COLORS = {
 };
 
 // ====== COUNTRY-AWARE IDENTITY AND PHONE FIELDS ======
-let countryRules = [];
-function countryDisplayName(iso2) {
-  try { return new Intl.DisplayNames([currentLang === 'en' ? 'en' : 'ar'], { type: 'region' }).of(iso2) || iso2; }
+let countryRules = Array.isArray(window.THIMAR_COUNTRY_RULES) ? window.THIMAR_COUNTRY_RULES : [];
+const COUNTRY_FIELD_CONFIG = [
+  { selector: 'recoveryIdentityCountry', identity: 'recoveryNid' },
+  { selector: 'recoveryCountry', phone: 'recoveryPhone' },
+  { selector: 'signupIdentityCountry', identity: 'signupNid' },
+  { selector: 'signupPhoneCountry', phone: 'signupPhone' },
+  { selector: 'signupWhatsCountry', phone: 'signupWhats' },
+  { selector: 'stIdentityCountry', identity: 'stNational' },
+  { selector: 'stPhoneCountry', phone: 'stPhone' },
+  { selector: 'editIdentityCountry', identity: 'editNational' },
+  { selector: 'editPhoneCountry', phone: 'editPhone' },
+  { selector: 'adminMobileCountry', phone: 'adminMobile' },
+  { selector: 'adminWhatsappCountry', phone: 'adminWhatsInput' },
+  { selector: 'newAdminMobileCountry', phone: 'newAdminMobile' },
+  { selector: 'confirmMobileCountry', phone: 'confirmMobile' },
+  { selector: 'newMobileCountry', phone: 'newMobile' }
+];
+function activeLocale() { return localStorage.getItem('lang') === 'en' ? 'en' : 'ar'; }
+function countryDisplayName(iso2, locale) {
+  try { return new Intl.DisplayNames([locale || activeLocale()], { type: 'region' }).of(iso2) || iso2; }
   catch { return iso2; }
 }
 function countryRuleForValue(value) {
-  return countryRules.find(function(rule) { return rule.iso2 === String(value || '').toUpperCase(); }) || countryRules.find(function(rule) { return rule.iso2 === 'EG'; });
+  const normalized = String(value || '').toUpperCase();
+  return countryRules.find(function(rule) { return rule.iso2 === normalized; })
+    || countryRules.find(function(rule) { return rule.dialCode === normalized; })
+    || countryRules.find(function(rule) { return rule.iso2 === 'EG'; });
+}
+function countryConfigFor(select) {
+  return COUNTRY_FIELD_CONFIG.find(function(config) { return config.selector === select.id; }) || {
+    phone: select.dataset.phoneId || '', identity: select.dataset.identityId || ''
+  };
+}
+function localCountryLabel(rule) {
+  const locale = activeLocale();
+  const primary = countryDisplayName(rule.iso2, locale);
+  const secondary = countryDisplayName(rule.iso2, locale === 'en' ? 'ar' : 'en');
+  return locale === 'en' ? primary + ' / ' + secondary : primary + ' / ' + secondary;
+}
+function addCountrySearch(select) {
+  if(!select || select.dataset.countryEnhanced === 'true') return;
+  const parent = select.parentElement;
+  if(!parent) return;
+  const picker = document.createElement('div');
+  picker.className = 'country-picker';
+  const search = document.createElement('input');
+  search.type = 'search';
+  search.className = 'country-search';
+  search.autocomplete = 'off';
+  search.placeholder = activeLocale() === 'en' ? 'Search countries' : 'بحث عن الدولة';
+  search.setAttribute('aria-label', search.placeholder);
+  search.addEventListener('input', function() {
+    const query = search.value.trim().toLocaleLowerCase();
+    Array.from(select.options).forEach(function(option) {
+      option.hidden = Boolean(query && !(option.textContent || '').toLocaleLowerCase().includes(query) && !option.value.toLocaleLowerCase().includes(query));
+    });
+  });
+  parent.insertBefore(picker, select);
+  picker.appendChild(search);
+  picker.appendChild(select);
+  select.dataset.countryEnhanced = 'true';
+  select.addEventListener('change', function() {
+    select.dataset.countryIso = select.value;
+    search.value = '';
+    Array.from(select.options).forEach(function(option) { option.hidden = false; });
+    updateCountryFieldHints(select);
+  });
 }
 function populateCountrySelect(select) {
   if(!select || !countryRules.length) return;
-  const previous = select.dataset.countryIso || (select.value === '20' ? 'EG' : '');
-  select.innerHTML = countryRules.map(function(rule) { return '<option value="' + rule.iso2 + '">' + escapeHtml(countryDisplayName(rule.iso2)) + ' (+' + rule.dialCode + ')</option>'; }).join('');
+  addCountrySearch(select);
+  const previousRule = countryRuleForValue(select.dataset.countryIso || select.value);
+  const previous = previousRule ? previousRule.iso2 : 'EG';
+  const options = countryRules.map(function(rule) {
+    return '<option value="' + rule.iso2 + '">' + escapeHtml(localCountryLabel(rule)) + ' (+' + rule.dialCode + ')</option>';
+  }).join('');
+  select.innerHTML = options;
   const selected = countryRules.some(function(rule) { return rule.iso2 === previous; }) ? previous : 'EG';
   select.value = selected;
   select.dataset.countryIso = selected;
-  select.addEventListener('change', function() { select.dataset.countryIso = select.value; updateCountryFieldHints(select); });
   updateCountryFieldHints(select);
 }
+function setCountrySelectorValue(id, iso2) {
+  const select = document.getElementById(id);
+  if(!select) return;
+  const rule = countryRuleForValue(iso2);
+  if(rule) { select.value = rule.iso2; select.dataset.countryIso = rule.iso2; updateCountryFieldHints(select); }
+}
 function updateCountryFieldHints(select) {
-  const rule = countryRuleForValue(select?.value);
+  const rule = countryRuleForValue(select && select.value);
   if(!rule) return;
-  const phoneId = select.id === 'recoveryCountry' ? 'recoveryPhone' : select.id === 'signupWhatsCountry' ? 'signupWhats' : select.id === 'signupPhoneCountry' ? 'signupPhone' : select.id === 'stNationalCountry' ? 'stPhone' : 'editPhone';
-  const phone = document.getElementById(phoneId);
-  const identityId = select.id === 'recoveryCountry' ? 'recoveryNid' : select.id === 'signupPhoneCountry' ? 'signupNid' : select.id === 'stNationalCountry' ? 'stNational' : select.id === 'editNationalCountry' ? 'editNational' : '';
-  const identity = document.getElementById(identityId);
-  if(phone) { phone.placeholder = currentLang === 'en' ? 'Local number without country code' : 'الرقم المحلي بدون رمز الدولة'; phone.inputMode = 'tel'; }
-  if(identity) { identity.inputMode = rule.identity === 'numeric' ? 'numeric' : 'text'; identity.placeholder = rule.identity === 'numeric' ? (currentLang === 'en' ? '6–20 digits' : 'من 6 إلى 20 رقماً') : (currentLang === 'en' ? 'Letters and numbers, or passport number' : 'حروف وأرقام أو رقم جواز السفر'); }
-  const hint = document.getElementById(identityId + 'Hint');
-  if(hint) hint.textContent = currentLang === 'en' ? (rule.identity === 'numeric' ? 'Format check only: 6–20 digits.' : 'Format check only: letters/numbers, 6–24 characters.') : (rule.identity === 'numeric' ? 'تحقق شكلي فقط: من 6 إلى 20 رقماً.' : 'تحقق شكلي فقط: حروف وأرقام من 6 إلى 24 خانة.');
-  updateSignupInternationalNumber(phoneId, select.id, phoneId + 'International');
+  const config = countryConfigFor(select);
+  const phone = config.phone ? document.getElementById(config.phone) : null;
+  const identity = config.identity ? document.getElementById(config.identity) : null;
+  const locale = activeLocale();
+  if(phone) {
+    phone.placeholder = locale === 'en' ? 'Local number without country code' : 'الرقم المحلي بدون رمز الدولة';
+    phone.inputMode = 'tel';
+    phone.maxLength = 15;
+  }
+  if(identity) {
+    identity.inputMode = rule.identity === 'numeric' ? 'numeric' : 'text';
+    identity.placeholder = locale === 'en' ? 'Enter the selected country ID or passport number' : 'أدخل هوية الدولة المختارة أو رقم جواز السفر';
+    identity.setAttribute('autocomplete', 'off');
+  }
+  const hint = config.identity ? document.getElementById(config.identity + 'Hint') : null;
+  if(hint) { hint.textContent = locale === 'en' ? rule.identityHintEn : rule.identityHintAr; hint.classList.add('country-hint'); }
+  const output = config.phone ? document.getElementById(config.phone + 'International') : null;
+  if(config.phone && output) updateSignupInternationalNumber(config.phone, select.id, output.id);
+}
+function refreshCountryFields() {
+  document.querySelectorAll('[data-country-selector]').forEach(populateCountrySelect);
 }
 async function loadCountryRules() {
   try {
     const response = await fetch('/api/countries', { cache: 'force-cache' });
     const payload = await response.json();
-    countryRules = Array.isArray(payload.countries) ? payload.countries : [];
-    document.querySelectorAll('#recoveryCountry,#signupWhatsCountry,#signupPhoneCountry,#stNationalCountry,#editNationalCountry').forEach(populateCountrySelect);
-  } catch(error) { console.warn('[v0] country rules unavailable'); }
+    if(Array.isArray(payload.countries) && payload.countries.length) countryRules = payload.countries;
+  } catch(error) {
+    if(!countryRules.length) console.warn('[v0] country rules unavailable');
+  }
+  refreshCountryFields();
 }
-function validateCountryFields(countryId, identityId, phoneId) {
-  const rule = countryRuleForValue(document.getElementById(countryId)?.value);
-  const identity = String(document.getElementById(identityId)?.value || '').trim().replace(/[\\s-]/g, '');
+function normalizeIdentityInput(value) {
+  return String(value || '').replace(/[٠-٩]/g, function(digit) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)); }).trim().replace(/[\\s-]/g, '').toUpperCase();
+}
+function validateCountryFields(identityCountryId, identityId, phoneCountryId, phoneId) {
+  const identityRule = countryRuleForValue(document.getElementById(identityCountryId)?.value);
+  const phoneRule = countryRuleForValue(document.getElementById(phoneCountryId)?.value);
+  const identity = normalizeIdentityInput(document.getElementById(identityId)?.value);
   const phone = String(document.getElementById(phoneId)?.value || '').replace(/\\D/g, '').replace(/^0+/, '');
-  const identityValid = rule && (rule.identity === 'numeric' ? /^\\d{6,20}$/.test(identity) : /^[A-Za-z0-9]{6,24}$/.test(identity));
-  const phoneValid = rule && rule.phoneLengths.includes(phone.length);
-  return { identityValid, phoneValid };
+  const identityValid = Boolean(identityRule && identity && new RegExp(identityRule.identityPattern).test(identity));
+  const phoneValid = !phone || Boolean(phoneRule && phoneRule.phoneLengths.includes(phone.length));
+  return { identityValid, phoneValid, identityRule, phoneRule, identity, phone };
+}
+function validatePhoneField(countryId, phoneId, required) {
+  const value = String(document.getElementById(phoneId)?.value || '').trim();
+  if(!value) return !required;
+  const rule = countryRuleForValue(document.getElementById(countryId)?.value);
+  const local = value.replace(/\\D/g, '').replace(/^0+/, '');
+  return Boolean(rule && rule.phoneLengths.includes(local.length));
 }
 
 // ====== NAVIGATION HISTORY ======
@@ -209,7 +304,7 @@ const LANG_DICT = {
   'تعذر تحليل التسجيل': 'Unable to analyze the recording', 'إعادة المحاولة': 'Try again',
   'خطأ في الشبكة': 'Network error', 'حدث خطأ': 'An error occurred', 'لا توجد بيانات': 'No data available',
   'حفظ': 'Save', 'إلغاء': 'Cancel', 'حذف': 'Delete', 'تعديل': 'Edit', 'إضافة': 'Add',
-  'إرس��ل': 'Send', 'تحميل': 'Loading', 'جار التحميل...': 'Loading...', 'تأكيد': 'Confirm',
+  'إرس����ل': 'Send', 'تحميل': 'Loading', 'جار التحميل...': 'Loading...', 'تأكيد': 'Confirm',
   'نجح': 'Succeeded', 'فشل': 'Failed', 'محظور': 'Blocked', 'مفعل': 'Enabled', 'غير مفعل': 'Disabled',
   'الوقت المتبقي': 'Time remaining', 'حالة الجلسة': 'Session status', 'النتيجة': 'Result',
   'تحديث': 'Refresh', 'تسجيل الدخول': 'Log in', 'تسجيل الخروج': 'Log out',
@@ -233,8 +328,8 @@ const LANG_DICT = {
   'إعدادات العرض': 'Display settings',
   'تبديل الوضع': 'Toggle theme'
 };
-let currentLang = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
-const LANG_ATTRS = ['placeholder','title','aria-label','alt'];
+let currentLang = activeLocale();
+const LANG_ATTRS = ['placeholder','title','aria-label','aria-description','alt'];
 function langTextNodes() {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const nodes = []; let node;
@@ -256,49 +351,47 @@ function translateValue(value) {
 }
 let langApplyFrame = 0;
 function applyLangToDom() {
+  currentLang = activeLocale();
   if (langApplyFrame) return;
   const run = function(){
     langApplyFrame = 0;
     document.documentElement.lang = currentLang;
     document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
-    document.querySelectorAll('.thimar-ayah-heading').forEach(function(el){ el.textContent = currentLang === 'en' ? 'Allah Almighty said:' : 'قال تعالى:'; });
-    document.querySelectorAll('.thimar-ayah-ref').forEach(function(el){ el.textContent = '(إبراهيم: 24)'; });
-    document.querySelectorAll('.thimar-footer .ref').forEach(function(el){ el.textContent = '(المزم��: 4)'; });
-    langTextNodes().forEach(function(node){
-      if(node.__arText === undefined) node.__arText = node.nodeValue;
-      const source = node.__arText;
-      const translated = translateValue(source);
-      node.nodeValue = currentLang === 'en' ? translated : source;
-    });
-    document.querySelectorAll('.side-sidebar-head h3, .role-nav-item > span:not(.role-nav-icon):not(.notification-count)').forEach(function(el){
-      if(!el.hasAttribute('data-ar-text')) el.setAttribute('data-ar-text', el.textContent);
-      let source = el.getAttribute('data-ar-text') || '';
-      if(source.includes('المرفوعة')) { source = 'الملفات المرفوعة'; el.setAttribute('data-ar-text', source); }
-      el.textContent = currentLang === 'en' ? translateValue(source) : source;
-    });
-    document.querySelectorAll('*').forEach(function(el){
-      LANG_ATTRS.forEach(function(attr){
-        if(!el.hasAttribute(attr)) return;
-        const key = 'data-ar-' + attr;
-        if(!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr));
-        const source = el.getAttribute(key) || '';
-        const translated = translateValue(source);
-        el.setAttribute(attr, currentLang === 'en' ? translated : source);
+    if(window.ThimarI18n && typeof window.ThimarI18n.apply === 'function') {
+      window.ThimarI18n.apply(document.body);
+    } else {
+      document.querySelectorAll('.thimar-ayah-heading').forEach(function(el){ el.textContent = currentLang === 'en' ? 'Allah Almighty said:' : 'قال تعالى:'; });
+      document.querySelectorAll('.thimar-ayah-ref').forEach(function(el){ el.textContent = '(إبراهيم: 24)'; });
+      langTextNodes().forEach(function(node){
+        if(node.__arText === undefined) node.__arText = node.nodeValue;
+        node.nodeValue = currentLang === 'en' ? translateValue(node.__arText) : node.__arText;
       });
-    });
+      document.querySelectorAll('*').forEach(function(el){
+        LANG_ATTRS.forEach(function(attr){
+          if(!el.hasAttribute(attr)) return;
+          const key = 'data-ar-' + attr;
+          if(!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr));
+          const source = el.getAttribute(key) || '';
+          el.setAttribute(attr, currentLang === 'en' ? translateValue(source) : source);
+        });
+      });
+    }
     const btn=document.getElementById('langToggleBtn'); if(btn) btn.textContent=currentLang==='en'?'ع':'EN';
     if(typeof syncSignupRelationshipField === 'function') syncSignupRelationshipField();
-    document.querySelectorAll('input,textarea,select').forEach(function(el){ el.style.direction = currentLang === 'en' ? 'ltr' : 'rtl'; el.style.textAlign = currentLang === 'en' ? 'left' : 'right'; });
+    refreshCountryFields();
+    document.querySelectorAll('input,textarea,select').forEach(function(el){
+      el.style.direction = el.classList.contains('country-search') || el.dataset.phoneId || el.dataset.identityId ? 'ltr' : (currentLang === 'en' ? 'ltr' : 'rtl');
+      el.style.textAlign = el.classList.contains('country-search') || el.dataset.phoneId || el.dataset.identityId ? 'left' : (currentLang === 'en' ? 'left' : 'right');
+    });
   };
   if (typeof requestAnimationFrame === 'function') langApplyFrame = requestAnimationFrame(run);
   else run();
 }
-  window.applyLangToDom = applyLangToDom;
-  function toggleLang() { currentLang=currentLang==='ar'?'en':'ar'; localStorage.setItem('lang',currentLang); applyLangToDom(); window.dispatchEvent(new Event('languagechange')); }
+window.applyLangToDom = applyLangToDom;
+function toggleLang() { currentLang=activeLocale()==='ar'?'en':'ar'; localStorage.setItem('lang',currentLang); applyLangToDom(); window.dispatchEvent(new Event('languagechange')); }
+window.addEventListener('languagechange', function(){ currentLang = activeLocale(); applyLangToDom(); });
 // تتم ترجمة العقد الديناميكية بواسطة legacy-i18n.js؛ لا نسجل مراقباً ثانياً
-// حتى لا يعد المترجمان فحص الصفحة نفسها مع كل تحديث للـ DOM.
 function initLanguage(){
-  // شاشة الدخول تُترجم بواسطة legacy-i18n؛ لا نفحص الصفحة الكبيرة مرة أخرى أثناء تحميل النظام.
   if (document.getElementById('lockScreen') && !document.querySelector('.page:not(.hidden):not(#lockScreen)')) return;
   applyLangToDom();
 }
@@ -2477,7 +2570,7 @@ async function generateLocalQuranQuestions(base,lastSurah,plans){
   for(let left=0,right=range.length-1;left<=right;left++,right--){sourceOrder.push(range[left]);if(right!==left)sourceOrder.push(range[right])}
   const sourceLimit=Math.min(range.length,Math.max(needed,8)),sources=[];
   for(const surah of sourceOrder.slice(0,sourceLimit)){const max=SURAH_AYAH_COUNTS[surah]||1;const text=await fetchAyatText(surah,1,max);const ayahs=String(text||'').split(/\s*﴿?\d+﴾?\s*/).map(x=>x.trim()).filter(Boolean);if(ayahs.length)sources.push({surah,ayahs,text})}
-  if(!sources.length)throw new Error('تعذر تحميل النص القرآني للمولّد المحلي.');let cursor=0;const out=[],used=new Set(),randomPositions=['start','end','middle'];
+  if(!sources.length)throw new Error('تعذر تحميل النص القرآني للمو��ّد المحلي.');let cursor=0;const out=[],used=new Set(),randomPositions=['start','end','middle'];
   for(const plan of plans){for(let i=0;i<plan.count;i++){const src=sources[cursor%sources.length],requestedPosition=plan.position||'random',position=requestedPosition==='random'?randomPositions[cursor%randomPositions.length]:requestedPosition;cursor++;const third=Math.max(1,Math.ceil(src.ayahs.length/3));let min=1,max=src.ayahs.length;if(position==='start')max=Math.min(src.ayahs.length,third);else if(position==='middle'){min=Math.min(src.ayahs.length,third+1);max=Math.min(src.ayahs.length,third*2)}else if(position==='end')min=Math.min(src.ayahs.length,third*2+1);let from=min+Math.floor(Math.random()*Math.max(1,max-min+1));for(let tries=0;tries<=max-min&&used.has(src.surah+':'+from);tries++)from=from>=max?min:from+1;used.add(src.surah+':'+from);const ayah=src.ayahs[from-1]||src.text,next=src.ayahs[from]||ayah;let q={surah:src.surah,from,to:Math.min(from+(plan.type==='complete'?plan.completeAyahs-1:plan.type==='audio'?plan.reciteAyahs-1:0),src.ayahs.length),points:1,source:'local-browser',options:[],stem:ayah,correct:''};
     if(plan.type==='mcq'){const options=shuffled([src.surah].concat(shuffled(range.filter(s=>s!==src.surah)).slice(0,plan.optionsCount-1)));q.prompt='إلى أي سورة ينتمي المقطع المصور؟';q.options=options;q.correct=src.surah}
     else if(plan.type==='truefalse'){const truth=Math.random()>.5,shown=truth?src.surah:(shuffled(range.filter(s=>s!==src.surah))[0]||src.surah);q.prompt='هل المقطع المصور من سورة '+shown+'؟';q.options=['صح','خطأ'];q.correct=truth?'صح':'خطأ'}
@@ -2565,7 +2658,7 @@ async function generateExamQuestions(){
   if(!plans.length){showExamAlert('أضف خطة سؤال واحدة على الأقل.','danger');return}
   const btns=document.querySelectorAll('#examBuilderSection button');btns.forEach(b=>b.disabled=true);
   const requestedTotal=plans.reduce((n,r)=>n+(parseInt(r.count)||0),0),sourceMode=getExamSourceMode();let generationSucceeded=false;
-  startExamGenerationProgress(requestedTotal);showExamAlert('جاري إنشاء دفعة جديدة من '+(sourceMode==='file'?'الملف المحدد':'الذكاء الاصطناعي مع التحقق القرآني')+'...','info');
+  startExamGenerationProgress(requestedTotal);showExamAlert('جاري إنشاء دفعة جديدة من '+(sourceMode==='file'?'الملف المحدد':'الذكاء الاصطناعي مع ا��تحقق القرآني')+'...','info');
   try{
     if(sourceMode==='file'&&!examFilesCache.length)await loadExamFiles();
     const file=examFilesCache.find(f=>f.id===document.getElementById('examFileSource')?.value);if(sourceMode==='file'&&!file)throw new Error('اختر ملف لمرجع أولاً.');
@@ -2681,7 +2774,7 @@ function renderStudentExam(){
   studentExamViewIndex=Math.max(0,Math.min(studentExamViewIndex,studentExamCurrentIndex));
   const i=studentExamViewIndex,q=ex.questions[i],isCurrent=i===studentExamCurrentIndex;
   const currentQuestion=ex.questions[studentExamCurrentIndex],remaining=Math.max(0,studentExamQuestionRemaining[studentExamCurrentIndex]||parseInt(currentQuestion.timeLimit)||60);
-  let h=(questionNeedsProctor?proctorLiveBar():'')+'<div class="exam-sticky"><strong>اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال الحالي '+(studentExamCurrentIndex+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)+'</span></div><div>لكل سؤال وقت مستقل. الشءءائح الساب��ة للعرض فقط، والقادمة تُفتح بعد تأكيد الإجابة.</div></div>';
+  let h=(questionNeedsProctor?proctorLiveBar():'')+'<div class="exam-sticky"><strong>اختبار '+escapeHtml(ex.baseSurah?'بعد سورة '+ex.baseSurah:'')+'</strong><div style="margin-top:6px">السؤال الحالي '+(studentExamCurrentIndex+1)+' من '+ex.questions.length+' — <span id="studentExamTimer" class="exam-timer">الوقت: '+formatExamTime(remaining)+'</span></div><div>لكل سؤال وقت مستقل. الشءءا��ح الساب��ة للعرض فقط، والقادمة تُفتح بعد تأكيد الإجابة.</div></div>';
   h+='<div class="exam-slide-strip" role="tablist" aria-label="شرائح أسئلة الاختبار">'+ex.questions.map((item,index)=>{const future=index>studentExamCurrentIndex,complete=!!studentExamLockedIndices[index]&&studentExamQuestionRemaining[index]>0,expired=!!studentExamLockedIndices[index]&&studentExamQuestionRemaining[index]===0;return '<button type="button" role="tab" aria-selected="'+(index===i)+'" '+(future?'disabled':'')+' class="exam-slide-tab '+(index===i?'active ':'')+(complete?'complete ':'')+(expired?'expired ':'')+(future?'locked':'')+'" onclick="viewStudentExamSlide('+index+')" title="السؤال '+(index+1)+'">'+(index+1)+'</button>'}).join('')+'</div>';
   h+='<div id="studentExamQuestions"><div class="exam-question exam-slide-panel" id="examQuestionBox_'+i+'"><div class="exam-question-header"><h4>السؤال '+(i+1)+': '+escapeHtml(q.prompt||'')+'</h4>'+(isCurrent?'<span id="examQTimer_'+i+'" class="badge badge-warning">الوقت: '+formatExamTime(remaining)+'</span>':'<span class="badge badge-success">تم تأكيد هذا السؤال</span>')+'</div>'+
     quranQuestionMediaHtml(q,i);
@@ -2934,7 +3027,7 @@ function renderAdminExamHistory(s) {
     h+='<div class="history-day-header" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><span>اءءتبار '+(exams.length-examIndex)+' — '+formatExamDate(submitted)+'</span><span class="score-badge">'+score+' / '+maxScore+' ('+percent+'٪)</span></div>';
     h+='<div class="history-element-details" style="margin:12px 0"><div class="history-detail"><strong>الحالة:</strong> '+examStatusLabel(ex)+'</div><div class="history-detail"><strong>الأسئلة:</strong> '+questions.length+'</div><div class="history-detail"><strong>السور:</strong> '+escapeHtml(range)+'</div><div class="history-detail"><strong>المدة:</strong> '+(Number(ex.totalDurationSeconds)||0)+' ثانية</div></div>';
     h+='<details><summary style="cursor:pointer;font-weight:700;color:var(--primary)">سجل الاختبار: عرض الإجابات والملحقات</summary>';
-    if(!questions.length)h+='<div class="alert alert-info" style="margin-top:10px">لا تتوفر تفاصيل الأسئلة لهذه النتيجة القديمة.</div>';
+    if(!questions.length)h+='<div class="alert alert-info" style="margin-top:10px">لا تتوفر تفاصيل الأسئلة لهذه النتي��ة القديمة.</div>';
     questions.forEach(function(q,i){
       q=q||{};const a=answers[i]||{},r=a.aiResult||{},audio=safeExamAttachmentUrl(a.audioData),image=safeExamAttachmentUrl(q.questionImage);
       const answerScore=Number(a.score)||0,answerLabel=answerScore>=1?'صحيحة':answerScore>0?'جزئية':'غير صحيحة';
@@ -3237,7 +3330,7 @@ function openGithubSync(){
 }
 
 async function refreshGithubSync(){
-  if(currentType !== 'admin'){ showToast('❌ هه الميزة متاحة للمسؤول فقط', 'error'); return; }
+  if(currentType !== 'admin'){ showToast('❌ هه الميزة مت��حة للمسؤول فقط', 'error'); return; }
   const box = document.getElementById('githubSyncStatus');
   const btn = document.getElementById('githubSyncRefreshBtn');
   const link = document.getElementById('githubHistoryLink');
@@ -3461,7 +3554,7 @@ function renderDevPlan(plan){
     resultBox.innerHTML =
       '<div style="background:#fdecea; color:#b02a37; padding:15px; border-radius:10px;">'+
       '<div style="font-weight:bold; margin-bottom:6px;">🚫 لا يمكن تنفيذ هذا الطلب</div>'+
-      '<div style="line-height:1.8;">'+esc(plan.summary || 'الطلب يخالف قيود المشروع.')+'</div></div>';
+      '<div style="line-height:1.8;">'+esc(plan.summary || 'الطلب يخالف ��يود المشروع.')+'</div></div>';
     return;
   }
 
@@ -3775,7 +3868,7 @@ function approveMessage(idx, approved) {
         msgs.push({
           type:'admin', sender:'المسؤول', senderId:0,
           receiverType: 'parent', receiverName: students[sIdx].parent,
-          text: '❌ تم رفض ملف '+students[sIdx].name+' من المسؤول. يرجى متابعة ابنك لإع��دة الإرسال.',
+          text: '❌ تم رفض ملف '+students[sIdx].name+' من المسؤول. يرج�� متابعة ابنك لإع��دة الإرسال.',
           sourceMsgId: srcId,
           reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false
         });
@@ -4063,7 +4156,7 @@ function renderStudentTasks() {
   const s = currentUser;
   const allTasks = s.tasks || [];
 
-  let html = '<div class="page" style="margin-top:20px;"><h4 style="color:var(--primary); margin-bottom:15px;">📝 المهام المطلوبة</h4>';
+  let html = '<div class="page" style="margin-top:20px;"><h4 style="color:var(--primary); margin-bottom:15px;">📝 المهام ��لمطلوبة</h4>';
 
   allTasks.forEach((task, originalIdx) => {
     if(task.approved) return;
@@ -5209,7 +5302,7 @@ function renderUserFiles(role) {
     html += '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;"><span class="badge badge-secondary">' + sizeMB + ' MB</span><span class="badge badge-primary">من المسؤل</span></div>';
     html += '<p style="color:var(--text-light); font-size:0.8rem; margin-bottom:12px;">🕐 ' + f.uploadedAt + '</p>';
     html += '<div style="display:flex; gap:8px;">';
-    html += '<a href="' + f.data + '" download="' + f.name + '" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تميل</a>';
+    html += '<a href="' + f.data + '" download="' + f.name + '" class="btn btn-sm btn-success" style="text-decoration:none;">⬇️ تمي��</a>';
     html += '<button class="btn btn-sm btn-primary" onclick="viewFile(' + f.id + ')">👁️ عر</button>';
     html += '</div></div>';
   });
@@ -5313,7 +5406,7 @@ function generateParentWelcome(student) {
   const finalizedSessions = sessions.filter(sess => !sess.isDraft);
   const last = finalizedSessions.length > 0 ? finalizedSessions[finalizedSessions.length - 1] : null;
   const templates = [
-    {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطوات جميلة في رحلته مع القرآن. دعمه وتحفي��ه هما سر التقدم.'},
+    {title: 'أهلاً بك! 🌟', body: 'ابنك '+student.name+' يخطو خطوات جميلة في رحل��ه مع القرآن. دعمه وتحفي��ه هما سر التقدم.'},
     {title: 'تقرير يومي! 📊', body: 'متابعة ابنك تُثمر بالخر. احرص على سؤاله عن حفظه يومياً، فالاهتمام يُشعره بأهمية ما يفعله.'},
     {title: 'مساء الخير! 🌙', body: 'القرآن غذاء الروح. شجع ابنك '+student.name+' لى الاستمرار، وذكّه بأ الله يُضاعف الأجر لمن يتب في سبيله.'}
   ];
@@ -5389,7 +5482,7 @@ function generateAIResponse(text, student) {
   }
   // خطة الحفظ
   if(has('خطة','جدول','تنظيم','وقت','كيف احفظ','كيف أحفظ')) {
-    return '🗓️ <strong>خطة يومية مقترحة لك '+name+':</strong><br>• بعد الفجر (20 د): حفظ جديد — كرر الآية 7 مرات نظراً ثم 3 مرات غيباً.<br>• بعد العصر (10 د): تثبيت حفظ اليوم.<br>• قبل النوم (15 د): مراجعة حفظ الأمس + صفحة قديمة.<br>• يوم الجمعة: مراجعة شاملة لكل ما حفظته في الأسبوع.<br><br>الاستمرار لقليل الدائم خير من الكثير المنقطع.';
+    return '🗓️ <strong>خطة يوم��ة مقترحة لك '+name+':</strong><br>• بعد الفجر (20 د): حفظ جديد — كرر الآية 7 مرات نظراً ثم 3 مرات غيباً.<br>• بعد العصر (10 د): تثبيت حفظ اليوم.<br>• قبل النوم (15 د): مراجعة حفظ الأمس + صفحة قديمة.<br>• يوم الجمعة: مراجعة شاملة لكل ما حفظته في الأسبوع.<br><br>الاستمرار لقليل الدائم خير من الكثير المنقطع.';
   }
   // نصائح
   if(has('نصفحة','نصائح','سادني','مساعدة','انسى','أنسى','نسيت','صعب')) {
