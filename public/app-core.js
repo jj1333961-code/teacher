@@ -102,8 +102,9 @@ function addCountrySearch(select) {
   search.type = 'search';
   search.className = 'country-search';
   search.autocomplete = 'off';
-  search.placeholder = activeLocale() === 'en' ? 'Search countries' : 'بحث ع������ الدولة';
+  search.placeholder = activeLocale() === 'en' ? 'Search countries' : 'بحث عن الدولة';
   search.setAttribute('aria-label', search.placeholder);
+  select.setAttribute('data-no-translate', '');
   search.addEventListener('input', function() {
     const query = search.value.trim().toLocaleLowerCase();
     Array.from(select.options).forEach(function(option) {
@@ -261,7 +262,7 @@ const LANG_DICT = {
   'كود دولة الواتساب': 'WhatsApp country code',
   'مصر': 'Egypt', 'السعودية': 'Saudi Arabia', 'الإمارات': 'United Arab Emirates', 'قطر': 'Qatar', 'الكويت': 'Kuwait', 'الأردن': 'Jordan', 'المغرب': 'Morocco', 'الجزائر': 'Algeria', 'تونس': 'Tunisia', 'أمريكا/كندا': 'United States/Canada', 'بريطانيا': 'United Kingdom', 'ألمانيا': 'Germany', 'تركيا': 'Turkey',
   'الرقم بدون كود الدولة': 'Number without country code', 'الرقم الدولي': 'International number', 'الرقم القومي المسجل': 'Registered national ID', 'الاسم المسجل بالحساب': 'Name registered on the account', 'أدخل اسم المستخدم': 'Enter username', 'أدخل اسمك كما سجله المسؤول': 'Enter your name as registered by the admin',
-  'التنبيهات': 'Notifications', 'المحادثة مع الذكاء الاصطناعي': 'AI chat', 'مخطط التقييم': 'Evaluation chart', 'صندوق التسجيلات': 'Recordings inbox', 'مساعد الذكاء الاصطناعي': 'AI assistant',   'الملفات المرسلة لي': 'Files sent to me', 'الملفات المرفوعة': 'Uploaded files', 'مساعد تطوير الموقع': 'Site development assistant', 'مزامنة GitHub': 'GitHub Sync', 'أدوات المسؤول': 'Admin tools', 'أدوات الطالب': 'Student tools', 'أدوات ولي الأمر': 'Parent tools',
+  'التنبيهات': 'Notifications', 'المحادثة مع الذكاء الاصطناعي': 'AI chat', 'مخطط التقييم': 'Evaluation chart', 'صندوق التس��يلات': 'Recordings inbox', 'مساعد الذكاء الاصطناعي': 'AI assistant',   'الملفات المرسلة لي': 'Files sent to me', 'الملفات المرفوعة': 'Uploaded files', 'مساعد تطوير الموقع': 'Site development assistant', 'مزامنة GitHub': 'GitHub Sync', 'أدوات المسؤول': 'Admin tools', 'أدوات الطالب': 'Student tools', 'أدوات ولي الأمر': 'Parent tools',
   'قال تعالى:': 'Allah Almighty said:', 'صدق الله العظيم': 'Allah Almighty has spoken the truth',
   'مرحباً بك — اختر طريقة استخدامك للموقع': 'Welcome — choose how you want to use the site',
   'المسؤول': 'Admin',
@@ -372,7 +373,31 @@ function applyLangToDom() {
     document.documentElement.lang = currentLang;
     document.documentElement.dir = currentLang === 'en' ? 'ltr' : 'rtl';
     if(window.ThimarI18n && typeof window.ThimarI18n.apply === 'function') {
+      langTextNodes().forEach(function(node){
+        if(node.__arText === undefined) node.__arText = node.nodeValue;
+      });
+      document.querySelectorAll('*').forEach(function(el){
+        if(el.closest('script,style,noscript,code,pre,.thimar-ayah-frame,.thimar-ayah-ref,.thimar-footer .ayah,.thimar-footer .ref,.thimar-footer-sidq,[data-no-translate]')) return;
+        LANG_ATTRS.forEach(function(attr){
+          if(el.hasAttribute(attr) && !el.hasAttribute('data-ar-' + attr)) el.setAttribute('data-ar-' + attr, el.getAttribute(attr));
+        });
+      });
       window.ThimarI18n.apply(document.body);
+      // Apply the application dictionary too so legacy and dynamically-rendered labels share one pass.
+      langTextNodes().forEach(function(node){
+        if(node.__arText === undefined) node.__arText = node.nodeValue;
+        node.nodeValue = currentLang === 'en' ? translateValue(node.__arText) : node.__arText;
+      });
+      document.querySelectorAll('*').forEach(function(el){
+        if(el.closest('script,style,noscript,code,pre,.thimar-ayah-frame,.thimar-ayah-ref,.thimar-footer .ayah,.thimar-footer .ref,.thimar-footer-sidq,[data-no-translate]')) return;
+        LANG_ATTRS.forEach(function(attr){
+          if(!el.hasAttribute(attr)) return;
+          const key = 'data-ar-' + attr;
+          if(!el.hasAttribute(key)) el.setAttribute(key, el.getAttribute(attr));
+          const source = el.getAttribute(key) || '';
+          el.setAttribute(attr, currentLang === 'en' ? translateValue(source) : source);
+        });
+      });
     } else {
       document.querySelectorAll('.thimar-ayah-heading').forEach(function(el){ el.textContent = currentLang === 'en' ? 'Allah Almighty said:' : 'قال تعالى:'; });
       document.querySelectorAll('.thimar-ayah-ref').forEach(function(el){ el.textContent = '(إبراهيم: 24)'; });
@@ -414,7 +439,7 @@ let neonSaveTimer = null;
 let neonSaveInFlight = null;
 let neonDataReady = false;
 const runtimeData = Object.create(null);
-const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','joinRequests','notifications','aiQuestionHistory'];
+const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','adminWhatsappCountry','joinRequests','notifications','aiQuestionHistory'];
 function getData(key, def) {
   if (Object.prototype.hasOwnProperty.call(runtimeData, key)) return runtimeData[key];
   return def || [];
@@ -487,7 +512,7 @@ if(!runtimeData.initialized_v7) {
   }
 
   // سجل الطالب التجريبي يُنشأ في الذاكرة ثم يُحفظ في Neon، وليس في الهاتف.
-  // سجل محلي دائم للطالب عثمان — يُضاف مرة واحدة فقط دون المساس بالس��لات الموجودة.
+  // سجل محلي دائم للطالب عثمان — يُضاف مرة واحدة فقط دون المساس ب��لس��لات الموجودة.
   (function ensureDefaultStudent() {
     const students = getData('students', []);
     const existing = students.find(function(student) {
@@ -1138,9 +1163,6 @@ function buildWaLink(phone, text, countryCode) {
   const p = normalizeWaNumber(phone, countryCode);
   return p ? 'https://wa.me/' + p + '?text=' + encodeURIComponent(text) : '';
 }
-  const p = normalizeWaNumber(phone);
-  return p ? 'https://wa.me/' + p + '?text=' + encodeURIComponent(text) : '';
-}
 
 function toggleUnifiedPassword() {
   const input = document.getElementById('unifiedPass');
@@ -1178,7 +1200,7 @@ function submitAccountRecovery() {
   const nid=normalizeIdentityInput(document.getElementById('recoveryNid')?.value || '');
   const phone=getInternationalNumber('recoveryPhone','recoveryCountry');
   const recoveryValidation = validateCountryFields('recoveryIdentityCountry','recoveryNid','recoveryCountry','recoveryPhone');
-  if(!name || !recoveryValidation.identityValid || !recoveryValidation.phoneValid) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال الاسم والهوية أو الجواز ورقم الهاتف وفق الصيغة الخاصة بالدول المختارة.</div>'; return; }
+  if(!name || !recoveryValidation.identityValid || !recoveryValidation.phoneValid) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال الاسم والهوية أو الج��از ورقم الهاتف وفق الصيغة الخاصة بالدول المختارة.</div>'; return; }
   const students=getData('students', []);
   const matched=students.find(function(student){
     const expectedName=role === 'student' ? student.name : (student.parent || student.parentName);
@@ -1199,7 +1221,7 @@ function submitAccountRecovery() {
   const roleLabel=role === 'student' ? 'طالب' : 'ولي أمر';
   const notification={id:'notification_'+now,type:'account_recovery',category:'استرجاع حساب',title:'طلب استرجاع حساب',message:'طلب استرجاع حساب '+roleLabel+' باسم '+name,role:role,roleLabel:roleLabel,name:name,nationalId:nid,identityCountry:selectedCountryIso('recoveryIdentityCountry'),phone:phone,phoneCountry:selectedCountryIso('recoveryCountry'),time:time,createdAt:new Date().toISOString(),read:false};
   const notifications=getData('notifications', []); notifications.unshift(notification); setData('notifications',notifications);
-  const message='طلب استرجاع حساب في منصة ثمار\nنوع الحساب: '+roleLabel+'\nالاسم: '+name+'\nالرقم القومي: '+nid+'\nرقم الهاتف الدولي: +'+phone+'\nوقت الطلب: '+time+'\n\nيرجى مراجعة ��لبيانات والتواصل مع صاحب الحساب لتعيين رقم سري جديد.';
+  const message='طلب استرجاع حساب في منصة ثمار\nنوع الحساب: '+roleLabel+'\nالاسم: '+name+'\nالرقم القومي: '+nid+'\nرقم الهاتف الدولي: +'+phone+'\nوقت الطلب: '+time+'\n\nيرجى مراجعة ��لبيانات والتواصل مع صاحب الحساب لتعيين رقم ��ري جديد.';
   const link=buildWaLink(getAdminWhatsapp(),message);
   box.innerHTML='<div class="alert alert-success">تم إرسال طلب استرجاع الحساب إلى المسؤول. <a href="'+link+'" target="_blank" rel="noopener noreferrer"><strong>فتح الرسالة الجاهزة على واتساب</strong></a></div>';
   if(link) window.open(link,'_blank','noopener');
@@ -1441,7 +1463,7 @@ function renderStudentSpeechPreview(parsed,filled){
   const rows=Object.keys(parsed.fields).map(function(k){return '<div>✓ '+escapeHtml(labels[k]||k)+': <strong>'+escapeHtml(parsed.fields[k])+'</strong></div>'}).join('');
   box.innerHTML='<div class="alert alert-success">تم التعرف على النص. راجع الخانات قبل احفظ اليدوي.<br>'+rows+'<small>النص الكامل: '+escapeHtml(parsed.text)+'</small></div>';
 }
-function speechErrorMessage(error){const code=error&&error.error;if(code==='not-allowed'||code==='service-not-allowed')return currentLang==='en'?'Microphone permission was denied.':'تم رفض إذن الميكروفون.';if(code==='no-speech')return currentLang==='en'?'No speech was detected. Try again.':'لم يتم التعرف على الصوت، حاول مرة أخرى.';if(code==='audio-capture')return currentLang==='en'?'No microphone was found.':'لم يتم العثور على ميكروفون.';return currentLang==='en'?'Voice input is unavailable in this browser.':'الإدخال الصوتي غير متاح في هذا المتصفح.'}
+function speechErrorMessage(error){const code=error&&error.error;if(code==='not-allowed'||code==='service-not-allowed')return currentLang==='en'?'Microphone permission was denied.':'تم رفض إذن الميكروفون.';if(code==='no-speech')return currentLang==='en'?'No speech was detected. Try again.':'لم يتم ��لتعرف على الصوت، حاول مرة أخرى.';if(code==='audio-capture')return currentLang==='en'?'No microphone was found.':'لم يتم العثور على ميكروفون.';return currentLang==='en'?'Voice input is unavailable in this browser.':'الإدخال الصوتي غير متاح في هذا المتصفح.'}
 function stopStudentSpeech(){if(studentSpeechRecognition){try{studentSpeechRecognition.stop()}catch(e){}}studentSpeechListening=false;const btn=document.getElementById('studentSpeechBtn');if(btn){btn.disabled=false;btn.setAttribute('aria-pressed','false');btn.textContent='🎤 إدخال البيانات بالصوت'}const status=document.getElementById('studentSpeechStatus');if(status)status.textContent='تم التعرف'}
 function toggleStudentSpeech(){
   const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition, btn=document.getElementById('studentSpeechBtn'), status=document.getElementById('studentSpeechStatus'), transcript=document.getElementById('studentSpeechTranscript');
@@ -1617,7 +1639,7 @@ function editAdmin(id) {
   if(!a) return;
   const country = a.mobileCountry || 'EG';
   const currentMobile = localPhoneFromInternational(a.mobile, country);
-  const newMobile = prompt('رقم الموبايل الجديد (بدون رمز الدولة):', currentMobile);
+  const newMobile = prompt('رقم الموبايل الجديد (بدون ��مز الدولة):', currentMobile);
   if(newMobile === null) return;
   const newPass = prompt('الرقم السري الجديد:', a.password);
   if(newPass === null) return;
@@ -1746,6 +1768,8 @@ function loadAdminSettings() {
   document.getElementById('confirmPass').value = '';
   document.getElementById('newMobile').value = '';
   document.getElementById('newPass').value = '';
+  setCountrySelectorValue('confirmMobileCountry', admin.mobileCountry || 'EG');
+  setCountrySelectorValue('newMobileCountry', admin.mobileCountry || 'EG');
   document.getElementById('adminSettingsAlert').innerHTML = '';
 }
 
@@ -1753,12 +1777,14 @@ function saveAdminSettings() {
   const admins = getData('admins');
   const idx = admins.findIndex(a => a.id === currentAdminId);
   if(idx === -1) return;
-  const confirmMobile = document.getElementById('confirmMobile').value.trim();
+  const currentCountry = admins[idx].mobileCountry || 'EG';
+  const confirmMobile = normalizeLocalPhoneInput(document.getElementById('confirmMobile').value);
   const confirmPass = document.getElementById('confirmPass').value;
-  const newMobile = document.getElementById('newMobile').value.trim();
-  const newPass = document.getElementById('newPass').value;
-  if(confirmMobile !== admins[idx].mobile) {
-    document.getElementById('adminSettingsAlert').innerHTML = '<div class="alert alert-danger"> رقم الموبايل الحالي غير صحيح</div>';
+  const newMobile = normalizeLocalPhoneInput(document.getElementById('newMobile').value);
+  const newCountry = selectedCountryIso('newMobileCountry');
+  const expectedMobile = normalizeWaNumber(admins[idx].mobile, currentCountry);
+  if(normalizeWaNumber(confirmMobile, selectedCountryIso('confirmMobileCountry')) !== expectedMobile) {
+    document.getElementById('adminSettingsAlert').innerHTML = '<div class="alert alert-danger">رقم الموبايل الحالي غير صحيح</div>';
     return;
   }
   if(confirmPass !== admins[idx].password) {
@@ -1767,9 +1793,12 @@ function saveAdminSettings() {
   }
   let changed = false;
   if(newMobile) {
-    if(newMobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
-    if(admins.find((a, i) => i !== idx && a.mobile === newMobile)) return alert('هذا الرقم مسجل لمسؤول آخر');
-    admins[idx].mobile = newMobile; changed = true;
+    if(!validatePhoneField('newMobileCountry','newMobile',true)) return alert('رقم الموبايل يجب أن يطابق الدولة المختارة');
+    const international = normalizeWaNumber(newMobile, newCountry);
+    if(admins.find((a, i) => i !== idx && normalizeWaNumber(a.mobile, a.mobileCountry || 'EG') === international)) return alert('هذا الرقم مسجل لمسؤول آخر');
+    admins[idx].mobile = newMobile;
+    admins[idx].mobileCountry = newCountry;
+    changed = true;
   }
   if(newPass) { admins[idx].password = newPass; changed = true; }
   if(!changed) {
@@ -1947,7 +1976,7 @@ async function saveStudent() {
   students.push(newStudent);
   setData('students', students);
   voiceBlob = null; voiceFingerprint = null; voiceDataUrl = null; voiceProfileGemini = null;
-  alertBox.innerHTML = '<div class="alert alert-success">✅ تم حفظ الطالب بنجاح!</div>';
+  alertBox.innerHTML = '<div class="alert alert-success">✅ ت�� حفظ الطالب بنجاح!</div>';
   showToast('تم حفظ الطالب "' + name + '" بنجاح' + (voiceProfile ? ' مع بصمة Gemini الصوتية' : ' (بدون بصمة صوتية)'), 'success');
   ['stName','stUsername','stNational','stPhone','stBirth','stAge','stStudentPass','stParent','stParentPass','stNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('stJuz').value = '';
@@ -2562,7 +2591,7 @@ function localSmartChatReply(message,role){
     return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوا��ياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
-  if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
+  if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب ال��تابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
   if(/صعب|ضعف|نسي|نسيان|خطا|خطأ/.test(q))return 'عند وجود ضعف، لا تُعد السورة كاملة مباشرة. حدّد موضع الخطأ، اقرأ ما قبله وما بعده، اربطه بأول كلمة في الآية التالية، ثم اختبر الموضع من بداية مختلفة. أعد مراجعته اليوم وبعد يوم وعد أسبوع.';
   return 'بصفتي المساعد المحلي لـ'+roleLabel+'، أستطيع تقديم جواب أدق إذا ذكرت االهدف والسورة أو النتيجة أو المشكلة الحالية. سأحوّلها إلى خطوات واضحة قابلة للتنفيذ دون ادعاء معلومات غير موجودة في المنصة.';
 }
@@ -3016,7 +3045,7 @@ function saveSession(isFinal) {
     return;
   }
 
-  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام الالية والانتقال لليوم التالي.
+  // الحفظ النهائي: نقل مهام اليوم إلى الأرشيف ثم تفريغ المهام ال��لية والانتقال لليوم التالي.
   const session = {date,elements:JSON.parse(JSON.stringify(activeElements)),homework:JSON.parse(JSON.stringify(homeworkItems)),reading:JSON.parse(JSON.stringify(readingItems)),totalScore,notes,isDraft:false,finalizedAt:nowText,status:'نهائ',completedTaskSnapshot:previousTasks};
   students[idx].sessions = students[idx].sessions.filter(s => !s.isDraft && s.date !== date);
   students[idx].sessions.push(session);
@@ -4176,7 +4205,7 @@ function renderStudentCompletedTasks() {
   html += '<h4 style="color:var(--success); margin-bottom:15px;"> المهام المنجزة والمسجلة</h4>';
   completed.slice().reverse().forEach(task => {
     html += '<div class="task-card" style="border-right-color:var(--success); background:linear-gradient(135deg, rgba(40,167,69,0.05), rgba(32,201,151,0.05));">';
-    html += '<h5 style="color:var(--success);">✅ '+(task.type === 'homework' ? 'واجب' : task.type === 'reading' ? 'قراءة' : 'تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
+    html += '<h5 style="color:var(--success);">✅ '+(task.type === 'homework' ? 'واجب' : task.type === 'reading' ? 'قراء��' : 'تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
     if(task.surah) html += '<p><strong>السورة:</strong> '+task.surah+' | <strong>من آية:</strong> '+(task.from || '-')+' | <strong>إلى آية:</strong> '+(task.to || '-')+'</p>';
     html += '<p style="color:var(--text-light); font-size:0.9rem;">🕐 تمت الموءءفقة: '+task.approvedAt+'</p>';
     html += '</div>';
@@ -5203,7 +5232,7 @@ function renderParentPendingTasks() {
         html += '<h5 style="color:var(--success);">✅ '+(task.type === 'homework' ? '📝 واجب' : task.type === 'reading' ? '📖 قراءة' : '🎙 تسجيل صوتي')+': '+(task.name || task.text || '')+'</h5>';
         if(task.surah) html += '<p><strong>السورة:</strong> '+task.surah+' | <strong>من آية:</strong> '+(task.from || '-')+' | <strong>إلى آية:</strong> '+(task.to || '-')+'</p>';
         html += '<p style="color:var(--text-light); font-size:0.9rem;">🕐 '+(task.approvedAt || '')+'</p>';
-        if(task.sourceMsgId) html += '<button class="btn btn-sm btn-info" onclick="openMessageFileById(\''+task.sourceMsgId+'\', true)">👁️ الاطلاع على الملف (عرض فقط)</button>';
+        if(task.sourceMsgId) html += '<button class="btn btn-sm btn-info" onclick="openMessageFileById(\''+task.sourceMsgId+'\', true)">👁️ الاطلاع عل�� الملف (عرض فقط)</button>';
         html += '</div>';
       });
     }
@@ -5442,7 +5471,7 @@ function generateAIReport(student) {
   const avgScore = last3.reduce((sum, s) => sum + s.totalScore, 0) / last3.length;
   let report = '';
   if(avgScore >= 14) report = 'ممتاز يا '+student.name+'! 🌟 مستواك رائع جداً. أنت تحفظ بثباءء وتميز. استمر في المراجعة وستكون من حفاظ كتاب الله.';
-  else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. حافظ على الاستمرارة.';
+  else if(avgScore >= 10) report = 'جيد جداً يا '+student.name+'! 👍 أداؤك ممتاز مع مجال للتحسين في المراجعة. ��افظ على الاستمرارة.';
   else if(avgScore >= 6) report = 'جيد يا '+student.name+'! 📚 مستواك في تقدم مستمر. أنصحك بزيادة وقت المراجعة اليومي.';
   else report = 'لا تيأس يا '+student.name+'! 💪 كل بداية صعبة. حافظ على التكرار والمراجعة اليومية وسترى التحسن قريباً.';
   report += '<br><br>📊 متوسط آخر 3 تس��يعات: <strong>'+avgScore.toFixed(1)+' / 16</strong><br>📈 عدد التسميعات المسجلة: '+finalizedSessions.length;
@@ -5523,7 +5552,7 @@ function generateAIResponse(text, student) {
   }
   // التقدم عبر الجلسات
   if(has('تقد','تطور','مقارنة','احصائ','إحصائ','رسم','مخطط')) {
-    if(finalizedSessions.length < 2) return ' أحتاج تسميعءءن نهائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
+    if(finalizedSessions.length < 2) return ' أحتاج تسميعءءن ��هائيين على الأقل لأقارن تقدمك. سجّل تسميعك القادم وسأحلل لك المنحنى بدقة.';
     const scores = finalizedSessions.map(x => x.totalScore || 0);
     const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
     const diff = scores[scores.length-1] - scores[scores.length-2];
@@ -5545,7 +5574,7 @@ function generateAIResponse(text, student) {
   }
   // الآيات ء��الصور
   if(has('اية','آية','ايات','آيات','صورة','اقرأ','مصحف')) {
-    return '📖 لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُع��ض بارم العثمانءء المشكَّل كصورة مطابقة تما��اً لمحف.';
+    return '���� لعرض الآيات المطلوبة منك:<br>1. افتح <strong>المهام المطلوبة</strong> في صفحتك.<br>2. اضغط <strong>📖 عرض الآيات بحجم كبير</strong> في المهمة.<br>3. استخدم زرار ➕ / ➖ للتكبير والتصغير حتى تصل لأوءءح حجم لعينيك.<br><br>ءءلآيات تُع��ض بارم العثمانءء المشكَّل كصورة مطابقة تما��اً لمحف.';
   }
   // البصمة الصوتية
   if(has('بصمة','صوتي','صءءت','ميكروفون','تحق')) {

@@ -1148,7 +1148,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label for="stNational">كود الهوية أو جواز السفر *</label><div class="country-input-row"><select id="stIdentityCountry" data-country-selector data-identity-id="stNational" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="stNational" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div><small id="stNationalHint" class="country-hint"></small></div>
-    <div class="form-group"><label for="stPhone">الدولة ورقم الهاتف</label><div class="country-input-row"><select id="stPhoneCountry" data-country-selector data-phone-id="stPhone" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="stPhone" data-phone-input class="phone-input" autocomplete="tel" placeholder="الرقم المحلي" style="flex:1;"></div><small id="stPhoneInternational" class="country-hint"></small></div>
+    <div class="form-group"><label for="stPhone">الدولة ورقم الهاتف</label><div class="country-input-row"><select id="stPhoneCountry" data-country-selector data-phone-id="stPhone" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="stPhone" data-phone-input class="phone-input" autocomplete="tel" placeholder="الرقم المحلي بدون رمز الدولة" style="flex:1;"></div><small id="stPhoneInternational" class="country-hint"></small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ الميلاد *</label><input type="date" id="stBirth" onchange="calcAge()"></div>
@@ -1193,8 +1193,8 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم المستخدم</label><input type="text" id="editUsername"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم القومي (14 رقم)</label><div class="country-input-row"><select id="editIdentityCountry" data-country-selector data-identity-id="editNational" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="editNational" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div><small id="editNationalHint" class="country-hint"></small></div>
-    <div class="form-group"><label>رقم الاتف (11 رقم)</label><div class="country-input-row"><select id="editPhoneCountry" data-country-selector data-phone-id="editPhone" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="editPhone" data-phone-input class="phone-input" autocomplete="tel" placeholder="الرقم المحلي بدون رمز الدولة"></div><small id="editPhoneInternational" class="country-hint"></small></div>
+    <div class="form-group"><label>كود الهوية أو جواز السفر</label><div class="country-input-row"><select id="editIdentityCountry" data-country-selector data-identity-id="editNational" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="editNational" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div><small id="editNationalHint" class="country-hint"></small></div>
+    <div class="form-group"><label>الدولة ورقم الهاتف</label><div class="country-input-row"><select id="editPhoneCountry" data-country-selector data-phone-id="editPhone" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="editPhone" data-phone-input class="phone-input" autocomplete="tel" placeholder="الرقم المحلي بدون رمز الدولة"></div><small id="editPhoneInternational" class="country-hint"></small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>

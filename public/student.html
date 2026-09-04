@@ -1006,7 +1006,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>🛠️ مساعد تطوير الموقع بالذكاء الاصطناعي</h2></div>
   <p style="color:var(--text-light); margin-bottom:12px;">اكتب طلب التطوير بالعربية. سيحلّل نموذج الذكاء الاصطناعي المشروع الحالي مباشرة عبر مزوده ويقرأ الملفات الب��مجية اللازمة، ويولّد الكود، ثم يطبّق التعديل تلقائياً على GitHub ويشغّل تحديث الموقع. لا توجد خطوة م��افقة ثانية.</p>
   <div style="background:rgba(255,193,7,0.12); border:1px solid #ffc107; border-radius:10px; padding:10px 14px; margin-bottom:15px; color:var(--text); font-size:0.9rem;">
-     الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله ا��ذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. ستظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
+     الوضع التلقائي المباشر: بعد إرسال الطلب سيحلله ا��ذكاء الاصطناعي ويقرأ الكود المطلوب ويعدّله تلقائياً. س��ظهر هنا نتيجة التنفيذ والملفات التي تغّرت وروابط الـcommit. مفتاحا Gemini وGroq وGitHub يبقيان على الخادم فقط.
   </div>
   <div id="devAssistantAlert"></div>
   <div id="cloudSaveStatus" class="badge badge-success" style="margin-bottom:12px;">الحفظ التلقائي في Neon مفعّل</div>
@@ -1158,7 +1158,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم المستخدم *</label><input type="text" id="stUsername" placeholder="اسم المستخدم لتسجيل الد��ول"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>كود الهوية أو جواز السفر *</label><div class="country-input-row"><select id="stIdentityCountry" data-country-selector data-identity-id="stNational" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="stNational" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div></div>
+    <div class="form-group"><label>كود الهوية أو جواز السفر *</label><div class="country-input-row"><select id="stIdentityCountry" data-country-selector data-identity-id="stNational" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="stNational" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div><small id="stNationalHint" class="country-hint"></small></div></div>
     <div class="form-group"><label>الدولة ورقم الهاتف</label><div style="display:flex;gap:8px;direction:ltr;"><select id="stPhoneCountry" data-country-selector data-phone-id="stPhone" aria-label="اختر الدولة" style="max-width:180px;"><option value="20">مصر (+20)</option></select><input type="tel" id="stPhone" data-phone-input class="phone-input" autocomplete="tel" placeholder="الرقم المحلي بدون رمز الدولة" style="flex:1;"></div></div>
   </div>
   <div class="form-row">
@@ -1204,8 +1204,8 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم المستخدم</label><input type="text" id="editUsername"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>الرقم القومي (14 رقم)</label><div class="country-input-row"><select id="editIdentityCountry" data-country-selector data-identity-id="editNational" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="editNational" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div><small id="editNationalHint" class="country-hint"></small></div>
-    <div class="form-group"><label>رقم الاتف (11 رقم)</label><div class="country-input-row"><select id="editPhoneCountry" data-country-selector data-phone-id="editPhone" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="editPhone" data-phone-input class="phone-input" autocomplete="tel" placeholder="الرقم المحلي بدون رمز الدولة"></div><small id="editPhoneInternational" class="country-hint"></small></div>
+    <div class="form-group"><label>كود الهوية أو جواز السفر</label><div class="country-input-row"><select id="editIdentityCountry" data-country-selector data-identity-id="editNational" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="editNational" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div><small id="editNationalHint" class="country-hint"></small></div>
+    <div class="form-group"><label>الدولة ورقم الهاتف</label><div class="country-input-row"><select id="editPhoneCountry" data-country-selector data-phone-id="editPhone" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="editPhone" data-phone-input class="phone-input" autocomplete="tel" placeholder="الرقم المحلي بدون رمز الدولة"></div><small id="editPhoneInternational" class="country-hint"></small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ الميلاد</label><input type="date" id="editBirth" onchange="calcEditAge()"></div>
@@ -1220,7 +1220,7 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>المواد الدراية</label><select id="editSubject" multiple class="subjects-select" onchange="toggleEditQuran()"></select></div>
   </div>
   <div id="editQuranFields" class="quran-section hidden">
-    <h4>📖 بيانات حفظ القرآن الكريم</h4>
+    <h4>📖 ��يانات حفظ القرآن الكريم</h4>
     <div class="form-row">
       <div class="form-group"><label>الجزء</label><select id="editJuz" onchange="updateEditSurahSelect()"><option value="">اختر الجزء...</option></select></div>
       <div class="form-group"><label>السورة</label><select id="editSurah"><option value="">اختر الجزء أولاً...</option></select></div>
