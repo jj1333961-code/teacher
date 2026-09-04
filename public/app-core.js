@@ -102,7 +102,7 @@ function addCountrySearch(select) {
   search.type = 'search';
   search.className = 'country-search';
   search.autocomplete = 'off';
-  search.placeholder = activeLocale() === 'en' ? 'Search countries' : 'بحث عن الدولة';
+  search.placeholder = activeLocale() === 'en' ? 'Search countries' : 'بحث ع������ الدولة';
   search.setAttribute('aria-label', search.placeholder);
   search.addEventListener('input', function() {
     const query = search.value.trim().toLocaleLowerCase();
@@ -177,22 +177,36 @@ async function loadCountryRules() {
   refreshCountryFields();
 }
 function normalizeIdentityInput(value) {
-  return String(value || '').replace(/[٠-٩]/g, function(digit) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)); }).trim().replace(/[\\s-]/g, '').toUpperCase();
+  return String(value || '').replace(/[٠-٩]/g, function(digit) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)); }).replace(/[۰-۹]/g, function(digit) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)); }).trim().replace(/[\s-]/g, '').toUpperCase();
 }
-function validateCountryFields(identityCountryId, identityId, phoneCountryId, phoneId) {
+function normalizeLocalPhoneInput(value) {
+  return String(value || '').replace(/[٠-٩]/g, function(digit) { return String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)); }).replace(/[۰-۹]/g, function(digit) { return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)); }).replace(/\D/g, '').replace(/^0+/, '');
+}
+function selectedCountryIso(countryId) {
+  const rule = countryRuleForValue(document.getElementById(countryId)?.value);
+  return rule ? rule.iso2 : 'EG';
+}
+function localPhoneFromInternational(value, countryId) {
+  const raw = String(value || '').replace(/\D/g, '');
+  const rule = countryRuleForValue(countryId);
+  if(!rule) return raw.replace(/^0+/, '');
+  if(raw.indexOf(rule.dialCode) === 0) return raw.slice(rule.dialCode.length).replace(/^0+/, '');
+  return raw.replace(/^0+/, '');
+}
+function validateCountryFields(identityCountryId, identityId, phoneCountryId, phoneId, phoneRequired) {
   const identityRule = countryRuleForValue(document.getElementById(identityCountryId)?.value);
   const phoneRule = countryRuleForValue(document.getElementById(phoneCountryId)?.value);
   const identity = normalizeIdentityInput(document.getElementById(identityId)?.value);
-  const phone = String(document.getElementById(phoneId)?.value || '').replace(/\\D/g, '').replace(/^0+/, '');
+  const phone = normalizeLocalPhoneInput(document.getElementById(phoneId)?.value);
   const identityValid = Boolean(identityRule && identity && new RegExp(identityRule.identityPattern).test(identity));
-  const phoneValid = !phone || Boolean(phoneRule && phoneRule.phoneLengths.includes(phone.length));
+  const phoneValid = phoneRequired === false && !phone ? true : Boolean(phoneRule && phone && phoneRule.phoneLengths.includes(phone.length));
   return { identityValid, phoneValid, identityRule, phoneRule, identity, phone };
 }
 function validatePhoneField(countryId, phoneId, required) {
   const value = String(document.getElementById(phoneId)?.value || '').trim();
   if(!value) return !required;
   const rule = countryRuleForValue(document.getElementById(countryId)?.value);
-  const local = value.replace(/\\D/g, '').replace(/^0+/, '');
+  const local = normalizeLocalPhoneInput(value);
   return Boolean(rule && rule.phoneLengths.includes(local.length));
 }
 
@@ -236,7 +250,7 @@ const LANG_DICT = {
   'إنشاء حساب جديد': 'Create New Account',
   '📚 نظام إدارة الطلاب': '📚 Student Management System',
   'أو رقم الموبايل للمسؤول': 'or admin mobile number',
-  'أدخل الرقم السري': 'Enter your password',
+  'أ��خ�� الرقم السري': 'Enter your password',
   'أدخل اسم المستخدم والرقم السري': 'Enter your username and password',
   'للمسؤول': 'for the admin',
   'للمسؤول فقط': 'for the admin only',
@@ -324,7 +338,7 @@ const LANG_DICT = {
   'لحفظ القرآن الكريم': 'for memorizing the Holy Quran',
   'قال تعالى:': 'Allah Almighty said:',
   'ليس لديك حساب؟': "Don't have an account?",
-  'مصحف مفتوح على حامل خشبي': 'An open Quran on a wooden stand',
+  'مصحف مفتوح ع��ى حامل خشبي': 'An open Quran on a wooden stand',
   'إعدادات العرض': 'Display settings',
   'تبديل الوضع': 'Toggle theme'
 };
@@ -473,7 +487,7 @@ if(!runtimeData.initialized_v7) {
   }
 
   // سجل الطالب التجريبي يُنشأ في الذاكرة ثم يُحفظ في Neon، وليس في الهاتف.
-  // سجل محلي دائم للطالب عثمان — يُضاف مرة واحدة فقط دون المساس بالسجلات الموجودة.
+  // سجل محلي دائم للطالب عثمان — يُضاف مرة واحدة فقط دون المساس بالس��لات الموجودة.
   (function ensureDefaultStudent() {
     const students = getData('students', []);
     const existing = students.find(function(student) {
@@ -932,7 +946,7 @@ function togglePassVisibility(inputId, iconEl) {
 }
 
 // ====== التقسيم الحقيقي للـ30 جزءاً (حدود الآيات، لا أسماء السور فقط) ======
-// الحدود مبنية على خريطة الآيات التقليدية للجزء: بداية كل جزء هي الآية التالية لنهاية الجزء السابق.
+// الحدود مبنية على خريطة الآيات التقليدية للجزء: بداية كل جزء هي الآية التالية لنها��ة الجزء السابق.
 const JUZ_BOUNDARIES = {
   1:[[1,1,7],[2,1,141]], 2:[[2,142,252]], 3:[[2,253,286],[3,1,92]],
   4:[[3,93,200],[4,1,23]], 5:[[4,24,147]], 6:[[4,148,176],[5,1,81]],
@@ -984,7 +998,7 @@ function updateSurahSelect() {
   if(hint) hint.textContent='حدود الجزء: '+ranges.map(r=>'سورة '+(ALL_SURAHS_ORDERED[r[0]-1]||r[0])+' '+r[1]+'–'+r[2]).join(' | ');
 }
 // ====== إنشاء حساب جدد (طلب انضمام) ======
-let signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
+let signupState = { method: null, email: '', name: '', whats: '', whatsCountry: 'EG', code: '', verified: false };
 
 // ====== إعداد تسجيل الدخو بحساب جوجل (Google Identity Services) ======
 // معرّف العميل (OAuth Client ID) ُدار من إعدادات المسؤول > إدارة المسؤولين
@@ -1090,7 +1104,7 @@ function handleGoogleCredential(resp) {
 }
 
 function getInternationalNumber(inputId, countryId) {
-  const raw = String(document.getElementById(inputId)?.value || '').replace(/\D/g, '');
+  const raw = normalizeLocalPhoneInput(document.getElementById(inputId)?.value || '');
   const selector = document.getElementById(countryId);
   const selectedRule = countryRuleForValue(selector?.value);
   const country = selectedRule ? selectedRule.dialCode : String(selector?.value || '20').replace(/\D/g, '');
@@ -1110,13 +1124,20 @@ function syncSignupRelationshipField() {
   input.placeholder = currentLang === 'en' ? (isStudent ? 'Enter the parent\'s full name' : 'Enter the student\'s full name') : (isStudent ? 'اكتب اسم ولي الأمر بالكامل' : 'اكتب اسم الطالب بالكامل');
 }
 function normalizeWaNumber(phone, countryCode) {
-  let p = String(phone || '').replace(/\D/g, '');
-  if(p.indexOf('00') === 0) p = p.slice(2);
-  if(countryCode) return String(countryCode).replace(/\D/g, '') + p.replace(/^0+/, '');
-  if(p.indexOf('0') === 0) p = '20' + p.slice(1);
-  return p;
+  let raw = String(phone || '').replace(/\D/g, '');
+  if(raw.indexOf('00') === 0) raw = raw.slice(2);
+  const rule = countryRuleForValue(countryCode);
+  if(rule) {
+    if(raw.indexOf(rule.dialCode) === 0 && raw.length > rule.dialCode.length + 6) return raw;
+    return rule.dialCode + raw.replace(/^0+/, '');
+  }
+  if(raw.indexOf('0') === 0) return '20' + raw.slice(1);
+  return raw;
 }
-function buildWaLink(phone, text) {
+function buildWaLink(phone, text, countryCode) {
+  const p = normalizeWaNumber(phone, countryCode);
+  return p ? 'https://wa.me/' + p + '?text=' + encodeURIComponent(text) : '';
+}
   const p = normalizeWaNumber(phone);
   return p ? 'https://wa.me/' + p + '?text=' + encodeURIComponent(text) : '';
 }
@@ -1136,7 +1157,8 @@ function toggleUnifiedPassword() {
 function openAccountRecovery() {
   ['recoveryName','recoveryNid','recoveryPhone'].forEach(function(id){ const el=document.getElementById(id); if(el) el.value=''; });
   const role=document.getElementById('recoveryRole'); if(role) role.value='student';
-  const country=document.getElementById('recoveryCountry'); if(country) country.value='20';
+  const country=document.getElementById('recoveryCountry'); if(country) { country.value='EG'; country.dataset.countryIso='EG'; }
+  const identityCountry=document.getElementById('recoveryIdentityCountry'); if(identityCountry) { identityCountry.value='EG'; identityCountry.dataset.countryIso='EG'; }
   const result=document.getElementById('recoveryResult'); if(result) result.innerHTML='';
   updateSignupInternationalNumber('recoveryPhone','recoveryCountry','recoveryPhoneInternational');
   showPage('accountRecoveryPage');
@@ -1144,8 +1166,8 @@ function openAccountRecovery() {
 function normalizeRecoveryText(value) {
   return String(value || '').trim().normalize('NFKD').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[\u064B-\u065F\s_-]/g,'').toLowerCase();
 }
-function recoveryPhoneMatches(stored, submitted) {
-  const a=normalizeWaNumber(stored), b=normalizeWaNumber(submitted);
+function recoveryPhoneMatches(stored, submitted, storedCountry, submittedCountry) {
+  const a=normalizeWaNumber(stored, storedCountry), b=normalizeWaNumber(submitted, submittedCountry);
   return Boolean(a && b && (a === b || a.slice(-10) === b.slice(-10)));
 }
 let lastRecoverySignature = '', lastRecoveryAt = 0;
@@ -1153,18 +1175,21 @@ function submitAccountRecovery() {
   const box=document.getElementById('recoveryResult');
   const role=document.getElementById('recoveryRole')?.value || 'student';
   const name=document.getElementById('recoveryName')?.value.trim() || '';
-  const nid=String(document.getElementById('recoveryNid')?.value || '').replace(/\D/g,'');
+  const nid=normalizeIdentityInput(document.getElementById('recoveryNid')?.value || '');
   const phone=getInternationalNumber('recoveryPhone','recoveryCountry');
-  const recoveryValidation = validateCountryFields('recoveryCountry','recoveryNid','recoveryPhone');
-  if(!name || !recoveryValidation.identityValid || !recoveryValidation.phoneValid) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال الاسم وكود الهوية ورقم الهاتف وفق صيغة الدولة المختارة. التحقق شكلي فقط.</div>'; return; }
+  const recoveryValidation = validateCountryFields('recoveryIdentityCountry','recoveryNid','recoveryCountry','recoveryPhone');
+  if(!name || !recoveryValidation.identityValid || !recoveryValidation.phoneValid) { box.innerHTML='<div class="alert alert-danger">يرجى إدخال الاسم والهوية أو الجواز ورقم الهاتف وفق الصيغة الخاصة بالدول المختارة.</div>'; return; }
   const students=getData('students', []);
   const matched=students.find(function(student){
     const expectedName=role === 'student' ? student.name : (student.parent || student.parentName);
     const expectedNid=role === 'student' ? (student.national || student.nationalId) : (student.parentNational || student.parentNationalId || student.national || student.nationalId);
-    const expectedPhone=role === 'student' ? student.phone : (student.parentPhone || student.phone);
-    return normalizeRecoveryText(expectedName) === normalizeRecoveryText(name)
-      && String(expectedNid || '').replace(/\D/g,'') === nid
-      && recoveryPhoneMatches(expectedPhone, phone);
+  const expectedPhone=role === 'student' ? student.phone : (student.parentPhone || student.phone);
+  const expectedPhoneCountry=role === 'student' ? (student.phoneCountry || 'EG') : (student.parentPhoneCountry || student.phoneCountry || 'EG');
+  const expectedIdentityCountry=role === 'student' ? (student.nationalCountry || student.identityCountry || 'EG') : (student.parentNationalCountry || student.nationalCountry || student.identityCountry || 'EG');
+  return normalizeRecoveryText(expectedName) === normalizeRecoveryText(name)
+      && selectedCountryIso('recoveryIdentityCountry') === (countryRuleForValue(expectedIdentityCountry)?.iso2 || 'EG')
+      && normalizeIdentityInput(expectedNid || '') === nid
+      && recoveryPhoneMatches(expectedPhone, phone, expectedPhoneCountry, selectedCountryIso('recoveryCountry'));
   });
   if(!matched) { box.innerHTML='<div class="alert alert-danger">لا يوجد بيانات مسجلة بهذا الشكل</div>'; return; }
   const now=Date.now(), signature=[role,normalizeRecoveryText(name),nid,phone].join('|');
@@ -1172,9 +1197,9 @@ function submitAccountRecovery() {
   lastRecoverySignature=signature; lastRecoveryAt=now;
   const time=new Date().toLocaleString('ar-EG');
   const roleLabel=role === 'student' ? 'طالب' : 'ولي أمر';
-  const notification={id:'notification_'+now,type:'account_recovery',category:'استرجاع حساب',title:'طلب استرجاع حساب',message:'طلب استرجاع حساب '+roleLabel+' باسم '+name,role:role,roleLabel:roleLabel,name:name,nationalId:nid,phone:phone,time:time,createdAt:new Date().toISOString(),read:false};
+  const notification={id:'notification_'+now,type:'account_recovery',category:'استرجاع حساب',title:'طلب استرجاع حساب',message:'طلب استرجاع حساب '+roleLabel+' باسم '+name,role:role,roleLabel:roleLabel,name:name,nationalId:nid,identityCountry:selectedCountryIso('recoveryIdentityCountry'),phone:phone,phoneCountry:selectedCountryIso('recoveryCountry'),time:time,createdAt:new Date().toISOString(),read:false};
   const notifications=getData('notifications', []); notifications.unshift(notification); setData('notifications',notifications);
-  const message='طلب استرجاع حساب في منصة ثمار\nنوع الحساب: '+roleLabel+'\nالاسم: '+name+'\nالرقم القومي: '+nid+'\nرقم الهاتف الدولي: +'+phone+'\nوقت الطلب: '+time+'\n\nيرجى مراجعة البيانات والتواصل مع صاحب الحساب لتعيين رقم سري جديد.';
+  const message='طلب استرجاع حساب في منصة ثمار\nنوع الحساب: '+roleLabel+'\nالاسم: '+name+'\nالرقم القومي: '+nid+'\nرقم الهاتف الدولي: +'+phone+'\nوقت الطلب: '+time+'\n\nيرجى مراجعة ��لبيانات والتواصل مع صاحب الحساب لتعيين رقم سري جديد.';
   const link=buildWaLink(getAdminWhatsapp(),message);
   box.innerHTML='<div class="alert alert-success">تم إرسال طلب استرجاع الحساب إلى المسؤول. <a href="'+link+'" target="_blank" rel="noopener noreferrer"><strong>فتح الرسالة الجاهزة على واتساب</strong></a></div>';
   if(link) window.open(link,'_blank','noopener');
@@ -1202,10 +1227,13 @@ function markNotificationRead(id) { const items=getData('notifications', []); co
 function markAllNotificationsRead() { const items=getData('notifications', []).map(function(item){return Object.assign({},item,{read:true})}); setData('notifications',items); renderNotifications(); }
 
 function startSignup() {
-  signupState = { method: null, email: '', name: '', whats: '', code: '', verified: false };
+  signupState = { method: null, email: '', name: '', whats: '', whatsCountry: 'EG', code: '', verified: false };
   ['signupWhats','signupCode','signupName','signupNid','signupPhone','signupNotes','signupRelationshipName'].forEach(function(id){ const el = document.getElementById(id); if(el) el.value = ''; });
-  const phoneCountry = document.getElementById('signupPhoneCountry'); if(phoneCountry) phoneCountry.value = '20';
-  const whatsCountry = document.getElementById('signupWhatsCountry'); if(whatsCountry) whatsCountry.value = '20';
+  const identityCountry = document.getElementById('signupIdentityCountry'); if(identityCountry) { identityCountry.value = 'EG'; identityCountry.dataset.countryIso = 'EG'; }
+  const phoneCountry = document.getElementById('signupPhoneCountry'); if(phoneCountry) { phoneCountry.value = 'EG'; phoneCountry.dataset.countryIso = 'EG'; }
+  const whatsCountry = document.getElementById('signupWhatsCountry'); if(whatsCountry) { whatsCountry.value = 'EG'; whatsCountry.dataset.countryIso = 'EG'; }
+  const recoveryIdentityCountry = document.getElementById('recoveryIdentityCountry'); if(recoveryIdentityCountry) { recoveryIdentityCountry.value = 'EG'; recoveryIdentityCountry.dataset.countryIso = 'EG'; }
+  const adminMobileCountry = document.getElementById('adminMobileCountry'); if(adminMobileCountry) { adminMobileCountry.value = 'EG'; adminMobileCountry.dataset.countryIso = 'EG'; }
   syncSignupRelationshipField();
   updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational');
   updateSignupInternationalNumber('signupWhats','signupWhatsCountry','signupWhatsInternational');
@@ -1233,12 +1261,13 @@ function setSignupMethod(method) {
 function sendSignupCode() {
   const box = document.getElementById('signupStep1Alert');
   const whatsRaw = document.getElementById('signupWhats').value.trim();
-  const whatsCountry = document.getElementById('signupWhatsCountry').value;
+  const whatsCountry = selectedCountryIso('signupWhatsCountry');
   const whats = getInternationalNumber('signupWhats','signupWhatsCountry');
   if(signupState.method !== 'phone') { box.innerHTML = '<div class="alert alert-danger">❌ اختر التسجيل برقم الهاتف أولاً</div>'; return; }
-  if(normalizeWaNumber(whats).length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح</div>'; return; }
+  if(!whatsRaw || !validatePhoneField('signupWhatsCountry','signupWhats',true)) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح وفق الدولة المختارة</div>'; return; }
   signupState.email = '';
   signupState.whats = whats;
+  signupState.whatsCountry = whatsCountry;
   signupState.code = String(Math.floor(100000 + Math.random() * 900000));
   const adminWa = getAdminWhatsapp();
   const text = 'طلب كود تحقق لحساب جديد في نظام إدارة الطلاب\n'
@@ -1259,7 +1288,11 @@ function verifySignupCode() {
   box.innerHTML = '';
   document.getElementById('signupVerifiedNote').innerHTML = '✅ تم التحقق من هويتك بنجاح — ' + (signupState.method === 'google' ? 'حساب جوجل: ' + signupState.email : 'رقم الواتساب: ' + signupState.whats);
   const verifiedPhone = document.getElementById('signupPhone');
-  if(verifiedPhone && !verifiedPhone.value) { verifiedPhone.value = String(signupState.whats || '').replace(/^20/, '0'); updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational'); }
+  if(verifiedPhone && signupState.whats && !verifiedPhone.value) {
+    setCountrySelectorValue('signupPhoneCountry', signupState.whatsCountry || 'EG');
+    verifiedPhone.value = localPhoneFromInternational(signupState.whats, signupState.whatsCountry || 'EG');
+    updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational');
+  }
   initSignupJuzSelect();
   showPage('signupStep2');
 }
@@ -1284,13 +1317,15 @@ function submitSignupRequest() {
   const role = document.getElementById('signupRole').value;
   const name = document.getElementById('signupName').value.trim();
   const relationshipName = document.getElementById('signupRelationshipName').value.trim();
-  const nid = document.getElementById('signupNid').value.trim();
+  const nid = normalizeIdentityInput(document.getElementById('signupNid').value);
+  const identityCountry = selectedCountryIso('signupIdentityCountry');
+  const phoneCountry = selectedCountryIso('signupPhoneCountry');
   const phone = getInternationalNumber('signupPhone','signupPhoneCountry');
   const juz = document.getElementById('signupJuz').value;
   const surah = document.getElementById('signupSurah').value;
   const notes = document.getElementById('signupNotes').value.trim();
-  const signupValidation = validateCountryFields('signupPhoneCountry','signupNid','signupPhone');
-  if(!name || !relationshipName || !signupValidation.identityValid || !signupValidation.phoneValid) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل الاسم والبيانات المطلوبة وفق صيغة الدولة المختارة. التحقق شكلي فقط.</div>'; return; }
+  const signupValidation = validateCountryFields('signupIdentityCountry','signupNid','signupPhoneCountry','signupPhone');
+  if(!name || !relationshipName || !signupValidation.identityValid || !signupValidation.phoneValid) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل الاسم والبيانات المطلوبة وفق صيغة الدولة المختارة.</div>'; return; }
   const roleLabel = role === 'student' ? 'طالب' : 'ولي أمر';
   const time = new Date().toLocaleString('ar-EG');
   const details = '📋 طلب ئنشاء حساب جديد\n'
@@ -1307,7 +1342,7 @@ function submitSignupRequest() {
     + 'وقت الطلب: ' + time;
 
   const requests = getData('joinRequests');
-  requests.push({ id: 'jr' + Date.now(), role: role, name: name, guardianName: role === 'student' ? relationshipName : '', studentName: role === 'parent' ? relationshipName : '', relationshipName: relationshipName, nid: nid, phone: phone, whats: signupState.whats, email: signupState.email, method: signupState.method, juz: juz, surah: surah, notes: notes, status: 'pending', time: time });
+  requests.push({ id: 'jr' + Date.now(), role: role, name: name, guardianName: role === 'student' ? relationshipName : '', studentName: role === 'parent' ? relationshipName : '', relationshipName: relationshipName, nid: nid, identityCountry: identityCountry, nationalCountry: identityCountry, phone: phone, phoneCountry: phoneCountry, whats: signupState.whats, whatsCountry: signupState.whatsCountry || 'EG', email: signupState.email, method: signupState.method, juz: juz, surah: surah, notes: notes, status: 'pending', time: time });
   setData('joinRequests', requests);
 
   const msgs = getData('messages');
@@ -1457,7 +1492,7 @@ async function toggleStudentIntakeRecord(){
     const stream=await safeGetMic(),mimeType=preferredRecorderMimeType();studentIntakeChunks=[];studentIntakeRecorder=mimeType?new MediaRecorder(stream,{mimeType: mimeType}):new MediaRecorder(stream);
     const recorder=studentIntakeRecorder;
     recorder.ondataavailable=function(e){if(e.data.size)studentIntakeChunks.push(e.data)};
-    recorder.onerror=function(){status.textContent='حدث خطأ أثناء التسجيل. أعد المحاولة.'};
+    recorder.onerror=function(){status.textContent='حدث خطأ أثناء التسجيل. ��عد المحاولة.'};
     recorder.onstop=async function(){
       const blob=new Blob(studentIntakeChunks,{type:recorder.mimeType||mimeType||'audio/webm'});studentIntakeLastBlob=blob;studentIntakeChunks=[];
       try{
@@ -1521,24 +1556,34 @@ async function toggleVoiceRecord() {
 
 const DEFAULT_ADMIN_WHATSAPP = '201554542019';
 function getAdminWhatsapp() {
-  const v = getData('adminWhatsapp', '');
-  const num = String(v || '').replace(/\D/g, '');
+  const value = getData('adminWhatsapp', '');
+  const num = typeof value === 'object' ? String(value.phone || '').replace(/\D/g, '') : String(value || '').replace(/\D/g, '');
   return num || DEFAULT_ADMIN_WHATSAPP;
+}
+function getAdminWhatsappCountry() {
+  const value = getData('adminWhatsappCountry', 'EG');
+  return countryRuleForValue(value)?.iso2 || 'EG';
 }
 function saveAdminWhatsapp() {
   const input = document.getElementById('adminWhatsInput');
-  const num = String(input.value || '').replace(/\D/g, '');
   const box = document.getElementById('adminsAlert');
-  if(num.length < 10) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب صحيح بصيغة الدولة (مثال: 201554542019)</div>'; return; }
-  setData('adminWhatsapp', num);
-  input.value = num;
-  box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب المسؤول: ' + num + '</div>';
+  const country = selectedCountryIso('adminWhatsCountry');
+  const local = normalizeLocalPhoneInput(input?.value || '');
+  if(!validatePhoneField('adminWhatsCountry','adminWhatsInput',true)) { box.innerHTML = '<div class="alert alert-danger">❌ أدخل رقم واتساب بطول صحيح للدولة المختارة</div>'; return; }
+  const international = getInternationalNumber('adminWhatsInput','adminWhatsCountry');
+  setData('adminWhatsapp', international);
+  setData('adminWhatsappCountry', country);
+  if(input) input.value = local;
+  box.innerHTML = '<div class="alert alert-success">✅ تم حفظ رقم واتساب المسؤول: +' + international + '</div>';
 }
 
 
 function renderAdmins() {
   const whatsInput = document.getElementById('adminWhatsInput');
-  if(whatsInput) whatsInput.value = getAdminWhatsapp();
+  const whatsCountry = document.getElementById('adminWhatsCountry');
+  const configuredCountry = getAdminWhatsappCountry();
+  if(whatsCountry) setCountrySelectorValue('adminWhatsCountry', configuredCountry);
+  if(whatsInput) whatsInput.value = localPhoneFromInternational(getAdminWhatsapp(), configuredCountry);
   const admins = getData('admins');
   let html = '<table><thead><tr><th>#</th><th>رقم الموبايل</th><th>الرقم السري</th><th>النوع</th><th>التحكم</th></tr></thead><tbody>';
   admins.forEach((a, i) => {
@@ -1549,33 +1594,39 @@ function renderAdmins() {
 }
 
 function addAdmin() {
-  const mobile = document.getElementById('newAdminMobile').value.trim();
+  const mobile = normalizeLocalPhoneInput(document.getElementById('newAdminMobile').value);
+  const mobileCountry = selectedCountryIso('newAdminMobileCountry');
   const pass = document.getElementById('newAdminPass').value.trim();
   const type = document.getElementById('newAdminType').value;
   if(!mobile || !pass) return alert('يرجى ملء جميع الحقول');
-  if(mobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
+  if(!validatePhoneField('newAdminMobileCountry','newAdminMobile',true)) return alert('رقم الموبايل يجب أن يطابق الدولة المختارة');
+  const international = normalizeWaNumber(mobile, mobileCountry);
   const admins = getData('admins');
-  if(admins.find(a => a.mobile === mobile)) return alert('هذا لرقم مسجل مسبقاً');
-  admins.push({id: Date.now(), mobile, password: pass, isMain: type === 'main'});
+  if(admins.find(a => normalizeWaNumber(a.mobile, a.mobileCountry || 'EG') === international)) return alert('هذا الرقم مسجل مسبقاً');
+  admins.push({id: Date.now(), mobile, mobileCountry, password: pass, isMain: type === 'main'});
   setData('admins', admins);
   document.getElementById('newAdminMobile').value = '';
   document.getElementById('newAdminPass').value = '';
   renderAdmins();
-  alert('تم إضافة ئلمسؤول بنجاح');
+  alert('تم إضافة المسؤول بنجاح');
 }
 
 function editAdmin(id) {
   const admins = getData('admins');
   const a = admins.find(x => x.id === id);
   if(!a) return;
-  const newMobile = prompt('رقم الموبايل الجديد:', a.mobile);
+  const country = a.mobileCountry || 'EG';
+  const currentMobile = localPhoneFromInternational(a.mobile, country);
+  const newMobile = prompt('رقم الموبايل الجديد (بدون رمز الدولة):', currentMobile);
   if(newMobile === null) return;
   const newPass = prompt('الرقم السري الجديد:', a.password);
   if(newPass === null) return;
   const newType = confirm('هل تريد جعله مسؤول رئيسي؟ (موافق = رئيسي، إلغاء = فرعي)');
-  if(newMobile.length !== 11) return alert('رقم الموبايل يجب أن يكون 11 رقم');
-  if(admins.find(x => x.id !== id && x.mobile === newMobile)) return alert('هذا لرقم مسجل لمسؤول آخر');
-  a.mobile = newMobile; a.password = newPass; a.isMain = newType;
+  const normalizedMobile = normalizeLocalPhoneInput(newMobile);
+  if(!normalizedMobile || !countryRuleForValue(country).phoneLengths.includes(normalizedMobile.length)) return alert('رقم الموبايل يجب أن يطابق الدولة المختارة');
+  const international = normalizeWaNumber(normalizedMobile, country);
+  if(admins.find(x => x.id !== id && normalizeWaNumber(x.mobile, x.mobileCountry || 'EG') === international)) return alert('هذا الرقم مسجل لمسؤول آخر');
+  a.mobile = normalizedMobile; a.mobileCountry = country; a.password = newPass; a.isMain = newType;
   setData('admins', admins); renderAdmins(); alert('تم التعديل بنجاح');
 }
 
@@ -1587,10 +1638,12 @@ function deleteAdmin(id) {
 }
 
 function adminLogin() {
-  const mobile = document.getElementById('adminMobile').value.trim();
+  const mobile = normalizeLocalPhoneInput(document.getElementById('adminMobile').value);
+  const mobileCountry = selectedCountryIso('adminMobileCountry');
   const pass = document.getElementById('adminPass').value;
   const admins = getData('admins');
-  const admin = admins.find(a => a.mobile === mobile && a.password === pass);
+  const international = normalizeWaNumber(mobile, mobileCountry);
+  const admin = admins.find(a => normalizeWaNumber(a.mobile, a.mobileCountry || 'EG') === international && a.password === pass);
   if(admin) {
     currentUser = admin; currentType = 'admin'; currentAdminId = admin.id;
     saveSessionState();
@@ -1616,11 +1669,11 @@ async function unifiedLogin() {
   if(!neonDataReady) {
     box.innerHTML = '<div class="alert alert-info">جارٍ تحميل البيانات الآمنة من Neon...</div>';
     const ready = await hydrateDataFromNeon();
-    if(!ready) { box.innerHTML = '<div class="alert alert-danger">تعذر الاتصال بقاعدة البيانات. تحقق من الاتصال ثم أعد المحاولة.</div>'; return; }
+    if(!ready) { box.innerHTML = '<div class="alert alert-danger">تعذر الاتصال بقاعدة الب��انات. تحقق من الاتصال ثم أعد المحاولة.</div>'; return; }
   }
 
-  // 1) مسؤول (اسم المستخدم = رقم الموبايل)
-  const admin = getData('admins').find(a => a.mobile === u && a.password === p);
+  // 1) مسؤول (اسم المستخدم = رقم الموبايل، مع دعم رمز الدولة)
+  const admin = getData('admins').find(a => normalizeWaNumber(a.mobile, a.mobileCountry || 'EG') === normalizeWaNumber(u, a.mobileCountry || 'EG') && a.password === p);
   if(admin) {
     currentUser = admin; currentType = 'admin'; currentAdminId = admin.id;
     pageHistory = []; saveSessionState();
@@ -1653,7 +1706,13 @@ async function unifiedLogin() {
   }
 
   // 3) ولي أمر (الاسم أو رقم الهاتف)
-  const kids = students.filter(x => (x.parent === u || x.parentPhone === u || x.phone === u) && x.parentPass === p);
+  const kids = students.filter(x => {
+    const phoneCountry = x.parentPhoneCountry || x.phoneCountry || 'EG';
+    const inputPhone = normalizeWaNumber(u, phoneCountry);
+    const parentPhone = x.parentPhone ? normalizeWaNumber(x.parentPhone, phoneCountry) : '';
+    const studentPhone = x.phone ? normalizeWaNumber(x.phone, x.phoneCountry || 'EG') : '';
+    return (x.parent === u || parentPhone === inputPhone || studentPhone === inputPhone) && x.parentPass === p;
+  });
   if(kids.length > 0) {
     currentUser = kids; currentType = 'parent'; currentAdminId = null;
     pageHistory = []; saveSessionState();
@@ -1830,8 +1889,10 @@ async function saveStudent() {
 
   const name = document.getElementById('stName').value.trim();
   const username = document.getElementById('stUsername').value.trim();
-  const national = document.getElementById('stNational').value.trim();
-  const phone = document.getElementById('stPhone').value.trim();
+  const national = normalizeIdentityInput(document.getElementById('stNational').value);
+  const identityCountry = selectedCountryIso('stIdentityCountry');
+  const phoneCountry = selectedCountryIso('stPhoneCountry');
+  const phone = normalizeLocalPhoneInput(document.getElementById('stPhone').value);
   const birth = document.getElementById('stBirth').value;
   const age = document.getElementById('stAge').value;
   const studentPass = document.getElementById('stStudentPass').value;
@@ -1842,11 +1903,12 @@ async function saveStudent() {
   const selectedSubjects = Array.from(subjectSelect.selectedOptions).map(o => parseInt(o.value));
 
   if(!name || !username || !national || !birth || !parent || !parentPass || !studentPass || selectedSubjects.length === 0) return fail('يرجى ملء جميع الحقول المطلوبة');
-  if(national.length !== 14) return fail('الرقم القومي يجب أن يكون 14 رقم بالضبط');
-  if(phone && phone.length !== 11) return fail('رقم الهاتف يجب أن يكون 11 رقم');
+  const studentValidation = validateCountryFields('stIdentityCountry','stNational','stPhoneCountry','stPhone',false);
+  if(!studentValidation.identityValid) return fail('أدخل الهوية أو جواز السفر وفق الدولة المختارة');
+  if(phone && !studentValidation.phoneValid) return fail('أدخل رقم الهاتف وفق الدولة المختارة');
 
   const students = getData('students');
-  if(students.find(s => s.national === national)) return fail('هذا الرقم القومي مسجل مسبقاً');
+  if(students.find(s => normalizeIdentityInput(s.national || s.nationalId || '') === national)) return fail('هذا الرقم القومي مسجل مسبقاً');
   if(students.find(s => s.username === username)) return fail('اسم المستخدم مسجل مسبقاً');
   if(students.find(s => s.username === username)) return fail('اسم المستخدم مسجل مسبقاً');
   // ✅ مسموح الآن أن يكون الرقم السري للطالب مطابقاً للرقم السري لولي الأمر
@@ -1872,7 +1934,7 @@ async function saveStudent() {
   }
 
   const newStudent = {
-    id: Date.now(), name, username, national, phone, birth, age, studentPass, parent, parentPass,
+    id: Date.now(), name, username, national, nationalId: national, identityCountry, nationalCountry: identityCountry, phone, phoneCountry, birth, age, studentPass, parent, parentPass,
     subjectIds: selectedSubjects, subjects: selectedSubData,
     notes, createdAt: new Date().toLocaleString('ar-EG'),
     juz: isQuran ? (document.getElementById('stJuz').value || '') : '',
@@ -1889,7 +1951,7 @@ async function saveStudent() {
   showToast('تم حفظ الطالب "' + name + '" بنجاح' + (voiceProfile ? ' مع بصمة Gemini الصوتية' : ' (بدون بصمة صوتية)'), 'success');
   ['stName','stUsername','stNational','stPhone','stBirth','stAge','stStudentPass','stParent','stParentPass','stNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('stJuz').value = '';
-  document.getElementById('stSurah').innerHTML = '<option value="">اختر الجزء أولاً...</option>';
+  document.getElementById('stSurah').innerHTML = '<option value="">اختر الجزء أولا��...</option>';
   const prev = document.getElementById('voicePreview');
   prev.style.display = 'none'; prev.removeAttribute('src');
   document.getElementById('voiceRecordStatus').textContent = 'اضغط للتسجيا (20 ثانية)';
@@ -1904,8 +1966,10 @@ function openEdit(id) {
   document.getElementById('editId').value = id;
   document.getElementById('editName').value = s.name;
   document.getElementById('editUsername').value = s.username || '';
-  document.getElementById('editNational').value = s.national;
-  document.getElementById('editPhone').value = s.phone || '';
+  setCountrySelectorValue('editIdentityCountry', s.identityCountry || s.nationalCountry || 'EG');
+  document.getElementById('editNational').value = s.national || s.nationalId || '';
+  setCountrySelectorValue('editPhoneCountry', s.phoneCountry || 'EG');
+  document.getElementById('editPhone').value = localPhoneFromInternational(s.phone || '', s.phoneCountry || 'EG');
   document.getElementById('editBirth').value = s.birth || '';
   document.getElementById('editAge').value = s.age || '';
   document.getElementById('editStudentPass').value = s.studentPass || '';
@@ -1950,7 +2014,7 @@ async function toggleEditVoiceRecord(){
       }catch(e){editVoiceProfileGemini=null;editVoiceFingerprint=null;editVoiceDataUrl=null;status.textContent=(e&&e.message)||'تعذر حليل الصوت بواسطة Gemini';}
       btn.classList.remove('recording');
     };
-    editVoiceRecorder.start();registerAudioRecorder('edit-fingerprint',editVoiceRecorder,stream,{statusId:'editVoiceStatus',buttonId:'editVoiceBtn',maxMs:20000});btn.classList.add('recording');status.textContent='جاري التسجيل... (20 ثانية فعلية)';
+    editVoiceRecorder.start();registerAudioRecorder('edit-fingerprint',editVoiceRecorder,stream,{statusId:'editVoiceStatus',buttonId:'editVoiceBtn',maxMs:20000});btn.classList.add('recording');status.textContent='جاري التسجيل... (20 ثانية فعل��ة)';
   }catch(e){status.textContent='لا يمكن الوصول إلى الميكروفون'}
 }
 
@@ -1959,18 +2023,25 @@ function updateStudent() {
   let students = getData('students');
   const idx = students.findIndex(s => s.id === id);
   if(idx === -1) return;
-  const national = document.getElementById('editNational').value.trim();
-  const phone = document.getElementById('editPhone').value.trim();
+  const national = normalizeIdentityInput(document.getElementById('editNational').value);
+  const identityCountry = selectedCountryIso('editIdentityCountry');
+  const phoneCountry = selectedCountryIso('editPhoneCountry');
+  const phone = normalizeLocalPhoneInput(document.getElementById('editPhone').value);
   const studentPass = document.getElementById('editStudentPass').value;
   const parentPass = document.getElementById('editParentPass').value.trim();
-  if(national.length !== 14) return alert('الرقم القومي يجب أن يكون 14 رقم');
-  if(phone && phone.length !== 11) return alert('رقم الهاتف يجب أن يكون 11 رقم');
+  const editValidation = validateCountryFields('editIdentityCountry','editNational','editPhoneCountry','editPhone',false);
+  if(!editValidation.identityValid) return alert('أدخل الهوية أو جواز السفر وفق الدولة المختارة');
+  if(phone && !editValidation.phoneValid) return alert('أدخل رقم الهاتف وفق الدولة المختارة');
   // ✅ مسموح تابق الرقم السري للطالب مع ولي الأمر
 
   students[idx].name = document.getElementById('editName').value.trim();
   students[idx].username = document.getElementById('editUsername').value.trim();
   students[idx].national = national;
+  students[idx].nationalId = national;
+  students[idx].identityCountry = identityCountry;
+  students[idx].nationalCountry = identityCountry;
   students[idx].phone = phone;
+  students[idx].phoneCountry = phoneCountry;
   students[idx].birth = document.getElementById('editBirth').value;
   students[idx].age = document.getElementById('editAge').value;
   students[idx].studentPass = document.getElementById('editStudentPass').value;
@@ -2021,7 +2092,7 @@ function renderStudents() {
     html += '<div class="student-field"><span class="field-label">اسم المستخدم:</span> <span class="field-value">'+s.username+'</span></div>';
     html += '<div class="student-field"><span class="field-label">الرقم القومي:</span> <span class="field-value">'+s.national+'</span></div>';
     html += '<div class="student-field"><span class="field-label">السن:</span> <span class="field-value">'+(s.age || '-')+' سنة</span></div>';
-    html += '<div class="student-field"><span class="field-label">رقم الاتف:</span> <span class="field-value">'+(s.phone || '-')+'</span></div>';
+    html += '<div class="student-field"><span class="field-label">��قم الاتف:</span> <span class="field-value">'+(s.phone || '-')+'</span></div>';
     html += '<div class="student-field"><span class="field-label">ولي الأمر:</span> <span class="field-value">'+s.parent+'</span></div>';
     html += '<div class="student-field"><span class="field-label">المواد:</span> <span class="badge badge-primary">'+subNames+'</span></div>';
     html += '<div class="student-field"><span class="field-label">تاريخ التسجيل:</span> <span class="field-value">'+s.createdAt+'</span></div>';
@@ -2045,7 +2116,7 @@ function deleteStudent(id) {
 }
 
 // ====== RECORD SESSION - FIXED ELEMENTS WITH SURAH & COLOR ======
-const FIXED_ELEMENTS = ['اللوح', 'السورة', 'الماضي القريب', 'الماضي البعيد'];
+const FIXED_ELEMENTS = ['اللوح', 'السورة', 'الماضي الق��يب', 'الماضي البعيد'];
 
 function openRecord(id) {
   const students = getData('students');
@@ -2353,7 +2424,7 @@ function updateHomeworkItem(idx, field, value) {
 }
 function renderHomeworkItems() {
   const container = document.getElementById('homeworkItems');
-  if(homeworkItems.length === 0) { container.innerHTML = '<p style="color:var(--text-light)">لا يجد واجبات مضافة. اضغط + لإضافة واجب</p>'; return; }
+  if(homeworkItems.length === 0) { container.innerHTML = '<p style="color:var(--text-light)">لا يجد ��اجبات مضافة. اضغط + لإضافة واجب</p>'; return; }
   let html = '';
   homeworkItems.forEach((item, i) => {
     html += '<div style="background:#fff; padding:12px; border-radius:8px; margin-bottom:8px; border:1px solid var(--border);">';
@@ -2488,7 +2559,7 @@ function localSmartChatReply(message,role){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
       return 'ملخص ابيانات ��لمحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
     }
-    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوائياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
+    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوا��ياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائية من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب المتابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
@@ -2550,7 +2621,7 @@ function quranQuestionMediaHtml(q,index){
 }
 function showQuranQuestionImageError(image){
   const box=image&&image.parentElement;if(!box)return;const src=image.getAttribute('src')||'';
-  box.innerHTML='<div class="quran-question-error" role="alert">تعذر تحميل صورة السؤال من المصحف.<br><button type="button" class="btn btn-sm btn-secondary quran-question-retry" onclick="retryQuranQuestionImage(this,\''+escapeHtml(src)+'\')">إعادة المحاولة</button></div>';
+  box.innerHTML='<div class="quran-question-error" role="alert">تعذر تحميل صورة السؤال من المص��ف.<br><button type="button" class="btn btn-sm btn-secondary quran-question-retry" onclick="retryQuranQuestionImage(this,\''+escapeHtml(src)+'\')">إعادة المحاولة</button></div>';
 }
 function retryQuranQuestionImage(button,src){
   const box=button&&button.closest('.quran-question-media');if(!box)return;const separator=src.includes('?')?'&':'?';
@@ -2857,7 +2928,7 @@ async function submitStudentExam(auto){
   const hasAudio=ex.questions.some(q=>q.type==='audio');ex.status=hasAudio?'pending_audio_review':'graded';ex.submittedAt=Date.now();ex.answers=answers;ex.score=score;ex.maxScore=ex.questions.reduce((n,q)=>n+(Number(q.points)||1),0);ex.totalDurationSeconds=Math.round((Date.now()-(ex.createdAt||Date.now()))/1000);ex.autoSubmitted=!!auto;ex.reviewedAt=hasAudio?null:Date.now();
   let students=getData('students');const idx=students.findIndex(x=>x.id===s.id);if(idx<0)return;students[idx].activeExam=null;students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].completedTasks=students[idx].completedTasks||[];students[idx].completedTasks.push({type:'exam',name:'اختبار '+ex.date,date:ex.date,completedAt:new Date().toLocaleString('ar-EG'),score,maxScore:ex.maxScore});setData('students',students);currentUser=students[idx];
   let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوتي والنتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
-  msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة اتسجيل الصوتي':'نتيجة اختبار '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
+  msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة اتسجيل الصوتي':'نتيجة اختبا�� '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبار وإرساله للمسؤول وولي الأمر','success');
 }
 
@@ -3009,7 +3080,7 @@ function formatExamDate(value) {
 }
 function examStatusLabel(ex) {
   if(ex.status==='pending_audio_review')return 'بانتظار مراجع التسجيل';
-  if(ex.status==='graded')return 'مكتمل ومصحح';
+  if(ex.status==='graded')return 'مكتم�� ومصحح';
   if(ex.autoSubmitted)return 'أُرسل تلقائياً بعد انتهاء الوقت';
   return escapeHtml(ex.status||'مكتمل');
 }
@@ -3034,7 +3105,7 @@ function renderAdminExamHistory(s) {
       h+='<div class="task-card" style="margin-top:12px">';
       h+='<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><strong>س'+(i+1)+': '+escapeHtml(q.prompt||q.stem||'سؤال بدون عنوان')+'</strong><span class="badge '+(answerScore>=1?'badge-success':answerScore>0?'badge-warning':'badge-danger')+'">'+answerLabel+' — '+answerScore+'</span></div>';
       h+='<div class="history-element-details" style="margin-top:10px"><div class="history-detail"><strong>النوع:</strong> '+escapeHtml(q.type||'غير محدد')+'</div><div class="history-detail"><strong>السورة:</strong> '+escapeHtml(q.surah||'—')+'</div><div class="history-detail"><strong>الآيات:</strong> '+escapeHtml(String(q.from||'—'))+' إلى '+escapeHtml(String(q.to||'—'))+'</div><div class="history-detail"><strong>وقت الإجابة:</strong> '+(Number(a.timeSeconds)||0)+' ثانية</div></div>';
-      h+='<p><strong>إجابة الطالب:</strong> '+escapeHtml(a.answer||r.transcript||'لم تتم الإجابة')+'</p>';
+      h+='<p><strong>��جابة الطالب:</strong> '+escapeHtml(a.answer||r.transcript||'لم تتم الإجابة')+'</p>';
       h+='<p><strong>الإجابة الصحيحة:</strong> '+escapeHtml(q.correct||'غير متاحة')+'</p>';
       if(r.reason)h+='<p><strong>سبب التصحيح:</strong> '+escapeHtml(r.reason)+'</p>';
       if(Number.isFinite(Number(r.matchedPercent)))h+='<p><strong>نسبة المطابقة:</strong> '+Math.max(0,Math.min(100,Number(r.matchedPercent)))+'٪</p>';
@@ -3398,7 +3469,7 @@ async function deleteGithubFile(){
   }
   } catch(e){
   if(resBox) resBox.innerHTML = '<span style="color:#dc3545;">❌ '+escapeHtmlAi(e.message || 'تعذر الحذف')+'</span>';
-  recordDevAudit({ status:'failed', request:'حذف ملف: '+path, error:(e && e.message) ? e.message : 'تعذر الحذف' });
+  recordDevAudit({ status:'failed', request:'حذف ملف: '+path, error:(e && e.message) ? e.message : 'تعذ�� الحذف' });
   }
   }
 
@@ -4035,13 +4106,13 @@ function renderStudentDashboard() {
 
   let html = '<div class="student-identity-cards" aria-label="بيانات الطالب الأساسية">';
   html += '<div class="student-identity-card"><div class="identity-value">'+escapeHtml(s.name || '-')+'</div><div class="identity-label">اسم الطالب</div></div>';
-  html += '<div class="student-identity-card"><div class="identity-value">'+escapeHtml(String(s.age || '-'))+'</div><div class="identity-label">سن الطالب</div></div>';
+  html += '<div class="student-identity-card"><div class="identity-value">'+escapeHtml(String(s.age || '-'))+'</div><div class="identity-label">سن ��لطالب</div></div>';
   html += '</div>';
 
   html += '<div style="display:flex; gap:20px; flex-wrap:wrap;"><div style="flex:1; min-width:300px;">';
   html += '<div class="page" style="margin-top:0;"><h4 style="color:var(--primary); margin-bottom:15px;">📋 البيانات</h4>';
   html += '<p><strong>المدرس:</strong> '+(s.subjects ? s.subjects.map(sub => sub.teacher || '-').join('<br>') : '-')+'</p>';
-  html += '<p><strong>رقم المدرس:</strong> '+(s.subjects && s.subjects[0] && s.subjects[0].phone ? s.subjects[0].phone : '-')+'</p>';
+  html += '<p><strong>رق�� المدرس:</strong> '+(s.subjects && s.subjects[0] && s.subjects[0].phone ? s.subjects[0].phone : '-')+'</p>';
   html += '<p><strong>ولي الأمر:</strong> '+s.parent+'</p>';
   html += '<p><strong>تاريخ التسجيل:</strong> '+s.createdAt+'</p>';
   if(isQuran && s.juz) html += '<p><strong>الجزء:</strong> <span class="score-badge">'+s.juz+'</span></p>';
@@ -4195,7 +4266,7 @@ function renderStudentTasks() {
         html += '<div style="margin-top:10px;"><div class="file-upload" onclick="document.getElementById(&quot;hwFile_'+originalIdx+'&quot;).click()"><div>📷 اضغط لرءءع صورة الءءاجب</div></div>';
         html += '<input type="file" id="hwFile_'+originalIdx+'" accept="image/*" style="display:none" onchange="uploadTaskFile('+originalIdx+', this, &quot;homework&quot;)"></div>';
       } else {
-        html += '<div class="task-pending-box">📤 تم إرسال الملف للمسؤول - انتظر الموافقة</div>';
+        html += '<div class="task-pending-box">📤 تم إرسال الملف للمسؤول - ا��تظر الموافقة</div>';
       }
       html += '</div>';
 
@@ -4285,7 +4356,7 @@ function uploadTaskFile(taskIdx, input, type) {
     }
 
     // Show success and re-render
-    alert('✅ تم إرسال الملف للمؤو بنجاح! انتظر الموافقة.');
+    alert('✅ تم إرسال الملف للمؤو ��نجاح! انتظر الموافقة.');
     renderStudentTasks();
   };
   reader.readAsDataURL(file);
@@ -4456,7 +4527,7 @@ async function analyzeRecitationContent(blob, task, transcript) {
   return {pct:Math.max(0,Math.min(100,Math.round(pct))),dur:Math.round(dur),txtPct,expectedSec,reason,transcript:usedTranscript,aiResult};
 }
 
-// التحءءق الكامل (بصمة صوتية + محتوى ائتلاوة) ثم الإرسال أو الرفض
+// التحءءق الكامل (بصمة صوتية + محتوى ائتلاوة) ثم الإرس��ل أو الرفض
 async function verifyAndSubmitRecitation(taskIdx, blob, dataUrl, transcript, aiBoxId, statusEl, fileName) {
   const aiBox = document.getElementById(aiBoxId);
   if(aiBox) aiBox.innerHTML = '<div class="alert alert-info">🤖 جاري تحليل التسجيل بالذكاء الاصطناعي...</div>';
@@ -5073,7 +5144,7 @@ function renderParentRecords() {
             html += '</div></div>';
           });
           html += '<div style="text-align:center; margin-top:15px; padding-top:15px; border-top:2px dashed var(--border);">';
-          html += '<span class="score-badge">المجموع: '+sess.totalScore+' درجة</span>';
+          html += '<span class="score-badge">الم��موع: '+sess.totalScore+' درجة</span>';
           if(sess.finalizedAt) html += '<p style="margin-top:8px; color:var(--success); font-size:0.9rem;"> تم الإغلاق النهائي: '+sess.finalizedAt+'</p>';
           if(sess.notes) html += '<p style="margin-top:10px; color:var(--text-light);"><strong>ملاحظات:</strong> '+sess.notes+'</p>';
           html += '</div>';
@@ -5366,7 +5437,7 @@ function deleteFile(id) {
 function generateAIReport(student) {
   const sessions = student.sessions || [];
   const finalizedSessions = sessions.filter(sess => !sess.isDraft);
-  if(finalizedSessions.length === 0) return 'لم يتم تسجيل أي تسميع نهائي بعد. بداية جيدة تنتظرك! 💪';
+  if(finalizedSessions.length === 0) return 'لم يتم تسجيل أي تسميع نهائ�� بعد. بداية جيدة تنتظرك! 💪';
   const last3 = finalizedSessions.slice(-3);
   const avgScore = last3.reduce((sum, s) => sum + s.totalScore, 0) / last3.length;
   let report = '';
@@ -5486,7 +5557,7 @@ function generateAIResponse(text, student) {
   }
   // نصائح
   if(has('نصفحة','نصائح','سادني','مساعدة','انسى','أنسى','نسيت','صعب')) {
-    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتءءل لآية جديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طيعي والمراجعة علاجه.';
+    return '💡 <strong>خمس قواعد ذهبية للحفظ:</strong><br>1. اربط الحفظ بوقت ثابت لا يتغير.<br>2. اقرأ الآية بصوت مسموع — السمع يثبّت أعاف النظر.<br>3. افهم معنى الآية قبل حفظها.<br>4. لا تنتءءل لآية ��ديدة قبل إتقان ما قبلها.<br>5. راجع، ثم راجع، ثم راجع — النسيان طيعي والمراجعة علاجه.';
   }
   // تحفيز
   if(has('تحفيز','همة','ملل','تعبا','زهقءءن','احبت','أحطت')) {

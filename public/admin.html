@@ -937,7 +937,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label for="signupNid">كود الهوية أو جواز السفر *</label><div class="country-input-row"><select id="signupIdentityCountry" data-country-selector data-identity-id="signupNid" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="signupNid" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div><small id="signupNidHint" class="country-hint" style="color:var(--text-light)"></small></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" data-country-selector data-phone-id="signupPhone" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" data-country-selector data-phone-id="signupPhone" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" data-phone-input class="phone-input" placeholder="الرقم المحلي بدون رمز الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -1070,7 +1070,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
     <div class="form-group" style="margin-bottom:0;">
       <label>رقم واتساب المسؤول لاستلام طلبات الامام</label>
-      <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
+      <div class="country-input-row"><select id="adminWhatsCountry" data-country-selector data-phone-id="adminWhatsInput" aria-label="دولة رقم الواتساب"><option value="EG">مصر (+20)</option></select><input type="tel" id="adminWhatsInput" data-phone-input class="phone-input" placeholder="الرقم المحلي بدون رمز الدولة" autocomplete="tel"></div>
       <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابا الجديدة لى واتساب (بصيغة الدولة، مثال: 201554542019)</small>
     </div>
     <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
@@ -1080,7 +1080,7 @@ tr:hover { background: var(--table-hover); }
   <div class="alert alert-info" style="margin-bottom:20px;">تفعل Google مركزي ومتاح لجميع الأجهزة عبر إعداد GOOGLE_CLIENT_ID في بيئة Vercel.</div>
 
   <div class="form-row" style="margin-bottom:20px;">
-    <div class="form-group"><label>رقم الموبايل</label><input type="text" id="newAdminMobile" placeholder="رقم الموبايل (11 رقم)" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div class="form-group"><label>رقم الموبايل</label><div class="country-input-row"><select id="newAdminMobileCountry" data-country-selector data-phone-id="newAdminMobile" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="newAdminMobile" data-phone-input class="phone-input" placeholder="الرقم المحلي بدون رمز الدولة" autocomplete="tel"></div></div>
     <div class="form-group"><label>الرقم السري</label><input type="password" id="newAdminPass" placeholder="الرقم السري"></div>
     <div class="form-group"><label>نوع المسؤول</label>
       <select id="newAdminType">
@@ -1102,8 +1102,8 @@ tr:hover { background: var(--table-hover); }
   <h4 style="color:var(--primary); margin:20px 0 15px; border-bottom:2px solid var(--border); padding-bottom:10px;">🔐 تأكيد الهوية</h4>
   <div class="form-group">
     <label>رقم الموبايل الحالي (للتأكيد)</label>
-    <div style="position:relative;">
-      <input type="password" id="confirmMobile" placeholder="أدخل رقم الموبايل الحالي للتأئيد" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')" style="padding-left:45px;">
+    <div class="country-input-row" style="position:relative;">
+      <select id="confirmMobileCountry" data-country-selector data-phone-id="confirmMobile" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="password" id="confirmMobile" data-phone-input class="phone-input" placeholder="أدخل رقم الموبايل الحالي للتأكيد" autocomplete="tel" style="padding-left:45px;">
       <span onclick="togglePassVisibility('confirmMobile', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span>
     </div>
   </div>
@@ -1117,8 +1117,8 @@ tr:hover { background: var(--table-hover); }
   <h4 style="color:var(--success); margin:25px 0 15px; border-bottom:2px solid var(--border); padding-bottom:10px;">✏️ البيانات الجديدة</h4>
   <div class="form-group">
     <label>رقم الموبايل الجديد</label>
-    <div style="position:relative;">
-      <input type="password" id="newMobile" placeholder="أدخل الرقم الجديد" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')" style="padding-left:45px;">
+    <div class="country-input-row" style="position:relative;">
+      <select id="newMobileCountry" data-country-selector data-phone-id="newMobile" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="password" id="newMobile" data-phone-input class="phone-input" placeholder="أدخل الرقم الجديد" autocomplete="tel" style="padding-left:45px;">
       <span onclick="togglePassVisibility('newMobile', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span>
     </div>
   </div>
@@ -1159,7 +1159,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label>كود الهوية أو جواز السفر *</label><div class="country-input-row"><select id="stIdentityCountry" data-country-selector data-identity-id="stNational" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="stNational" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div></div>
-    <div class="form-group"><label>الدولة ورقم الهاتف</label><div style="display:flex;gap:8px;direction:ltr;"><select id="stPhoneCountry" data-country-selector data-phone-id="stPhone" aria-label="اختر الدولة" style="max-width:180px;"><option value="20">مصر (+20)</option></select><input type="tel" id="stPhone" autocomplete="tel" placeholder="الرقم المحلي" style="flex:1;"></div></div>
+    <div class="form-group"><label>الدولة ورقم الهاتف</label><div style="display:flex;gap:8px;direction:ltr;"><select id="stPhoneCountry" data-country-selector data-phone-id="stPhone" aria-label="اختر الدولة" style="max-width:180px;"><option value="20">مصر (+20)</option></select><input type="tel" id="stPhone" data-phone-input class="phone-input" autocomplete="tel" placeholder="الرقم المحلي بدون رمز الدولة" style="flex:1;"></div></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ الميلاد *</label><input type="date" id="stBirth" onchange="calcAge()"></div>
@@ -1452,7 +1452,7 @@ tr:hover { background: var(--table-hover); }
   <div class="page-header"><h2>👨‍👩‍👧 دخول ولي الأمر</h2></div>
   <div id="parentLoginAlert"></div>
   <div class="form-group"><label>اسم ولي الأمر</label><input type="text" id="parentName" placeholder="أدخل اسمك كما سجله المسؤول"></div>
-  <div class="form-group"><label>الرقم السري</label><input type="password" id="parentPass" placeholder="الرقم السري الخاص بك"></div>
+  <div class="form-group"><label>الرقم السري</label><input type="password" id="parentPass" placeholder="الرقم الس��ي الخاص بك"></div>
   <button class="btn btn-primary" onclick="parentLogin()" style="width:100%">دخول</button>
   <button class="btn btn-secondary" onclick="showPage('lockScreen')" style="width:100%; margin-top:10px">رجوع للرئيسية</button>
 </div>

@@ -857,7 +857,7 @@ tr:hover { background: var(--table-hover); }
   <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
   <button type="button" id="unifiedPassToggle" class="thimar-password-toggle" onclick="toggleUnifiedPassword()" aria-label="Show password" data-ar-aria-label="إظهار الرقم السري" aria-pressed="false"><span class="thimar-eye-icon" aria-hidden="true"></span></button>
   </div>
-        <button type="button" class="thimar-forgot" onclick="openAccountRecovery()">هل نسيت الرقم السري؟</button>
+        <button type="button" class="thimar-forgot" onclick="openAccountRecovery()">هل نسي�� الرقم السري؟</button>
       </div>
       <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
       <div class="thimar-signup-row">
@@ -1059,7 +1059,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
     <div class="form-group" style="margin-bottom:0;">
       <label>رقم واتساب المسؤول لاستلام طلبات الامام</label>
-      <input type="text" id="adminWhatsInput" placeholder="201554542019" oninput="this.value=this.value.replace(/[^\d+]/g,'')">
+      <div class="country-input-row"><select id="adminWhatsappCountry" data-country-selector data-phone-id="adminWhatsInput" aria-label="دولة رقم الواتساب"><option value="EG">مصر (+20)</option></select><input type="tel" id="adminWhatsInput" data-phone-input class="phone-input" placeholder="الرقم المحلي بدون رمز الدولة" autocomplete="tel"></div>
       <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابات الجديدة على واتساب (بصيغة الدولة، مثال: 201554542019)</small>
     </div>
     <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
@@ -1069,7 +1069,7 @@ tr:hover { background: var(--table-hover); }
   <div class="alert alert-info" style="margin-bottom:20px;">تفل Google مركزي ومتاح لجميع الأجهزة عبر إعداد GOOGLE_CLIENT_ID في بيئة Vercel.</div>
 
   <div class="form-row" style="margin-bottom:20px;">
-    <div class="form-group"><label>رقم الموبايل</label><input type="text" id="newAdminMobile" placeholder="رقم الموبايل (11 رقم)" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div class="form-group"><label>رقم الموبايل</label><div class="country-input-row"><select id="newAdminMobileCountry" data-country-selector data-phone-id="newAdminMobile" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="newAdminMobile" data-phone-input class="phone-input" placeholder="الرقم المحلي بدون رمز الدولة" autocomplete="tel"></div></div>
     <div class="form-group"><label>الرقم السري</label><input type="password" id="newAdminPass" placeholder="الرقم السري"></div>
     <div class="form-group"><label>نوع المسؤول</label>
       <select id="newAdminType">
@@ -1091,8 +1091,8 @@ tr:hover { background: var(--table-hover); }
   <h4 style="color:var(--primary); margin:20px 0 15px; border-bottom:2px solid var(--border); padding-bottom:10px;">🔐 تأكيد الهوية</h4>
   <div class="form-group">
     <label>رقم الموبايل الحالي (للتأكيد)</label>
-    <div style="position:relative;">
-      <input type="password" id="confirmMobile" placeholder="أدخل رقم الموبايل الحالي للتأئيد" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')" style="padding-left:45px;">
+    <div class="country-input-row" style="position:relative;">
+      <select id="confirmMobileCountry" data-country-selector data-phone-id="confirmMobile" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="password" id="confirmMobile" data-phone-input class="phone-input" placeholder="أدخل رقم الموبايل الحالي للتأكيد" autocomplete="tel" style="padding-left:45px;">
       <span onclick="togglePassVisibility('confirmMobile', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span>
     </div>
   </div>
@@ -1106,8 +1106,8 @@ tr:hover { background: var(--table-hover); }
   <h4 style="color:var(--success); margin:25px 0 15px; border-bottom:2px solid var(--border); padding-bottom:10px;">✏️ البيانات الجديدة</h4>
   <div class="form-group">
     <label>رقم الموبايل الجديد</label>
-    <div style="position:relative;">
-      <input type="password" id="newMobile" placeholder="أدخل الرقم الجديد" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')" style="padding-left:45px;">
+    <div class="country-input-row" style="position:relative;">
+      <select id="newMobileCountry" data-country-selector data-phone-id="newMobile" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="password" id="newMobile" data-phone-input class="phone-input" placeholder="أدخل الرقم الجديد" autocomplete="tel" style="padding-left:45px;">
       <span onclick="togglePassVisibility('newMobile', this)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:1.2rem; user-select:none;">👁️</span>
     </div>
   </div>
@@ -1147,8 +1147,8 @@ tr:hover { background: var(--table-hover); }
     <div class="form-group"><label>اسم المستخدم *</label><input type="text" id="stUsername" placeholder="اسم المستخدم لتسجيل الدخول"></div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label>كود الهوية أو جواز السفر *</label><div class="country-input-row"><select id="stIdentityCountry" data-country-selector data-identity-id="stNational" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="stNational" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div></div>
-    <div class="form-group"><label>الدولة ورقم الهاتف</label><div style="display:flex;gap:8px;direction:ltr;"><select id="stPhoneCountry" data-country-selector data-phone-id="stPhone" aria-label="اختر الدولة" style="max-width:180px;"><option value="20">مصر (+20)</option></select><input type="tel" id="stPhone" autocomplete="tel" placeholder="الرقم المحلي" style="flex:1;"></div></div>
+    <div class="form-group"><label for="stNational">كود الهوية أو جواز السفر *</label><div class="country-input-row"><select id="stIdentityCountry" data-country-selector data-identity-id="stNational" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="stNational" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div><small id="stNationalHint" class="country-hint"></small></div>
+    <div class="form-group"><label for="stPhone">الدولة ورقم الهاتف</label><div class="country-input-row"><select id="stPhoneCountry" data-country-selector data-phone-id="stPhone" aria-label="دولة رقم الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="stPhone" data-phone-input class="phone-input" autocomplete="tel" placeholder="الرقم المحلي" style="flex:1;"></div><small id="stPhoneInternational" class="country-hint"></small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>تاريخ الميلاد *</label><input type="date" id="stBirth" onchange="calcAge()"></div>
@@ -1392,7 +1392,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ندوق التسجيلات لطالب -->
 <div id="studentExamPage" class="page hidden">
-  <div class="page-header"><h2>🧪 الاختبار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رجءءع</button></div>
+  <div class="page-header"><h2>🧪 الاخ��بار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رجءءع</button></div>
   <div id="studentExamContent"></div>
 </div>
 
@@ -1847,7 +1847,7 @@ window.alert = function(m){ showToast(m); };
         if(event.key === 'ArrowLeft') { event.preventDefault(); previousQuranPage(); }
         if(event.key === 'Escape') { event.preventDefault(); closeQuranReader(); }
       });
-      /* تكبير بإصبعين، وسحب للتنقل بين الصفحات (يمين = التالية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
+      /* تكبير بإصبعين، وسحب للتنقل بين الصفحات (يمين = ال��الية، يسار = السابقة) داخل نفس صفحة PDF الأصلية دون أي تعديل على محتواها */
       (function(){
         var MIN_SCALE = 1, MAX_SCALE = 4;
         var scale = 1, tx = 0, ty = 0;
