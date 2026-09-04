@@ -55,7 +55,7 @@
       if (!node.nodeValue || !node.nodeValue.trim() || isProtected(node)) continue;
       if (!originals.has(node)) originals.set(node, node.nodeValue);
       var source = originals.get(node);
-      node.nodeValue = locale === 'ar' ? (source.indexOf('Thimar') !== -1 ? translate(source, 'ar') : source) : translate(source, 'en');
+      node.nodeValue = locale === 'ar' ? translate(source, 'ar') : translate(source, 'en');
     }
   }
 
