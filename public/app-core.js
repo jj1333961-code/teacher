@@ -556,6 +556,7 @@ async function hydrateDataFromNeon(){
     if(hasCloudData) Object.keys(body.data).forEach(function(key){ if(CLOUD_DATA_KEYS.includes(key)) runtimeData[key]=body.data[key]; });
     neonDataReady=true;
     if(!hasCloudData) await saveAllDataToNeon();
+    window.__thimarCloudDataReady = true;
     window.dispatchEvent(new Event('clouddataready'));
     return true;
   } catch(e){
@@ -1432,7 +1433,7 @@ function submitSignupRequest() {
     + 'الرقم القومي: ' + nid + '\n'
     + 'رقم الهاتف الدولي: +' + phone + '\n'
     + 'طريقة التسجيل: ' + (signupState.method === 'google' ? 'جوجل (' + signupState.email + ')' : 'رقم الهاتف / واتساب') + '\n'
-    + (signupState.method === 'google' ? 'حساب جوجل المُوثّق: ' + signupState.email + '\n' : 'رقم الواتساب المُوثّق: ' + signupState.whats + '\n')
+    + (signupState.method === 'google' ? 'حساب جوجل المُوثّق: ' + signupState.email + '\n' : 'رقم ال��اتساب المُوثّق: ' + signupState.whats + '\n')
     + 'الجزء: ' + (juz ? 'الجزء ' + juz : 'غير محدد') + '\n'
     + 'السورة: ' + (surah || 'غير محددة') + '\n'
     + 'ملاحظات: ' + (notes || 'لا يوجد') + '\n'
@@ -2665,7 +2666,7 @@ function localSmartChatReply(message,role){
       const completed=students.reduce((n,s)=>n+(Array.isArray(s.examResults)?s.examResults.length:0),0),pending=students.filter(s=>s.activeExam&&s.activeExam.status==='pending').length;
       return 'ملخص ابيانات ��لمحلية: '+students.length+' طالباً، '+completed+' نتيجة اختبار محفوظة، و'+pending+' اختباراً قيد الانتظار. ابدأ بالطلاب ذوي النتائج الأضعف أو الاختبارات المتأخرة، ثم اجعل المراجعة على فترتين: سورة قريبة من آخر حفظ وسورة أقدم لتثبيت المائي البعيد.';
     }
-    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة للمقطع القريب، ثم اختبر نفسك عشوا��ياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
+    return 'لتحسين الحفظ: ابدأ بمراجعة قصيرة ��لمقطع القريب، ثم اختبر نفسك عشوا��ياً من مقطع أقدم، وسجّل المواضع التي توقفت فيها. كرر الموضع الضعيفة ثلاث مرات ثم أعد الاختبار دون النظر إلى المصحف.';
   }
   if(/وقت|تنظيم|خطه|خطة|جدول|فكرة/.test(q))return 'خطة مقترحة: 10 دقائق للماضي القريب، 10 دقائق للماضي البعيد، 5 دقائق لأسئلة عشوائ��ة من أول ووسط وآخر السور، ثم دقيقتان لتسجيل الأخطاء. اجعل الهدف محدداً بعدد آيات أي سور، لا بمدة فقط.';
   if(/رساله|رسالة|تواصل/.test(q)&&role==='admin')return 'يوجد حالياً '+messages.length+' رسالة محفوظة في بيانات المنصة. رتّب ال��تابعة حسب الرسائل غير المقروءة، ثم الطلبات المتعلقة باختبار أو تسميع، وأرسل لكل حالة إجراءً واضحاً وموعد متابعة.';
@@ -3033,7 +3034,7 @@ async function submitStudentExam(auto){
   }
   const hasAudio=ex.questions.some(q=>q.type==='audio');ex.status=hasAudio?'pending_audio_review':'graded';ex.submittedAt=Date.now();ex.answers=answers;ex.score=score;ex.maxScore=ex.questions.reduce((n,q)=>n+(Number(q.points)||1),0);ex.totalDurationSeconds=Math.round((Date.now()-(ex.createdAt||Date.now()))/1000);ex.autoSubmitted=!!auto;ex.reviewedAt=hasAudio?null:Date.now();
   let students=getData('students');const idx=students.findIndex(x=>x.id===s.id);if(idx<0)return;students[idx].activeExam=null;students[idx].examResults=students[idx].examResults||[];students[idx].examResults.push(ex);students[idx].completedTasks=students[idx].completedTasks||[];students[idx].completedTasks.push({type:'exam',name:'اختبار '+ex.date,date:ex.date,completedAt:new Date().toLocaleString('ar-EG'),score,maxScore:ex.maxScore});setData('students',students);currentUser=students[idx];
-  let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوتي والنتيجة معلقة حتى مراجعة المسؤول':'تم تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
+  let msgs=getData('messages');const resultText=hasAudio?'تم تسليم الاختبار الصوتي والنتيجة معلقة حتى مراجعة المسؤول':'��م تسليم الاختبار — النتيجة '+score+'/'+ex.maxScore;msgs.push({type:'student',sender:s.name,senderId:s.id,receiverType:'admin',text:resultText,exam:ex,time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   msgs.push({type:'system',sender:'النظام',senderId:0,receiverType:'parent',receiverName:s.parent,text:hasAudio?'تم استلام اختبار '+s.name+' والنتيجة معلقة لمراجعة اتسجيل الصوتي':'نتيجة اختبا�� '+s.name+': '+score+'/'+ex.maxScore+' — الزمن '+ex.totalDurationSeconds+' ثانية',examSummary:{date:ex.date,score,maxScore:ex.maxScore,duration:ex.totalDurationSeconds,status:ex.status},time:new Date().toLocaleString('ar-EG'),approved:true,read:false});
   setData('messages',msgs);renderStudentExamResult(ex);showToast('✅ تم تصحيح الاختبار وإرساله للمسؤول وولي الأمر','success');
 }
@@ -3468,11 +3469,36 @@ function voiceAudioHTML(m) {
 }
 async function persistMessageWithFallback(message) {
   try {
-    const response = await fetch('/api/messages', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(message) });
+    const response = await fetch('/api/messages', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify(message) });
     const result = await response.json();
-    if (result.saved) return true;
+    if (result.saved && result.message) return result.message;
   } catch (error) { console.warn('[v0] Messages API unavailable; using local fallback'); }
-  return false;
+  return null;
+}
+
+function localMessageFromCloud(cloudMessage, fallback) {
+  const createdAt = cloudMessage && cloudMessage.createdAt ? new Date(cloudMessage.createdAt) : null;
+  return {
+    id: cloudMessage && cloudMessage.id != null ? cloudMessage.id : fallback.id,
+    cloudId: cloudMessage && cloudMessage.id != null ? cloudMessage.id : null,
+    type: cloudMessage?.senderRole || fallback.senderRole,
+    sender: cloudMessage?.senderName || fallback.senderName,
+    senderId: String(cloudMessage?.senderId || fallback.senderId),
+    senderRole: cloudMessage?.senderRole || fallback.senderRole,
+    receiverType: cloudMessage?.recipientRole || fallback.recipientRole,
+    receiverId: cloudMessage?.recipientId || fallback.recipientId,
+    receiverName: cloudMessage?.recipientName || fallback.recipientName,
+    recipientId: cloudMessage?.recipientId || fallback.recipientId,
+    recipientName: cloudMessage?.recipientName || fallback.recipientName,
+    recipientRole: cloudMessage?.recipientRole || fallback.recipientRole,
+    text: cloudMessage?.body || fallback.text,
+    voiceData: fallback.voiceData || '',
+    reply: '',
+    time: createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt.toLocaleString('ar-EG') : new Date().toLocaleString('ar-EG'),
+    approved: true,
+    read: Boolean(cloudMessage?.readAt),
+    cloudPersisted: Boolean(cloudMessage?.id),
+  };
 }
 
 async function sendUserMessageToAdmin(role) {
@@ -3483,8 +3509,8 @@ async function sendUserMessageToAdmin(role) {
   const sender = role === 'student' ? currentUser.name : (Array.isArray(currentUser) ? currentUser[0].parent : currentUser.name);
   let messages = getData('messages');
   const message = { senderId: String(role === 'student' ? currentUser.id : (currentUser.id || 0)), senderName: sender, senderRole: role, recipientId: 'admin', recipientName: 'المسؤول', recipientRole: 'admin', text: text || 'رسالة صوتية' };
-  const savedToCloud = await persistMessageWithFallback(message);
-  messages.push({ type: role, sender: sender, senderId: message.senderId, receiverType:'admin', text: message.text, voiceData: voice, reply:'', time:new Date().toLocaleString('ar-EG'), approved:false, read:false });
+  const cloudMessage = await persistMessageWithFallback(message);
+  messages.push(localMessageFromCloud(cloudMessage, Object.assign({}, message, { id: 'm' + Date.now(), voiceData: voice })));
   setData('messages', messages);
   if(ta) ta.value = '';
   clearVoiceMsg(role);
@@ -3667,7 +3693,7 @@ async function runDevAssistant(){
   const dangers = detectDevDanger(request);
   if(dangers.length){
     const confirmed = confirm(
-      '⚠️ تحذير: قد يتضمن هذا الطلب عملية حسّاسة:\n\n- '+dangers.join('\n- ')+
+      '⚠️ تحذير: قد يتضمن هذا الطلب عملية ح��ّاسة:\n\n- '+dangers.join('\n- ')+
       '\n\nهذه المليات قد تؤثر على البيانات أئ الأمان أو المستخدمين. لن يُنفَذ الطلب إلا بعد تأكيدك الصريح.\n\nهل تريد المتابعة والتنفيذ التلقائي؟'
     );
     if(!confirmed){
@@ -3845,12 +3871,14 @@ async function sendComposeMessage() {
   const id = parts.slice(1).join('_');
   const students = getData('students');
   const recipientName = type === 'student' ? (students.find(s => String(s.id) === id)?.name || id) : id;
-  const cloudMessage = {senderId:'admin', senderName:'المسؤول', senderRole:'admin', recipientId:id, recipientName, recipientRole:type, text:text || 'رسالة صوتية'};
-  await persistMessageWithFallback(cloudMessage);
-  if(type === 'student') {
-    messages.push({type:'admin', sender:'المسؤول', senderId:0, receiverType:'student', receiverId:parseInt(id), text: cloudMessage.text, voiceData: voice, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
+  const messageDraft = {senderId:'admin', senderName:'المسؤول', senderRole:'admin', recipientId:id, recipientName, recipientRole:type, text:text || 'رسالة صوتية'};
+  const cloudMessage = await persistMessageWithFallback(messageDraft);
+  if(cloudMessage) {
+    messages.push(localMessageFromCloud(cloudMessage, Object.assign({}, messageDraft, { voiceData: voice })));
+  } else if(type === 'student') {
+    messages.push({type:'admin', sender:'المسؤول', senderId:0, receiverType:'student', receiverId:parseInt(id), text: messageDraft.text, voiceData: voice, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
   } else {
-    messages.push({type:'admin', sender:'المسؤول', senderId:0, receiverType:'parent', receiverName:id, text: cloudMessage.text, voiceData: voice, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
+    messages.push({type:'admin', sender:'المسؤول', senderId:0, receiverType:'parent', receiverName:id, text: messageDraft.text, voiceData: voice, reply:'', time:new Date().toLocaleString('ar-EG'), approved:true, read:false});
   }
   setData('messages', messages);
   document.getElementById('composeText').value = '';
@@ -5589,7 +5617,7 @@ function generateParentWelcome(student) {
   ];
   const base = templates[Math.floor(Math.random() * templates.length)];
   if(last) {
-    base.body += '<br><br>📊 آخر تسميع نهائي لـ '+student.name+' كان بتاريخ '+last.date+' بمجموع <strong>'+last.totalScore+' درجة</strong>. ';
+    base.body += '<br><br>📊 آخر تسميع ن��ائي لـ '+student.name+' كان بتاريخ '+last.date+' بمجموع <strong>'+last.totalScore+' درجة</strong>. ';
     if(last.totalScore >= 14) base.body += 'أداء مءءتاز! ابنك يُظهر تفوقاً واضحاً. استمر في تشجيعه. 🌟';
     else if(last.totalScore >= 10) base.body += 'مستوى جي جداً. مع دعمك المستمر سيصل للتميز. ����';
     else base.body += 'يحتاج لبعض الدعم والمراجعة. جالسه يومياً وشاركه الحفظ. 💪';
@@ -5659,7 +5687,7 @@ function generateAIResponse(text, student) {
   }
   // خطة الحفظ
   if(has('خطة','جدول','تنظيم','وقت','كيف احفظ','كيف أحفظ')) {
-    return '🗓️ <strong>خطة يوم��ة مقترحة لك '+name+':</strong><br>• بعد الفجر (20 د): حفظ جديد — كرر الآية 7 مرات نظراً ثم 3 مرات غيباً.<br>• بعد العصر (10 د): تثبيت حفظ اليوم.<br>• قبل النوم (15 د): مراجعة حفظ الأمس + صفحة قديمة.<br>• يوم الجمعة: مراجعة شاملة لكل ما حفظته في الأسبوع.<br><br>الاستمرار لقليل الدائم خير من الكثير المنقطع.';
+    return '🗓️ <strong>خطة يوم��ة مقترحة لك '+name+':</strong><br>• بعد الفجر (20 د): حفظ جديد — كرر الآية 7 مرات نظراً ثم 3 مرات غيباً.<br>• بعد العصر (10 د): تثبيت حفظ اليوم.<br>• قبل النوم (15 د): مراجعة حفظ الأمس + صفحة قديمة.<br>• يوم الجمعة: مراجعة شاملة لكل ما حفظته في الأسبوع.<br><br>الاستمرار لقلي�� الدائم خير من الكثير المنقطع.';
   }
   // نصائح
   if(has('نصفحة','نصائح','سادني','مساعدة','انسى','أنسى','نسيت','صعب')) {

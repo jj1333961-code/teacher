@@ -1,5 +1,11 @@
 import { pgTable, text, integer, timestamp, jsonb, boolean, primaryKey, bigserial } from 'drizzle-orm/pg-core'
 
+export const appSnapshots = pgTable('app_snapshots', {
+  id: text('id').primaryKey(),
+  data: jsonb('data').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
 export const quizzes = pgTable('quizzes', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
@@ -52,7 +58,9 @@ export const messages = pgTable('messages', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
   senderId: text('sender_id').notNull(), senderName: text('sender_name').notNull(), senderRole: text('sender_role').notNull(),
   recipientId: text('recipient_id').notNull(), recipientName: text('recipient_name').notNull(), recipientRole: text('recipient_role').notNull(),
-  body: text('body').notNull(), createdAt: timestamp('created_at').defaultNow().notNull(), readAt: timestamp('read_at'),
+  body: text('body').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  readAt: timestamp('read_at', { withTimezone: true }),
 })
 
 export type QuizData = { id: string; title: string; questions: QuizQuestion[] }
