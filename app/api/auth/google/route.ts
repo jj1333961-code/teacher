@@ -87,7 +87,7 @@ export async function POST() {
 }
 
 export async function session(request: NextRequest) {
-  const secret = process.env.GOOGLE_CLIENT_SECRET?.trim()
+  const secret = process.env.GOOGLE_CLIENT_SECRET?.trim() || process.env.DATABASE_URL?.trim()
   const value = request.cookies.get(SESSION)?.value
   return secret && value ? verify(value, secret) : null
 }
