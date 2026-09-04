@@ -857,7 +857,7 @@ tr:hover { background: var(--table-hover); }
   <input type="password" id="unifiedPass" placeholder="الرقم السري" autocomplete="current-password" onkeypress="if(event.key==='Enter'&&!event.nativeEvent?.isComposing&&event.keyCode!==229)unifiedLogin()">
   <button type="button" id="unifiedPassToggle" class="thimar-password-toggle" onclick="toggleUnifiedPassword()" aria-label="Show password" data-ar-aria-label="إظهار الرقم السري" aria-pressed="false"><span class="thimar-eye-icon" aria-hidden="true"></span></button>
   </div>
-        <button type="button" class="thimar-forgot" onclick="openAccountRecovery()">هل نسي�� الرقم السري؟</button>
+        <button type="button" class="thimar-forgot" onclick="openAccountRecovery()">هل نسيت الرقم السري؟</button>
       </div>
       <button class="btn btn-primary thimar-btn thimar-btn-gold" onclick="unifiedLogin()">تسجيل الدخول</button>
       <div class="thimar-signup-row">
@@ -926,7 +926,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label for="signupNid">كود الهوية أو جواز السفر *</label><div class="country-input-row"><select id="signupIdentityCountry" data-country-selector data-identity-id="signupNid" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="signupNid" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div><small id="signupNidHint" class="country-hint" style="color:var(--text-light)"></small></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" data-country-selector data-phone-id="signupPhone" aria-label="كود دولة الهاتف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" placeholder="رقم الهاتف بدون كود الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div class="country-input-row"><select id="signupPhoneCountry" data-country-selector data-phone-id="signupPhone" aria-label="كود دولة الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="signupPhone" data-phone-input class="phone-input" inputmode="numeric" autocomplete="tel" placeholder="الرقم المحلي بدون رمز الدولة" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -1392,7 +1392,7 @@ tr:hover { background: var(--table-hover); }
 
 <!-- ندوق التسجيلات لطالب -->
 <div id="studentExamPage" class="page hidden">
-  <div class="page-header"><h2>🧪 الاخ��بار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رجءءع</button></div>
+  <div class="page-header"><h2>🧪 ا��اخ��بار الحالي</h2><button class="btn btn-secondary" onclick="goBack()">رجءءع</button></div>
   <div id="studentExamContent"></div>
 </div>
 

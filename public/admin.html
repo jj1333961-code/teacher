@@ -937,7 +937,7 @@ tr:hover { background: var(--table-hover); }
   </div>
   <div class="form-row">
     <div class="form-group"><label for="signupNid">كود الهوية أو جواز السفر *</label><div class="country-input-row"><select id="signupIdentityCountry" data-country-selector data-identity-id="signupNid" aria-label="دولة الهوية"><option value="EG">مصر (+20)</option></select><input type="text" id="signupNid" data-identity-input autocomplete="off" placeholder="أدخل هوية الدولة أو رقم جواز السفر"></div><small id="signupNidHint" class="country-hint" style="color:var(--text-light)"></small></div>
-    <div class="form-group"><label>رقم الهاتف *</label><div style="display:flex; gap:8px; direction:ltr;"><select id="signupPhoneCountry" data-country-selector data-phone-id="signupPhone" aria-label="كود دولة الهاءءءءءءءءءءءءف" onchange="updateSignupInternationalNumber('signupPhone','signupPhoneCountry','signupPhoneInternational')" style="max-width:145px;"><option value="20">مصر (+20)</option><option value="966">السعودية (+966)</option><option value="971">الإمءءرات (+971)</option><option value="974">قطر (+974)</option><option value="965">الكويت (+965)</option><option value="962">الأردن (+962)</option><option value="212">المغرب (+212)</option><option value="213">الجزائر (+213)</option><option value="216">تونس (+216)</option><option value="1">أمريكا/كندا (+1)</option><option value="44">بريطانيا (+44)</option><option value="49">ألمانيا (+49)</option><option value="90">تركيا (+90)</option></select><input type="text" id="signupPhone" data-phone-input class="phone-input" placeholder="الرقم المحلي بدون رمز الدولة" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
+    <div class="form-group"><label>رقم الهاتف *</label><div class="country-input-row"><select id="signupPhoneCountry" data-country-selector data-phone-id="signupPhone" aria-label="كود دولة الهاتف"><option value="EG">مصر (+20)</option></select><input type="tel" id="signupPhone" data-phone-input class="phone-input" inputmode="numeric" autocomplete="tel" placeholder="الرقم المحلي بدون رمز الدولة" style="flex:1; direction:ltr;"></div><small id="signupPhoneInternational" style="color:var(--text-light)">الرقم الدولي: +20</small></div>
   </div>
   <div class="form-row">
     <div class="form-group"><label>الجزء</label><select id="signupJuz" onchange="updateSignupSurahSelect()"><option value="">اختر الجزء...</option></select></div>
@@ -1070,7 +1070,7 @@ tr:hover { background: var(--table-hover); }
   <div class="form-row" style="margin-bottom:20px; border:2px solid var(--primary); border-radius:12px; padding:15px; background:var(--table-header);">
     <div class="form-group" style="margin-bottom:0;">
       <label>رقم واتساب المسؤول لاستلام طلبات الامام</label>
-      <div class="country-input-row"><select id="adminWhatsCountry" data-country-selector data-phone-id="adminWhatsInput" aria-label="دولة رقم الواتساب"><option value="EG">مصر (+20)</option></select><input type="tel" id="adminWhatsInput" data-phone-input class="phone-input" placeholder="الرقم المحلي بدون رمز الدولة" autocomplete="tel"></div>
+      <div class="country-input-row"><select id="adminWhatsappCountry" data-country-selector data-phone-id="adminWhatsInput" aria-label="دولة رقم الواتساب"><option value="EG">مصر (+20)</option></select><input type="tel" id="adminWhatsInput" data-phone-input class="phone-input" placeholder="الرقم المحلي بدون رمز الدولة" autocomplete="tel"></div>
       <small style="color:var(--text-light)">يُستخدم لإرسال طلبات الحسابا الجديدة لى واتساب (بصيغة الدولة، مثال: 201554542019)</small>
     </div>
     <div class="form-group" style="display:flex; align-items:flex-end; margin-bottom:0;">
@@ -1383,7 +1383,7 @@ tr:hover { background: var(--table-hover); }
         <button type="button" class="side-sidebar-close" onclick="closeRoleSidebar('student')" aria-label="إغلاق القئمة">×</button>
       </div>
       <div class="side-sidebar-body">
-        <button type="button" class="role-nav-item" onclick="showPage('studentInbox')"><span class="role-nav-icon" aria-hidden="true">💬</span><span>الرسائل</span></button><button type="button" class="role-nav-item" onclick="openQuranReader()"><span class="role-nav-icon" aria-hidden="true">📖</span><span>المصحف الشريف</span></button>
+        <button type="button" class="role-nav-item" onclick="showPage('studentInbox')"><span class="role-nav-icon" aria-hidden="true">💬</span><span>الرسائل</span></button><button type="button" class="role-nav-item" onclick="openQuranReader()"><span class="role-nav-icon" aria-hidden="true">📖</span><span>المصحف ال��ريف</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('studentFilesPage')"><span class="role-nav-icon" aria-hidden="true">📁</span><span>الملفات</span></button>
         <button type="button" class="role-nav-item" onclick="showPage('studentAIChat')"><span class="role-nav-icon" aria-hidden="true">✦</span><span>مساعد الذكاء الاصطناعي</span></button>
         <button type="button" class="role-nav-item" onclick="showStudentFullChart()"><span class="role-nav-icon" aria-hidden="true">📈</span><span>مخطط التقيي</span></button>
@@ -1967,7 +1967,7 @@ window.alert = function(m){ showToast(m); };
     if(form) form.classList.remove('hidden');
   };
 
-  /* عند العودة لشاشة الدخول (تسجيل الخروج مثلاً) نعيد عرض الأزرار الرئيسية */
+  /* عند العودة لشاشة الدخول (تسجيل الخرو�� مثلاً) نعيد عرض الأزرار الرئيسية */
   (function patchShowPage(){
     if(typeof window.showPage !== 'function') return setTimeout(patchShowPage, 60);
     if(window.__thimarShowPagePatched) return;
