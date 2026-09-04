@@ -1,0 +1,66 @@
+.country-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  direction: ltr;
+  flex-wrap: wrap;
+}
+
+.country-input-row > input,
+.country-input-row > .phone-input {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.country-picker {
+  display: flex;
+  flex: 0 1 230px;
+  min-width: 170px;
+  flex-direction: column;
+  gap: 5px;
+  direction: ltr;
+}
+
+.country-picker select,
+.country-picker .country-search {
+  width: 100%;
+  min-width: 0;
+  max-width: none !important;
+}
+
+.country-search {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: .86rem;
+}
+
+.country-search:focus {
+  border-color: var(--primary);
+  outline: 2px solid color-mix(in srgb, var(--primary) 24%, transparent);
+}
+
+.country-hint {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.country-input-row input[data-identity-input] {
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+@media (max-width: 620px) {
+  .country-picker {
+    flex: 1 1 100%;
+  }
+
+  .country-input-row > input,
+  .country-input-row > .phone-input {
+    flex-basis: 100%;
+  }
+}
