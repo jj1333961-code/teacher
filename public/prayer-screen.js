@@ -23,7 +23,9 @@
 
   var LS_ADHAN = "thimar_prayer_adhan_enabled"; // "1" مفعّل / "0" معطّل
   var LS_SHOWN = "thimar_prayer_shown";          // منع التكرار: "YYYY-MM-DD:Key"
-  var DEFAULT_ADHAN = "/audio/adhan.mp3";
+  // صوت الأذان الجديد — نضيف رقم إصدار لكسر التخزين المؤقت للملف القديم في المتصفح
+  var ADHAN_VERSION = "3";
+  var DEFAULT_ADHAN = "/audio/adhan.mp3?v=" + ADHAN_VERSION;
   var FALLBACK_ADHAN = "/audio/notification-chime.mp3";
 
   /* ---------- المحتوى الديني لكل صلاة (يتغيّر تلقائيًا) ---------- */
@@ -173,6 +175,7 @@
         "</div>" +
         '<div class="ps-controls">' +
           '<button type="button" class="ps-btn" data-ps-adhan-toggle></button>' +
+          '<button type="button" class="ps-btn" data-ps-stop>' + ICONS.soundOff + "<span>إيقاف الأذان</span></button>" +
         "</div>" +
       "</div>";
 
@@ -190,6 +193,7 @@
 
     root.querySelector(".ps-close").addEventListener("click", hide);
     els.adhanBtn.addEventListener("click", function () { setAdhanEnabled(!isAdhanEnabled()); });
+    root.querySelector("[data-ps-stop]").addEventListener("click", stopAdhan);
 
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && root.getAttribute("data-open") === "1") hide();
@@ -208,26 +212,68 @@
   }
 
   /* ---------- تشغيل/إيقاف الأذان (محليًا بلا إنترنت) ---------- */
+  function ensureAudio() {
+    if (adhanAudio) return adhanAudio;
+    adhanAudio = new Audio();
+    adhanAudio.preload = "auto";
+    adhanAudio.src = DEFAULT_ADHAN;
+    adhanAudio.addEventListener("error", function () {
+      // في حال غياب ملف الأذان، نرجع إلى نغمة التنبيه المدمجة
+      if (String(adhanAudio.src).indexOf(FALLBACK_ADHAN) === -1) {
+        adhanAudio.src = FALLBACK_ADHAN;
+        adhanAudio.play().catch(function () {});
+      }
+    });
+    return adhanAudio;
+  }
+
+  /* فتح قفل التشغيل التلقائي: المتصفحات تمنع الصوت قبل أي تفاعل من المستخدم،
+     لذلك نجهّز عنصر الصوت بصمت عند أول لمسة/ضغطة في الصفحة حتى يعمل الأذان
+     تلقائيًا لاحقًا عند دخول وقت الصلاة بدون أي تدخل. */
+  var audioUnlocked = false;
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try {
+      var a = ensureAudio();
+      var prevVol = a.volume;
+      a.volume = 0;
+      var p = a.play();
+      if (p && p.then) {
+        p.then(function () {
+          a.pause();
+          a.currentTime = 0;
+          a.volume = prevVol;
+          console.log("[v0] adhan audio unlocked");
+        }).catch(function () {
+          a.volume = prevVol;
+          audioUnlocked = false;
+        });
+      }
+    } catch (e) { audioUnlocked = false; }
+  }
+  ["pointerdown", "touchstart", "keydown", "click"].forEach(function (ev) {
+    document.addEventListener(ev, unlockAudio, { once: false, passive: true });
+  });
+
   function playAdhan(src) {
     if (!isAdhanEnabled()) return;
     try {
-      if (!adhanAudio) {
-        adhanAudio = new Audio();
-        adhanAudio.preload = "auto";
-        adhanAudio.addEventListener("error", function () {
-          // في حال غياب ملف الأذان، نرجع إلى نغمة التنبيه المدمجة
-          if (adhanAudio.src.indexOf(FALLBACK_ADHAN) === -1) {
-            adhanAudio.src = FALLBACK_ADHAN;
-            adhanAudio.play().catch(function () {});
-          }
-        });
-      }
-      adhanAudio.src = src || DEFAULT_ADHAN;
-      adhanAudio.currentTime = 0;
-      var p = adhanAudio.play();
+      var a = ensureAudio();
+      a.volume = 1;
+      a.src = src || DEFAULT_ADHAN;
+      a.currentTime = 0;
+      var p = a.play();
       if (p && p.catch) p.catch(function () {
-        // تشغيل تلقائي محظور قبل تفاعل المستخدم — نتجاهل بهدوء
-        console.log("[v0] adhan autoplay blocked");
+        // تشغيل تلقائي محظور قبل تفاعل المستخدم — نعيد المحاولة عند أول تفاعل
+        console.log("[v0] adhan autoplay blocked — waiting for interaction");
+        var retry = function () {
+          document.removeEventListener("pointerdown", retry);
+          document.removeEventListener("keydown", retry);
+          try { a.play().catch(function () {}); } catch (e2) {}
+        };
+        document.addEventListener("pointerdown", retry, { once: true });
+        document.addEventListener("keydown", retry, { once: true });
       });
     } catch (e) { console.log("[v0] adhan play failed", e); }
   }
@@ -328,9 +374,17 @@
     systemNotify(name, timeStr);
     try { if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 300]); } catch (e) {}
 
-    // إغلاق تلقائي بعد فترة (يمكن للمستخدم الإغلاق يدويًا)
+    // إغلاق تلقائي بعد انتهاء الأذان (أو بعد 3 دقائق كحد أقصى) — ويمكن الإغلاق يدويًا
     clearTimeout(hideTimer);
-    hideTimer = setTimeout(hide, 90000);
+    hideTimer = setTimeout(hide, 180000);
+    try {
+      if (adhanAudio) {
+        adhanAudio.onended = function () {
+          clearTimeout(hideTimer);
+          hideTimer = setTimeout(hide, 15000);
+        };
+      }
+    } catch (e) {}
   }
 
   function systemNotifyMaybe(bridge, name, timeStr) {
