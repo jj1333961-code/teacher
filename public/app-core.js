@@ -512,8 +512,9 @@ function initLanguage(){
 
 let neonSaveTimer = null;
 let neonSaveInFlight = null;
-let neonDataReady = false;
-const runtimeData = Object.create(null);
+  let neonDataReady = false;
+  let neonAuthRequired = false;
+  const runtimeData = Object.create(null);
 const CLOUD_DATA_KEYS = ['subjects','students','messages','devices','admins','files','devAuditLog','proctoringIncidents','recordElements','extraElements','adminWhatsapp','adminWhatsappCountry','joinRequests','notifications','aiQuestionHistory'];
 function getData(key, def) {
   if (Object.prototype.hasOwnProperty.call(runtimeData, key)) return runtimeData[key];
@@ -524,12 +525,13 @@ function collectCloudData(){
   CLOUD_DATA_KEYS.forEach(function(key){ if(Object.prototype.hasOwnProperty.call(runtimeData,key)) data[key]=runtimeData[key]; });
   return data;
 }
-async function saveAllDataToNeon(){
+  async function saveAllDataToNeon(){
+  if(!neonDataReady) return false;
   const status=document.getElementById('cloudSaveStatus');
   if(neonSaveInFlight) return neonSaveInFlight;
   neonSaveInFlight=(async function(){
     try{
-      const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:collectCloudData()})});
+      const res=await fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({data:collectCloudData()})});
       const body=await res.json().catch(function(){ return {}; });
       if(!res.ok || body.saved !== true) throw new Error(body.error || 'cloud-save-failed');
       if(status)status.textContent='محفوظ في Neon';
@@ -544,9 +546,9 @@ async function saveAllDataToNeon(){
 function setData(key, val) {
   runtimeData[key]=val;
   clearTimeout(neonSaveTimer);
-  neonSaveTimer=setTimeout(saveAllDataToNeon,500);
-}
-async function hydrateDataFromNeon(){
+  if(neonDataReady) neonSaveTimer=setTimeout(saveAllDataToNeon,500);
+  }
+  async function hydrateDataFromNeon(options){
   if(neonDataReady) return true;
   try{
     const res=await fetch('/api/data',{cache:'no-store'});

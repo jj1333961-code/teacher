@@ -31,14 +31,22 @@ export async function GET(request: Request) {
     const storedData = snapshot?.data
     const admin = await requireAdmin(request)
     if (!admin.response) return response({ data: storedData ?? null, updatedAt: snapshot?.updatedAt ?? null })
-    const email = String(auth.user?.email || '').trim().toLowerCase()
+    const user = auth.user as Record<string, unknown>
+    const email = String(user.email || '').trim().toLowerCase()
+    const identifier = String(user.identifier || '').trim().toLowerCase()
+    const role = String(user.role || '').trim().toLowerCase()
+    const userId = String(user.id || '').trim().toLowerCase()
+    const matches = (candidate: unknown, expected: string) => String(candidate || '').trim().toLowerCase() === expected
     const rawData = storedData && typeof storedData === 'object' && !Array.isArray(storedData) ? storedData as Record<string, unknown> : {}
     const data = Object.fromEntries(Object.entries(rawData).filter(([key]) => USER_DATA_KEYS.has(key)).map(([key, value]) => {
       if (key === 'students' && Array.isArray(value)) {
         return [key, value.filter((student) => {
           if (!student || typeof student !== 'object') return false
           const record = student as Record<string, unknown>
-          return [record.email, record.googleEmail, record.parentEmail, record.parentGoogleEmail].some((candidate) => String(candidate || '').trim().toLowerCase() === email)
+          const emailMatch = [record.email, record.googleEmail, record.parentEmail, record.parentGoogleEmail].some((candidate) => matches(candidate, email))
+          const studentMatch = role === 'student' && [record.id, record.username, record.national, record.nationalId].some((candidate) => matches(candidate, userId) || matches(candidate, identifier))
+          const parentMatch = role === 'parent' && [record.parent, record.parentName, record.parentPhone, record.phone].some((candidate) => matches(candidate, identifier))
+          return emailMatch || studentMatch || parentMatch
         })]
       }
       if (key === 'notifications' && Array.isArray(value)) {

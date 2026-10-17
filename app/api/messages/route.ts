@@ -68,11 +68,15 @@ async function aliasesForUser(email: string) {
 async function getContext(request: Request) {
   const auth = await requireUser(request)
   if (auth.response) return { response: auth.response, email: '', name: '', isAdmin: false, aliases: [] as string[] }
-  const email = normalizedEmail(auth.user?.email)
+  const user = auth.user as Record<string, unknown>
+  const email = normalizedEmail(user.email)
   if (!email) return { response: response({ error: 'هوية المستخدم غير مكتملة' }, 400), email: '', name: '', isAdmin: false, aliases: [] as string[] }
-  const isAdmin = adminEmails().has(email)
-  const aliases = isAdmin ? [email] : await aliasesForUser(email)
-  return { response: null, email, name: String(auth.user?.name || auth.user?.email || '').trim(), isAdmin, aliases }
+  const baseAliases = [email, user.id, user.identifier, user.name]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean)
+  const isAdmin = user.role === 'admin' || adminEmails().has(email)
+  const aliases = [...new Set(isAdmin ? baseAliases : [...baseAliases, ...(await aliasesForUser(email))])]
+  return { response: null, email, name: String(user.name || user.email || '').trim(), isAdmin, aliases }
 }
 
 function participantFilter(aliases: string[]) {
